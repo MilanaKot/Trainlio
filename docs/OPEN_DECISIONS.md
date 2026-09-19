@@ -2,134 +2,61 @@
 
 Trainlio — Sports Training Booking Platform
 
-Every item below materially affects the schema, an RPC signature, the privacy
-model, the tenancy model, or user-visible behaviour, and none has been explicitly
-decided. Each carries a provisional choice so the documents and the proposed
-schema are complete and reviewable — the provisional choice is marked in the
-source it appears in, and none is silently baked in.
-
-**Nine items need a decision.** D-18 was deferred by the approver; the other eight
-are new asks.
+**One item remains open.** D-01 through D-17 are all decided; the resulting
+design is in `ARCHITECTURE.md`, `DATA_MODEL.md`, `DOMAIN_OPERATIONS.md` and
+`/supabase/schema`, and its behaviour is verified in
+`/supabase/schema/VALIDATION.md`.
 
 ---
 
-## Needs a decision before Phase 1 (schema)
-
-### D-17 — Platform administration
-**Question.** `PRD §3` defines ADMIN as a technical/business administrator, separate
-from COACH. `DATA_MODEL` originally sketched a `user_roles` table with a nullable
-workspace id; the original schema had only `workspace_members`, leaving nowhere to
-store a platform-level administrator.
-
-**Provisional.** Two separate things: `workspace_members.role` is a `workspace_role`
-enum of COACH and ADMIN (workspace-scoped), and a separate `platform_admins` table
-holds platform staff. The `app_role` enum, which included USER, is dropped — being
-a guardian is an athlete relationship, not a workspace membership.
-
-**Impact if changed.** Schema, and the shape of every role predicate.
-
-### D-11 — Which changes are "significant"
-**Question.** `BR-062` requires a `ZMĚNĚNO` marker on changed future sessions.
-Which field changes set it, and does it ever clear?
-
-**Provisional.** Stored as `last_significant_change_at timestamptz`, replacing the
-former boolean, so the badge can be shown only to guardians who booked before the
-change, and the "when does it clear" question disappears. Set by date, start, end,
-facility, changing room and notes; not set by capacity-only or coach-roster-only
-changes.
-
-**Impact if changed.** Column type, and which guardians see a badge.
-
-### D-13 — Are session notes guardian-visible?
-**Question.** Undefined in all source documents.
-
-**Provisional.** Coach-internal. Guardians do not see `notes`.
-
-**Impact if changed.** If parents should see them, this needs a second column — one
-field must not be dual-purpose, or a coach's private remark eventually reaches a
-parent.
-
----
-
-## Needs a decision before Phase 3 (coach session management)
-
-### D-07 — Coach additions to a cancelled session
-**Question.** `PRD §11` says a coach may remove an athlete at any time, but says
-nothing about adding one to a cancelled session.
-
-**Provisional.** Rejected when the session is CANCELLED; allowed for DRAFT, OPEN,
-CLOSED and COMPLETED, the last for late roster correction.
-
-**Impact if changed.** Coach RPC precondition.
-
-### D-08 — Narrowing eligibility with existing bookings
-**Question.** A coach changes a session from 2017–2018 to 2018 only, and a 2017
-athlete already holds a confirmed booking. `BR-052` covers the capacity case but
-not this one.
-
-**Provisional.** Existing bookings are preserved. The coach sees a warning and must
-confirm, exactly as for a capacity reduction. Nothing is auto-cancelled.
-
-**Impact if changed.** `update_training_session` signature gains or loses a
-confirmation flag, and booked athletes may or may not lose their place.
-
-### D-12 — Is the changing room guardian-visible?
-**Question.** `UI_SPEC` shows `Šatna 4` on the coach card only; the guardian card
-shows `Příbram · MH`. Parents plausibly need it on the day.
-
-**Provisional.** Visible to a guardian who holds a confirmed booking on that
-session, and not otherwise.
-
-**Impact if changed.** A guardian-facing field, and one helper predicate.
-
----
-
-## Needs a decision before Phase 5 (booking engine)
-
-### D-02 — The cancellation boundary
-**Question.** `BR-040` says "at least 12 hours away"; `AC-040` says "more than 12
-hours". At exactly 12:00:00 these disagree.
-
-**Provisional.** `start_at - now() >= interval` — cancellation is permitted at
-exactly the deadline, matching `BR-040`.
-
-**Impact if changed.** One comparison operator, and one acceptance criterion. Low
-stakes, but the two source documents cannot both stand.
-
-### D-09 — Deactivating an athlete
-**Question.** `athletes.is_active` exists with no stated behaviour.
-
-**Provisional.** Blocks new bookings; existing confirmed bookings are untouched;
-no cascade.
-
-**Impact if changed.** Eligibility predicate, and whether a deactivation silently
-removes a child from sessions their guardian expects them to attend.
-
----
-
-## Deferred by the approver
+## Deferred — due before Phase 9
 
 ### D-18 — Account deletion and anonymisation
-Explicitly deferred: "Define an explicit account deletion/anonymisation strategy
-separately."
 
-Recorded here because it is a launch blocker, not a nice-to-have: the subjects are
-minors in the EU, and the approved deletion policy means an erasure request cannot
-be satisfied by `DELETE`. The proposed direction is anonymisation — blank the
-names, drop the photo, retain booking and session rows keyed by id — performed by
-an administrative operation and recorded in the audit log. Who is controller (the
-coach) and who is processor (the platform) also needs settling before launch.
+The **workflow** is deferred by decision, to be defined before production
+launch. The **architectural constraint** is applied now and is verified:
 
-Due before Phase 9.
+- personally identifiable account data is separable from operational history —
+  email lives only in `auth.users`, display name in `app_profiles`, and every
+  operational table holds an opaque profile id;
+- bookings, audit records and session history are preservable without retaining
+  personal data;
+- no domain history depends on an `auth.users` row physically existing —
+  `app_profiles.auth_user_id` is nullable with `ON DELETE SET NULL`, so deleting
+  an authentication record severs the login and leaves history intact and still
+  attributed;
+- actor references point at the durable profile, not the authentication record,
+  so a later strategy can blank a display name and stamp `anonymized_at` without
+  rewriting history.
+
+Validation confirms all four: deleting a guardian's `auth.users` row left both
+their bookings attributed and both guardian links intact.
+
+Still to decide before launch: the retention period, the exact anonymisation
+procedure, whether `notification_deliveries.recipient_email` is scrubbed on a
+schedule, and who is controller (the coach) versus processor (the platform).
 
 ---
 
-## Resolved by the approved decisions, recorded for traceability
+## Decided, recorded for traceability
 
 | # | Question | Resolution |
 |---|---|---|
-| D-03 | Is the 12-hour deadline a constant? | `workspaces.cancellation_deadline_hours`, default 12. Carried by the approval of S-17 alongside the workspace timezone. |
-| D-10 | Who creates the workspace athlete membership? | The transactional athlete creation operation, which the approver specified as covering athlete, guardian access, sport profile and membership. Privacy consequence: creating a hockey profile makes the child visible to that workspace's coaches. That is what makes booking possible, and the UI should say so. |
-| D-14 | `created_by_role` when a coach books their own child | Fixed by the entry point, never inferred. The guardian function always records USER; the coach function always records COACH. |
-| D-19 | Signed URL lifetime for athlete photos | 60 minutes, issued server-side. The client never receives a public or long-lived URL. |
+| D-01 | Which sessions can a guardian see? | Non-DRAFT sessions in workspaces where they have an active athlete membership. DRAFT is staff-only. Possession of the app URL is not authorization. |
+| D-02 | Exact cancellation boundary | `current_time <= start_at - deadline` is allowed. At exactly the deadline, cancellation is still permitted. Server time only. |
+| D-03 | Is the deadline a constant? | `workspaces.cancellation_deadline_hours`, default 12. |
+| D-04 | Who sets COMPLETED? | Nobody. Upcoming/Past derive from `end_at`; no scheduled job is required. COMPLETED stays a valid explicit status. |
+| D-05 | Booking N children with fewer places | **Atomic.** All selected athletes or none, with the free-place count returned. One CTA must not split siblings. Coach additions stay independent. |
+| D-06 | Re-booking after a coach removal | Blocked for guardians; only a coach may restore. A guardian's own cancellation is re-bookable. Enforced on the most recent booking record, not inferred from the unique index. |
+| D-07 | Coach additions to a cancelled session | Not allowed. CANCELLED is terminal: no new booking of any kind, no reopening. Duplicate Session replaces a mistaken cancellation. |
+| D-08 | Narrowing eligibility with bookings | Allowed after an explicit warning naming the affected count. Nothing is auto-cancelled; only affected guardians are emailed and only affected bookings show `Změněno`. |
+| D-09 | Athlete deactivation | Blocks new bookings only. All history, bookings, profiles and memberships are preserved; cancellation still works; reactivation restores eligibility. |
+| D-10 | Who creates the workspace membership? | The transactional athlete creation operation. Creating a hockey profile makes the child visible to that workspace's coaches, which is what makes booking possible. |
+| D-11 | Which changes are significant? | Date, start, end, location, facility, main coach. Stored as `significant_changed_at`; the marker shows when it is later than `booking.created_at`. Changing room, capacity, assistant coaches and both notes fields are not significant. |
+| D-12 | Is the changing room guardian-visible? | Yes — `Příbram · MH · Šatna 4`. May be null and added later. A changing-room-only update sends no email. |
+| D-13 | Session notes | Split into `public_notes` (guardian-visible) and internal notes (staff only). Internal notes are a separate table, because a column on a row guardians can read cannot be hidden by row level security. |
+| D-14 | `created_by_role` when a coach books their own child | Fixed by the entry point, never inferred. |
+| D-15 / D-16 | Email provider | Resend, for both transactional email and Auth OTP via custom SMTP, behind an email service abstraction. The outbox stays provider-neutral. |
+| D-17 | Platform vs workspace admin | `workspace_role` is COACH and WORKSPACE_ADMIN; platform administration is a separate `platform_admins` table and is never inferred from workspace membership. Guardians are not a staff role. The generic `app_role` enum is dropped. |
+| D-19 | Signed URL lifetime | 60 minutes, issued server-side. |
 | D-20 | Next.js router | App Router, Server Components, Server Actions calling the domain functions. |

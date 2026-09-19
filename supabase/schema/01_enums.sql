@@ -9,10 +9,11 @@
 
 create extension if not exists pgcrypto;
 
--- Workspace-scoped role. Deliberately excludes USER: being a guardian is an
--- athlete relationship, not a workspace membership.
--- OPEN (D-17): confirm the split between workspace roles and platform roles.
-create type public.workspace_role as enum ('COACH', 'ADMIN');
+-- D-17: workspace-scoped staff roles. Deliberately excludes any guardian value —
+-- guardian authorization runs through athlete access and workspace athlete
+-- membership, never through a staff role. Platform administration is a separate
+-- table and is never inferred from workspace membership.
+create type public.workspace_role as enum ('COACH', 'WORKSPACE_ADMIN');
 
 create type public.access_status as enum ('ACTIVE', 'INVITED', 'REVOKED');
 
@@ -22,7 +23,10 @@ create type public.session_status as enum ('DRAFT', 'OPEN', 'CLOSED', 'COMPLETED
 
 create type public.booking_status as enum ('CONFIRMED', 'CANCELLED_BY_USER', 'CANCELLED_BY_COACH');
 
-create type public.booking_creator_role as enum ('USER', 'COACH', 'ADMIN');
+-- Mirrors the role under which the creating operation ran. Fixed by the entry
+-- point, never inferred from the caller's memberships (D-14).
+create type public.booking_creator_role as enum
+  ('USER', 'COACH', 'WORKSPACE_ADMIN', 'PLATFORM_ADMIN');
 
 create type public.eligibility_mode as enum ('ALL', 'BIRTH_YEAR_RANGE');
 

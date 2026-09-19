@@ -41,3 +41,15 @@ and implemented in Phase 1 against that contract.
   cross-athlete references impossible rather than merely discouraged.
 - **Every SECURITY DEFINER function sets `search_path = ''`.** Removing it is a
   privilege-escalation vector.
+- **Internal session notes are a separate table, not a column.** Row level
+  security is row-level; guardians must read the session row, so a column on it
+  could not be hidden.
+- **The occupancy trigger takes its own row lock before recounting.** Without it
+  the projection drifts under concurrent inserts. See `VALIDATION.md`.
+- **Nothing in the domain references `auth.users`.** Actor columns point at
+  `app_profiles`, so history survives account deletion.
+- **A policy must not inline a subquery against a table the caller cannot read.**
+  Use a `SECURITY DEFINER` predicate in file 06.
+
+Validation: [`VALIDATION.md`](VALIDATION.md), suites in
+[`../tests`](../tests).

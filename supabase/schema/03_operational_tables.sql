@@ -15,7 +15,7 @@ create table public.session_series (
   sport_id           uuid not null,
   location_id        uuid not null,
   facility_id        uuid not null,
-  main_coach_user_id uuid not null references auth.users(id) on delete restrict,
+  main_coach_profile_id uuid not null references public.app_profiles(id) on delete restrict,
 
   -- Recurrence pattern, expressed in workspace-local wall clock.
   frequency          public.recurrence_frequency not null default 'WEEKLY',
@@ -38,9 +38,10 @@ create table public.session_series (
   birth_year_from    integer,
   birth_year_to      integer,
   changing_room      text,
-  notes              text,
+  public_notes       text,   -- D-13: guardian-visible
+  internal_notes     text,   -- D-13: staff only
 
-  created_by_user_id uuid not null references auth.users(id) on delete restrict,
+  created_by         uuid not null references public.app_profiles(id) on delete restrict,
   created_at         timestamptz not null default now(),
   updated_at         timestamptz not null default now(),
 
@@ -82,32 +83,38 @@ create table public.training_sessions (
   sport_id           uuid not null,
   location_id        uuid not null,
   facility_id        uuid not null,
-  main_coach_user_id uuid not null references auth.users(id) on delete restrict,
+  main_coach_profile_id uuid not null references public.app_profiles(id) on delete restrict,
   series_id          uuid references public.session_series(id) on delete restrict,
 
   start_at           timestamptz not null,
   end_at             timestamptz not null,
 
+  -- D-12: guardian-visible. Displayed as "Příbram · MH · Šatna 4".
+  -- May be null at creation and filled in later.
   changing_room      text,
   capacity           integer not null default 10,
   eligibility_mode   public.eligibility_mode not null default 'ALL',
   birth_year_from    integer,
   birth_year_to      integer,
   status             public.session_status not null default 'DRAFT',
-  notes              text,
 
-  -- S-11, replaces the former updated_marker boolean.
-  -- Non-null means a significant change has occurred; the guardian-facing
-  -- "ZMĚNĚNO" badge compares this against the booking's created_at so a
-  -- guardian who booked after the change is not shown a stale marker.
-  -- OPEN (D-11): confirm which fields count as significant.
-  last_significant_change_at timestamptz,
+  -- D-13: two fields, never one ambiguous one. internal_notes is NOT a column
+  -- here — see public.training_session_internal_notes below for why.
+  public_notes       text,   -- guardian-visible: equipment, meeting instructions
 
-  created_by_user_id uuid not null references auth.users(id) on delete restrict,
+  -- D-11. Set only when date, start time, end time, location, facility or main
+  -- coach changes. NOT set by changing room, capacity, assistant coaches or
+  -- either notes field — those move updated_at only.
+  -- The guardian "Změněno" badge is shown when
+  --   significant_changed_at > booking.created_at
+  -- so a guardian who booked after the change sees no misleading marker.
+  significant_changed_at timestamptz,
+
+  created_by         uuid not null references public.app_profiles(id) on delete restrict,
   created_at         timestamptz not null default now(),
   updated_at         timestamptz not null default now(),
   cancelled_at       timestamptz,
-  cancelled_by_user_id uuid references auth.users(id) on delete restrict,
+  cancelled_by       uuid references public.app_profiles(id) on delete restrict,
 
   constraint training_sessions_time_range check (end_at > start_at),
   constraint training_sessions_capacity_range check (capacity between 1 and 200),
@@ -125,9 +132,9 @@ create table public.training_sessions (
 
   -- S-07: cancellation columns and status cannot disagree.
   constraint training_sessions_cancellation_consistent check (
-    (status =  'CANCELLED' and cancelled_at is not null and cancelled_by_user_id is not null)
+    (status =  'CANCELLED' and cancelled_at is not null and cancelled_by is not null)
     or
-    (status <> 'CANCELLED' and cancelled_at is null     and cancelled_by_user_id is null)
+    (status <> 'CANCELLED' and cancelled_at is null     and cancelled_by is null)
   ),
 
   -- Approved finding 3, invariant 1: the facility belongs to this location.
@@ -148,16 +155,37 @@ create table public.training_sessions (
     references public.workspaces (id, primary_sport_id) on delete restrict
 );
 
+-- ---------------------------------------------------------------------------
+-- D-13: coach/admin-only session notes.
+--
+-- This is a separate table rather than a column on training_sessions because
+-- row level security is row-level. Guardians must be able to read a session
+-- row; if internal_notes were a column on that row, no policy could hide it and
+-- any guardian could select it through the REST API. A separate table gets its
+-- own policy, so a guardian's query returns no row at all.
+--
+-- session_series keeps internal_notes as a plain column: the whole series table
+-- is staff-only, so there is no row a guardian can reach.
+-- ---------------------------------------------------------------------------
+
+create table public.training_session_internal_notes (
+  training_session_id uuid primary key
+    references public.training_sessions(id) on delete restrict,
+  notes               text,
+  updated_at          timestamptz not null default now(),
+  updated_by          uuid references public.app_profiles(id) on delete restrict
+);
+
 create table public.training_session_coaches (
   training_session_id uuid not null references public.training_sessions(id) on delete restrict,
-  user_id             uuid not null references auth.users(id) on delete restrict,
+  profile_id          uuid not null references public.app_profiles(id) on delete restrict,
   role                public.coach_session_role not null,
   created_at          timestamptz not null default now(),
-  primary key (training_session_id, user_id)
+  primary key (training_session_id, profile_id)
 );
 
 -- S-09: exactly one MAIN coach per session; mirrored onto
--- training_sessions.main_coach_user_id by trigger so the two cannot diverge.
+-- training_sessions.main_coach_profile_id by trigger so the two cannot diverge.
 create unique index uq_session_single_main_coach
   on public.training_session_coaches (training_session_id)
   where role = 'MAIN';
@@ -171,25 +199,34 @@ create table public.bookings (
   training_session_id     uuid not null references public.training_sessions(id) on delete restrict,
   athlete_id              uuid not null references public.athletes(id) on delete restrict,
   status                  public.booking_status not null default 'CONFIRMED',
-  created_by_user_id      uuid not null references auth.users(id) on delete restrict,
+  created_by              uuid not null references public.app_profiles(id) on delete restrict,
   created_by_role         public.booking_creator_role not null,
   coach_capacity_override boolean not null default false,
+
+  -- D-08. Stamped on the individual bookings that fall outside a narrowed
+  -- birth-year range. A session-level marker cannot express this: it would show
+  -- "Změněno" to every booked guardian, when only the affected families are
+  -- notified. The booking stays CONFIRMED and valid — this records that the
+  -- rule moved under it.
+  eligibility_narrowed_at timestamptz,
+
   cancellation_reason     text,
   created_at              timestamptz not null default now(),
   updated_at              timestamptz not null default now(),
   cancelled_at            timestamptz,
-  cancelled_by_user_id    uuid references auth.users(id) on delete restrict,
+  cancelled_by            uuid references public.app_profiles(id) on delete restrict,
 
   -- S-07
   constraint bookings_cancellation_consistent check (
-    (status =  'CONFIRMED' and cancelled_at is null     and cancelled_by_user_id is null)
+    (status =  'CONFIRMED' and cancelled_at is null     and cancelled_by is null)
     or
-    (status <> 'CONFIRMED' and cancelled_at is not null and cancelled_by_user_id is not null)
+    (status <> 'CONFIRMED' and cancelled_at is not null and cancelled_by is not null)
   ),
 
-  -- BR-033/BR-034: only a coach or admin can hold an override flag.
+  -- BR-033/BR-034: only staff can hold an override flag.
   constraint bookings_override_requires_privileged_creator check (
-    coach_capacity_override = false or created_by_role in ('COACH', 'ADMIN')
+    coach_capacity_override = false
+    or created_by_role in ('COACH', 'WORKSPACE_ADMIN', 'PLATFORM_ADMIN')
   )
 );
 

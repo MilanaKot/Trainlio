@@ -38,8 +38,11 @@ deploys to Vercel.
 
 Exit: Supabase database linter clean; the RLS test matrix passes, proving a
 guardian cannot read another family's athlete, booking or photo (AC-091,
-AC-092); no table is writable without passing through a policy; AC-130 to AC-135
-hold.
+AC-092); no table is writable without passing through a policy; AC-130 to AC-135,
+AC-210 to AC-214 (roles) and AC-220 to AC-223 (account data separability) hold.
+
+The pre-implementation validation in `/supabase/tests` already covers most of
+these; Phase 1 ports them to the Supabase CLI local stack.
 
 ## Phase 2 — athlete management
 
@@ -49,7 +52,8 @@ hold.
 - Private photo upload with server-issued signed URLs
 - Multiple children per guardian
 
-Exit: AC-010 to AC-015, AC-092, AC-100 to AC-102, AC-110, AC-111.
+Exit: AC-010 to AC-015, AC-092, AC-100 to AC-102, AC-110, AC-111, AC-180 to
+AC-184 (athlete deactivation).
 
 ## Phase 3 — coach session management
 
@@ -57,7 +61,9 @@ Exit: AC-010 to AC-015, AC-092, AC-100 to AC-102, AC-110, AC-111.
 - Server-side capacity warning gate
 - Change classification driving the significant-change marker
 
-Exit: AC-051, AC-052, AC-060, AC-062, AC-070, AC-070a, AC-027.
+Exit: AC-051, AC-052, AC-060, AC-062, AC-070, AC-070a, AC-027, AC-160 to AC-164
+(terminal cancellation), AC-170 to AC-175 (eligibility narrowing), AC-190 to
+AC-194 (significant changes), AC-200 to AC-204 (notes and changing room).
 
 ## Phase 4 — recurring series
 
@@ -78,7 +84,7 @@ not a manual check.
 - Guardian cancellation against the workspace deadline
 - Realtime occupancy on the projection
 
-Exit: AC-020 to AC-028, AC-030 to AC-032, AC-040, AC-041, AC-043, AC-090 to
+Exit: AC-020 to AC-028, AC-030 to AC-032, AC-040 to AC-041, AC-043, AC-090 to
 AC-090d, AC-120 to AC-123. AC-022 is proven with genuinely parallel database
 connections.
 
@@ -124,7 +130,9 @@ Two checkpoints carry nearly all the irreversible risk:
 - after Phase 1, when the schema and the authorization model freeze;
 - after Phase 5, when booking correctness is established.
 
-## Before Phase 5
+## Before Phase 9
 
-The account deletion and anonymisation strategy (D-18) must be decided before
-production launch. It is recorded in `OPEN_DECISIONS.md`.
+The account deletion and anonymisation *workflow* (D-18) must be decided before
+production launch. The architectural constraint is already applied and verified:
+no domain history depends on an `auth.users` row existing. See
+`OPEN_DECISIONS.md`.

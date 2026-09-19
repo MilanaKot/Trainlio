@@ -28,17 +28,28 @@ create table public.notification_events (
   constraint notification_events_type_known check (
     event_type in (
       'SESSION_CANCELLED',            -- BR-072, AC-071..073
-      'SESSION_SCHEDULE_CHANGED',     -- date / start / end (BR-061)
-      'SESSION_FACILITY_CHANGED'      -- MH <-> VH (BR-061)
+      'SESSION_SCHEDULE_CHANGED',     -- date / start / end (D-11)
+      'SESSION_LOCATION_CHANGED',     -- D-11
+      'SESSION_FACILITY_CHANGED',     -- MH <-> VH (D-11)
+      'SESSION_MAIN_COACH_CHANGED',   -- D-11 clarification: the coach IS the product
+      -- D-08. Unlike the others this one is NOT sent to every booked guardian:
+      -- expansion is limited to the guardians of the athletes that fell outside
+      -- the narrowed range, listed in payload.affected_athlete_ids.
+      'SESSION_ELIGIBILITY_NARROWED'
     )
   )
 );
 
+comment on column public.notification_events.payload is
+  'Event-level content. For SESSION_ELIGIBILITY_NARROWED it must carry affected_athlete_ids, which scopes recipient expansion (D-08).';
+
 create table public.notification_deliveries (
   id                  uuid primary key default gen_random_uuid(),
   event_id            uuid not null references public.notification_events(id) on delete restrict,
-  recipient_user_id   uuid not null references auth.users(id) on delete restrict,
-  recipient_email     text not null,
+  recipient_profile_id uuid not null references public.app_profiles(id) on delete restrict,
+  -- Nullable so a future anonymisation can scrub the address while keeping the
+  -- delivery record and its profile attribution intact (D-18 constraint).
+  recipient_email     text,
   -- S-12. Per-recipient content: the list of that guardian's affected athletes,
   -- so one guardian with two booked children receives one email naming both
   -- (AC-072, AC-073). The event payload alone cannot express this.
@@ -52,7 +63,7 @@ create table public.notification_deliveries (
   updated_at          timestamptz not null default now(),
   sent_at             timestamptz,
   -- BR-073: one row per guardian per event is the deduplication mechanism.
-  unique (event_id, recipient_user_id),
+  unique (event_id, recipient_profile_id),
   constraint notification_deliveries_sent_consistent check (
     (status = 'SENT' and sent_at is not null) or (status <> 'SENT')
   ),
@@ -64,24 +75,29 @@ comment on column public.notification_deliveries.recipient_email is
 
 -- ---------------------------------------------------------------------------
 -- Audit trail (approved). Append-only.
+--
+-- actor_profile_id references the durable profile, not auth.users, so audit
+-- attribution survives account deletion and anonymisation (D-18 constraint).
 -- ---------------------------------------------------------------------------
 
 create table public.audit_log (
-  id           bigint generated always as identity primary key,
-  workspace_id uuid not null references public.workspaces(id) on delete restrict,
-  actor_user_id uuid references auth.users(id) on delete restrict,  -- null for system actions
-  action        text not null,
-  entity_type   text not null,
-  entity_id     uuid not null,
-  before        jsonb,
-  after         jsonb,
-  metadata      jsonb not null default '{}'::jsonb,
-  created_at    timestamptz not null default now(),
+  id               bigint generated always as identity primary key,
+  workspace_id     uuid not null references public.workspaces(id) on delete restrict,
+  actor_profile_id uuid references public.app_profiles(id) on delete restrict,  -- null for system actions
+  action           text not null,
+  entity_type      text not null,
+  entity_id        uuid not null,
+  before           jsonb,
+  after            jsonb,
+  metadata         jsonb not null default '{}'::jsonb,
+  created_at       timestamptz not null default now(),
   constraint audit_log_action_known check (
     action in (
       'SESSION_CREATED',
       'SESSION_UPDATED',
       'SESSION_CAPACITY_CHANGED',
+      'SESSION_MAIN_COACH_CHANGED',      -- D-11 clarification
+      'SESSION_ELIGIBILITY_NARROWED',    -- D-08
       'SESSION_BOOKING_CLOSED',
       'SESSION_BOOKING_REOPENED',
       'SESSION_CANCELLED',
@@ -100,7 +116,7 @@ create table public.audit_log (
 );
 
 comment on table public.audit_log is
-  'Append-only (CLAUDE.md principle 8, BR-034). UPDATE and DELETE are blocked by trigger for every role including service_role; correction is done by appending, never by editing.';
+  'Append-only (CLAUDE.md principle 8, BR-034). UPDATE and DELETE are blocked by trigger for every role including service_role; correction is done by appending. This is the source of truth for exactly what changed in a session edit (D-11).';
 
 create or replace function public.audit_log_is_append_only()
 returns trigger

@@ -56,6 +56,11 @@ A coach may close booking manually regardless of remaining capacity.
 BR-025  
 Session statuses are DRAFT, OPEN, CLOSED, COMPLETED, CANCELLED.
 
+BR-025c **(new — D-07)**  
+`CANCELLED` is a terminal session status. Once a session is cancelled it accepts no new guardian booking, no coach manual booking, and cannot be reopened.
+
+Reason: cancellation notifications may already have been sent, and reopening the same record would create ambiguous communication and history. A coach who cancelled by mistake uses Duplicate Session. The cancelled session is preserved as historical evidence.
+
 BR-025a **(new — D-04)**  
 `Upcoming` and `Past` are derived from `end_at` relative to the current time, not from the `COMPLETED` status. No scheduled job is required for the user interface to be correct.
 
@@ -107,10 +112,18 @@ Booking stores who created it.
 
 ## Cancellation
 
-BR-040  
-A guardian may cancel a booking only when session start is at least the workspace cancellation deadline away. The deadline is a workspace setting; its MVP value is 12 hours.
+BR-040 **(amended — D-02)**  
+A guardian may cancel a booking when:
 
-The deadline is always computed server-side from the session start time. A client-supplied indication that cancellation is allowed is never accepted.
+`current_time <= start_at - cancellation_deadline`
+
+and is blocked when:
+
+`current_time > start_at - cancellation_deadline`
+
+At exactly the deadline, cancellation is still allowed. Examples at a 12-hour deadline: 12:00:01 before start is allowed, 12:00:00 before start is allowed, 11:59:59 before start is blocked.
+
+The deadline is a workspace setting; its MVP value is 12 hours. It is always computed from server/database time, never client device time. A client-supplied indication that cancellation is allowed is never accepted.
 
 BR-041  
 Inside the 12-hour window the UI must show that self-cancellation is unavailable and the coach must be contacted.
@@ -146,8 +159,34 @@ Existing confirmed bookings remain valid when capacity is reduced below occupanc
 BR-053  
 When occupancy is equal to or above capacity, normal user booking is blocked.
 
+BR-053a **(new — D-08)**  
+A coach may narrow the birth-year eligibility of a session that already has confirmed bookings, after an explicit warning that identifies how many confirmed bookings would fall outside the new range.
+
+BR-053b **(new — D-08)**  
+Narrowing eligibility never auto-cancels a booking. Existing confirmed bookings remain valid. New booking attempts use the new rule.
+
+BR-053c **(new — D-08)**  
+When existing confirmed athletes fall outside the new range, the change creates a significant-change audit entry, notifies the active guardians of those athletes by email, and shows `Změněno` on those bookings.
+
+BR-053d **(new — D-08)**  
+Guardians of unaffected athletes are not emailed solely because the eligibility rule changed.
+
 BR-054  
 Coach may still manually add athletes beyond capacity.
+
+## Session notes
+
+BR-055 **(new — D-13)**  
+A session has two separate notes fields. One ambiguous field is not permitted.
+
+BR-056 **(new — D-13)**  
+`public_notes` are guardian-visible. Examples: equipment reminders, meeting instructions, special training information.
+
+BR-057 **(new — D-13)**  
+`internal_notes` are coach and admin only and must never be exposed to guardians through the API or row level security.
+
+BR-058 **(new — D-13)**  
+Both fields are optional.
 
 ## Session updates
 
@@ -157,13 +196,48 @@ Coach may edit a future published session.
 BR-061  
 Date, time, or facility changes require email notification to affected active guardians.
 
-BR-062 **(amended)**  
-A changed future session displays an in-app `Updated` marker to guardians whose booking predates the change.
+BR-062 **(amended — D-11)**  
+A changed future session displays an in-app `Změněno` marker to guardians whose booking predates the change.
 
-The marker is recorded as the timestamp of the last significant change, not as a boolean flag, so it can be compared against a booking's creation time.
+The marker is stored as `significant_changed_at`, a timestamp rather than a boolean flag. A booking shows the marker only when:
 
-BR-063  
-Changing-room-only update does not require email in MVP.
+`significant_changed_at > booking.created_at`
+
+This prevents a guardian who booked after the change from seeing a misleading marker.
+
+BR-062a **(new — D-11)**  
+A change is significant when any of these changes:
+
+- session date;
+- start time;
+- end time;
+- location;
+- facility;
+- main coach.
+
+For the hockey MVP, changing MH ↔ VH therefore qualifies as significant.
+
+BR-062b **(new — D-11)**  
+The following are not significant changes by themselves and trigger no email:
+
+- changing room;
+- capacity;
+- assistant coaches;
+- public notes;
+- internal notes.
+
+They still update the ordinary `updated_at` timestamp and appear immediately in the app.
+
+BR-062c **(new — D-11)**  
+A change of main coach is operationally significant. Trainlio is a system for booking training with a coach, so a main-coach change triggers guardian email, updates `significant_changed_at`, and creates an audit entry. Adding or removing an assistant coach does not require guardian email in MVP.
+
+BR-062d **(new — D-11)**  
+The audit log remains the source of truth for exactly what changed. The marker records that something significant changed, not what.
+
+BR-063 **(amended — D-12)**  
+Changing room is guardian-visible and is displayed with the venue, for example `Příbram · MH · Šatna 4`. It may be null at creation and added later.
+
+A changing-room-only update appears immediately in the app and updates `updated_at`, but does not set `significant_changed_at` and does not trigger email in MVP.
 
 BR-064  
 Capacity-only change does not require email if existing bookings remain valid.
@@ -227,6 +301,57 @@ A guardian may see a workspace's sessions only while at least one of their athle
 
 BR-095 **(new — D-01)**  
 Possession of the application URL is not authorization. An authenticated user with no athlete relationship sees no workspace data.
+
+## Athlete deactivation
+
+BR-140 **(new — D-09)**  
+Deactivating an athlete never cancels or deletes an existing booking.
+
+BR-141 **(new — D-09)**  
+While an athlete is inactive: all historical data is preserved; existing future confirmed bookings are preserved; the bookings remain visible in My Bookings and on the coach roster; the guardian may still cancel an existing booking when the normal cancellation rule allows; the coach may still remove the athlete from a session.
+
+BR-142 **(new — D-09)**  
+An inactive athlete cannot be selected for new bookings and is excluded from active-athlete selectors.
+
+BR-143 **(new — D-09)**  
+Reactivation restores eligibility for future bookings, subject to the normal workspace, sport and session rules.
+
+BR-144 **(new — D-09)**  
+Deactivation never cascades into deletion of sport profiles or workspace memberships.
+
+## Roles
+
+BR-150 **(new — D-17)**  
+Workspace staff roles are `COACH` and `WORKSPACE_ADMIN`. A user may hold both.
+
+BR-151 **(new — D-17)**  
+Guardians are not modelled as a workspace staff role. Guardian authorization runs through athlete access and workspace athlete membership.
+
+BR-152 **(new — D-17)**  
+Platform administration is a separate, explicitly privileged role. It must never be inferred from workspace membership.
+
+BR-153 **(new — D-17)**  
+A technical support person may hold platform administration, or workspace administration where access is intentionally limited to one workspace.
+
+## Account data and history
+
+BR-160 **(new — D-18)**  
+The schema must not make future user anonymisation impossible.
+
+BR-161 **(new — D-18)**  
+Personally identifiable account data is kept separable from operational history.
+
+BR-162 **(new — D-18)**  
+Bookings, audit records and session history must be preservable without retaining unnecessary personal data.
+
+BR-163 **(new — D-18)**  
+No domain history may depend on the corresponding authentication record physically existing.
+
+BR-164 **(new — D-18)**  
+Actor references are designed so a later anonymisation strategy can preserve audit integrity.
+
+BR-165 **(new — D-18)**  
+The exact deletion and anonymisation policy is defined before production launch. It is not implemented in the MVP foundation phases.
 
 ## Multi-sport and SaaS readiness
 

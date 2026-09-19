@@ -13,8 +13,10 @@ domain model is intentionally designed for:
 
 ## Status
 
-Pre-implementation. The architecture and schema are under review; no application
-code has been written.
+Architecture and schema approved and validated against PostgreSQL 16
+(68 of 68 cases pass — see
+[`supabase/schema/VALIDATION.md`](supabase/schema/VALIDATION.md)).
+Phase 0 — foundation is in progress.
 
 ## MVP stack
 - Next.js
@@ -48,6 +50,7 @@ without redesigning the domain model.
 | [`docs/ACCEPTANCE_CRITERIA.md`](docs/ACCEPTANCE_CRITERIA.md) | Testable criteria |
 | [`docs/IMPLEMENTATION_PLAN.md`](docs/IMPLEMENTATION_PLAN.md) | Phases and exit criteria |
 | [`docs/OPEN_DECISIONS.md`](docs/OPEN_DECISIONS.md) | Decisions still needed |
+| [`supabase/schema/VALIDATION.md`](supabase/schema/VALIDATION.md) | What the schema was proven to do |
 | [`docs/ARCHITECTURE_REVIEW.md`](docs/ARCHITECTURE_REVIEW.md) | The review these decisions came from |
 
 Schema: [`supabase/schema/`](supabase/schema/).

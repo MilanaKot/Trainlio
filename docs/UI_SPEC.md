@@ -26,7 +26,7 @@ Card example:
 Neděle 27. 9.
 
 09:00–10:00
-Příbram · MH
+Příbram · MH · Šatna 4
 
 2017–2018
 
@@ -34,6 +34,9 @@ Příbram · MH
 
 [Přihlásit]
 ```
+
+Changing room is guardian-visible and may be absent, in which case the venue line
+is `Příbram · MH`.
 
 If all athletes:
 `Všichni sportovci`
@@ -124,6 +127,9 @@ The deadline is a workspace setting whose MVP value is 12 hours. The disabled
 state is a display affordance only; the server independently rejects a late
 cancellation.
 
+Cancelled session, no re-booking possible:
+`Trénink byl zrušen.`
+
 Removed by coach:
 When a coach has removed an athlete from a session, the guardian sees the
 booking in history and no re-booking action:
@@ -189,6 +195,8 @@ Show:
 - date/time
 - facility
 - changing room
+- public notes
+- internal notes (coach and admin only — never rendered in a guardian view)
 - eligibility
 - capacity
 - occupancy

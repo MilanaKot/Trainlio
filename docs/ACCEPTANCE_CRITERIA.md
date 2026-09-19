@@ -105,13 +105,28 @@ Given eligibility mode ALL
 Then birth year does not restrict booking.
 
 ## Cancellation
-AC-040  
-Given session starts more than 12 hours in the future  
-Then guardian can cancel.
+AC-040 **(D-02)**  
+Given the session starts more than the workspace cancellation deadline away  
+Then the guardian can cancel.
+
+AC-040a **(D-02)**  
+Given the session starts in exactly 12 hours and 1 second  
+Then the guardian can cancel.
+
+AC-040b **(D-02)**  
+Given the session starts in exactly 12 hours  
+Then the guardian can cancel.
+
+AC-040c **(D-02)**  
+Given the session starts in 11 hours, 59 minutes and 59 seconds  
+Then the guardian cannot cancel.
+
+AC-040d **(D-02)**  
+The boundary is evaluated on server/database time, never on client device time.
 
 AC-041  
-Given session starts in less than 12 hours  
-Then guardian cannot cancel.
+Given the session starts inside the cancellation deadline  
+Then the guardian cannot cancel.
 
 AC-042  
 Coach can cancel athlete booking at any time.
@@ -297,3 +312,139 @@ Re-running event expansion does not create duplicate delivery rows.
 
 AC-152  
 The database contains no provider-specific notification columns.
+
+## Session terminality (D-07)
+AC-160  
+Given a CANCELLED session  
+When anyone attempts to set its status back to OPEN  
+Then the change is rejected.
+
+AC-161  
+Given a CANCELLED session  
+When a guardian attempts to book  
+Then the request is rejected.
+
+AC-162  
+Given a CANCELLED session  
+When a coach attempts to add an athlete manually  
+Then the request is rejected.
+
+AC-163  
+Given a CANCELLED session  
+Then its existing bookings are unchanged and remain as historical evidence.
+
+AC-164  
+Given a session cancelled by mistake  
+Then the coach creates a replacement with Duplicate Session rather than reopening.
+
+## Eligibility narrowing (D-08)
+AC-170  
+Given a session with eligibility 2016–2018 and a confirmed athlete born in 2016  
+When the coach narrows eligibility to 2017–2018  
+Then a warning identifies that one confirmed booking would fall outside the new range.
+
+AC-171  
+When the coach confirms the narrowing  
+Then the change is applied  
+And no existing booking is cancelled.
+
+AC-172  
+After the narrowing  
+Then a new booking attempt for the 2016 athlete is rejected as out of range.
+
+AC-173  
+After the narrowing  
+Then only the affected bookings are marked as changed, not every booking on the session.
+
+AC-174  
+After the narrowing  
+Then only the active guardians of the affected athletes are emailed.
+
+AC-175  
+After the narrowing  
+Then a significant-change audit entry exists.
+
+## Athlete deactivation (D-09)
+AC-180  
+Given an inactive athlete with a confirmed future booking  
+Then the booking is preserved and remains visible in My Bookings and on the coach roster.
+
+AC-181  
+Given an inactive athlete  
+Then a new booking attempt is rejected as inactive.
+
+AC-182  
+Given an inactive athlete with a confirmed booking  
+Then the guardian may still cancel it when the normal cancellation rule allows.
+
+AC-183  
+Given an inactive athlete  
+Then their sport profiles and workspace memberships are not deleted.
+
+AC-184  
+When the athlete is reactivated  
+Then they are eligible for future bookings again.
+
+## Significant changes (D-11)
+AC-190  
+Changing date, start time, end time, location, facility or main coach sets `significant_changed_at` and queues guardian email.
+
+AC-191  
+Changing the changing room, capacity, assistant coaches, public notes or internal notes does not set `significant_changed_at` and queues no email.
+
+AC-192  
+Given a guardian booked after a significant change  
+Then that booking does not show the `Změněno` marker.
+
+AC-193  
+Given a guardian booked before a significant change  
+Then that booking shows the `Změněno` marker.
+
+AC-194  
+When the main coach changes  
+Then guardians of confirmed athletes are emailed, `significant_changed_at` is set, and an audit entry is created.
+
+## Session notes and changing room (D-12, D-13)
+AC-200  
+A guardian can read `public_notes`.
+
+AC-201  
+A guardian querying internal notes receives no rows.
+
+AC-202  
+A coach can read internal notes for sessions in their workspace.
+
+AC-203  
+A guardian can read the changing room, displayed as `Příbram · MH · Šatna 4`.
+
+AC-204  
+A changing-room-only update appears immediately in the app without an email.
+
+## Roles (D-17)
+AC-210  
+A WORKSPACE_ADMIN may run coach domain operations in their own workspace.
+
+AC-211  
+A WORKSPACE_ADMIN is not a platform admin and cannot read `platform_admins`.
+
+AC-212  
+A PLATFORM_ADMIN gains no workspace coach rights and no athlete data through row level security.
+
+AC-213  
+A guardian is never a workspace member; their authorization comes from athlete access and workspace athlete membership.
+
+AC-214  
+A user may hold both COACH and WORKSPACE_ADMIN in the same workspace.
+
+## Account data separability (D-18)
+AC-220  
+Deleting an authentication record severs the login link but preserves the actor's bookings and their attribution.
+
+AC-221  
+Deleting an authentication record preserves guardian access links.
+
+AC-222  
+No operational table stores an email address except the notification delivery audit, which is service-role only and scrubbable.
+
+AC-223  
+Audit entries remain attributable after an authentication record is removed.

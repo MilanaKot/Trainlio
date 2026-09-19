@@ -62,14 +62,26 @@ WORKSPACE --> NOTIFICATION_EVENT --> NOTIFICATION_DELIVERY   (outbox, drained)
 WORKSPACE --> AUDIT_LOG                                      (append-only, retained)
 ```
 
-## users
-Backed by Supabase Auth.
+## app_profiles
+The durable actor record. Every operational table references it; nothing in the
+domain references `auth.users` directly.
 
-Application profile table:
-- id UUID, FK auth.users
+- id
+- auth_user_id — nullable, unique, FK to auth.users with ON DELETE SET NULL
 - display_name
+- anonymized_at
 - created_at
 - updated_at
+
+The split exists so the deferred account-deletion strategy remains possible
+(D-18). Email lives only in `auth.users` and is read server-side; display name
+lives here; operational tables hold an opaque profile id and no personal data.
+Because `auth_user_id` is severable, deleting an authentication record removes
+the login and leaves every booking, session and audit row intact and still
+correctly attributed.
+
+Authorization resolves the caller through `current_profile_id()` rather than
+comparing `auth.uid()` directly, since the link can be severed.
 
 ## workspace_members
 
@@ -77,7 +89,7 @@ Workspace-scoped staff membership:
 - id
 - workspace_id
 - user_id
-- role: COACH | ADMIN
+- role: COACH | WORKSPACE_ADMIN
 - is_active
 - created_at
 - updated_at
@@ -85,18 +97,26 @@ Workspace-scoped staff membership:
 A user may hold several roles in a workspace, so role checks use existence, never
 equality.
 
-The role enum deliberately excludes USER: being a guardian is an athlete
-relationship, not a workspace membership.
+The role enum deliberately excludes any guardian value: being a guardian is an
+athlete relationship, not a workspace membership. Guardian authorization runs
+through `guardian_athlete_access` and `workspace_athlete_memberships` (D-17).
+
+A user may hold both COACH and WORKSPACE_ADMIN.
 
 ## platform_admins
 
-Platform-level administration, distinct from workspace ADMIN:
-- user_id
-- created_at
+Platform-level administration, distinct from workspace administration (D-17):
+- profile_id
+- granted_at, granted_by
+
+Explicitly privileged and never inferred from workspace membership. A platform
+admin gains no workspace coach rights and no athlete access through row level
+security: platform support runs through server-side tooling under the service
+role, which keeps family data out of reach of a role that exists for operational
+troubleshooting.
 
 Supersedes the earlier `user_roles` sketch, which had no place to store a
-platform-level administrator. Pending confirmation — see `OPEN_DECISIONS.md`
-(D-17).
+platform-level administrator.
 
 ## athletes
 - id UUID
@@ -112,12 +132,12 @@ No hockey-specific columns.
 
 ## guardian_athlete_access
 - id
-- user_id
+- profile_id
 - athlete_id
 - relationship_code
 - permission_level
 - status
-- invited_by_user_id nullable
+- invited_by nullable
 - created_at
 - updated_at
 
@@ -249,32 +269,52 @@ Future facility types:
 - sport_id
 - location_id
 - facility_id
-- main_coach_user_id
+- main_coach_profile_id
 - start_at timestamptz
 - end_at timestamptz
-- changing_room nullable
+- changing_room nullable — guardian-visible (D-12)
 - capacity integer default 10
 - eligibility_mode
 - birth_year_from nullable
 - birth_year_to nullable
 - status
-- notes nullable
+- public_notes nullable — guardian-visible (D-13)
 - series_id nullable
-- last_significant_change_at nullable
-- created_by_user_id
+- significant_changed_at nullable
+- created_by
 - created_at
 - updated_at
 - cancelled_at nullable
-- cancelled_by_user_id nullable
+- cancelled_by nullable
 
 Eligibility modes:
 - ALL
 - BIRTH_YEAR_RANGE
 
-`last_significant_change_at` replaces the former `updated_marker` boolean. As a
+`significant_changed_at` replaces the former `updated_marker` boolean. As a
 timestamp it can be compared against a booking's creation time, so a guardian who
 booked after a change is not shown a stale `ZMĚNĚNO` badge, and the question of
-when a boolean flag would be cleared does not arise.
+when a boolean flag would be cleared does not arise. It is set by a change to the
+date, start time, end time, location, facility or main coach — and by nothing
+else (D-11).
+
+Internal notes are deliberately **not** a column here. See
+`training_session_internal_notes`.
+
+## training_session_internal_notes
+
+- training_session_id — primary key
+- notes
+- updated_at, updated_by
+
+Coach and admin only (D-13). A separate table rather than a column, because row
+level security is row-level: guardians must be able to read the session row, so
+no policy could hide a column on it and any guardian could select internal notes
+through the REST API. With a separate table, a guardian's query returns no row at
+all.
+
+`session_series` keeps its internal notes as a plain column, because the whole
+series table is staff-only and there is no row a guardian can reach.
 
 Composite foreign keys enforce that the facility belongs to the location, the
 location belongs to the workspace, and the sport is the workspace's sport.
@@ -284,14 +324,14 @@ agreement.
 ## session_series
 
 - id
-- workspace_id, sport_id, location_id, facility_id, main_coach_user_id
+- workspace_id, sport_id, location_id, facility_id, main_coach_profile_id
 - frequency — WEEKLY in MVP
 - by_weekday — ISO 1 = Monday .. 7 = Sunday
 - local_date_from, local_date_to
 - local_start_time, local_end_time
 - generated_in_timezone, generated_count, generated_at
 - template fields: capacity, eligibility_mode, birth_year_from/to, changing_room, notes
-- created_by_user_id, created_at, updated_at
+- created_by, created_at, updated_at
 
 The recurrence pattern is stored as local wall-clock dates and times. Occurrences
 are generated by stepping whole days and converting each one to an absolute
@@ -340,12 +380,12 @@ Main coach may be mirrored in training_sessions for simple querying, but associa
 - training_session_id
 - athlete_id
 - status
-- created_by_user_id
+- created_by
 - created_by_role
 - coach_capacity_override boolean
 - created_at
 - cancelled_at nullable
-- cancelled_by_user_id nullable
+- cancelled_by nullable
 
 Statuses:
 - CONFIRMED
@@ -363,7 +403,13 @@ which restores correctly when the coach adds the athlete back, and is enforced b
 trigger as well as checked by the domain function.
 
 Check constraints keep status and the cancellation columns in agreement, and
-restrict the capacity override flag to bookings created by a coach or admin.
+restrict the capacity override flag to bookings created by staff.
+
+`eligibility_narrowed_at` marks the individual bookings that fell outside a
+narrowed birth-year range (D-08). A session-level marker cannot express this: it
+would show `Změněno` to every booked guardian when only the affected families are
+notified. The booking stays CONFIRMED and valid; the column records that the rule
+moved under it.
 
 ## notification_events
 Outbox of intent to notify:
@@ -379,7 +425,7 @@ Outbox of intent to notify:
 ## notification_deliveries
 - id
 - event_id
-- recipient_user_id
+- recipient_profile_id
 - recipient_email
 - payload jsonb — per-recipient content, notably that guardian's affected athletes
 - status — PENDING, SENDING, SENT, FAILED
@@ -387,7 +433,7 @@ Outbox of intent to notify:
 - provider_message_id nullable
 - created_at, updated_at, sent_at nullable
 
-Unique on `(event_id, recipient_user_id)`: this is the deduplication mechanism,
+Unique on `(event_id, recipient_profile_id)`: this is the deduplication mechanism,
 so a guardian with two booked children receives one delivery. The per-recipient
 `payload` is what lets that one email name both children — the event payload
 alone cannot express it.
@@ -405,7 +451,7 @@ code sits behind an email service abstraction.
 Append-only record of important domain actions:
 - id
 - workspace_id
-- actor_user_id nullable — null for system actions
+- actor_profile_id nullable — null for system actions
 - action
 - entity_type, entity_id
 - before jsonb, after jsonb

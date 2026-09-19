@@ -98,9 +98,10 @@ A single confirmation never splits siblings into booked and not-booked states.
 1. Coach opens session.
 2. Taps `Zrušit trénink`.
 3. Confirmation displayed.
-4. Session status becomes CANCELLED.
+4. Session status becomes CANCELLED, which is terminal.
 5. Existing bookings are left untouched, preserving the roster as it stood.
-6. Session remains in bookings/history.
+6. The session cannot be reopened and accepts no further bookings.
+7. Session remains in bookings/history as evidence of what was cancelled.
 7. All active guardians of booked athletes are collected.
 8. Recipient emails are deduplicated to one delivery per guardian.
 9. Each delivery lists all of that guardian's affected athletes.
@@ -117,6 +118,23 @@ A single confirmation never splits siblings into booked and not-booked states.
 6. Separate session records are created in one transaction.
 7. Coach may later edit or cancel any occurrence independently; siblings are
    never affected.
+
+## 11a. Coach narrows eligibility with athletes already booked
+1. Coach opens `Upravit trénink`.
+2. Changes eligibility from 2016–2018 to 2017–2018.
+3. Warning names how many confirmed bookings fall outside the new range.
+4. Coach confirms.
+5. Existing bookings remain confirmed; nothing is cancelled.
+6. Affected bookings show `Změněno`; unaffected ones do not.
+7. Only the guardians of affected athletes are emailed.
+8. New booking attempts use the new range.
+
+## 11b. Coach cancelled a session by mistake
+1. Coach realises the cancellation was wrong.
+2. The session cannot be reopened — cancellation emails may already have been sent.
+3. Coach opens the cancelled session and taps `Duplikovat`.
+4. A new independent session is created with the same configuration.
+5. The cancelled session remains in history.
 
 ## 12. Duplicate session
 1. Coach opens existing session.

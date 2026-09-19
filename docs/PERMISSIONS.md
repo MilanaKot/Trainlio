@@ -71,7 +71,8 @@ May:
 - create/update sport profiles for athletes they can access;
 - read non-DRAFT sessions in workspaces where at least one of their athletes
   holds an active membership;
-- read own athletes' bookings;
+- read own athletes' bookings, including bookings of a deactivated athlete;
+- read a session's public notes, changing room and main coach name;
 - create normal bookings for own linked athletes;
 - cancel own athletes' bookings only when server-side cancellation rule allows.
 
@@ -83,6 +84,8 @@ May not:
 - re-book an athlete a coach has removed from a session;
 - read other families' bookings;
 - read another user's email;
+- read a session's internal notes;
+- book into a cancelled session;
 - exceed session capacity;
 - modify sessions;
 - bypass age eligibility;
@@ -105,15 +108,38 @@ May not:
 - edit athlete core profile;
 - edit guardian relationships except through explicit admin/support features.
 
-## Admin
+## Workspace admin
+
+`WORKSPACE_ADMIN` is a workspace staff role alongside `COACH`. A user may hold
+both, so role checks use existence, never equality.
 
 May:
-- manage workspace configuration;
-- manage roles;
-- investigate/fix operational records;
-- perform explicitly authorized administration.
+- run coach domain operations in their own workspace;
+- manage that workspace's configuration.
 
-Admin and coach are separate permissions.
+May not:
+- read or modify anything in another workspace;
+- read `platform_admins`;
+- gain platform administration by any route.
+
+## Platform admin
+
+An explicitly privileged role held in its own table. It is never inferred from
+workspace membership.
+
+A platform admin gains **no** workspace coach rights and **no** athlete access
+through row level security. Platform support and investigation run through
+server-side tooling under the service role, which keeps family data out of reach
+of a role that exists for operational troubleshooting.
+
+A technical support person may hold platform administration, or workspace
+administration where access is intentionally limited to one workspace.
+
+## Guardians are not a staff role
+
+Guardian authorization runs entirely through athlete access and workspace athlete
+membership. No guardian predicate consults `workspace_members`, and there is no
+guardian value in the workspace role enum.
 
 ## Private athlete photos
 

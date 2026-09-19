@@ -1,35 +1,63 @@
 -- Trainlio — Sports Training Booking Platform
 -- Layer: DATABASE INVARIANTS
--- 02 — core domain tables
+-- 02 — identity, tenancy, athletes, venues
 --
 -- Deletion policy (approved finding 4):
 --   Tables carrying operational history use ON DELETE RESTRICT. Domain entities
---   are deactivated (is_active), never deleted. The only cascades that remain are
---   on rows that are pure projections or pure join rows with no historical value.
---   Account deletion / anonymisation is a separate strategy (OPEN D-18).
+--   are deactivated (is_active), never deleted. The only cascades that remain
+--   are on rows that are pure projections with no historical value.
 --
 -- Composite unique keys ending in a surrogate id exist solely so that a child
 -- table can carry a composite foreign key. They are redundant with the primary
 -- key by design and cost one index each.
 
 -- ---------------------------------------------------------------------------
--- Identity
+-- Actor identity (D-18 architecture constraint)
+--
+-- app_profiles is the durable actor record. Every operational table references
+-- it, and nothing in the domain references auth.users directly.
+--
+-- Why: the account-deletion strategy is deferred, but the schema must not make
+-- anonymisation impossible. Three properties follow from this split:
+--
+--   1. PII is separable from operational history. Email lives only in
+--      auth.users; display_name lives here. Operational tables hold an opaque
+--      profile id and no PII at all.
+--   2. No domain history depends on an auth.users row physically existing.
+--      auth_user_id is nullable with ON DELETE SET NULL, so deleting the auth
+--      user severs the login link and leaves every booking, session and audit
+--      row intact and still correctly attributed.
+--   3. Audit integrity survives anonymisation. The actor reference is a stable
+--      internal id that never changes, so a later strategy can blank
+--      display_name and stamp anonymized_at without rewriting history.
+--
+-- The deletion/anonymisation workflow itself is NOT implemented here (D-18).
 -- ---------------------------------------------------------------------------
 
 create table public.app_profiles (
-  id          uuid primary key references auth.users(id) on delete cascade,
-  display_name text,
-  created_at  timestamptz not null default now(),
-  updated_at  timestamptz not null default now()
+  id            uuid primary key default gen_random_uuid(),
+  -- Severable link to the authentication identity. Null means the login was
+  -- removed; the profile and everything it did remain.
+  auth_user_id  uuid unique references auth.users(id) on delete set null,
+  display_name  text,
+  anonymized_at timestamptz,
+  created_at    timestamptz not null default now(),
+  updated_at    timestamptz not null default now()
 );
 
 comment on table public.app_profiles is
-  'Application profile for an authenticated user. Never stores email: email lives in auth.users and is read server-side only (PERMISSIONS, email privacy).';
+  'Durable actor record. Never stores email: email lives in auth.users and is read server-side only (PERMISSIONS, email privacy).';
 
--- OPEN (D-17): platform-level administration, distinct from workspace ADMIN.
+create index idx_app_profiles_auth_user on public.app_profiles (auth_user_id)
+  where auth_user_id is not null;
+
+-- D-17: platform administration is an explicitly privileged role held in its
+-- own table. It is never inferred from workspace membership, and a workspace
+-- admin gains nothing here.
 create table public.platform_admins (
-  user_id    uuid primary key references auth.users(id) on delete cascade,
-  created_at timestamptz not null default now()
+  profile_id uuid primary key references public.app_profiles(id) on delete restrict,
+  granted_at timestamptz not null default now(),
+  granted_by uuid references public.app_profiles(id) on delete restrict
 );
 
 -- ---------------------------------------------------------------------------
@@ -54,7 +82,7 @@ create table public.workspaces (
   -- Approved finding 2. All wall-clock reasoning (session display, series
   -- generation, "Upcoming"/"Past" day grouping) happens in this zone.
   timezone                    text not null default 'Europe/Prague',
-  -- D-03 / S-17. Same 12 hours as the MVP rule, but not a hardcoded constant.
+  -- D-03. Same 12 hours as the MVP rule, but not a hardcoded constant.
   cancellation_deadline_hours integer not null default 12,
   is_active                   boolean not null default true,
   created_at                  timestamptz not null default now(),
@@ -67,19 +95,18 @@ create table public.workspaces (
   constraint workspaces_id_primary_sport_key unique (id, primary_sport_id)
 );
 
+-- D-17: a user may hold both COACH and WORKSPACE_ADMIN, so role checks use
+-- EXISTS, never equality.
 create table public.workspace_members (
   id           uuid primary key default gen_random_uuid(),
   workspace_id uuid not null references public.workspaces(id) on delete restrict,
-  user_id      uuid not null references auth.users(id) on delete restrict,
+  profile_id   uuid not null references public.app_profiles(id) on delete restrict,
   role         public.workspace_role not null,
   is_active    boolean not null default true,
   created_at   timestamptz not null default now(),
   updated_at   timestamptz not null default now(),
-  unique (workspace_id, user_id, role)
+  unique (workspace_id, profile_id, role)
 );
-
-comment on table public.workspace_members is
-  'A user may hold several roles in a workspace, so role checks must use EXISTS, never equality.';
 
 -- ---------------------------------------------------------------------------
 -- Athletes
@@ -91,6 +118,8 @@ create table public.athletes (
   last_name     text not null,
   date_of_birth date not null,
   photo_path    text,
+  -- D-09: deactivation blocks selection for NEW bookings only. It never
+  -- cancels, deletes or hides existing bookings, sport profiles or memberships.
   is_active     boolean not null default true,
   created_at    timestamptz not null default now(),
   updated_at    timestamptz not null default now(),
@@ -106,20 +135,20 @@ comment on table public.athletes is
   'Sport-independent athlete identity (BR-004). No sport-specific columns may ever be added here.';
 
 create table public.guardian_athlete_access (
-  id                 uuid primary key default gen_random_uuid(),
-  user_id            uuid not null references auth.users(id) on delete restrict,
-  athlete_id         uuid not null references public.athletes(id) on delete restrict,
-  relationship_code  text not null default 'GUARDIAN',
-  permission_level   public.access_permission_level not null default 'MANAGE',
-  status             public.access_status not null default 'ACTIVE',
-  invited_by_user_id uuid references auth.users(id) on delete set null,
-  created_at         timestamptz not null default now(),
-  updated_at         timestamptz not null default now(),
-  unique (user_id, athlete_id)
+  id                uuid primary key default gen_random_uuid(),
+  profile_id        uuid not null references public.app_profiles(id) on delete restrict,
+  athlete_id        uuid not null references public.athletes(id) on delete restrict,
+  relationship_code text not null default 'GUARDIAN',
+  permission_level  public.access_permission_level not null default 'MANAGE',
+  status            public.access_status not null default 'ACTIVE',
+  invited_by        uuid references public.app_profiles(id) on delete set null,
+  created_at        timestamptz not null default now(),
+  updated_at        timestamptz not null default now(),
+  unique (profile_id, athlete_id)
 );
 
 comment on table public.guardian_athlete_access is
-  'M:N from day one (BR-002). MVP creates one ACTIVE row per athlete; the invitation flow is post-MVP.';
+  'M:N from day one (BR-002). MVP creates one ACTIVE row per athlete; the invitation flow is post-MVP. This, not a workspace role, is how guardian authorization works (D-17).';
 
 create table public.athlete_sport_profiles (
   id               uuid primary key default gen_random_uuid(),

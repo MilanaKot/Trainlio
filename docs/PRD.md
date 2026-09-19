@@ -47,8 +47,18 @@ A registered user who manages one or more athletes and can book/cancel for athle
 ### COACH
 Can create and manage training sessions, view athlete profiles, manually add/remove athletes from sessions, change capacity, close booking, and cancel sessions.
 
-### ADMIN
-Technical/business administrator. Can manage system data and configuration. ADMIN is separate from COACH; one account may have both roles.
+### WORKSPACE_ADMIN
+Workspace-level administrator. May run coach operations and manage configuration
+within their own workspace. One account may hold both COACH and WORKSPACE_ADMIN.
+
+### PLATFORM_ADMIN
+Technical/business administrator of the platform itself. Explicitly privileged and
+never inferred from workspace membership. Gains no workspace coach rights and no
+athlete data through the normal authorization path; platform support runs through
+server-side tooling.
+
+Guardians are not a staff role. Guardian authorization runs through athlete access
+and workspace athlete membership.
 
 ## 4. Core domain model
 
@@ -123,6 +133,10 @@ Optional:
 - Profile photo
 - Active/inactive
 
+Deactivating an athlete blocks new bookings only. All history, existing bookings,
+sport profiles and workspace memberships are preserved, the bookings stay visible
+to the guardian and the coach, and reactivation restores eligibility.
+
 ### Hockey sport profile
 Required:
 - Position
@@ -191,8 +205,9 @@ Required:
 
 Optional:
 - Assistant coaches
-- Changing room
-- Notes
+- Changing room (guardian-visible, may be added later)
+- Public notes (guardian-visible)
+- Internal notes (coach and admin only)
 
 Current default:
 - Capacity = 10
@@ -266,6 +281,12 @@ Bookings are not hard-deleted.
 
 `DRAFT` sessions are visible to coaches and administrators only.
 
+`CANCELLED` is terminal. A cancelled session accepts no new guardian booking, no
+coach manual booking, and cannot be reopened, because cancellation notifications
+may already have been sent and reopening the record would create ambiguous
+history. A coach who cancelled by mistake uses Duplicate Session; the cancelled
+session is preserved as historical evidence.
+
 `Upcoming` and `Past` are derived from the session end time relative to now.
 No scheduled job is required. `COMPLETED` remains available as an explicit status
 but no MVP behaviour depends on anything setting it.
@@ -300,18 +321,29 @@ Coach may change:
 - coaches
 - notes
 
+A change is significant when the date, start time, end time, location, facility or
+main coach changes. A main-coach change counts because Trainlio is a system for
+booking training with a coach.
+
 User-facing marker:
-- show `Změněno` for changed future sessions.
+- show `Změněno` on a booking only when the significant change happened after that
+  booking was made, so a guardian who booked after the change sees nothing.
 
 Email notification required for:
 - session cancellation;
 - date change;
 - start/end time change;
-- facility MH/VH change.
+- location change;
+- facility MH/VH change;
+- main coach change.
 
-Changing room updates may show in-app marker without mandatory email in MVP.
+Not significant, and no email: changing room, capacity, assistant coaches, public
+notes, internal notes. These still appear immediately in the app.
 
-Capacity-only change does not require email if existing booking remains valid.
+A coach may narrow birth-year eligibility on a session that already has confirmed
+bookings, after a warning naming how many would fall outside the new range.
+Existing bookings are never auto-cancelled; only the affected guardians are
+emailed and only the affected bookings show `Změněno`.
 
 ## 15. Session cancellation
 

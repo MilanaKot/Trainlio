@@ -43,7 +43,7 @@ Czech message. Constraint violations still raise — those are bugs, not user er
 | `SESSION_NOT_FOUND` | |
 | `SESSION_NOT_OPEN` | Status is not `OPEN` (`BR-030`) |
 | `SESSION_ALREADY_STARTED` | `now() >= start_at` |
-| `SESSION_CANCELLED` | Operation is meaningless on a cancelled session |
+| `SESSION_CANCELLED` | D-07: the session is terminal and accepts no booking or edit |
 | `NOT_ELIGIBLE` | Per-athlete reason in `details` |
 | `ALREADY_BOOKED` | A `CONFIRMED` booking exists (`BR-031`) |
 | `REMOVED_BY_COACH` | D-06: the coach removed this athlete from this session |
@@ -54,7 +54,7 @@ Czech message. Constraint violations still raise — those are bugs, not user er
 | `BOOKING_NOT_CONFIRMED` | Already cancelled |
 | `CANCELLATION_DEADLINE_PASSED` | `BR-040` |
 | `CAPACITY_BELOW_OCCUPANCY` | Coach must resend with the confirmation flag (`BR-051`) |
-| `BOOKINGS_WOULD_BECOME_INELIGIBLE` | D-08 (OPEN): narrowing the birth-year range |
+| `BOOKINGS_WOULD_BECOME_INELIGIBLE` | D-08: narrowing the birth-year range past existing bookings |
 | `SERIES_EMPTY` | The recurrence pattern generates no occurrence |
 
 ## The single serialization point
@@ -140,7 +140,7 @@ booked and not-booked states.
                                             -> INSUFFICIENT_CAPACITY
 9.  insert all bookings
       status = 'CONFIRMED'
-      created_by_user_id = auth.uid()
+      created_by = current_profile_id()
       created_by_role = 'USER'              -- D-14: fixed by the entry point,
       coach_capacity_override = false       --       never inferred from the caller
 10. append audit BOOKING_CREATED_BY_GUARDIAN per booking
@@ -177,16 +177,21 @@ and why:
 5. session.status <> 'CANCELLED'                  -> SESSION_CANCELLED
 6. start_at - now() >= (workspaces.cancellation_deadline_hours || ' hours')::interval
                                                   -> CANCELLATION_DEADLINE_PASSED
-7. update -> CANCELLED_BY_USER, cancelled_at = now(), cancelled_by_user_id = auth.uid()
+7. update -> CANCELLED_BY_USER, cancelled_at = now(), cancelled_by = auth.uid()
 8. append audit BOOKING_CANCELLED_BY_GUARDIAN
 ```
 
 The deadline is computed from `start_at` on the server, from the workspace's own
 configured value. A client-supplied `can_cancel` flag is never read (`PERMISSIONS`).
 
-OPEN (D-02): step 6 is written as `>=`, so cancellation is permitted at exactly
-12:00:00. `BR-040` ("at least") and `AC-040` ("more than") disagree in the source
-documents; `>=` matches `BR-040` and is the provisional choice.
+D-02, decided: step 6 is `now() <= start_at - deadline`, so cancellation is
+permitted at exactly the deadline. 12:00:01 before start is allowed, 12:00:00 is
+allowed, 11:59:59 is blocked. Evaluated on server time; a client-supplied
+`can_cancel` is never read.
+
+D-09: this path never consults `athletes.is_active`. A guardian can cancel the
+booking of a deactivated athlete, which is what keeps deactivation from stranding
+a family.
 
 ---
 
@@ -207,7 +212,8 @@ Differs from the guardian path in four ways:
 - `guardian_rebooking_blocked` does **not** apply: this is how a coach restores a
   previously removed athlete (D-06);
 - allowed while the session is `DRAFT`, `OPEN`, `CLOSED` or `COMPLETED`; rejected
-  when `CANCELLED` (D-07, OPEN).
+  when `CANCELLED`, which is terminal (D-07). The database enforces this too, so
+  no code path can add a booking to a cancelled session.
 
 Records `created_by_role = 'COACH'` and `coach_capacity_override = true` when the
 booking took the count past capacity. Appends `BOOKING_CREATED_BY_COACH`, plus
@@ -246,23 +252,43 @@ transaction — which is precisely why coaches have no `UPDATE` policy on the ta
 10. append audit SESSION_UPDATED (+ SESSION_CAPACITY_CHANGED if capacity moved)
 ```
 
-Change classification (D-11, OPEN):
+Change classification (D-11):
 
-| Changed field | `last_significant_change_at` | Notification event |
+| Changed field | `significant_changed_at` | Notification event |
 |---|---|---|
 | `start_at`, `end_at` | set | `SESSION_SCHEDULE_CHANGED` |
+| `location_id` | set | `SESSION_LOCATION_CHANGED` |
 | `facility_id` | set | `SESSION_FACILITY_CHANGED` |
-| `changing_room` | set | none (`BR-063`) |
-| `notes` | set | none |
+| main coach | set | `SESSION_MAIN_COACH_CHANGED` |
+| `changing_room` | **not set** | none (D-12) |
+| `public_notes`, internal notes | not set | none |
 | `capacity` | not set | none (`BR-064`) |
-| coaches, eligibility | not set | none |
+| assistant coaches | not set | none |
+
+A main-coach change is significant because Trainlio is a system for booking
+training *with a coach*. Assistant coach changes are not.
+
+The guardian badge is computed as `significant_changed_at > booking.created_at`,
+so a guardian who booked after the change sees nothing. The audit log, not this
+timestamp, records what actually changed.
 
 Step 5 is the server-side form of the capacity warning. Existing bookings are
 always preserved (`BR-052`, `AC-052`); the flag confirms intent, it does not
 change the outcome for booked athletes.
 
-Step 6 implements D-08 (OPEN): narrowing the birth-year range never auto-cancels a
-booking. It warns, and on confirmation the existing bookings stand.
+Step 6 implements D-08. Narrowing the birth-year range never auto-cancels a
+booking. The warning names how many confirmed bookings would fall outside the new
+range, obtained from `bookings_outside_birth_year_range()`. On confirmation:
+
+- existing bookings stand, still `CONFIRMED`;
+- the affected bookings get `eligibility_narrowed_at`, so only they show
+  `Změněno` — a session-level marker would flag every booked guardian;
+- one `SESSION_ELIGIBILITY_NARROWED` event is queued whose payload carries
+  `affected_athlete_ids`, which scopes expansion to those guardians only;
+- a `SESSION_ELIGIBILITY_NARROWED` audit entry is appended;
+- new booking attempts use the new rule.
+
+Guardians of unaffected athletes are not emailed.
 
 ### `set_session_booking_state(p_training_session_id uuid, p_open boolean) → jsonb`
 
@@ -271,7 +297,13 @@ booking. It warns, and on confirmation the existing bookings stand.
 
 ### `cancel_training_session(p_training_session_id uuid) → jsonb`
 
-Sets `status = 'CANCELLED'`, `cancelled_at`, `cancelled_by_user_id`.
+Sets `status = 'CANCELLED'`, `cancelled_at`, `cancelled_by`.
+
+D-07: this is terminal. The session can never be reopened, and no booking of any
+kind can be added afterwards; both rules are enforced by database trigger as well
+as here. A coach who cancelled by mistake uses `duplicate_training_session`. The
+cancelled session is preserved as historical evidence, which is precisely why
+reopening is refused: cancellation emails may already have gone out.
 
 **Bookings are not modified.** They stay `CONFIRMED` so the roster of who was
 booked at the moment of cancellation is preserved (`BR-071`), and the session's own
@@ -283,7 +315,9 @@ Queues one `SESSION_CANCELLED` event. Appends `SESSION_CANCELLED`.
 ### `duplicate_training_session(p_training_session_id uuid, ...) → jsonb`
 
 Copies configuration and the coach roster. Never copies bookings, `series_id`,
-`last_significant_change_at` or cancellation columns. Appends `SESSION_DUPLICATED`
+`significant_changed_at` or cancellation columns.
+
+This is also the supported recovery from a mistaken cancellation (D-07). Appends `SESSION_DUPLICATED`
 with the source id in `metadata`.
 
 ### `create_session_series(...) → jsonb`
@@ -340,10 +374,13 @@ Turns one event into deduplicated per-guardian deliveries.
 1. skip if dispatched_at is not null            -- idempotent re-run
 2. collect athletes with CONFIRMED bookings on the event's session
 3. collect ACTIVE guardians of those athletes
-4. group by guardian  -> one row per user (BR-073, AC-072)
+4. group by guardian  -> one row per profile (BR-073, AC-072)
+     for SESSION_ELIGIBILITY_NARROWED, restrict step 2 to
+     payload.affected_athlete_ids, so unaffected guardians are not emailed (D-08)
 5. per row, payload = { athletes: [ { first_name, last_name } ], session: { … } }
-6. read the email from auth.users server-side   -- never from a domain table
-7. insert notification_deliveries (unique (event_id, recipient_user_id))
+6. read the email from auth.users via app_profiles.auth_user_id, server-side
+     -- never from a domain table; null means the login was removed (D-18)
+7. insert notification_deliveries (unique (event_id, recipient_profile_id))
 8. set dispatched_at
 ```
 

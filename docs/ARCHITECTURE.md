@@ -144,6 +144,33 @@ daylight-saving boundary.
 
 The device timezone is never used for display.
 
+### Actor identity and account deletion
+
+Every operational table references `app_profiles`, never `auth.users`. The
+profile is the durable actor; `auth_user_id` is a severable link.
+
+This is what keeps the deferred deletion strategy (D-18) possible. Personal data
+is confined to `auth.users` (email) and `app_profiles` (display name); everything
+else holds an opaque profile id. Deleting an authentication record sets
+`auth_user_id` to null and leaves every booking, session and audit row intact and
+still correctly attributed — verified in `VALIDATION.md`.
+
+The cost is one indirection: authorization resolves the caller through
+`current_profile_id()` rather than comparing `auth.uid()` directly.
+
+### Roles
+
+Three distinct things, deliberately not collapsed:
+
+| | Held in | Grants |
+|---|---|---|
+| Guardian | `guardian_athlete_access` + `workspace_athlete_memberships` | access to their own athletes and to sessions in workspaces where those athletes are members |
+| Workspace staff | `workspace_members`, role COACH or WORKSPACE_ADMIN | coach operations within that workspace only |
+| Platform admin | `platform_admins` | nothing through RLS; platform tooling runs under the service role |
+
+A guardian is never workspace staff, and platform administration is never
+inferred from workspace membership.
+
 ### Language
 
 UI text is Czech; code, schema, comments and documentation are English. Enum
