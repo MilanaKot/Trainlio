@@ -13,10 +13,15 @@ domain model is intentionally designed for:
 
 ## Status
 
-Architecture and schema approved and validated against PostgreSQL 16
-(68 of 68 cases pass — see
-[`supabase/schema/VALIDATION.md`](supabase/schema/VALIDATION.md)).
-Phase 0 — foundation is in progress.
+Phase 0 — foundation complete. Next.js, TypeScript, Tailwind, Vitest and
+Playwright are in place with the architectural guard rules enforced by lint, and
+`lint`, `typecheck`, `test` and `build` are green.
+
+The schema is reviewed and validated against PostgreSQL 16 — 68 of 68 cases pass,
+see [`supabase/schema/VALIDATION.md`](supabase/schema/VALIDATION.md) — and is
+applied in Phase 1.
+
+See [`CONTRIBUTING.md`](CONTRIBUTING.md) to run it.
 
 ## MVP stack
 - Next.js

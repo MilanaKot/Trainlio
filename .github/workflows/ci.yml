@@ -1,0 +1,69 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    env:
+      # Placeholders. The build validates that configuration is present and
+      # well-formed, not that it points at a real project — so CI proves the
+      # gate works without holding production secrets.
+      NEXT_PUBLIC_SUPABASE_URL: http://127.0.0.1:54321
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ci-anon-key
+      SUPABASE_SERVICE_ROLE_KEY: ci-service-role-key
+      RESEND_API_KEY: ci-resend-key
+      CRON_SECRET: ci-cron-secret-at-least-16
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Unit tests
+        run: pnpm test
+
+      - name: Build
+        run: pnpm build
+
+  schema:
+    # The schema is reviewable SQL until Phase 1 promotes it to migrations, but
+    # it must keep applying cleanly and keep passing its invariant and
+    # authorization suites. See supabase/schema/VALIDATION.md.
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+        options: >-
+          --health-cmd pg_isready --health-interval 10s
+          --health-timeout 5s --health-retries 5
+        ports: ['5432:5432']
+    env:
+      PGPASSWORD: postgres
+      PSQL: psql -h localhost -U postgres -v ON_ERROR_STOP=1
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Apply schema and run validation suites
+        run: bash supabase/tests/run.sh
