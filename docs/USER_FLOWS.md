@@ -1,7 +1,10 @@
 # User Flows
 
+Trainlio — Sports Training Booking Platform
+
 ## 1. Registration
-1. User receives app link from coach.
+1. User receives app link from coach. The link is a distribution channel, not
+   authorization: an authenticated user with no athlete sees no workspace data.
 2. Opens app.
 3. Enters email.
 4. Receives OTP.
@@ -9,7 +12,10 @@
 6. Account is created/authenticated.
 7. User creates first athlete profile.
 8. User creates hockey sport profile for athlete.
-9. Athlete becomes available for booking in current workspace.
+9. Athlete, guardian access, sport profile and workspace membership are created
+   in one server-side transaction.
+10. Athlete becomes available for booking in the current workspace, and becomes
+    visible to that workspace's coaches.
 
 ## 2. Add another child
 1. Guardian opens `Moji sportovci`.
@@ -21,14 +27,25 @@
 
 ## 3. Book a training
 1. Guardian opens `Tréninky`.
-2. Sees future OPEN sessions.
+2. Sees future non-DRAFT sessions for workspaces where they have an athlete.
 3. Session card shows date, time, facility, birth-year range, occupancy.
 4. Guardian taps `Přihlásit`.
 5. System lists only eligible athletes.
 6. Guardian may select one or multiple eligible athletes.
-7. Booking transaction runs.
-8. Successful athletes become confirmed.
-9. Occupancy updates in real time.
+7. The booking transaction runs atomically for the whole selection.
+8. Either all selected athletes become confirmed, or none does.
+9. Occupancy updates in real time from the occupancy projection.
+
+## 3a. Not enough places for the whole selection (D-05)
+1. Guardian selects two children for a session with one place left.
+2. Guardian confirms.
+3. The transaction books neither child.
+4. The application reports how many places remain.
+5. UI shows: `Na tento trénink zbývá poslední volné místo. Vyberte prosím pouze jednoho sportovce.`
+6. Guardian reduces the selection and retries.
+7. The remaining place is booked.
+
+A single confirmation never splits siblings into booked and not-booked states.
 
 ## 4. Full session
 1. Session occupancy reaches capacity.
@@ -64,6 +81,8 @@
 3. Confirms removal.
 4. Booking status becomes CANCELLED_BY_COACH.
 5. Booking remains in history.
+6. The guardian can no longer re-book that athlete into this session.
+7. Only the coach may add the athlete back (flow 7).
 
 ## 9. Coach edits session
 1. Coach opens session.
@@ -80,19 +99,24 @@
 2. Taps `Zrušit trénink`.
 3. Confirmation displayed.
 4. Session status becomes CANCELLED.
-5. Session remains in bookings/history.
-6. All active guardians of booked athletes are collected.
-7. Recipient emails are deduplicated.
-8. One email per guardian is sent.
-9. My Bookings shows cancelled status.
+5. Existing bookings are left untouched, preserving the roster as it stood.
+6. Session remains in bookings/history.
+7. All active guardians of booked athletes are collected.
+8. Recipient emails are deduplicated to one delivery per guardian.
+9. Each delivery lists all of that guardian's affected athletes.
+10. My Bookings shows cancelled status.
 
 ## 11. Create recurring series
 1. Coach selects `Série tréninků`.
-2. Enters recurrence pattern and common session data.
-3. UI previews occurrence dates.
+2. Enters recurrence pattern and common session data as local dates and times.
+3. UI previews the generated local occurrence dates and times.
 4. Coach confirms.
-5. Separate session records are created.
-6. Coach may later edit any occurrence independently.
+5. Each occurrence is converted from workspace-local wall clock to an absolute
+   timestamp individually, so a series crossing a daylight-saving change keeps
+   the same local start time.
+6. Separate session records are created in one transaction.
+7. Coach may later edit or cancel any occurrence independently; siblings are
+   never affected.
 
 ## 12. Duplicate session
 1. Coach opens existing session.

@@ -1,5 +1,7 @@
 # Product Requirements Document
 
+Trainlio — Sports Training Booking Platform
+
 ## 1. Product summary
 
 A mobile-first booking application for sports training sessions.
@@ -77,6 +79,11 @@ Examples:
 Logical tenant/business context.
 Current MVP: one hockey coach/workspace in Příbram.
 Future: each independent coach, academy, club, or organization may have its own workspace.
+
+A workspace carries its own timezone and its own guardian cancellation deadline.
+The MVP workspace uses `Europe/Prague` and 12 hours. All wall-clock reasoning —
+session display, series generation, day grouping — happens in the workspace
+timezone, never the device timezone.
 
 ### Workspace athlete membership
 Links an athlete and relevant sport profile to a workspace.
@@ -223,6 +230,14 @@ Coach manual booking:
 
 When one guardian books multiple children into the same session, each athlete receives a separate booking record.
 
+Multi-athlete booking in a single guardian action is atomic: either all selected
+athletes are booked or none is. If fewer places remain than athletes selected,
+the whole request is rejected and the number of available places is reported, so
+the guardian can reduce the selection. A single confirmation must never split
+siblings into booked and not-booked states.
+
+Coach manual additions remain independent single-athlete operations.
+
 ## 11. Cancellation behavior
 
 Guardian/user:
@@ -232,6 +247,10 @@ Guardian/user:
 
 Coach:
 - may cancel/remove an athlete at any time.
+
+When a coach removes an athlete from a session, the guardian may not re-book that
+athlete into the same session. Only a coach may restore them. A guardian's own
+cancellation does not carry this restriction.
 
 Bookings are not hard-deleted.
 
@@ -244,6 +263,12 @@ Bookings are not hard-deleted.
 - CANCELLED
 
 `CLOSED` means new user bookings are not accepted even if places remain.
+
+`DRAFT` sessions are visible to coaches and administrators only.
+
+`Upcoming` and `Past` are derived from the session end time relative to now.
+No scheduled job is required. `COMPLETED` remains available as an explicit status
+but no MVP behaviour depends on anything setting it.
 
 ## 13. Capacity rules
 
@@ -311,7 +336,16 @@ Example:
 
 The system must create separate training_session rows for each occurrence.
 
-After creation each occurrence is independently editable/cancellable.
+A series record retains the recurrence pattern, the timezone it was generated in,
+and when it was generated. Generated sessions reference their originating series.
+
+Occurrences are generated from local wall-clock dates and times and converted
+individually, so a series that crosses a daylight-saving change keeps the same
+local start time throughout.
+
+After creation each occurrence is independently editable/cancellable. Editing or
+cancelling one occurrence never affects its siblings. Calendar-style recurrence
+editing such as "this and all following" is out of MVP scope.
 
 Also provide Duplicate Session.
 
@@ -347,6 +381,16 @@ Session detail actions:
 - Cancel session
 
 ## 19. Privacy
+
+A guardian may see a workspace's sessions only while at least one of their
+athletes holds an active membership of that workspace. Possession of the
+application link is not authorization.
+
+Guardians see occupancy as a count produced by a database-maintained projection.
+That projection exposes no athlete identity, no booking identity and no
+per-booking timestamp, and it is the only booking-derived data a guardian may
+read or subscribe to.
+
 
 Other guardians must not see:
 - names of athletes booked into a session;

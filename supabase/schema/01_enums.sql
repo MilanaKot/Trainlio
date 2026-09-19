@@ -1,0 +1,37 @@
+-- Trainlio — Sports Training Booking Platform
+-- Layer: DATABASE INVARIANTS
+-- 01 — extensions and enumerated types
+--
+-- Reviewed proposal for Phase 1. Promoted to supabase/migrations/ on approval.
+--
+-- All enum values are stable internal codes. Czech labels are resolved in the
+-- application i18n layer and are never stored as business data (PRD §21).
+
+create extension if not exists pgcrypto;
+
+-- Workspace-scoped role. Deliberately excludes USER: being a guardian is an
+-- athlete relationship, not a workspace membership.
+-- OPEN (D-17): confirm the split between workspace roles and platform roles.
+create type public.workspace_role as enum ('COACH', 'ADMIN');
+
+create type public.access_status as enum ('ACTIVE', 'INVITED', 'REVOKED');
+
+create type public.access_permission_level as enum ('MANAGE', 'VIEW');
+
+create type public.session_status as enum ('DRAFT', 'OPEN', 'CLOSED', 'COMPLETED', 'CANCELLED');
+
+create type public.booking_status as enum ('CONFIRMED', 'CANCELLED_BY_USER', 'CANCELLED_BY_COACH');
+
+create type public.booking_creator_role as enum ('USER', 'COACH', 'ADMIN');
+
+create type public.eligibility_mode as enum ('ALL', 'BIRTH_YEAR_RANGE');
+
+create type public.coach_session_role as enum ('MAIN', 'ASSISTANT');
+
+create type public.facility_type as enum ('RINK', 'PITCH', 'COURT', 'POOL', 'LANE', 'GYM', 'ROOM', 'OTHER');
+
+-- MVP generates weekly series only. The enum exists so additional patterns do
+-- not require a schema change (PRD §16). No calendar-style recurrence editing.
+create type public.recurrence_frequency as enum ('WEEKLY');
+
+create type public.notification_delivery_status as enum ('PENDING', 'SENDING', 'SENT', 'FAILED');

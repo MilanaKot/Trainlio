@@ -1,5 +1,7 @@
 # UI Specification
 
+Trainlio — Sports Training Booking Platform
+
 ## Design direction
 - Mobile-first
 - Very simple
@@ -59,6 +61,49 @@ Koho chcete přihlásit?
 
 Do not show ineligible children in the default MVP picker.
 
+### Atomic multi-athlete booking (D-05)
+
+Selecting several athletes is one all-or-nothing action. The UI must never
+present a result in which some selected siblings are booked and others are not.
+
+When the remaining places are fewer than the selection, the server rejects the
+whole request and reports the number of available places. The picker then asks
+the guardian to reduce the selection:
+
+```text
+Na tento trénink zbývá poslední volné místo.
+Vyberte prosím pouze jednoho sportovce.
+
+[Rozumím]
+```
+
+```text
+Na tento trénink zbývají 2 volná místa.
+Vyberte prosím nejvýše 2 sportovce.
+
+[Rozumím]
+```
+
+```text
+Trénink je již plný.
+
+[Rozumím]
+```
+
+Czech plural agreement for the place count is required:
+
+| Places | Text |
+|---|---|
+| 1 | `zbývá poslední volné místo` |
+| 2–4 | `zbývají 2 volná místa` |
+| 5 or more | `zbývá 5 volných míst` |
+
+This is a message-formatting concern, handled by the i18n layer with plural
+categories, not by string concatenation.
+
+The confirm button is not disabled client-side on the basis of a cached
+occupancy value. The count may be stale; the server decides.
+
 ## My Bookings
 
 Tabs/sections:
@@ -71,9 +116,18 @@ Future changed session:
 Cancelled:
 `ZRUŠENO TRENÉREM`
 
-Inside 12-hour window:
+Inside the cancellation deadline window:
 Disable cancel button and show:
 `Odhlášení již není možné. Kontaktujte trenéra.`
+
+The deadline is a workspace setting whose MVP value is 12 hours. The disabled
+state is a display affordance only; the server independently rejects a late
+cancellation.
+
+Removed by coach:
+When a coach has removed an athlete from a session, the guardian sees the
+booking in history and no re-booking action:
+`Sportovce odebral trenér. Pro opětovné přihlášení kontaktujte trenéra.`
 
 ## Athlete profile
 
@@ -122,6 +176,12 @@ MH · Šatna 4
 Primary actions:
 - + Trénink
 - + Série tréninků
+
+## Session times and dates
+
+All dates and times shown to any user are rendered in the workspace timezone
+(`Europe/Prague` for the MVP workspace), never in the device timezone. A guardian
+travelling abroad must see the same training time as the coach.
 
 ## Coach: Session detail
 
@@ -192,3 +252,8 @@ Fields:
 - notes
 
 Preview generated dates before save.
+
+The preview shows local dates and times in the workspace timezone. It must show
+the same local start time for every occurrence, including occurrences on the far
+side of a daylight-saving change. A preview whose times drift by an hour
+indicates the generation bug this specification exists to prevent.

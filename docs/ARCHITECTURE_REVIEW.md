@@ -1,6 +1,15 @@
 # Architecture Review — Pre-Implementation
 
-Status: **awaiting approval**. No application code written.
+Trainlio — Sports Training Booking Platform
+
+Status: **reviewed and decided.** Retained as the record of how the current
+architecture was arrived at.
+
+The five must-fix findings and the S-items were approved. D-05 was decided
+against this document's recommendation: multi-athlete guardian booking is
+atomic, not partial-success. Decisions still outstanding are tracked in
+`OPEN_DECISIONS.md`; the resulting design is in `ARCHITECTURE.md`,
+`DATA_MODEL.md`, `DOMAIN_OPERATIONS.md` and `/supabase/schema`.
 
 Scope reviewed: `CLAUDE.md`, `README.md`, `PRD.md`, `DATA_MODEL.md`, `BUSINESS_RULES.md`,
 `PERMISSIONS.md`, `USER_FLOWS.md`, `UI_SPEC.md`, `ACCEPTANCE_CRITERIA.md`,
@@ -97,7 +106,7 @@ given; all are cheap to change if you disagree.
 | D-02 | Exact 12-hour boundary | `start_at - now() >= interval '12 hours'`. At exactly 12:00:00 cancellation is **allowed**. (`BR-040` "at least" and `AC-040` "more than" disagree; pick one.) |
 | D-03 | Is the 12h deadline a constant? | Store as `workspaces.cancellation_deadline_hours int not null default 12`. Same value, but not hardcoded — required by principle 11. |
 | D-04 | Who sets `COMPLETED`? | Nothing in the stack schedules jobs. Derive "Minulé" from `end_at < now()`; leave `COMPLETED` as an allowed manual/admin status with no MVP writer. Otherwise the Past/Upcoming split silently depends on a job nobody is building. |
-| D-05 | Booking N children when fewer places remain | Per-athlete independent attempts inside one RPC call; partial success allowed; RPC returns a per-athlete result array; UI reports which succeeded. This matches `USER_FLOWS §3.8` ("Successful athletes become confirmed"), but it must be explicit because it defines the RPC signature. |
+| D-05 | Booking N children when fewer places remain | **Decided otherwise.** The recommendation here was partial success; the approved rule is that multi-athlete guardian booking is atomic — all selected athletes or none, with the free-place count returned so the guardian can reduce the selection. One CTA must not split siblings into booked and not-booked states. See `BR-035a`–`BR-035c`. |
 | D-06 | Can a guardian re-book after `CANCELLED_BY_COACH`? | **No.** Otherwise a parent silently undoes a coach's removal. The coach can re-add. The partial unique index does not cover this — it needs an explicit RPC check. |
 | D-07 | Can a coach add athletes to a `CANCELLED` session? | No. Allowed on `DRAFT`/`OPEN`/`CLOSED`/`COMPLETED` (late roster correction). |
 | D-08 | Coach narrows the birth-year range on a session with bookings | Preserve existing bookings, warn the coach. Consistent with `BR-052` and principle 9. Never auto-cancel. |
