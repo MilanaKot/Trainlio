@@ -1,4 +1,4 @@
-# Sports Training Booking Platform
+# Trainlio - Sports Training Booking Platform
 
 Mobile-first booking platform for sports training sessions.
 
