@@ -1,8 +1,10 @@
-# Trainlio - Sports Training Booking Platform
+# Trainlio — Sports Training Booking Platform
 
 Mobile-first booking platform for sports training sessions.
 
-The MVP is configured for one hockey coach in Příbram, Czech Republic, but the domain model is intentionally designed for:
+The MVP is configured for one hockey coach in Příbram, Czech Republic, but the
+domain model is intentionally designed for:
+
 - multiple sports;
 - multiple coaches;
 - multiple workspaces;
@@ -10,23 +12,69 @@ The MVP is configured for one hockey coach in Příbram, Czech Republic, but the
 - one athlete linked to multiple guardians;
 - later commercialization as a multi-tenant SaaS product.
 
+## Status
+
+**All nine phases complete. The MVP is ready to deploy.**
+
+The database and its authorization model, email one-time-code sign-in, athlete
+management, coach session management, recurring series, the booking engine, the
+coach roster, transactional notifications and the account-anonymisation
+workflow are in place. Twenty migrations apply clean, the database lint reports
+no error-level finding, and 494 validation cases pass — plus a concurrency
+proof, a live-stack integration suite, 121 unit tests and 57 browser flows
+including a mobile viewport review.
+See [`supabase/VALIDATION.md`](supabase/VALIDATION.md).
+
+**All 125 acceptance criteria map to a named test**, checked mechanically by
+`pnpm qa:coverage` on every push. Nothing in
+[`docs/OPEN_DECISIONS.md`](docs/OPEN_DECISIONS.md) is open.
+
+To put it into production, follow [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md).
+When something goes wrong, [`docs/RUNBOOK.md`](docs/RUNBOOK.md).
+
+See [`CONTRIBUTING.md`](CONTRIBUTING.md) to run it.
+
 ## MVP stack
+
 - Next.js
 - TypeScript
 - Supabase (PostgreSQL, Auth, Storage, Realtime)
 - Tailwind CSS
 - shadcn/ui
+- Resend (transactional email and Auth OTP via custom SMTP)
 - Vercel
 - Vitest
 - Playwright
 
 ## Current MVP language
+
 Czech.
 
-The codebase must be internationalization-ready so English can be added later without redesigning the domain model.
+The codebase must be internationalization-ready so English can be added later
+without redesigning the domain model.
 
-## Main documentation
-See `/docs`.
+## Documentation
+
+| Document                                                     | Purpose                                    |
+| ------------------------------------------------------------ | ------------------------------------------ |
+| [`docs/PRD.md`](docs/PRD.md)                                 | Product requirements                       |
+| [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)               | The five layers and why they stay separate |
+| [`docs/DATA_MODEL.md`](docs/DATA_MODEL.md)                   | Entities and their relationships           |
+| [`docs/DOMAIN_OPERATIONS.md`](docs/DOMAIN_OPERATIONS.md)     | Server-side operation contracts            |
+| [`docs/BUSINESS_RULES.md`](docs/BUSINESS_RULES.md)           | Numbered business rules                    |
+| [`docs/PERMISSIONS.md`](docs/PERMISSIONS.md)                 | Permissions and row level security         |
+| [`docs/USER_FLOWS.md`](docs/USER_FLOWS.md)                   | End-to-end flows                           |
+| [`docs/UI_SPEC.md`](docs/UI_SPEC.md)                         | Screens and Czech UI text                  |
+| [`docs/ACCEPTANCE_CRITERIA.md`](docs/ACCEPTANCE_CRITERIA.md) | Testable criteria                          |
+| [`docs/IMPLEMENTATION_PLAN.md`](docs/IMPLEMENTATION_PLAN.md) | Phases and exit criteria                   |
+| [`docs/OPEN_DECISIONS.md`](docs/OPEN_DECISIONS.md)           | Decisions still needed                     |
+| [`supabase/README.md`](supabase/README.md)                   | Migrations, types, validation              |
+| [`supabase/VALIDATION.md`](supabase/VALIDATION.md)           | What the schema was proven to do           |
+| [`docs/ARCHITECTURE_REVIEW.md`](docs/ARCHITECTURE_REVIEW.md) | The review these decisions came from       |
+
+Schema: [`supabase/migrations/`](supabase/migrations/).
 
 ## Important product principle
-The user-facing MVP is intentionally simple and hockey-specific where helpful, while the underlying architecture remains sport-agnostic.
+
+The user-facing MVP is intentionally simple and hockey-specific where helpful,
+while the underlying architecture remains sport-agnostic.

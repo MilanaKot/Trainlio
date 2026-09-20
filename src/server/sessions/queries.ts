@@ -1,0 +1,263 @@
+import 'server-only'
+
+import { createClient } from '@/lib/supabase/server'
+import { maybeRow, rows } from '@/server/query-result'
+import type { SessionStatus, EligibilityMode } from '@/types/database'
+
+export type CoachWorkspace = {
+  id: string
+  name: string
+  timezone: string
+  facilities: { id: string; code: string; name: string; locationName: string }[]
+  coaches: { id: string; displayName: string | null }[]
+}
+
+export type CoachSession = {
+  id: string
+  startAt: string
+  endAt: string
+  status: SessionStatus
+  capacity: number
+  confirmedCount: number
+  facilityCode: string
+  locationName: string
+  changingRoom: string | null
+  eligibilityMode: EligibilityMode
+  birthYearFrom: number | null
+  birthYearTo: number | null
+  publicNotes: string | null
+  internalNotes: string | null
+  mainCoachId: string
+  mainCoachName: string | null
+  significantChangedAt: string | null
+}
+
+/**
+ * The workspace this user coaches, with everything the session forms need.
+ *
+ * Returns null for anyone who is not active staff: `is_workspace_coach` is the
+ * same predicate the row policies and every session RPC use, so a guardian
+ * cannot reach a coach screen by URL.
+ */
+export async function getCoachWorkspace(): Promise<CoachWorkspace | null> {
+  const supabase = await createClient()
+
+  const memberships = rows(
+    'getCoachWorkspace memberships',
+    await supabase
+      .from('workspace_members')
+      .select('workspace_id, workspaces ( id, name, timezone )')
+      .eq('is_active', true),
+  )
+
+  const workspace = memberships[0]?.workspaces
+  if (!workspace) return null
+
+  const [facilitiesResult, staffResult] = await Promise.all([
+    supabase
+      .from('facilities')
+      .select('id, code, name, locations!inner ( name, workspace_id )')
+      .eq('is_active', true)
+      .eq('locations.workspace_id', workspace.id)
+      .order('code'),
+    supabase
+      .from('workspace_members')
+      .select('profile_id, app_profiles ( id, display_name )')
+      .eq('workspace_id', workspace.id)
+      .eq('is_active', true),
+  ])
+
+  const facilities = rows('getCoachWorkspace facilities', facilitiesResult)
+  const staff = rows('getCoachWorkspace staff', staffResult)
+
+  const coaches = new Map<string, string | null>()
+  for (const member of staff) {
+    const profile = member.app_profiles
+    if (profile) coaches.set(profile.id, profile.display_name)
+  }
+
+  return {
+    id: workspace.id,
+    name: workspace.name,
+    timezone: workspace.timezone,
+    facilities: facilities.map((f) => ({
+      id: f.id,
+      code: f.code,
+      name: f.name,
+      locationName: f.locations?.name ?? '',
+    })),
+    coaches: [...coaches].map(([id, displayName]) => ({ id, displayName })),
+  }
+}
+
+/**
+ * Coach-facing session columns.
+ *
+ * The main coach is embedded through a *named* relationship. A bare
+ * `app_profiles ( display_name )` is ambiguous and PostgREST refuses it:
+ * training_sessions holds three foreign keys into app_profiles (created_by,
+ * cancelled_by, and the main-coach mirror). The refusal is a query error, and
+ * because a failed query returns no rows it renders as "no sessions at all" —
+ * which is how it went unnoticed until an end-to-end flow booked a real
+ * session and found the list empty.
+ */
+const SESSION_COLUMNS = `
+  id, start_at, end_at, status, capacity, changing_room, public_notes,
+  eligibility_mode, birth_year_from, birth_year_to, significant_changed_at,
+  main_coach_profile_id,
+  facilities ( code ),
+  locations ( name ),
+  app_profiles!training_sessions_main_coach_profile_id_fkey ( display_name ),
+  training_session_occupancy ( confirmed_count ),
+  training_session_internal_notes ( notes )
+`
+
+type Row = {
+  id: string
+  start_at: string
+  end_at: string
+  status: SessionStatus
+  capacity: number
+  changing_room: string | null
+  public_notes: string | null
+  eligibility_mode: EligibilityMode
+  birth_year_from: number | null
+  birth_year_to: number | null
+  significant_changed_at: string | null
+  main_coach_profile_id: string
+  facilities: { code: string } | null
+  locations: { name: string } | null
+  app_profiles: { display_name: string | null } | null
+  training_session_occupancy: { confirmed_count: number } | null
+  training_session_internal_notes: { notes: string | null } | null
+}
+
+function toSession(row: Row): CoachSession {
+  return {
+    id: row.id,
+    startAt: row.start_at,
+    endAt: row.end_at,
+    status: row.status,
+    capacity: row.capacity,
+    // The count comes from the projection, never from counting booking rows.
+    confirmedCount: row.training_session_occupancy?.confirmed_count ?? 0,
+    facilityCode: row.facilities?.code ?? '',
+    locationName: row.locations?.name ?? '',
+    changingRoom: row.changing_room,
+    eligibilityMode: row.eligibility_mode,
+    birthYearFrom: row.birth_year_from,
+    birthYearTo: row.birth_year_to,
+    publicNotes: row.public_notes,
+    // Staff-only, and only reachable because this query runs as a coach: the
+    // table has its own policy, so a guardian's identical query returns no row.
+    internalNotes: row.training_session_internal_notes?.notes ?? null,
+    mainCoachId: row.main_coach_profile_id,
+    mainCoachName: row.app_profiles?.display_name ?? null,
+    significantChangedAt: row.significant_changed_at,
+  }
+}
+
+/** Upcoming first, then past — a list by date, not a calendar (UI_SPEC). */
+export async function listCoachSessions(): Promise<{
+  upcoming: CoachSession[]
+  past: CoachSession[]
+}> {
+  const supabase = await createClient()
+  const now = new Date().toISOString()
+
+  const [upcoming, past] = await Promise.all([
+    supabase.from('training_sessions').select(SESSION_COLUMNS).gte('end_at', now).order('start_at'),
+    supabase
+      .from('training_sessions')
+      .select(SESSION_COLUMNS)
+      .lt('end_at', now)
+      .order('start_at', { ascending: false })
+      .limit(50),
+  ])
+
+  return {
+    upcoming: (rows('listCoachSessions upcoming', upcoming) as unknown as Row[]).map(toSession),
+    past: (rows('listCoachSessions past', past) as unknown as Row[]).map(toSession),
+  }
+}
+
+export async function getCoachSession(sessionId: string): Promise<CoachSession | null> {
+  const supabase = await createClient()
+  const result = await supabase
+    .from('training_sessions')
+    .select(SESSION_COLUMNS)
+    .eq('id', sessionId)
+    .maybeSingle()
+
+  const row = maybeRow('getCoachSession', result)
+  return row ? toSession(row as unknown as Row) : null
+}
+
+export type CoachSeries = {
+  id: string
+  byWeekday: number
+  localDateFrom: string
+  localDateTo: string
+  localStartTime: string
+  localEndTime: string
+  generatedCount: number
+  generatedAt: string | null
+  generatedInTimezone: string
+  facilityCode: string
+  capacity: number
+  /** How many of the generated occurrences still exist and are not cancelled. */
+  activeCount: number
+  cancelledCount: number
+}
+
+type SeriesRow = {
+  id: string
+  by_weekday: number
+  local_date_from: string
+  local_date_to: string
+  local_start_time: string
+  local_end_time: string
+  generated_count: number
+  generated_at: string | null
+  generated_in_timezone: string
+  capacity: number
+  facilities: { code: string } | null
+  training_sessions: { status: string }[] | null
+}
+
+/** Series in the coach's workspace, newest first. */
+export async function listCoachSeries(): Promise<CoachSeries[]> {
+  const supabase = await createClient()
+
+  const result = await supabase
+    .from('session_series')
+    .select(
+      `id, by_weekday, local_date_from, local_date_to, local_start_time, local_end_time,
+       generated_count, generated_at, generated_in_timezone, capacity,
+       facilities ( code ),
+       training_sessions ( status )`,
+    )
+    .order('created_at', { ascending: false })
+
+  return (rows('listCoachSeries', result) as unknown as SeriesRow[]).map((row) => {
+    const occurrences = row.training_sessions ?? []
+    return {
+      id: row.id,
+      byWeekday: row.by_weekday,
+      localDateFrom: row.local_date_from,
+      localDateTo: row.local_date_to,
+      // `time` comes back as HH:MM:SS; the form and the list want HH:MM.
+      localStartTime: row.local_start_time.slice(0, 5),
+      localEndTime: row.local_end_time.slice(0, 5),
+      generatedCount: row.generated_count,
+      generatedAt: row.generated_at,
+      generatedInTimezone: row.generated_in_timezone,
+      facilityCode: row.facilities?.code ?? '',
+      capacity: row.capacity,
+      // Counted from the occurrences, not from the series row: the series is
+      // provenance and never follows what happens to them afterwards.
+      activeCount: occurrences.filter((s) => s.status !== 'CANCELLED').length,
+      cancelledCount: occurrences.filter((s) => s.status === 'CANCELLED').length,
+    }
+  })
+}
