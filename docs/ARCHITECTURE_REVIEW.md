@@ -9,7 +9,7 @@ The five must-fix findings and the S-items were approved. D-05 was decided
 against this document's recommendation: multi-athlete guardian booking is
 atomic, not partial-success. Decisions still outstanding are tracked in
 `OPEN_DECISIONS.md`; the resulting design is in `ARCHITECTURE.md`,
-`DATA_MODEL.md`, `DOMAIN_OPERATIONS.md` and `/supabase/schema`.
+`DATA_MODEL.md`, `DOMAIN_OPERATIONS.md` and `/supabase/migrations`.
 
 Scope reviewed: `CLAUDE.md`, `README.md`, `PRD.md`, `DATA_MODEL.md`, `BUSINESS_RULES.md`,
 `PERMISSIONS.md`, `USER_FLOWS.md`, `UI_SPEC.md`, `ACCEPTANCE_CRITERIA.md`,

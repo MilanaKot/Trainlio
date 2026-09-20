@@ -2,7 +2,7 @@
 #
 # Trainlio — schema validation runner.
 #
-# Applies the schema to throwaway databases and runs both suites. Each suite
+# Applies every migration to throwaway databases and runs both suites. Each suite
 # gets its own database: validation.sql cancels a session and deletes an auth
 # user on purpose, so it is not idempotent and must never run twice against the
 # same data.
@@ -41,16 +41,20 @@ grant usage on schema public to authenticated, anon, service_role;
 SQL
 
 run_suite() {
-  local db="$1" suite="$2"
+  local db="$1" suite="$2" fixtures="${3:-}"
   $PSQL -q -d postgres -c "drop database if exists $db" -c "create database $db" >/dev/null 2>&1
   $PSQL -q -d "$db" -f "$STUB" >/dev/null 2>&1
-  for f in supabase/schema/0*.sql; do
+  for f in supabase/migrations/*.sql; do
     if ! $PSQL -q -d "$db" -f "$f" >/dev/null; then
       echo "SCHEMA FAILED TO APPLY: $f" >&2
       return 1
     fi
   done
-  $PSQL -q -d "$db" -f supabase/tests/fixtures.sql >/dev/null
+  # The auth suite creates its own authentication identities, so the shared
+  # fixtures would collide with it.
+  if [ "$fixtures" != "--no-fixtures" ]; then
+    $PSQL -q -d "$db" -f supabase/tests/fixtures.sql >/dev/null
+  fi
 
   local out
   out="$($PSQL -d "$db" -f "$suite" 2>&1)"
@@ -65,6 +69,32 @@ run_suite() {
   echo "$suite: $(echo "$out" | grep -c '^PASS') passed"
 }
 
+lint() {
+  local db="$1"
+  $PSQL -q -d postgres -c "drop database if exists $db" -c "create database $db" >/dev/null 2>&1
+  $PSQL -q -d "$db" -f "$STUB" >/dev/null 2>&1
+  for f in supabase/migrations/*.sql; do
+    $PSQL -q -d "$db" -f "$f" >/dev/null || { echo "MIGRATION FAILED: $f" >&2; return 1; }
+  done
+
+  local out errors
+  out="$($PSQL -d "$db" -f supabase/tests/lint.sql 2>&1)"
+  errors="$(echo "$out" | grep -c '^ERROR' || true)"
+  echo "$out" | grep '^ERROR' || true
+
+  if [ "$errors" -ne 0 ]; then
+    echo "lint: $errors error-level finding(s)" >&2
+    return 1
+  fi
+  echo "lint: clean ($(echo "$out" | grep -c '^INFO') informational)"
+}
+
+echo '── Database lint ───────────────────────────────────────────────────'
+lint trainlio_lint
+echo
+
 run_suite trainlio_invariants supabase/tests/validation.sql
 echo
 run_suite trainlio_rls supabase/tests/validation_rls.sql
+echo
+run_suite trainlio_auth supabase/tests/validation_auth.sql --no-fixtures

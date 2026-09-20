@@ -4,8 +4,8 @@ Trainlio — Sports Training Booking Platform
 
 **One item remains open.** D-01 through D-17 are all decided; the resulting
 design is in `ARCHITECTURE.md`, `DATA_MODEL.md`, `DOMAIN_OPERATIONS.md` and
-`/supabase/schema`, and its behaviour is verified in
-`/supabase/schema/VALIDATION.md`.
+`/supabase/migrations`, and its behaviour is verified in
+`/supabase/VALIDATION.md`.
 
 ---
 

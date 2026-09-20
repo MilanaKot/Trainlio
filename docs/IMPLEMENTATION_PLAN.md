@@ -7,7 +7,7 @@ so "done" is testable rather than declared.
 
 Phase 0 is **not** started until this revised architecture is approved.
 
-## Phase 0 — foundation
+## Phase 0 — foundation ✅
 
 - Next.js App Router, TypeScript strict mode
 - Tailwind, shadcn/ui
@@ -24,9 +24,11 @@ Phase 0 is **not** started until this revised architecture is approved.
 Exit: `lint`, `typecheck`, `test`, `build` all green; an empty application
 deploys to Vercel.
 
-## Phase 1 — database, authorization and auth
+## Phase 1 — database, authorization and auth ✅
 
-- Promote `/supabase/schema` to `/supabase/migrations`
+- Promote the reviewed schema to `/supabase/migrations`
+- Supabase Auth integration: a profile is created for each new authentication
+  identity, without which every policy resolves to null
 - Reference seed: HOCKEY, workspace with `Europe/Prague` and a 12-hour deadline,
   Příbram, MH and VH
 - Row level security on every user-facing table, with SECURITY DEFINER helper

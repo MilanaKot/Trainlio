@@ -38,7 +38,7 @@ rules.
 
 ### 1. Database invariants
 
-Enforced by the schema in `/supabase/schema/02`–`05`.
+Enforced by the schema in migrations 02–05.
 
 What belongs here: anything true regardless of the caller. Session end after
 start. Capacity in range. A cancelled booking has a cancellation timestamp. A
@@ -55,7 +55,7 @@ beyond a column comparison, anything that must produce a user-facing message.
 
 ### 2. RLS authorization
 
-Defined in `/supabase/schema/06`–`08`, specified in `PERMISSIONS.md`.
+Defined in migrations 06–08, specified in `PERMISSIONS.md`.
 
 What belongs here: visibility. Which athletes a guardian can read, which sessions
 a workspace's coaches can read, that DRAFT is staff-only, that photos are reachable

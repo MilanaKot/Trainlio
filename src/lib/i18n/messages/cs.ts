@@ -12,6 +12,30 @@ export const cs = {
     name: 'Trainlio',
   },
 
+  auth: {
+    signInTitle: 'Přihlášení',
+    signInIntro: 'Zadejte e-mail. Pošleme vám přihlašovací kód.',
+    email: 'E-mail',
+    sendCode: 'Poslat kód',
+    sending: 'Odesílám…',
+    codeTitle: 'Zadejte kód',
+    codeSentTo: 'Kód jsme poslali na {email}. Platí 10 minut.',
+    code: 'Kód',
+    verify: 'Přihlásit se',
+    verifying: 'Přihlašuji…',
+    resend: 'Poslat kód znovu',
+    resendIn: 'Nový kód můžete poslat za {seconds} s',
+    useAnotherEmail: 'Použít jiný e-mail',
+    signOut: 'Odhlásit se',
+    errors: {
+      invalidEmail: 'Zadejte platný e-mail.',
+      invalidCode: 'Kód musí mít 6 číslic.',
+      wrongCode: 'Kód je neplatný nebo vypršel. Zkuste to znovu.',
+      tooManyRequests: 'Příliš mnoho pokusů. Zkuste to prosím za chvíli.',
+      generic: 'Přihlášení se nezdařilo. Zkuste to prosím znovu.',
+    },
+  },
+
   nav: {
     sessions: 'Tréninky',
     myBookings: 'Moje tréninky',

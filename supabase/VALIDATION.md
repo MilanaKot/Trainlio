@@ -10,12 +10,21 @@ intent. Supabase-provided objects (`auth.users`, `auth.uid()`, `storage.objects`
 
 All nine files applied in order with no errors.
 
-**68 of 68 cases pass**: 40 in [`../tests/validation.sql`](../tests/validation.sql)
-and 28 in [`../tests/validation_rls.sql`](../tests/validation_rls.sql), plus the
-concurrency and daylight-saving cases below, which need parallel connections and
-are run separately.
+**85 of 85 cases pass**, and the database lint reports no error-level finding:
 
-Three defects were found and fixed during this round. They are recorded at the
+| Suite | Cases |
+|---|---|
+| [`tests/lint.sql`](tests/lint.sql) | 0 errors, 33 informational |
+| [`tests/validation.sql`](tests/validation.sql) | 40 |
+| [`tests/validation_rls.sql`](tests/validation_rls.sql) | 28 |
+| [`tests/validation_auth.sql`](tests/validation_auth.sql) | 17 |
+
+Plus the concurrency and daylight-saving cases below, which need parallel
+connections and are run separately.
+
+Run everything with `pnpm db:validate`.
+
+Four defects were found and fixed across these rounds. They are recorded at the
 end, because each is a mistake worth not repeating.
 
 ## Database invariants
@@ -212,11 +221,70 @@ against `workspace_members`. That subquery runs as the calling role, guardians
 cannot select from `workspace_members`, so it silently evaluated to false and the
 coach's name disappeared from the guardian view. Fixed by moving it into
 `is_visible_staff_profile()`. This is the same trap as S-R1, and a note in
-`07_rls_policies.sql` now states when an inline subquery is safe and when it
-needs a `SECURITY DEFINER` predicate.
+migration 07 now states when an inline subquery is safe and when it needs a
+`SECURITY DEFINER` predicate.
+
+**4. Nothing created the actor record on signup.**
+Found while wiring authentication. Every policy resolves the caller through
+`current_profile_id()`, which reads `app_profiles` by `auth_user_id`; Supabase
+Auth creates a row in `auth.users` and nothing else. A real user would have
+signed in successfully and then found an empty application, with no error
+anywhere to explain it. Fixed by migration 10, which adds the trigger, a
+backfill for identities that predate it, and `ensure_current_profile()` for
+identities the trigger never saw.
+
+## Database lint
+
+The Supabase database linter's rules, written out in
+[`tests/lint.sql`](tests/lint.sql) so they run against any PostgreSQL instance
+and in CI. Split by severity, because blanket-indexing every foreign key would
+slow every insert to speed up deletions that `ON DELETE RESTRICT` exists to
+refuse.
+
+**Error-level: zero findings.** RLS is enabled on every table in `public`; no
+table has a policy without RLS or RLS without a policy; every function pins its
+`search_path`; no `SECURITY DEFINER` function is executable by `PUBLIC` or
+`anon`; no policy reads `auth.uid()` directly or `user_metadata`; no `DELETE`
+policy or grant exists anywhere; no write grant on `bookings`,
+`training_sessions` or the occupancy projection; no client grant on the outbox,
+the audit log or `platform_admins`; nothing is granted to `anon`; `bookings` is
+absent from the Realtime publication; no extension is installed in `public`.
+
+**Informational: 33 unindexed foreign keys.** Each was weighed rather than
+fixed in bulk. Most are supported by a partial index that serves the query but
+not the referential check — correct, because the query is the hot path and the
+parent is never deleted. Two were genuinely missing an index that serves a real
+coach-facing query ("my sessions", on the association table and the mirror
+column) and were added.
+
+## Auth integration
+
+| Check | Result |
+|---|---|
+| A new authentication identity gets a profile | yes, by trigger |
+| `display_name` on signup | null — no personal data written |
+| The email in a domain table | never |
+| `current_profile_id()` resolves | yes, so every policy can authorize |
+| Backfill re-run | idempotent |
+| `ensure_current_profile()` on an existing profile | returns it, creates nothing |
+| Guardian sets own `display_name` | allowed |
+| Guardian sets own `auth_user_id` | denied |
+| Guardian sets own `anonymized_at` | denied |
+| Guardian creates a profile | denied |
+| Guardian edits another profile | matches no row; the other profile is untouched |
+| Guardian reads `auth.users` | denied |
+
+The three denials are column-level grants, not a trigger. A trigger would have
+had to ask which role was acting, so that the service role could still sever a
+link or stamp `anonymized_at` when the deferred D-18 workflow is built; a column
+grant simply does not extend to those columns for `authenticated`.
+
+Without this migration the authorization model is inert: signing in creates an
+`auth.users` row and nothing else, so every predicate returns null and the
+application reads as empty for everyone.
 
 ## Reproducing
 
-See [`../tests/README.md`](../tests/README.md). Phase 8 replaces this with the
+See [`tests/README.md`](tests/README.md). Phase 8 replaces this with the
 Supabase CLI local stack and a committed Vitest suite; these cases become its
 seed.

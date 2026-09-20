@@ -45,10 +45,10 @@ jobs:
       - name: Build
         run: pnpm build
 
-  schema:
-    # The schema is reviewable SQL until Phase 1 promotes it to migrations, but
-    # it must keep applying cleanly and keep passing its invariant and
-    # authorization suites. See supabase/schema/VALIDATION.md.
+  database:
+    # Applies every migration to a clean PostgreSQL 16, runs the database lint,
+    # and runs the invariant, authorization and auth suites.
+    # See supabase/VALIDATION.md.
     runs-on: ubuntu-latest
     services:
       postgres:
@@ -65,5 +65,5 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
-      - name: Apply schema and run validation suites
+      - name: Apply migrations, lint and validate
         run: bash supabase/tests/run.sh

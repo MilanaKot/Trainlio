@@ -7,7 +7,13 @@
 -- All enum values are stable internal codes. Czech labels are resolved in the
 -- application i18n layer and are never stored as business data (PRD §21).
 
-create extension if not exists pgcrypto;
+-- Extensions live in their own schema, not public: anything in public joins the
+-- search path of every query, which is the shadowing risk that the pinned
+-- search_path on every function exists to prevent. This matches how Supabase
+-- provisions a project, where the schema and pgcrypto already exist.
+create schema if not exists extensions;
+grant usage on schema extensions to postgres, anon, authenticated, service_role;
+create extension if not exists pgcrypto with schema extensions;
 
 -- D-17: workspace-scoped staff roles. Deliberately excludes any guardian value —
 -- guardian authorization runs through athlete access and workspace athlete

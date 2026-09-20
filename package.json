@@ -14,7 +14,10 @@
     "test:e2e": "playwright test",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "db:types": "supabase gen types typescript --local > src/types/database.generated.ts"
+    "db:types": "supabase gen types typescript --local --schema public > src/types/database.generated.ts",
+    "db:types:url": "node scripts/gen-types.mjs",
+    "db:validate": "bash supabase/tests/run.sh",
+    "pretypecheck": "next typegen"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",
@@ -30,6 +33,8 @@
   },
   "devDependencies": {
     "@playwright/test": "^1.57.0",
+    "@supabase/postgres-meta": "^0.99.0",
+    "@supabase/postgrest-typegen": "^0.2.2",
     "@tailwindcss/postcss": "^4.3.3",
     "@testing-library/jest-dom": "^6.10.0",
     "@testing-library/react": "^16.3.0",
@@ -42,6 +47,7 @@
     "eslint-config-prettier": "^10.1.8",
     "jsdom": "^28.0.2",
     "prettier": "^3.6.2",
+    "supabase": "^2.117.0",
     "tailwindcss": "^4.3.3",
     "typescript": "^5.9.3",
     "vitest": "^3.2.4"

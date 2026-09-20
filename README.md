@@ -13,13 +13,14 @@ domain model is intentionally designed for:
 
 ## Status
 
-Phase 0 — foundation complete. Next.js, TypeScript, Tailwind, Vitest and
-Playwright are in place with the architectural guard rules enforced by lint, and
-`lint`, `typecheck`, `test` and `build` are green.
+Phases 0 and 1 complete.
 
-The schema is reviewed and validated against PostgreSQL 16 — 68 of 68 cases pass,
-see [`supabase/schema/VALIDATION.md`](supabase/schema/VALIDATION.md) — and is
-applied in Phase 1.
+The database, its authorization model and email one-time-code sign-in are in
+place. Ten migrations apply clean, the database lint reports no error-level
+finding, and 85 validation cases pass against PostgreSQL 16 — see
+[`supabase/VALIDATION.md`](supabase/VALIDATION.md).
+
+Next: Phase 2 — athlete management.
 
 See [`CONTRIBUTING.md`](CONTRIBUTING.md) to run it.
 
@@ -55,10 +56,11 @@ without redesigning the domain model.
 | [`docs/ACCEPTANCE_CRITERIA.md`](docs/ACCEPTANCE_CRITERIA.md) | Testable criteria |
 | [`docs/IMPLEMENTATION_PLAN.md`](docs/IMPLEMENTATION_PLAN.md) | Phases and exit criteria |
 | [`docs/OPEN_DECISIONS.md`](docs/OPEN_DECISIONS.md) | Decisions still needed |
-| [`supabase/schema/VALIDATION.md`](supabase/schema/VALIDATION.md) | What the schema was proven to do |
+| [`supabase/README.md`](supabase/README.md) | Migrations, types, validation |
+| [`supabase/VALIDATION.md`](supabase/VALIDATION.md) | What the schema was proven to do |
 | [`docs/ARCHITECTURE_REVIEW.md`](docs/ARCHITECTURE_REVIEW.md) | The review these decisions came from |
 
-Schema: [`supabase/schema/`](supabase/schema/).
+Schema: [`supabase/migrations/`](supabase/migrations/).
 
 ## Important product principle
 

@@ -438,6 +438,16 @@ create index idx_training_sessions_workspace_status_start
 create index idx_training_sessions_series
   on public.training_sessions (series_id) where series_id is not null;
 
+-- "My sessions" for a coach, on both the canonical association table and the
+-- mirror column. These exist for the query, not for the foreign key check:
+-- every parent here is protected by ON DELETE RESTRICT and never deleted, so an
+-- index added only to satisfy a linter would slow every insert for nothing.
+create index idx_training_sessions_main_coach
+  on public.training_sessions (main_coach_profile_id, start_at);
+
+create index idx_session_coaches_profile
+  on public.training_session_coaches (profile_id);
+
 create index idx_bookings_session_status
   on public.bookings (training_session_id, status);
 

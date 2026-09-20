@@ -2,7 +2,7 @@
 
 Trainlio — Sports Training Booking Platform
 
-The authoritative definition is `/supabase/schema`. This document explains the
+The authoritative definition is `/supabase/migrations`. This document explains the
 shape and the reasoning; the SQL enforces it.
 
 ## Design principles

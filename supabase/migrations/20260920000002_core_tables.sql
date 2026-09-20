@@ -35,7 +35,7 @@
 -- ---------------------------------------------------------------------------
 
 create table public.app_profiles (
-  id            uuid primary key default gen_random_uuid(),
+  id            uuid primary key default extensions.gen_random_uuid(),
   -- Severable link to the authentication identity. Null means the login was
   -- removed; the profile and everything it did remain.
   auth_user_id  uuid unique references auth.users(id) on delete set null,
@@ -65,7 +65,7 @@ create table public.platform_admins (
 -- ---------------------------------------------------------------------------
 
 create table public.sports (
-  id         uuid primary key default gen_random_uuid(),
+  id         uuid primary key default extensions.gen_random_uuid(),
   code       text not null unique,
   name       text not null,
   created_at timestamptz not null default now(),
@@ -76,7 +76,7 @@ comment on column public.sports.name is
   'Administrative label only. UI text is resolved from code via i18n (PRD §21).';
 
 create table public.workspaces (
-  id                          uuid primary key default gen_random_uuid(),
+  id                          uuid primary key default extensions.gen_random_uuid(),
   name                        text not null,
   primary_sport_id            uuid not null references public.sports(id) on delete restrict,
   -- Approved finding 2. All wall-clock reasoning (session display, series
@@ -98,7 +98,7 @@ create table public.workspaces (
 -- D-17: a user may hold both COACH and WORKSPACE_ADMIN, so role checks use
 -- EXISTS, never equality.
 create table public.workspace_members (
-  id           uuid primary key default gen_random_uuid(),
+  id           uuid primary key default extensions.gen_random_uuid(),
   workspace_id uuid not null references public.workspaces(id) on delete restrict,
   profile_id   uuid not null references public.app_profiles(id) on delete restrict,
   role         public.workspace_role not null,
@@ -113,7 +113,7 @@ create table public.workspace_members (
 -- ---------------------------------------------------------------------------
 
 create table public.athletes (
-  id            uuid primary key default gen_random_uuid(),
+  id            uuid primary key default extensions.gen_random_uuid(),
   first_name    text not null,
   last_name     text not null,
   date_of_birth date not null,
@@ -135,7 +135,7 @@ comment on table public.athletes is
   'Sport-independent athlete identity (BR-004). No sport-specific columns may ever be added here.';
 
 create table public.guardian_athlete_access (
-  id                uuid primary key default gen_random_uuid(),
+  id                uuid primary key default extensions.gen_random_uuid(),
   profile_id        uuid not null references public.app_profiles(id) on delete restrict,
   athlete_id        uuid not null references public.athletes(id) on delete restrict,
   relationship_code text not null default 'GUARDIAN',
@@ -151,7 +151,7 @@ comment on table public.guardian_athlete_access is
   'M:N from day one (BR-002). MVP creates one ACTIVE row per athlete; the invitation flow is post-MVP. This, not a workspace role, is how guardian authorization works (D-17).';
 
 create table public.athlete_sport_profiles (
-  id               uuid primary key default gen_random_uuid(),
+  id               uuid primary key default extensions.gen_random_uuid(),
   athlete_id       uuid not null references public.athletes(id) on delete restrict,
   sport_id         uuid not null references public.sports(id) on delete restrict,
   club_name        text,
@@ -172,7 +172,7 @@ comment on column public.athlete_sport_profiles.attributes is
   'Sport-specific attributes (BR-010). Validated per sport by trigger; unknown keys are rejected.';
 
 create table public.workspace_athlete_memberships (
-  id                       uuid primary key default gen_random_uuid(),
+  id                       uuid primary key default extensions.gen_random_uuid(),
   workspace_id             uuid not null,
   athlete_id               uuid not null references public.athletes(id) on delete restrict,
   athlete_sport_profile_id uuid not null,
@@ -209,7 +209,7 @@ comment on table public.workspace_athlete_memberships is
 -- ---------------------------------------------------------------------------
 
 create table public.locations (
-  id           uuid primary key default gen_random_uuid(),
+  id           uuid primary key default extensions.gen_random_uuid(),
   workspace_id uuid not null references public.workspaces(id) on delete restrict,
   name         text not null,
   address      text,
@@ -221,7 +221,7 @@ create table public.locations (
 );
 
 create table public.facilities (
-  id            uuid primary key default gen_random_uuid(),
+  id            uuid primary key default extensions.gen_random_uuid(),
   location_id   uuid not null references public.locations(id) on delete restrict,
   code          text not null,
   name          text not null,

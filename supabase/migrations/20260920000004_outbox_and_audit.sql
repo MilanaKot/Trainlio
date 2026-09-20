@@ -16,7 +16,7 @@
 -- ---------------------------------------------------------------------------
 
 create table public.notification_events (
-  id                  uuid primary key default gen_random_uuid(),
+  id                  uuid primary key default extensions.gen_random_uuid(),
   workspace_id        uuid not null references public.workspaces(id) on delete restrict,
   training_session_id uuid references public.training_sessions(id) on delete restrict,
   event_type          text not null,
@@ -44,7 +44,7 @@ comment on column public.notification_events.payload is
   'Event-level content. For SESSION_ELIGIBILITY_NARROWED it must carry affected_athlete_ids, which scopes recipient expansion (D-08).';
 
 create table public.notification_deliveries (
-  id                  uuid primary key default gen_random_uuid(),
+  id                  uuid primary key default extensions.gen_random_uuid(),
   event_id            uuid not null references public.notification_events(id) on delete restrict,
   recipient_profile_id uuid not null references public.app_profiles(id) on delete restrict,
   -- Nullable so a future anonymisation can scrub the address while keeping the

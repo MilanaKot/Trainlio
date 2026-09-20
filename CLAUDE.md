@@ -7,7 +7,7 @@ platform for sports training sessions.
 The first production use case is a single hockey coach in Příbram, Czech Republic. The architecture must support multiple sports, multiple independent coaches/workspaces, and one athlete participating in several sports.
 
 ## Required reading before implementation
-Read all files in `/docs` and all files in `/supabase/schema`.
+Read all files in `/docs` and all files in `/supabase/migrations`.
 
 Start with `/docs/ARCHITECTURE.md`, which defines the five layers, and
 `/docs/OPEN_DECISIONS.md`, which lists decisions that are still provisional.

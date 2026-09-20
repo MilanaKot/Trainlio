@@ -10,7 +10,7 @@
 -- ---------------------------------------------------------------------------
 
 create table public.session_series (
-  id                 uuid primary key default gen_random_uuid(),
+  id                 uuid primary key default extensions.gen_random_uuid(),
   workspace_id       uuid not null references public.workspaces(id) on delete restrict,
   sport_id           uuid not null,
   location_id        uuid not null,
@@ -78,7 +78,7 @@ comment on column public.session_series.local_start_time is
 -- ---------------------------------------------------------------------------
 
 create table public.training_sessions (
-  id                 uuid primary key default gen_random_uuid(),
+  id                 uuid primary key default extensions.gen_random_uuid(),
   workspace_id       uuid not null references public.workspaces(id) on delete restrict,
   sport_id           uuid not null,
   location_id        uuid not null,
@@ -195,7 +195,7 @@ create unique index uq_session_single_main_coach
 -- ---------------------------------------------------------------------------
 
 create table public.bookings (
-  id                      uuid primary key default gen_random_uuid(),
+  id                      uuid primary key default extensions.gen_random_uuid(),
   training_session_id     uuid not null references public.training_sessions(id) on delete restrict,
   athlete_id              uuid not null references public.athletes(id) on delete restrict,
   status                  public.booking_status not null default 'CONFIRMED',

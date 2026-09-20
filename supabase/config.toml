@@ -1,0 +1,104 @@
+# Trainlio — Sports Training Booking Platform
+# Supabase project configuration.
+
+project_id = "trainlio"
+
+[api]
+enabled = true
+port = 54321
+schemas = ["public"]
+extra_search_path = ["public", "extensions"]
+# Bounded so a guardian list query cannot be turned into a bulk export.
+max_rows = 1000
+
+[db]
+port = 54322
+major_version = 17
+
+[db.seed]
+enabled = true
+# Dev and test fixtures only. Reference data (HOCKEY, the workspace, Příbram,
+# MH and VH) is a migration, because production needs it too.
+sql_paths = ["./tests/fixtures.sql"]
+
+[realtime]
+enabled = true
+
+[studio]
+enabled = true
+port = 54323
+
+# Local mailbox for OTP codes during development. Production uses Resend.
+[local_smtp]
+enabled = true
+port = 54324
+
+[storage]
+enabled = true
+file_size_limit = "5MiB"
+
+# Athlete photos. Private: signed URLs or authenticated access only
+# (BR-093, AC-092). Policies live in migration 08.
+[storage.buckets.athlete-photos]
+public = false
+file_size_limit = "5MiB"
+allowed_mime_types = ["image/jpeg", "image/png", "image/webp"]
+
+[auth]
+enabled = true
+site_url = "env(NEXT_PUBLIC_SITE_URL)"
+additional_redirect_urls = ["http://127.0.0.1:3000", "http://localhost:3000"]
+
+# Sessions last a week and refresh, so a parent is not asked to re-verify an
+# email code every time they check a training time.
+jwt_expiry = 3600
+enable_refresh_token_rotation = true
+refresh_token_reuse_interval = 10
+
+# PRD §7: email one-time code, no password.
+enable_signup = true
+enable_anonymous_sign_ins = false
+enable_manual_linking = false
+
+[auth.email]
+enable_signup = true
+# OTP only. A magic link would let anyone who can read a forwarded email sign in
+# from any device, and the code is what the coach's parents are told to expect.
+enable_confirmations = false
+secure_password_change = false
+max_frequency = "60s"
+otp_length = 6
+otp_expiry = 600
+
+[auth.email.template.magic_link]
+subject = "Přihlášení do Trainlio"
+content_path = "./templates/auth_otp.html"
+
+# Production email. Supabase's built-in SMTP is rate limited to a handful of
+# messages per hour and is not a production option (D-16): a Sunday morning
+# where fifteen parents sign in at once would silently stop sending codes.
+[auth.email.smtp]
+enabled = true
+host = "smtp.resend.com"
+port = 587
+user = "resend"
+pass = "env(RESEND_API_KEY)"
+admin_email = "trainink@example.com"
+sender_name = "Trainlio"
+
+[auth.rate_limit]
+# Per hour, per project.
+email_sent = 100
+# Per five minutes, per IP.
+sign_in_sign_ups = 30
+token_verifications = 30
+
+[auth.sessions]
+# A parent using the app on a phone should stay signed in between trainings.
+inactivity_timeout = "720h"
+
+[edge_runtime]
+enabled = false
+
+[analytics]
+enabled = false

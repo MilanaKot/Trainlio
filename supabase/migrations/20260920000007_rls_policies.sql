@@ -347,7 +347,13 @@ grant select on
   to authenticated;
 
 -- Rows a guardian may edit directly. Everything else is an RPC.
-grant update on public.app_profiles                   to authenticated;
+--
+-- Column-level on app_profiles: display_name only. id, auth_user_id and
+-- anonymized_at are the actor identity that all history points at, so a client
+-- must not be able to move a profile to another login or mark itself
+-- anonymised. The service role is unaffected and can still do both when the
+-- deferred D-18 workflow is built.
+grant update (display_name) on public.app_profiles    to authenticated;
 grant update on public.athletes                       to authenticated;
 grant select on public.athletes                       to authenticated;
 grant insert, update on public.athlete_sport_profiles to authenticated;

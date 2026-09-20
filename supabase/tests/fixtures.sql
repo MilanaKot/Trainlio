@@ -6,14 +6,23 @@ insert into auth.users(id,email) values
  ('00000000-0000-0000-0000-0000005f4a46','stranger@example.test'),
  ('00000000-0000-0000-0000-00000000ad11','wsadmin@example.test'),
  ('00000000-0000-0000-0000-00000000a170','platformadmin@example.test');
-insert into public.app_profiles(id,auth_user_id,display_name) values
- ('00000000-0000-0000-0000-00000000c0ac','00000000-0000-0000-0000-00000000c0ac','Trenér Novák'),
- ('00000000-0000-0000-0000-00000000c0ad','00000000-0000-0000-0000-00000000c0ad','Trenér Dvořák'),
- ('00000000-0000-0000-0000-0000000fa000','00000000-0000-0000-0000-0000000fa000','Rodina A'),
- ('00000000-0000-0000-0000-0000000fb000','00000000-0000-0000-0000-0000000fb000','Rodina B'),
- ('00000000-0000-0000-0000-0000005f4a46','00000000-0000-0000-0000-0000005f4a46','Cizinec'),
- ('00000000-0000-0000-0000-00000000ad11','00000000-0000-0000-0000-00000000ad11','Workspace Admin'),
- ('00000000-0000-0000-0000-00000000a170','00000000-0000-0000-0000-00000000a170','Platform Admin');
+-- Profiles are created by the trigger in migration 10, exactly as a real OTP
+-- signup creates them. The fixtures only name them: the id is aligned with the
+-- authentication id so the rest of this file stays readable, which is a test
+-- convenience and not how production ids are assigned.
+update public.app_profiles p
+   set id = v.auth_id, display_name = v.name
+from (values
+  ('00000000-0000-0000-0000-00000000c0ac'::uuid, 'Trenér Novák'),
+  ('00000000-0000-0000-0000-00000000c0ad'::uuid, 'Trenér Dvořák'),
+  ('00000000-0000-0000-0000-0000000fa000'::uuid, 'Rodina A'),
+  ('00000000-0000-0000-0000-0000000fb000'::uuid, 'Rodina B'),
+  ('00000000-0000-0000-0000-0000005f4a46'::uuid, 'Cizinec'),
+  ('00000000-0000-0000-0000-00000000ad11'::uuid, 'Workspace Admin'),
+  ('00000000-0000-0000-0000-00000000a170'::uuid, 'Platform Admin')
+) v(auth_id, name)
+where p.auth_user_id = v.auth_id;
+
 insert into public.platform_admins(profile_id) values ('00000000-0000-0000-0000-00000000a170');
 insert into public.workspace_members(workspace_id,profile_id,role)
  select w.id, v.p, v.r::public.workspace_role from public.workspaces w,

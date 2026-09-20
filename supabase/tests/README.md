@@ -3,9 +3,10 @@
 Trainlio — Sports Training Booking Platform
 
 `fixtures.sql` seeds a two-family, three-athlete, multi-role workspace used to
-exercise the invariants, the authorization model and the concurrency design
-before any application code exists. Results are recorded in
-[`../schema/VALIDATION.md`](../schema/VALIDATION.md).
+exercise the invariants, the authorization model and the concurrency design.
+Profiles are created by the signup trigger, exactly as a real OTP signup creates
+them; the fixtures only name them. Results are recorded in
+[`../VALIDATION.md`](../VALIDATION.md).
 
 It runs against a plain PostgreSQL 16 cluster with the Supabase-provided objects
 stubbed (`auth.users`, `auth.uid()`, `storage.objects`, `storage.foldername`,
@@ -28,9 +29,15 @@ create database → stubs → schema/01..09 → fixtures.sql → one suite
 
 | Suite | Cases |
 |---|---|
+| `lint.sql` | the Supabase database linter's rules, split into ERROR (must be zero) and INFO |
 | `validation.sql` | database invariants, D-02, D-07, D-08, D-09, D-11, D-18 |
 | `validation_rls.sql` | family isolation, occupancy, D-01, D-12, D-13, D-17, RPC-only mutations |
+| `validation_auth.sql` | signup creating the actor record, and that a client cannot forge or move one |
+
+`bash supabase/tests/run.sh` runs all four. It needs `psql` and a reachable
+PostgreSQL 16; set `PGHOST`/`PGUSER`/`PGPASSWORD`, or pass a full invocation in
+`$PSQL`.
 
 Concurrency and daylight-saving cases are run separately because they need two
 parallel connections and a date-generation comparison; both are recorded in
-`../schema/VALIDATION.md`.
+`../VALIDATION.md`.

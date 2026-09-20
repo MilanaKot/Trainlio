@@ -23,7 +23,8 @@ refuse to start with a missing or malformed value and name the offending key.
 | `pnpm test` | Vitest unit tests |
 | `pnpm test:e2e` | Playwright |
 | `pnpm build` | Production build |
-| `bash supabase/tests/run.sh` | Apply the schema to a throwaway database and run both validation suites |
+| `pnpm db:types` | Regenerate database types from the local Supabase stack |
+| `pnpm db:validate` | Apply every migration to a throwaway database, lint it, run all three suites |
 
 `PLAYWRIGHT_CHROMIUM_EXECUTABLE` overrides the browser binary, for environments
 that ship a preinstalled Chromium of a different build.
@@ -52,7 +53,9 @@ the same training time as the coach. `toLocaleDateString`, `toLocaleTimeString`,
 
 ```
 src/
-  app/            routes; (guardian) and (coach) groups arrive in Phase 2
+  app/
+    (auth)/       OTP sign-in
+                  (guardian) and (coach) groups arrive in Phase 2
   lib/
     env.ts        validated configuration, the only reader of process.env
     supabase/     browser, request-scoped server, service-role admin clients
@@ -60,10 +63,11 @@ src/
     i18n/         Czech messages with plural categories
     enums/        stable codes mapped to Czech labels
     domain/       pure business logic, mirrors the SQL rules (Phase 5)
-  types/          generated database types (Phase 1)
+  server/         server actions; the only place the admin client may be used
+  types/          database.generated.ts, generated from the migrations
 supabase/
-  schema/         reviewed SQL, promoted to migrations/ in Phase 1
-  tests/          invariant and authorization suites
+  migrations/     applied in filename order
+  tests/          lint plus invariant, authorization and auth suites
 tests/
   unit/           Vitest
   e2e/            Playwright
