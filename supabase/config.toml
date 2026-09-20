@@ -72,20 +72,12 @@ otp_expiry = 600
 
 [auth.email.template.magic_link]
 subject = "Přihlášení do Trainlio"
-content_path = "./templates/auth_otp.html"
+content_path = "./supabase/templates/auth_otp.html"
 
-# Production email. Supabase's built-in SMTP is rate limited to a handful of
-# messages per hour and is not a production option (D-16): a Sunday morning
-# where fifteen parents sign in at once would silently stop sending codes.
+# Local development sends nothing outward: the CLI routes mail to Mailpit, where
+# the OTP code can be read. Production SMTP is configured on the project — see below.
 [auth.email.smtp]
-enabled = true
-host = "smtp.resend.com"
-port = 587
-user = "resend"
-pass = "env(RESEND_API_KEY)"
-# Must be an address on a domain verified in Resend, or delivery fails.
-admin_email = "env(AUTH_SENDER_EMAIL)"
-sender_name = "Trainlio"
+enabled = false
 
 [auth.rate_limit]
 # Per hour, per project.
@@ -103,3 +95,28 @@ enabled = false
 
 [analytics]
 enabled = false
+
+
+
+# ---------------------------------------------------------------------------
+# Production email
+#
+# Supabase's built-in SMTP is rate limited to a handful of messages per hour and
+# is not a production option (D-16): a Sunday morning where fifteen parents sign
+# in at once would silently stop sending codes.
+#
+# It is not configured here because this file is the local-development config —
+# an [auth.email.smtp] block applies locally too, where it would take mail away
+# from Mailpit and leave the OTP unreadable. Configure it on the project
+# instead, in Authentication → Emails → SMTP:
+#
+#     Host        smtp.resend.com
+#     Port        587
+#     Username    resend
+#     Password    the Resend API key
+#     Sender      an address on a domain verified in Resend
+#     Sender name Trainlio
+#
+# The Czech OTP template below is pushed with `supabase config push` and applies
+# to both.
+# ---------------------------------------------------------------------------

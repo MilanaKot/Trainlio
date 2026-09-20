@@ -87,3 +87,32 @@ Mutations go through Server Actions calling the database domain functions.
 Guardians hold no write grant on `bookings` and coaches none on
 `training_sessions`, so a direct table write is refused — see
 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
+
+## Running the real stack
+
+Docker is required. `supabase start` brings up Postgres, Auth, Storage,
+Realtime, PostgREST, Studio and Mailpit, applies every migration and seeds
+`supabase/tests/fixtures.sql`.
+
+```bash
+pnpm db:start           # prints the local keys; copy them into .env.local
+pnpm db:types           # regenerate types from the running stack
+pnpm db:integration     # ANON=<anon key> pnpm db:integration
+pnpm db:reset           # reapply migrations and fixtures from scratch
+pnpm db:stop
+```
+
+OTP codes are not emailed anywhere locally: Mailpit catches them at
+http://127.0.0.1:54324.
+
+`pnpm db:validate` needs only `psql` and a PostgreSQL 16+ instance, so it runs
+in CI without Docker.
+
+### Two kinds of database test
+
+`supabase/tests/*.sql` reach RLS through `set role authenticated` plus a JWT
+claim, which is what PostgREST does internally. They are fast and need no
+containers.
+
+`supabase/tests/integration.mjs` exercises what SQL cannot: real OTP delivery,
+real Storage policies, and RLS as PostgREST applies it over HTTP.

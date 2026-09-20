@@ -39,7 +39,7 @@ export type Database = {
       athlete_sport_profiles: {
         Row: {
           athlete_id: string
-          attributes: NonNullable<Json>
+          attributes: Json
           club_name: string | null
           created_at: string
           id: string
@@ -51,7 +51,7 @@ export type Database = {
         }
         Insert: {
           athlete_id: string
-          attributes?: NonNullable<Json>
+          attributes?: Json
           club_name?: string | null
           created_at?: string
           id?: string
@@ -63,7 +63,7 @@ export type Database = {
         }
         Update: {
           athlete_id?: string
-          attributes?: NonNullable<Json>
+          attributes?: Json
           club_name?: string | null
           created_at?: string
           id?: string
@@ -133,7 +133,7 @@ export type Database = {
           entity_id: string
           entity_type: string
           id: number
-          metadata: NonNullable<Json>
+          metadata: Json
           workspace_id: string
         }
         Insert: {
@@ -145,7 +145,7 @@ export type Database = {
           entity_id: string
           entity_type: string
           id?: never
-          metadata?: NonNullable<Json>
+          metadata?: Json
           workspace_id: string
         }
         Update: {
@@ -157,7 +157,7 @@ export type Database = {
           entity_id?: string
           entity_type?: string
           id?: never
-          metadata?: NonNullable<Json>
+          metadata?: Json
           workspace_id?: string
         }
         Relationships: [
@@ -398,7 +398,7 @@ export type Database = {
           event_id: string
           id: string
           last_error: string | null
-          payload: NonNullable<Json>
+          payload: Json
           provider_message_id: string | null
           recipient_email: string | null
           recipient_profile_id: string
@@ -412,7 +412,7 @@ export type Database = {
           event_id: string
           id?: string
           last_error?: string | null
-          payload?: NonNullable<Json>
+          payload?: Json
           provider_message_id?: string | null
           recipient_email?: string | null
           recipient_profile_id: string
@@ -426,7 +426,7 @@ export type Database = {
           event_id?: string
           id?: string
           last_error?: string | null
-          payload?: NonNullable<Json>
+          payload?: Json
           provider_message_id?: string | null
           recipient_email?: string | null
           recipient_profile_id?: string
@@ -457,7 +457,7 @@ export type Database = {
           dispatched_at: string | null
           event_type: string
           id: string
-          payload: NonNullable<Json>
+          payload: Json
           training_session_id: string | null
           workspace_id: string
         }
@@ -466,7 +466,7 @@ export type Database = {
           dispatched_at?: string | null
           event_type: string
           id?: string
-          payload?: NonNullable<Json>
+          payload?: Json
           training_session_id?: string | null
           workspace_id: string
         }
@@ -475,7 +475,7 @@ export type Database = {
           dispatched_at?: string | null
           event_type?: string
           id?: string
-          payload?: NonNullable<Json>
+          payload?: Json
           training_session_id?: string | null
           workspace_id?: string
         }
@@ -1094,11 +1094,8 @@ export type Database = {
         }
         Returns: Json
       }
-      current_profile_id: { Args: Record<PropertyKey, never>; Returns: string }
-      ensure_current_profile: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
+      current_profile_id: { Args: never; Returns: string }
+      ensure_current_profile: { Args: never; Returns: string }
       guardian_can_see_workspace: {
         Args: { p_workspace_id: string }
         Returns: boolean
@@ -1112,7 +1109,7 @@ export type Database = {
         Args: { p_athlete_id: string }
         Returns: boolean
       }
-      is_platform_admin: { Args: Record<PropertyKey, never>; Returns: boolean }
+      is_platform_admin: { Args: never; Returns: boolean }
       is_visible_staff_profile: {
         Args: { p_profile_id: string }
         Returns: boolean
@@ -1124,7 +1121,7 @@ export type Database = {
         Returns: boolean
       }
       joinable_workspaces: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           id: string
           name: string
@@ -1329,3 +1326,4 @@ export const Constants = {
     },
   },
 } as const
+

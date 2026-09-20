@@ -1,11 +1,15 @@
 /**
  * Generate src/types/database.generated.ts from a live database.
  *
- * `supabase gen types` is the canonical command and stays in package.json, but
- * it launches pg-meta in a container. This script calls the same two libraries
- * that container runs — @supabase/postgres-meta to introspect and
- * @supabase/postgrest-typegen to render — so the output is the generator's own,
- * not a lookalike, and it works wherever Postgres is reachable.
+ * `supabase gen types --local` is the canonical command and stays in
+ * package.json. This script exists as a fallback for environments without
+ * Docker: it calls the same two libraries the CLI runs in its container —
+ * @supabase/postgres-meta to introspect and @supabase/postgrest-typegen to
+ * render — so the output is the generator's own, not a lookalike.
+ *
+ * Verified against the CLI: the only difference is that these package versions
+ * render a NOT NULL jsonb column as `NonNullable<Json>` where the CLI's bundled
+ * version renders `Json`. Prefer `pnpm db:types` when Docker is available.
  *
  *   node scripts/gen-types.mjs "postgresql://postgres@127.0.0.1:54322/postgres"
  */

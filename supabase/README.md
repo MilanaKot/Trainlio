@@ -69,6 +69,25 @@ The second form calls the same two libraries the CLI runs in its container, so
 the output is identical; it exists because the CLI needs Docker even when given
 a connection string.
 
+## Production email
+
+`config.toml` is the local-development configuration, and an
+`[auth.email.smtp]` block in it applies locally too — where it takes mail away
+from Mailpit and leaves the OTP code unreadable. Production SMTP is therefore
+configured on the project itself, in Authentication → Emails → SMTP:
+
+| Field | Value |
+|---|---|
+| Host | `smtp.resend.com` |
+| Port | `587` |
+| Username | `resend` |
+| Password | the Resend API key |
+| Sender | an address on a domain verified in Resend |
+| Sender name | `Trainlio` |
+
+Supabase's built-in SMTP is rate limited to a handful of messages per hour and
+is not a production option (D-16).
+
 ## Validation
 
 `pnpm db:validate` — lint plus three suites. Results in
