@@ -13,14 +13,15 @@ domain model is intentionally designed for:
 
 ## Status
 
-Phases 0 to 3 complete.
+Phases 0 to 4 complete.
 
 The database and its authorization model, email one-time-code sign-in, athlete
-management and coach session management are in place. Thirteen migrations apply
-clean, the database lint reports no error-level finding, and 171 validation
-cases pass — see [`supabase/VALIDATION.md`](supabase/VALIDATION.md).
+management, coach session management and recurring series are in place. Fourteen
+migrations apply clean, the database lint reports no error-level finding, and
+205 validation cases pass — see
+[`supabase/VALIDATION.md`](supabase/VALIDATION.md).
 
-Next: Phase 4 — recurring series.
+Next: Phase 5 — the booking engine.
 
 See [`CONTRIBUTING.md`](CONTRIBUTING.md) to run it.
 

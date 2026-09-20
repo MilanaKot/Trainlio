@@ -213,3 +213,62 @@ export async function duplicateSession(
   refresh(newId)
   return { ok: true, sessionId: newId }
 }
+
+/**
+ * Create a series and every occurrence, in one call.
+ *
+ * The dates are generated on the server, not submitted from the preview: the
+ * preview and the generator run the same rule, but only one of them is
+ * authoritative. Sending the list would let a stale or edited preview decide
+ * what gets created.
+ */
+export async function createSeries(
+  workspaceId: string,
+  form: FormData,
+): Promise<SessionActionResult & { generatedCount?: number }> {
+  const validated = validateSession(readForm(form))
+  if (!validated.ok) return { ok: false, code: 'VALIDATION', fieldErrors: validated.errors }
+
+  const v = validated.value
+  const byWeekday = Number(String(form.get('byWeekday') ?? ''))
+  const dateFrom = String(form.get('localDateFrom') ?? '')
+  const dateTo = String(form.get('localDateTo') ?? '')
+
+  if (!Number.isInteger(byWeekday) || byWeekday < 1 || byWeekday > 7) {
+    return { ok: false, code: 'INVALID_WEEKDAY' }
+  }
+  if (!dateFrom || !dateTo || dateTo < dateFrom) {
+    return { ok: false, code: 'INVALID_DATE_RANGE' }
+  }
+
+  const supabase = await createClient()
+
+  const { data, error } = await supabase.rpc('create_session_series', {
+    p_workspace_id: workspaceId,
+    p_by_weekday: byWeekday,
+    p_local_date_from: dateFrom,
+    p_local_date_to: dateTo,
+    p_local_start_time: v.localStartTime,
+    p_local_end_time: v.localEndTime,
+    p_facility_id: v.facilityId,
+    p_capacity: v.capacity,
+    p_eligibility_mode: v.eligibilityMode,
+    ...withoutEmpty({
+      p_birth_year_from: v.birthYearFrom,
+      p_birth_year_to: v.birthYearTo,
+      p_changing_room: v.changingRoom,
+      p_public_notes: v.publicNotes,
+      p_internal_notes: v.internalNotes,
+      p_main_coach_profile_id: v.mainCoachProfileId,
+    }),
+  })
+
+  if (error) return { ok: false, code: 'generic' }
+
+  const result = readRpc(data)
+  if (!result.ok) return { ok: false, code: result.code ?? 'generic' }
+
+  revalidatePath('/trener')
+  revalidatePath('/trener/serie')
+  return { ok: true, generatedCount: Number(result.data?.generated_count ?? 0) }
+}

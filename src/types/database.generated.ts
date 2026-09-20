@@ -1098,6 +1098,27 @@ export type Database = {
         }
         Returns: Json
       }
+      create_session_series: {
+        Args: {
+          p_birth_year_from?: number
+          p_birth_year_to?: number
+          p_by_weekday: number
+          p_capacity?: number
+          p_changing_room?: string
+          p_eligibility_mode?: Database["public"]["Enums"]["eligibility_mode"]
+          p_facility_id: string
+          p_internal_notes?: string
+          p_local_date_from: string
+          p_local_date_to: string
+          p_local_end_time: string
+          p_local_start_time: string
+          p_main_coach_profile_id?: string
+          p_public_notes?: string
+          p_status?: Database["public"]["Enums"]["session_status"]
+          p_workspace_id: string
+        }
+        Returns: Json
+      }
       create_training_session: {
         Args: {
           p_birth_year_from?: number
@@ -1206,6 +1227,14 @@ export type Database = {
           p_workspace_id?: string
         }
         Returns: Json
+      }
+      weekly_occurrence_dates: {
+        Args: {
+          p_by_weekday: number
+          p_local_date_from: string
+          p_local_date_to: string
+        }
+        Returns: string[]
       }
     }
     Enums: {

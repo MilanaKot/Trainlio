@@ -102,3 +102,5 @@ echo
 run_suite trainlio_athletes supabase/tests/validation_athletes.sql
 echo
 run_suite trainlio_sessions supabase/tests/validation_sessions.sql
+echo
+run_suite trainlio_series supabase/tests/validation_series.sql

@@ -20,10 +20,15 @@ export default async function CoachLayout({ children }: { children: React.ReactN
 
   return (
     <div className="mx-auto min-h-dvh max-w-3xl px-4 py-6">
-      <header className="mb-6 flex items-center justify-between gap-4">
-        <Link href="/trener" className="text-sm font-semibold">
-          {workspace.name}
-        </Link>
+      <header className="mb-6 flex flex-wrap items-center justify-between gap-4">
+        <div className="flex items-center gap-4">
+          <Link href="/trener" className="text-sm font-semibold">
+            {workspace.name}
+          </Link>
+          <Link href="/trener/serie" className="text-sm opacity-70">
+            {messages.coach.series}
+          </Link>
+        </div>
         <form
           action={async () => {
             'use server'

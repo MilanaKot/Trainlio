@@ -173,3 +173,72 @@ export async function getCoachSession(sessionId: string): Promise<CoachSession |
 
   return data ? toSession(data as unknown as Row) : null
 }
+
+export type CoachSeries = {
+  id: string
+  byWeekday: number
+  localDateFrom: string
+  localDateTo: string
+  localStartTime: string
+  localEndTime: string
+  generatedCount: number
+  generatedAt: string | null
+  generatedInTimezone: string
+  facilityCode: string
+  capacity: number
+  /** How many of the generated occurrences still exist and are not cancelled. */
+  activeCount: number
+  cancelledCount: number
+}
+
+type SeriesRow = {
+  id: string
+  by_weekday: number
+  local_date_from: string
+  local_date_to: string
+  local_start_time: string
+  local_end_time: string
+  generated_count: number
+  generated_at: string | null
+  generated_in_timezone: string
+  capacity: number
+  facilities: { code: string } | null
+  training_sessions: { status: string }[] | null
+}
+
+/** Series in the coach's workspace, newest first. */
+export async function listCoachSeries(): Promise<CoachSeries[]> {
+  const supabase = await createClient()
+
+  const { data } = await supabase
+    .from('session_series')
+    .select(
+      `id, by_weekday, local_date_from, local_date_to, local_start_time, local_end_time,
+       generated_count, generated_at, generated_in_timezone, capacity,
+       facilities ( code ),
+       training_sessions ( status )`,
+    )
+    .order('created_at', { ascending: false })
+
+  return ((data ?? []) as unknown as SeriesRow[]).map((row) => {
+    const occurrences = row.training_sessions ?? []
+    return {
+      id: row.id,
+      byWeekday: row.by_weekday,
+      localDateFrom: row.local_date_from,
+      localDateTo: row.local_date_to,
+      // `time` comes back as HH:MM:SS; the form and the list want HH:MM.
+      localStartTime: row.local_start_time.slice(0, 5),
+      localEndTime: row.local_end_time.slice(0, 5),
+      generatedCount: row.generated_count,
+      generatedAt: row.generated_at,
+      generatedInTimezone: row.generated_in_timezone,
+      facilityCode: row.facilities?.code ?? '',
+      capacity: row.capacity,
+      // Counted from the occurrences, not from the series row: the series is
+      // provenance and never follows what happens to them afterwards.
+      activeCount: occurrences.filter((s) => s.status !== 'CANCELLED').length,
+      cancelledCount: occurrences.filter((s) => s.status === 'CANCELLED').length,
+    }
+  })
+}

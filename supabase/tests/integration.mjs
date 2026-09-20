@@ -326,6 +326,86 @@ if (!SERVICE) {
        .every((a) => audit.some((row) => row.action === a)))
   r = await fetch(`${API}/rest/v1/audit_log?select=action`, { headers: coachAuth })
   ok('which even a coach cannot read', !r.ok, `${r.status}`)
+
+  console.log('')
+  console.log('── Recurring series across a daylight-saving change ────────────────')
+
+  // The PRD's own example. Czech DST ends on 25 October 2026, which is itself
+  // an occurrence date.
+  res = await rpc('create_session_series', {
+    p_workspace_id: ws.id,
+    p_by_weekday: 7,
+    p_local_date_from: '2026-10-04',
+    p_local_date_to: '2026-11-29',
+    p_local_start_time: '09:00',
+    p_local_end_time: '10:00',
+    p_facility_id: mh.id,
+    p_capacity: 10,
+    p_eligibility_mode: 'BIRTH_YEAR_RANGE',
+    p_birth_year_from: 2017,
+    p_birth_year_to: 2018,
+  })
+  ok('a coach can create a series', res.ok === true, res.code ?? '')
+  ok('it generates nine occurrences (AC-080)', res.data?.generated_count === 9)
+
+  const seriesId = res.data?.session_series_id
+  const occurrences = await (
+    await fetch(
+      `${API}/rest/v1/training_sessions?series_id=eq.${seriesId}&select=start_at,capacity,status&order=start_at`,
+      { headers: coachAuth },
+    )
+  ).json()
+
+  const localTimes = occurrences.map((o) =>
+    new Intl.DateTimeFormat('en-GB', {
+      timeZone: ws.timezone, hour: '2-digit', minute: '2-digit', hour12: false,
+    }).format(new Date(o.start_at)),
+  )
+  ok('every occurrence keeps the same local start time (AC-080a)',
+     new Set(localTimes).size === 1 && localTimes[0] === '09:00',
+     [...new Set(localTimes)].join(', '))
+
+  // The corollary, and the reason a fixed interval is wrong: the absolute gaps
+  // are not all equal.
+  const gaps = new Set(
+    occurrences.slice(1).map((o, i) =>
+      new Date(o.start_at).getTime() - new Date(occurrences[i].start_at).getTime()),
+  )
+  ok('so the absolute gap between them is not uniform', gaps.size === 2, `${gaps.size} distinct gaps`)
+
+  // BR-081: independent from creation onward.
+  const firstId = (
+    await (
+      await fetch(
+        `${API}/rest/v1/training_sessions?series_id=eq.${seriesId}&select=id&order=start_at&limit=1`,
+        { headers: coachAuth },
+      )
+    ).json()
+  )[0].id
+  res = await rpc('cancel_training_session', { p_training_session_id: firstId })
+  ok('one occurrence can be cancelled', res.ok === true, res.code ?? '')
+
+  const after = await (
+    await fetch(`${API}/rest/v1/training_sessions?series_id=eq.${seriesId}&select=status`, { headers: coachAuth })
+  ).json()
+  ok('and its siblings are untouched (AC-081)',
+     after.filter((o) => o.status === 'CANCELLED').length === 1 &&
+     after.filter((o) => o.status === 'OPEN').length === 8)
+
+  const series = (
+    await (
+      await fetch(
+        `${API}/rest/v1/session_series?id=eq.${seriesId}&select=generated_in_timezone,generated_count`,
+        { headers: coachAuth },
+      )
+    ).json()
+  )[0]
+  ok('the series records the timezone it was generated under (AC-080c)',
+     series.generated_in_timezone === ws.timezone, series.generated_in_timezone)
+  ok('and does not follow what happens to the occurrences', series.generated_count === 9)
+
+  r = await fetch(`${API}/rest/v1/session_series?select=id`, { headers: auth })
+  ok('a guardian sees no series at all', (await r.json()).length === 0)
 }
 
 console.log('')

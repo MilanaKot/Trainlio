@@ -63,6 +63,29 @@ export function formatDate(at: Date, timeZone: Timezone): string {
   return `${day}. ${month}. ${year}`
 }
 
+/**
+ * `Neděle 4. 10.` from a `YYYY-MM-DD` calendar date.
+ *
+ * Takes a date key rather than an instant, because a recurrence preview has no
+ * instant yet — the occurrence is a local calendar date until the server
+ * converts it. Formatting it through a Date would invite exactly the timezone
+ * shift the whole series design avoids, so the weekday is computed
+ * arithmetically and only the label comes from the locale.
+ */
+export function formatLocalDateKey(dateKey: string): string {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dateKey)
+  if (!match) throw new Error(`Not a calendar date: ${dateKey}`)
+
+  const [, year, month, day] = match
+  // UTC noon is used purely as a calendar: it carries no timezone meaning and
+  // cannot land on a different day under any offset.
+  const at = new Date(Date.UTC(Number(year), Number(month) - 1, Number(day), 12))
+  const weekday = part(at, 'UTC', { weekday: 'long' }, 'weekday')
+  const capitalised = weekday.charAt(0).toLocaleUpperCase(CZECH_LOCALE) + weekday.slice(1)
+
+  return `${capitalised} ${Number(day)}. ${Number(month)}.`
+}
+
 /** Birth year from a full date of birth (PRD §9). */
 export function birthYear(dateOfBirth: string): number {
   const year = Number(dateOfBirth.slice(0, 4))

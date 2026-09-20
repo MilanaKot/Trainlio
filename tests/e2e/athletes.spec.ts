@@ -14,6 +14,8 @@ test.describe('guardian area requires a session', () => {
     '/treninky',
     '/trener',
     '/trener/novy',
+    '/trener/serie',
+    '/trener/serie/nova',
   ]) {
     test(`${path} redirects to sign-in`, async ({ page }) => {
       await page.goto(path)

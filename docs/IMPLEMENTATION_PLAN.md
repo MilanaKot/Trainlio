@@ -69,7 +69,7 @@ Exit: AC-051, AC-052, AC-060, AC-062, AC-070, AC-070a, AC-027, AC-160 to AC-164
 (terminal cancellation), AC-170 to AC-175 (eligibility narrowing), AC-190 to
 AC-194 (significant changes), AC-200 to AC-204 (notes and changing room).
 
-## Phase 4 — recurring series
+## Phase 4 — recurring series ✅
 
 - `session_series` with generation metadata
 - Local wall-clock generation, per-occurrence conversion

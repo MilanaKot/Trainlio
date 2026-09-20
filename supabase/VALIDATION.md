@@ -10,7 +10,7 @@ intent. Supabase-provided objects (`auth.users`, `auth.uid()`, `storage.objects`
 
 All nine files applied in order with no errors.
 
-**171 of 171 cases pass**, and the database lint reports no error-level finding:
+**205 of 205 cases pass**, and the database lint reports no error-level finding:
 
 | Suite | Cases |
 |---|---|
@@ -20,6 +20,7 @@ All nine files applied in order with no errors.
 | [`tests/validation_auth.sql`](tests/validation_auth.sql) | 17 |
 | [`tests/validation_athletes.sql`](tests/validation_athletes.sql) | 35 |
 | [`tests/validation_sessions.sql`](tests/validation_sessions.sql) | 51 |
+| [`tests/validation_series.sql`](tests/validation_series.sql) | 34 |
 
 Plus the concurrency and daylight-saving cases below, which need parallel
 connections and are run separately.
@@ -183,11 +184,11 @@ The two mechanisms are separate and both are needed: the trigger's own lock
 guarantees the projection never lies about what exists, and the RPC's lock
 guarantees capacity is never exceeded in the first place.
 
-## Daylight saving (approved finding 2)
+## Recurring series
 
-The PRD's own example series — Sundays 09:00–10:00, 4 October to 29 November
-2026, `Europe/Prague` — generates nine occurrences. Czech DST ends on
-25 October 2026, which is itself an occurrence date.
+The PRD's own example — Sundays 09:00–10:00, 4 October to 29 November 2026,
+`Europe/Prague`. Czech DST ends on 25 October 2026, which is itself an
+occurrence date.
 
 | Occurrence | Per-occurrence local conversion | Fixed 7×24h stepping |
 |---|---|---|
@@ -195,6 +196,26 @@ The PRD's own example series — Sundays 09:00–10:00, 4 October to 29 November
 | 25 Oct, and 1, 8, 15, 22, 29 Nov | 09:00 | **08:00** |
 
 Six of nine occurrences land an hour early under the naive approach.
+
+Generation is now exercised end to end rather than demonstrated:
+
+| Check | Result |
+|---|---|
+| Occurrences generated | 9, every one on the requested weekday |
+| Distinct local start times | **1** — `09:00` (AC-080a) |
+| Distinct absolute gaps between them | **2** — which is the corollary, and the reason a fixed interval is wrong |
+| First and last occurrence | on the start date and on or before the end date |
+| Timezone and pattern recorded on the series | `Europe/Prague`, weekday and local times (AC-080c) |
+| Each occurrence's MAIN coach row, internal note, occupancy row | created |
+| Cancelling one occurrence | only that one; the other eight untouched (AC-081) |
+| Editing one occurrence | only that one; the series row does not follow (AC-082) |
+| A pattern matching no date, an inverted range, a bad weekday | refused |
+| A creation that fails partway | leaves no series row and no occurrence (AC-080b) |
+| A guardian reading `session_series` | no rows |
+
+The preview a coach approves and the rows the server creates run the same rule,
+but only the server's is authoritative: the dates are never submitted, so a
+stale preview cannot decide what exists.
 
 ---
 

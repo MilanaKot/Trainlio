@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   DEFAULT_TIMEZONE,
   birthYear,
+  formatLocalDateKey,
   formatSessionDay,
   formatTime,
   formatTimeRange,
@@ -86,5 +87,32 @@ describe('weekly occurrence dates', () => {
   it('rejects an out-of-range weekday', () => {
     expect(() => weeklyOccurrenceDates('2026-10-04', '2026-10-11', 0)).toThrow()
     expect(() => weeklyOccurrenceDates('2026-10-04', '2026-10-11', 8)).toThrow()
+  })
+})
+
+describe('formatLocalDateKey', () => {
+  // A recurrence preview has no instant yet — an occurrence is a local calendar
+  // date until the server converts it. Formatting it through a Date would risk
+  // the very shift the series design avoids.
+  it('renders the session-card heading from a calendar date', () => {
+    expect(formatLocalDateKey('2026-10-04')).toBe('Neděle 4. 10.')
+    expect(formatLocalDateKey('2026-09-27')).toBe('Neděle 27. 9.')
+  })
+
+  it('gives the same label regardless of the machine timezone', () => {
+    // 1 November 2026 is a Sunday. Under a negative offset an instant-based
+    // implementation would render Saturday.
+    expect(formatLocalDateKey('2026-11-01')).toBe('Neděle 1. 11.')
+  })
+
+  it('renders every occurrence of the PRD series on the same weekday', () => {
+    const labels = weeklyOccurrenceDates('2026-10-04', '2026-11-29', 7).map(formatLocalDateKey)
+    expect(labels).toHaveLength(9)
+    expect(labels.every((label) => label.startsWith('Neděle'))).toBe(true)
+  })
+
+  it('rejects anything that is not a calendar date', () => {
+    expect(() => formatLocalDateKey('2026-10-04T09:00:00Z')).toThrow()
+    expect(() => formatLocalDateKey('4. 10. 2026')).toThrow()
   })
 })
