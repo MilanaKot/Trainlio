@@ -16,10 +16,18 @@ jobs:
       # Placeholders. The build validates that configuration is present and
       # well-formed, not that it points at a real project — so CI proves the
       # gate works without holding production secrets.
+      #
+      # Every variable the schemas declare has to be here, including the ones a
+      # developer never notices: Next loads .env.local automatically, so a
+      # missing variable is invisible locally and fails only on a runner with
+      # no such file. That is exactly how NEXT_PUBLIC_SITE_URL and
+      # AUTH_SENDER_EMAIL went missing from this job until the first CI run.
       NEXT_PUBLIC_SUPABASE_URL: http://127.0.0.1:54321
       NEXT_PUBLIC_SUPABASE_ANON_KEY: ci-anon-key
+      NEXT_PUBLIC_SITE_URL: http://127.0.0.1:3000
       SUPABASE_SERVICE_ROLE_KEY: ci-service-role-key
       RESEND_API_KEY: ci-resend-key
+      AUTH_SENDER_EMAIL: trainlio@example.test
       CRON_SECRET: ci-cron-secret-at-least-16
     steps:
       - uses: actions/checkout@v5
