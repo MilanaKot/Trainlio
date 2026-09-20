@@ -73,7 +73,22 @@ and restarting the Realtime container by hand does not change the outcome —
 only having run the suite once does.
 
 The suite skips rather than fails so a red line here always means a real
-regression. If the checks skip on two consecutive runs, that is worth
-investigating: they are the only coverage of live occupancy, and a guardian who
-never sees the count move is a guardian who books into a session that filled
-while they were reading it.
+regression — **unless `REALTIME_REQUIRED=1` is set**, which turns the skip into
+a failure. CI sets it on a second run of the suite, after a first run that is
+allowed to skip:
+
+```bash
+pnpm db:integration                       # warm-up, may skip
+REALTIME_REQUIRED=1 pnpm db:integration   # the run that counts
+```
+
+Running twice without the flag would prove nothing, because a skip leaves the
+exit code at zero and two skips look exactly like coverage. That is precisely
+what CI was doing until the first pull request: a fresh stack every run, so
+every run was the first one, so these checks never ran at all while CI stayed
+green.
+
+They are the only coverage of live occupancy, and a guardian who never sees the
+count move is a guardian who books into a session that filled while they were
+reading it. See [`../VALIDATION.md`](../VALIDATION.md) for what is and is not
+understood about the cause.

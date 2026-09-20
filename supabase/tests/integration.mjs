@@ -16,6 +16,20 @@ const API = process.env.SUPABASE_URL ?? 'http://127.0.0.1:54321'
 const MAIL = process.env.MAILPIT_URL ?? 'http://127.0.0.1:54324'
 const ANON = process.env.ANON
 
+/**
+ * Turns the Realtime skip into a failure.
+ *
+ * Against a freshly started stack the Supabase CLI does not route changes to an
+ * RLS-scoped subscriber until the suite has run once, so the first run always
+ * skips — including in CI, where the stack is always fresh. A second run does
+ * route, but running twice proves nothing on its own: a skip leaves the exit
+ * code at zero, so two skips would look exactly like coverage.
+ *
+ * So CI runs the suite twice and sets this on the second: the warm-up may skip,
+ * the run that counts may not.
+ */
+const REALTIME_REQUIRED = process.env.REALTIME_REQUIRED === '1'
+
 if (!ANON) {
   console.error('ANON is required (the local anon key from `supabase status`)')
   process.exit(1)
@@ -483,14 +497,21 @@ if (!SERVICE) {
     if (!routing) await rt.removeChannel(channel)
   }
 
-  // Not ok(): a local stack that is not routing is a fault in the harness, not
-  // in Trainlio, and reporting it as a failed assertion would train everyone to
-  // ignore a red line here. Against a freshly reset stack the Supabase CLI's
-  // Realtime container does not route to an RLS-scoped subscriber until the
-  // suite has been run once; the checks below are real on every other run.
+  // A stack that is not routing is a fault in the harness rather than in
+  // Trainlio, and on a first run it is expected — so it skips, because a red
+  // line nobody can act on is a red line everybody learns to ignore.
+  //
+  // Unless this is the run that counts. Then it is a failure, because the
+  // alternative is a suite that reports success while never having checked the
+  // one thing a parent watching a session fill depends on.
   if (!routing) {
-    console.log('SKIP  Realtime checks — the local stack is not routing changes yet.')
-    console.log('      Run the suite again; see supabase/tests/README.md.')
+    if (REALTIME_REQUIRED) {
+      ok('a guardian can subscribe to the occupancy projection and receive changes',
+         false, 'the stack never routed a probe change; this is the run that counts')
+    } else {
+      console.log('SKIP  Realtime checks — the local stack is not routing changes yet.')
+      console.log('      Run the suite again; see supabase/tests/README.md.')
+    }
   } else {
     ok('a guardian can subscribe to the occupancy projection and receive changes', true)
   }

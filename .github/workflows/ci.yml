@@ -120,10 +120,25 @@ jobs:
       - name: Start the Supabase stack
         run: pnpm db:start
 
+      # Twice, on purpose. The Supabase CLI does not route Realtime changes to
+      # an RLS-scoped subscriber until the suite has run once against a fresh
+      # stack, and CI's stack is always fresh — so the first run always skipped
+      # those checks, and CI was green while never testing them.
+      #
+      # The warm-up may skip. The second run sets REALTIME_REQUIRED, which
+      # turns that skip into a failure: running twice without it would leave
+      # two skips looking exactly like coverage.
+      - name: Integration suite (warm-up)
+        env:
+          ANON: ${{ env.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+          SERVICE_ROLE_KEY: ${{ env.SUPABASE_SERVICE_ROLE_KEY }}
+        run: pnpm db:integration
+
       - name: Integration suite
         env:
           ANON: ${{ env.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
           SERVICE_ROLE_KEY: ${{ env.SUPABASE_SERVICE_ROLE_KEY }}
+          REALTIME_REQUIRED: '1'
         run: pnpm db:integration
 
       - name: Browser flows and mobile review
