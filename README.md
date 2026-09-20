@@ -4,6 +4,7 @@ Mobile-first booking platform for sports training sessions.
 
 The MVP is configured for one hockey coach in Příbram, Czech Republic, but the
 domain model is intentionally designed for:
+
 - multiple sports;
 - multiple coaches;
 - multiple workspaces;
@@ -34,6 +35,7 @@ When something goes wrong, [`docs/RUNBOOK.md`](docs/RUNBOOK.md).
 See [`CONTRIBUTING.md`](CONTRIBUTING.md) to run it.
 
 ## MVP stack
+
 - Next.js
 - TypeScript
 - Supabase (PostgreSQL, Auth, Storage, Realtime)
@@ -45,6 +47,7 @@ See [`CONTRIBUTING.md`](CONTRIBUTING.md) to run it.
 - Playwright
 
 ## Current MVP language
+
 Czech.
 
 The codebase must be internationalization-ready so English can be added later
@@ -52,22 +55,22 @@ without redesigning the domain model.
 
 ## Documentation
 
-| Document | Purpose |
-|---|---|
-| [`docs/PRD.md`](docs/PRD.md) | Product requirements |
-| [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | The five layers and why they stay separate |
-| [`docs/DATA_MODEL.md`](docs/DATA_MODEL.md) | Entities and their relationships |
-| [`docs/DOMAIN_OPERATIONS.md`](docs/DOMAIN_OPERATIONS.md) | Server-side operation contracts |
-| [`docs/BUSINESS_RULES.md`](docs/BUSINESS_RULES.md) | Numbered business rules |
-| [`docs/PERMISSIONS.md`](docs/PERMISSIONS.md) | Permissions and row level security |
-| [`docs/USER_FLOWS.md`](docs/USER_FLOWS.md) | End-to-end flows |
-| [`docs/UI_SPEC.md`](docs/UI_SPEC.md) | Screens and Czech UI text |
-| [`docs/ACCEPTANCE_CRITERIA.md`](docs/ACCEPTANCE_CRITERIA.md) | Testable criteria |
-| [`docs/IMPLEMENTATION_PLAN.md`](docs/IMPLEMENTATION_PLAN.md) | Phases and exit criteria |
-| [`docs/OPEN_DECISIONS.md`](docs/OPEN_DECISIONS.md) | Decisions still needed |
-| [`supabase/README.md`](supabase/README.md) | Migrations, types, validation |
-| [`supabase/VALIDATION.md`](supabase/VALIDATION.md) | What the schema was proven to do |
-| [`docs/ARCHITECTURE_REVIEW.md`](docs/ARCHITECTURE_REVIEW.md) | The review these decisions came from |
+| Document                                                     | Purpose                                    |
+| ------------------------------------------------------------ | ------------------------------------------ |
+| [`docs/PRD.md`](docs/PRD.md)                                 | Product requirements                       |
+| [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)               | The five layers and why they stay separate |
+| [`docs/DATA_MODEL.md`](docs/DATA_MODEL.md)                   | Entities and their relationships           |
+| [`docs/DOMAIN_OPERATIONS.md`](docs/DOMAIN_OPERATIONS.md)     | Server-side operation contracts            |
+| [`docs/BUSINESS_RULES.md`](docs/BUSINESS_RULES.md)           | Numbered business rules                    |
+| [`docs/PERMISSIONS.md`](docs/PERMISSIONS.md)                 | Permissions and row level security         |
+| [`docs/USER_FLOWS.md`](docs/USER_FLOWS.md)                   | End-to-end flows                           |
+| [`docs/UI_SPEC.md`](docs/UI_SPEC.md)                         | Screens and Czech UI text                  |
+| [`docs/ACCEPTANCE_CRITERIA.md`](docs/ACCEPTANCE_CRITERIA.md) | Testable criteria                          |
+| [`docs/IMPLEMENTATION_PLAN.md`](docs/IMPLEMENTATION_PLAN.md) | Phases and exit criteria                   |
+| [`docs/OPEN_DECISIONS.md`](docs/OPEN_DECISIONS.md)           | Decisions still needed                     |
+| [`supabase/README.md`](supabase/README.md)                   | Migrations, types, validation              |
+| [`supabase/VALIDATION.md`](supabase/VALIDATION.md)           | What the schema was proven to do           |
+| [`docs/ARCHITECTURE_REVIEW.md`](docs/ARCHITECTURE_REVIEW.md) | The review these decisions came from       |
 
 Schema: [`supabase/migrations/`](supabase/migrations/).
 

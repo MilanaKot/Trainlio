@@ -11,13 +11,13 @@ Approved finding 5: guardians hold no `INSERT`/`UPDATE` privilege on `bookings`,
 and coaches hold none on `training_sessions`. Every state change that carries a
 business invariant, a notification or an audit consequence happens here.
 
-| Layer | Answers | Mechanism |
-|---|---|---|
-| Database invariants | Can this row exist at all? | Constraints, composite FKs, triggers |
-| RLS authorization | May this identity see or touch this row? | Policies + `SECURITY DEFINER` predicates |
-| **Domain operations** | **Is this action permitted, now, given capacity, deadlines and eligibility — and what else must happen atomically?** | **This document** |
-| Notification outbox | Who must be told, and was it delivered? | `notification_events` → `notification_deliveries` |
-| Audit trail | What happened, by whom? | `audit_log`, append-only |
+| Layer                 | Answers                                                                                                              | Mechanism                                         |
+| --------------------- | -------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------- |
+| Database invariants   | Can this row exist at all?                                                                                           | Constraints, composite FKs, triggers              |
+| RLS authorization     | May this identity see or touch this row?                                                                             | Policies + `SECURITY DEFINER` predicates          |
+| **Domain operations** | **Is this action permitted, now, given capacity, deadlines and eligibility — and what else must happen atomically?** | **This document**                                 |
+| Notification outbox   | Who must be told, and was it delivered?                                                                              | `notification_events` → `notification_deliveries` |
+| Audit trail           | What happened, by whom?                                                                                              | `audit_log`, append-only                          |
 
 Every function here is `SECURITY DEFINER`, `set search_path = ''`, schema-qualified
 throughout, with `EXECUTE` revoked from `PUBLIC` and granted only to `authenticated`
@@ -35,36 +35,36 @@ Czech message. Constraint violations still raise — those are bugs, not user er
 
 ### Error codes
 
-| Code | Meaning |
-|---|---|
-| `NOT_AUTHENTICATED` | No `auth.uid()` |
-| `NOT_AUTHORIZED` | Caller is not an active coach of the workspace |
-| `NOT_AUTHORIZED_FOR_ATHLETE` | Caller has no active `MANAGE` guardian access |
-| `SESSION_NOT_FOUND` | |
-| `SESSION_NOT_OPEN` | Status is not `OPEN` (`BR-030`) |
-| `SESSION_ALREADY_STARTED` | `now() >= start_at` |
-| `SESSION_CANCELLED` | D-07: the session is terminal and accepts no booking or edit |
-| `NOT_ELIGIBLE` | Per-athlete reason in `details` |
-| `ALREADY_BOOKED` | A `CONFIRMED` booking exists (`BR-031`) |
-| `REMOVED_BY_COACH` | D-06: the coach removed this athlete from this session |
-| `INSUFFICIENT_CAPACITY` | D-05: fewer free places than athletes requested |
-| `DUPLICATE_ATHLETE_IN_REQUEST` | The same athlete id appears twice in one call |
-| `EMPTY_SELECTION` | No athlete ids supplied |
-| `BOOKING_NOT_FOUND` | |
-| `BOOKING_NOT_CONFIRMED` | Already cancelled |
-| `CANCELLATION_DEADLINE_PASSED` | `BR-040` |
-| `CAPACITY_BELOW_OCCUPANCY` | Session edit: the requested capacity is below the confirmed count. Coach must resend with the confirmation flag (`BR-051`) |
-| `WOULD_EXCEED_CAPACITY` | Coach manual booking: the addition would take the count past capacity. Coach must resend with the confirmation flag (`BR-033`) |
-| `BOOKINGS_WOULD_BECOME_INELIGIBLE` | D-08: narrowing the birth-year range past existing bookings |
-| `SERIES_EMPTY` | The recurrence pattern generates no occurrence |
-| `INVALID_NAME` | Athlete first or last name is blank |
-| `INVALID_DATE_OF_BIRTH` | Missing, before 1900, or in the future |
-| `INVALID_ATHLETE_DATA` | A core athlete constraint was violated |
-| `INVALID_SPORT_ATTRIBUTES` | Position, stick side, or an attribute key the sport does not define |
-| `SPORT_NOT_FOUND` | No sport with that code |
-| `SPORT_NOT_IN_WORKSPACE` | The workspace does not run that sport |
-| `SPORT_PROFILE_EXISTS` | The athlete already holds a profile for that sport |
-| `WORKSPACE_NOT_FOUND` | No such workspace, or it is inactive |
+| Code                               | Meaning                                                                                                                        |
+| ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| `NOT_AUTHENTICATED`                | No `auth.uid()`                                                                                                                |
+| `NOT_AUTHORIZED`                   | Caller is not an active coach of the workspace                                                                                 |
+| `NOT_AUTHORIZED_FOR_ATHLETE`       | Caller has no active `MANAGE` guardian access                                                                                  |
+| `SESSION_NOT_FOUND`                |                                                                                                                                |
+| `SESSION_NOT_OPEN`                 | Status is not `OPEN` (`BR-030`)                                                                                                |
+| `SESSION_ALREADY_STARTED`          | `now() >= start_at`                                                                                                            |
+| `SESSION_CANCELLED`                | D-07: the session is terminal and accepts no booking or edit                                                                   |
+| `NOT_ELIGIBLE`                     | Per-athlete reason in `details`                                                                                                |
+| `ALREADY_BOOKED`                   | A `CONFIRMED` booking exists (`BR-031`)                                                                                        |
+| `REMOVED_BY_COACH`                 | D-06: the coach removed this athlete from this session                                                                         |
+| `INSUFFICIENT_CAPACITY`            | D-05: fewer free places than athletes requested                                                                                |
+| `DUPLICATE_ATHLETE_IN_REQUEST`     | The same athlete id appears twice in one call                                                                                  |
+| `EMPTY_SELECTION`                  | No athlete ids supplied                                                                                                        |
+| `BOOKING_NOT_FOUND`                |                                                                                                                                |
+| `BOOKING_NOT_CONFIRMED`            | Already cancelled                                                                                                              |
+| `CANCELLATION_DEADLINE_PASSED`     | `BR-040`                                                                                                                       |
+| `CAPACITY_BELOW_OCCUPANCY`         | Session edit: the requested capacity is below the confirmed count. Coach must resend with the confirmation flag (`BR-051`)     |
+| `WOULD_EXCEED_CAPACITY`            | Coach manual booking: the addition would take the count past capacity. Coach must resend with the confirmation flag (`BR-033`) |
+| `BOOKINGS_WOULD_BECOME_INELIGIBLE` | D-08: narrowing the birth-year range past existing bookings                                                                    |
+| `SERIES_EMPTY`                     | The recurrence pattern generates no occurrence                                                                                 |
+| `INVALID_NAME`                     | Athlete first or last name is blank                                                                                            |
+| `INVALID_DATE_OF_BIRTH`            | Missing, before 1900, or in the future                                                                                         |
+| `INVALID_ATHLETE_DATA`             | A core athlete constraint was violated                                                                                         |
+| `INVALID_SPORT_ATTRIBUTES`         | Position, stick side, or an attribute key the sport does not define                                                            |
+| `SPORT_NOT_FOUND`                  | No sport with that code                                                                                                        |
+| `SPORT_NOT_IN_WORKSPACE`           | The workspace does not run that sport                                                                                          |
+| `SPORT_PROFILE_EXISTS`             | The athlete already holds a profile for that sport                                                                             |
+| `WORKSPACE_NOT_FOUND`              | No such workspace, or it is inactive                                                                                           |
 
 ## The single serialization point
 
@@ -193,8 +193,11 @@ without relying on rollback.
 `INSUFFICIENT_CAPACITY` returns enough for the UI to recover:
 
 ```json
-{ "ok": false, "code": "INSUFFICIENT_CAPACITY",
-  "details": { "requested": 2, "available_places": 1, "capacity": 10, "confirmed_count": 9 } }
+{
+  "ok": false,
+  "code": "INSUFFICIENT_CAPACITY",
+  "details": { "requested": 2, "available_places": 1, "capacity": 10, "confirmed_count": 9 }
+}
 ```
 
 The picker then asks the guardian to reduce the selection and retry. It never
@@ -204,8 +207,11 @@ silently books a subset.
 and why:
 
 ```json
-{ "ok": false, "code": "NOT_ELIGIBLE",
-  "details": { "athletes": [ { "athlete_id": "…", "reason": "BIRTH_YEAR_OUT_OF_RANGE" } ] } }
+{
+  "ok": false,
+  "code": "NOT_ELIGIBLE",
+  "details": { "athletes": [{ "athlete_id": "…", "reason": "BIRTH_YEAR_OUT_OF_RANGE" }] }
+}
 ```
 
 ### `cancel_booking_as_guardian(p_booking_id uuid) → jsonb`
@@ -260,6 +266,7 @@ Differs from the guardian path in four ways:
   are recovered from by different actions. Sharing one code would force the UI
   to branch on which call it had just made rather than on what the server
   said;
+
 - `guardian_rebooking_blocked` does **not** apply: this is how a coach restores a
   previously removed athlete (D-06);
 - allowed while the session is `DRAFT`, `OPEN`, `CLOSED` or `COMPLETED`; rejected
@@ -351,19 +358,19 @@ transaction — which is precisely why coaches have no `UPDATE` policy on the ta
 
 Change classification (D-11):
 
-| Changed field | `significant_changed_at` | Notification event |
-|---|---|---|
-| `start_at`, `end_at` | set | `SESSION_SCHEDULE_CHANGED` |
-| `location_id` | set | `SESSION_LOCATION_CHANGED` |
-| `facility_id` | set | `SESSION_FACILITY_CHANGED` |
-| main coach | set | `SESSION_MAIN_COACH_CHANGED` |
-| `changing_room` | **not set** | none (D-12) |
-| `public_notes`, internal notes | not set | none |
-| `capacity` | not set | none (`BR-064`) |
-| assistant coaches | not set | none |
+| Changed field                  | `significant_changed_at` | Notification event           |
+| ------------------------------ | ------------------------ | ---------------------------- |
+| `start_at`, `end_at`           | set                      | `SESSION_SCHEDULE_CHANGED`   |
+| `location_id`                  | set                      | `SESSION_LOCATION_CHANGED`   |
+| `facility_id`                  | set                      | `SESSION_FACILITY_CHANGED`   |
+| main coach                     | set                      | `SESSION_MAIN_COACH_CHANGED` |
+| `changing_room`                | **not set**              | none (D-12)                  |
+| `public_notes`, internal notes | not set                  | none                         |
+| `capacity`                     | not set                  | none (`BR-064`)              |
+| assistant coaches              | not set                  | none                         |
 
 A main-coach change is significant because Trainlio is a system for booking
-training *with a coach*. Assistant coach changes are not.
+training _with a coach_. Assistant coach changes are not.
 
 The guardian badge is computed as `significant_changed_at > booking.created_at`,
 so a guardian who booked after the change sees nothing. The audit log, not this
@@ -535,9 +542,9 @@ The recipient's address is snapshotted here rather than joined at send time.
 `auth_user_id` is severable (D-18): a profile whose login was removed keeps its
 delivery history, and a delivery already made keeps the address it was made to.
 
-| Code | Meaning |
-|---|---|
-| `EVENT_NOT_FOUND` | |
+| Code              | Meaning |
+| ----------------- | ------- |
+| `EVENT_NOT_FOUND` |         |
 
 ### `pending_notification_events(p_limit integer default 50) → setof uuid`
 
@@ -581,9 +588,9 @@ outside the trigger can set it.
 `SENT` with `sent_at`, or `FAILED` with `last_error`. The provider id is plain
 text in a column that names no vendor (`AC-152`).
 
-| Code | Meaning |
-|---|---|
-| `DELIVERY_NOT_FOUND` | |
+| Code                 | Meaning |
+| -------------------- | ------- |
+| `DELIVERY_NOT_FOUND` |         |
 
 ### `notification_queue_depth() → jsonb`
 
@@ -654,9 +661,9 @@ ice that evening".
 reference. Off by default: an athlete is a different data subject, and erasing a
 child because a parent asked is a decision, not a side effect.
 
-| Code | Meaning |
-|---|---|
-| `PROFILE_NOT_FOUND` | |
+| Code                 | Meaning                           |
+| -------------------- | --------------------------------- |
+| `PROFILE_NOT_FOUND`  |                                   |
 | `ALREADY_ANONYMIZED` | With `anonymized_at` in `details` |
 
 ### `scrub_notification_emails() → jsonb`

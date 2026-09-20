@@ -25,16 +25,10 @@ export default async function CoachLayout({ children }: { children: React.ReactN
           reachable with a mouse and not with a thumb. */}
       <header className="mb-4 flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-2">
-          <Link
-            href="/trener"
-            className="flex min-h-11 items-center text-sm font-semibold"
-          >
+          <Link href="/trener" className="flex min-h-11 items-center text-sm font-semibold">
             {workspace.name}
           </Link>
-          <Link
-            href="/trener/serie"
-            className="flex min-h-11 items-center px-2 text-sm opacity-70"
-          >
+          <Link href="/trener/serie" className="flex min-h-11 items-center px-2 text-sm opacity-70">
             {messages.coach.series}
           </Link>
         </div>

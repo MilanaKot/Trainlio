@@ -3,6 +3,7 @@
 Trainlio — Sports Training Booking Platform
 
 ## Authentication
+
 AC-001  
 Given a valid email  
 When the user requests login  
@@ -14,6 +15,7 @@ When the user confirms it
 Then the user is authenticated without a password.
 
 ## Athlete profiles
+
 AC-010  
 A guardian can create more than one athlete.
 
@@ -33,6 +35,7 @@ AC-015
 A coach can view but cannot edit the athlete's core profile.
 
 ## Booking
+
 AC-020  
 Given a session capacity of 10 and 9 confirmed bookings  
 When an eligible guardian books one athlete  
@@ -91,6 +94,7 @@ AC-028
 No client role can delete a row from `bookings` or `training_sessions`.
 
 ## Eligibility
+
 AC-030  
 Given session eligibility 2017–2018  
 And athlete DOB 2017-10-23  
@@ -105,6 +109,7 @@ Given eligibility mode ALL
 Then birth year does not restrict booking.
 
 ## Cancellation
+
 AC-040 **(D-02)**  
 Given the session starts more than the workspace cancellation deadline away  
 Then the guardian can cancel.
@@ -150,6 +155,7 @@ AC-043
 Cancelled booking does not count toward occupancy.
 
 ## Capacity override
+
 AC-050  
 Given session is 10/10  
 When coach manually adds athlete and confirms override  
@@ -165,6 +171,7 @@ When coach confirms the 8/6 change
 Then all eight bookings remain confirmed.
 
 ## Session updates
+
 AC-060  
 When coach changes session time  
 Then session shows Updated marker to booked guardians.
@@ -177,6 +184,7 @@ AC-062
 Changing only changing room does not require email.
 
 ## Session cancellation
+
 AC-070  
 When coach cancels a session  
 Then session status becomes CANCELLED and it remains in My Bookings.
@@ -196,6 +204,7 @@ AC-073
 Cancellation email may list both affected athletes.
 
 ## Recurring sessions
+
 AC-080  
 Creating a six-week weekly series generates six independent training_session rows.
 
@@ -220,6 +229,7 @@ AC-082
 Editing one occurrence does not change others.
 
 ## Privacy
+
 AC-090  
 Guardian sees occupancy but not names of other booked athletes.
 
@@ -245,6 +255,7 @@ AC-092
 Athlete photo cannot be accessed publicly without authorization.
 
 ## Multi-sport
+
 AC-100  
 One athlete can have HOCKEY and SWIMMING sport profiles simultaneously.
 
@@ -255,6 +266,7 @@ AC-102
 Core athlete data is shared across sport profiles.
 
 ## Workspace readiness
+
 AC-110  
 One athlete may be active in multiple workspaces.
 
@@ -262,6 +274,7 @@ AC-111
 Workspace membership is not derived from club_name.
 
 ## Session lists
+
 AC-120 **(D-04)**  
 `Nadcházející` contains sessions whose `end_at` is in the future.
 
@@ -275,6 +288,7 @@ AC-123 **(D-04)**
 No scheduled job is required for AC-120 to AC-122 to hold.
 
 ## Database invariants
+
 AC-130  
 A training session cannot reference a facility that belongs to a different location.
 
@@ -294,6 +308,7 @@ AC-135
 Deleting an athlete or a session that has bookings is rejected by the database.
 
 ## Audit
+
 AC-140  
 Every action listed in BR-130 produces exactly one audit entry.
 
@@ -304,6 +319,7 @@ AC-142
 A coach capacity override produces an audit entry recording the override.
 
 ## Notifications
+
 AC-150  
 Notification delivery rows are not readable by any authenticated client role.
 
@@ -314,6 +330,7 @@ AC-152
 The database contains no provider-specific notification columns.
 
 ## Session terminality (D-07)
+
 AC-160  
 Given a CANCELLED session  
 When anyone attempts to set its status back to OPEN  
@@ -338,6 +355,7 @@ Given a session cancelled by mistake
 Then the coach creates a replacement with Duplicate Session rather than reopening.
 
 ## Eligibility narrowing (D-08)
+
 AC-170  
 Given a session with eligibility 2016–2018 and a confirmed athlete born in 2016  
 When the coach narrows eligibility to 2017–2018  
@@ -365,6 +383,7 @@ After the narrowing
 Then a significant-change audit entry exists.
 
 ## Athlete deactivation (D-09)
+
 AC-180  
 Given an inactive athlete with a confirmed future booking  
 Then the booking is preserved and remains visible in My Bookings and on the coach roster.
@@ -386,6 +405,7 @@ When the athlete is reactivated
 Then they are eligible for future bookings again.
 
 ## Significant changes (D-11)
+
 AC-190  
 Changing date, start time, end time, location, facility or main coach sets `significant_changed_at` and queues guardian email.
 
@@ -405,6 +425,7 @@ When the main coach changes
 Then guardians of confirmed athletes are emailed, `significant_changed_at` is set, and an audit entry is created.
 
 ## Session notes and changing room (D-12, D-13)
+
 AC-200  
 A guardian can read `public_notes`.
 
@@ -421,6 +442,7 @@ AC-204
 A changing-room-only update appears immediately in the app without an email.
 
 ## Roles (D-17)
+
 AC-210  
 A WORKSPACE_ADMIN may run coach domain operations in their own workspace.
 
@@ -437,6 +459,7 @@ AC-214
 A user may hold both COACH and WORKSPACE_ADMIN in the same workspace.
 
 ## Account data separability (D-18)
+
 AC-220  
 Deleting an authentication record severs the login link but preserves the actor's bookings and their attribution.
 
@@ -450,6 +473,7 @@ AC-223
 Audit entries remain attributable after an authentication record is removed.
 
 ## Account anonymisation workflow (D-18)
+
 These were added with the workflow itself, in Phase 9. AC-220 to AC-223 above
 remain the architectural constraint they are built on.
 
@@ -480,5 +504,6 @@ AC-231
 Dormancy is a list for review, never an automatic erasure: listing a profile changes nothing about it.
 
 ## Operational repair
+
 AC-232  
 Occupancy drift has a supported repair that recomputes from the bookings, reports what it changed, and appends an audit entry. It is service-role only, and it does not create a missing projection row.

@@ -31,7 +31,9 @@ describe('session availability', () => {
   })
 
   it('reports a closed session even when places remain (BR-024)', () => {
-    expect(sessionAvailability(session({ status: 'CLOSED', confirmedCount: 0 }), NOW)).toBe('CLOSED')
+    expect(sessionAvailability(session({ status: 'CLOSED', confirmedCount: 0 }), NOW)).toBe(
+      'CLOSED',
+    )
   })
 
   it('reports a cancelled session ahead of everything else', () => {

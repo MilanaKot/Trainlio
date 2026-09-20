@@ -49,7 +49,11 @@ describe('composing a notification', () => {
   it('formats a winter date correctly too, across the offset change', () => {
     const message = composeNotificationEmail(
       delivery({
-        session: { ...delivery().session, startAt: '2026-11-04T08:00:00Z', endAt: '2026-11-04T09:00:00Z' },
+        session: {
+          ...delivery().session,
+          startAt: '2026-11-04T08:00:00Z',
+          endAt: '2026-11-04T09:00:00Z',
+        },
       }),
       APP,
     )

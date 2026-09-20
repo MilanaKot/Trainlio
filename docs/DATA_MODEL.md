@@ -63,6 +63,7 @@ WORKSPACE --> AUDIT_LOG                                      (append-only, retai
 ```
 
 ## app_profiles
+
 The durable actor record. Every operational table references it; nothing in the
 domain references `auth.users` directly.
 
@@ -86,6 +87,7 @@ comparing `auth.uid()` directly, since the link can be severed.
 ## workspace_members
 
 Workspace-scoped staff membership:
+
 - id
 - workspace_id
 - user_id
@@ -106,6 +108,7 @@ A user may hold both COACH and WORKSPACE_ADMIN.
 ## platform_admins
 
 Platform-level administration, distinct from workspace administration (D-17):
+
 - profile_id
 - granted_at, granted_by
 
@@ -119,6 +122,7 @@ Supersedes the earlier `user_roles` sketch, which had no place to store a
 platform-level administrator.
 
 ## athletes
+
 - id UUID
 - first_name
 - last_name
@@ -131,6 +135,7 @@ platform-level administrator.
 No hockey-specific columns.
 
 ## guardian_athlete_access
+
 - id
 - profile_id
 - athlete_id
@@ -142,25 +147,30 @@ No hockey-specific columns.
 - updated_at
 
 Expected statuses:
+
 - ACTIVE
 - INVITED
 - REVOKED
 
 ## sports
+
 - id
 - code unique
 - name
 
 Initial:
+
 - HOCKEY
 
 Future:
+
 - FOOTBALL
 - SWIMMING
 - TENNIS
 - etc.
 
 ## athlete_sport_profiles
+
 - id
 - athlete_id
 - sport_id
@@ -173,6 +183,7 @@ Future:
 - updated_at
 
 ### Hockey attributes
+
 ```json
 {
   "position": "CENTER",
@@ -183,6 +194,7 @@ Future:
 Application validation must enforce allowed values.
 
 ## workspaces
+
 - id
 - name
 - primary_sport_id
@@ -203,6 +215,7 @@ Carries a composite key `(id, primary_sport_id)` so sessions and memberships can
 prove their sport matches the workspace.
 
 ## workspace_athlete_memberships
+
 - id
 - workspace_id
 - athlete_id
@@ -216,16 +229,17 @@ One athlete may be a member of multiple workspaces.
 
 Three composite foreign keys make an inconsistent membership impossible:
 
-| Constraint | Guarantees |
-|---|---|
+| Constraint                                                          | Guarantees                          |
+| ------------------------------------------------------------------- | ----------------------------------- |
 | `(athlete_sport_profile_id, athlete_id)` → `athlete_sport_profiles` | the profile belongs to this athlete |
-| `(athlete_sport_profile_id, sport_id)` → `athlete_sport_profiles` | `sport_id` is that profile's sport |
-| `(workspace_id, sport_id)` → `workspaces (id, primary_sport_id)` | that sport is the workspace's sport |
+| `(athlete_sport_profile_id, sport_id)` → `athlete_sport_profiles`   | `sport_id` is that profile's sport  |
+| `(workspace_id, sport_id)` → `workspaces (id, primary_sport_id)`    | that sport is the workspace's sport |
 
 Created as part of the transactional athlete creation operation, together with
 the athlete, the guardian access row and the sport profile.
 
 ## locations
+
 - id
 - workspace_id
 - name
@@ -239,6 +253,7 @@ Carries a composite key `(id, workspace_id)` so a session can prove its location
 belongs to its workspace.
 
 ## facilities
+
 - id
 - location_id
 - code
@@ -250,10 +265,12 @@ Carries a composite key `(id, location_id)` so a session can prove its facility
 is at its location.
 
 Current:
+
 - MH / Malá hala / RINK
 - VH / Velká hala / RINK
 
 Future facility types:
+
 - RINK
 - PITCH
 - COURT
@@ -264,6 +281,7 @@ Future facility types:
 - OTHER
 
 ## training_sessions
+
 - id
 - workspace_id
 - sport_id
@@ -288,6 +306,7 @@ Future facility types:
 - cancelled_by nullable
 
 Eligibility modes:
+
 - ALL
 - BIRTH_YEAR_RANGE
 
@@ -369,6 +388,7 @@ It serves three purposes:
 and no domain function ever writes it.
 
 ## training_session_coaches
+
 - training_session_id
 - user_id
 - coach_role: MAIN | ASSISTANT
@@ -376,6 +396,7 @@ and no domain function ever writes it.
 Main coach may be mirrored in training_sessions for simple querying, but association table is canonical for multiple coaches.
 
 ## bookings
+
 - id
 - training_session_id
 - athlete_id
@@ -388,6 +409,7 @@ Main coach may be mirrored in training_sessions for simple querying, but associa
 - cancelled_by nullable
 
 Statuses:
+
 - CONFIRMED
 - CANCELLED_BY_USER
 - CANCELLED_BY_COACH
@@ -412,7 +434,9 @@ notified. The booking stays CONFIRMED and valid; the column records that the rul
 moved under it.
 
 ## notification_events
+
 Outbox of intent to notify:
+
 - id
 - workspace_id
 - training_session_id nullable
@@ -423,6 +447,7 @@ Outbox of intent to notify:
   expansion idempotent after a failed drain
 
 ## notification_deliveries
+
 - id
 - event_id
 - recipient_profile_id
@@ -449,6 +474,7 @@ code sits behind an email service abstraction.
 ## audit_log
 
 Append-only record of important domain actions:
+
 - id
 - workspace_id
 - actor_profile_id nullable — null for system actions
@@ -470,7 +496,9 @@ records intent to tell a person something and is drained; the audit log records
 that a thing happened and is retained.
 
 ## future tables
+
 Not required for MVP:
+
 - attendance
 - payments
 - waiting_list

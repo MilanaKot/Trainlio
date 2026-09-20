@@ -4,18 +4,18 @@ Trainlio — Sports Training Booking Platform
 
 Migrations, applied in filename order.
 
-| Migration | Layer |
-|---|---|
-| `…01_enums.sql` | Database invariants |
-| `…02_core_tables.sql` | Database invariants |
-| `…03_operational_tables.sql` | Database invariants |
-| `…04_outbox_and_audit.sql` | Notification outbox, audit trail |
-| `…05_triggers_and_indexes.sql` | Database invariants |
-| `…06_authz_helpers.sql` | RLS authorization |
-| `…07_rls_policies.sql` | RLS authorization, table and column grants |
-| `…08_storage_policies.sql` | RLS authorization |
-| `…09_seed_reference.sql` | Reference data, needed in every environment |
-| `…10_auth_integration.sql` | Supabase Auth → actor record |
+| Migration                      | Layer                                       |
+| ------------------------------ | ------------------------------------------- |
+| `…01_enums.sql`                | Database invariants                         |
+| `…02_core_tables.sql`          | Database invariants                         |
+| `…03_operational_tables.sql`   | Database invariants                         |
+| `…04_outbox_and_audit.sql`     | Notification outbox, audit trail            |
+| `…05_triggers_and_indexes.sql` | Database invariants                         |
+| `…06_authz_helpers.sql`        | RLS authorization                           |
+| `…07_rls_policies.sql`         | RLS authorization, table and column grants  |
+| `…08_storage_policies.sql`     | RLS authorization                           |
+| `…09_seed_reference.sql`       | Reference data, needed in every environment |
+| `…10_auth_integration.sql`     | Supabase Auth → actor record                |
 
 Reference data is a migration, not `seed.sql`: production needs the workspace,
 Příbram and MH/VH too. `supabase/tests/fixtures.sql` holds dev and test fixtures
@@ -76,14 +76,14 @@ a connection string.
 from Mailpit and leaves the OTP code unreadable. Production SMTP is therefore
 configured on the project itself, in Authentication → Emails → SMTP:
 
-| Field | Value |
-|---|---|
-| Host | `smtp.resend.com` |
-| Port | `587` |
-| Username | `resend` |
-| Password | the Resend API key |
-| Sender | an address on a domain verified in Resend |
-| Sender name | `Trainlio` |
+| Field       | Value                                     |
+| ----------- | ----------------------------------------- |
+| Host        | `smtp.resend.com`                         |
+| Port        | `587`                                     |
+| Username    | `resend`                                  |
+| Password    | the Resend API key                        |
+| Sender      | an address on a domain verified in Resend |
+| Sender name | `Trainlio`                                |
 
 Supabase's built-in SMTP is rate limited to a handful of messages per hour and
 is not a production option (D-16).

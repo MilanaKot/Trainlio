@@ -3,6 +3,7 @@
 Trainlio — Sports Training Booking Platform
 
 ## Design direction
+
 - Mobile-first
 - Very simple
 - Large tap targets
@@ -12,7 +13,9 @@ Trainlio — Sports Training Booking Platform
 - Avoid exposing technical multi-sport complexity in the hockey MVP
 
 ## Guardian navigation
+
 Bottom navigation:
+
 1. Tréninky
 2. Moje tréninky
 3. Moji sportovci
@@ -53,6 +56,7 @@ If CLOSED:
 Only show eligible athletes.
 
 Example:
+
 ```text
 Koho chcete přihlásit?
 
@@ -95,11 +99,11 @@ Trénink je již plný.
 
 Czech plural agreement for the place count is required:
 
-| Places | Text |
-|---|---|
-| 1 | `zbývá poslední volné místo` |
-| 2–4 | `zbývají 2 volná místa` |
-| 5 or more | `zbývá 5 volných míst` |
+| Places    | Text                         |
+| --------- | ---------------------------- |
+| 1         | `zbývá poslední volné místo` |
+| 2–4       | `zbývají 2 volná místa`      |
+| 5 or more | `zbývá 5 volných míst`       |
 
 This is a message-formatting concern, handled by the i18n layer with plural
 categories, not by string concatenation.
@@ -110,6 +114,7 @@ occupancy value. The count may be stale; the server decides.
 ## My Bookings
 
 Tabs/sections:
+
 - Nadcházející
 - Minulé
 
@@ -138,12 +143,14 @@ booking in history and no re-booking action:
 ## Athlete profile
 
 Core:
+
 - Jméno
 - Příjmení
 - Datum narození
 - Fotografie
 
 Hockey:
+
 - Klub
 - Tým / kategorie
 - Pozice
@@ -151,6 +158,7 @@ Hockey:
 - Číslo dresu
 
 Position select:
+
 - Brankář
 - Obránce
 - Centr
@@ -159,6 +167,7 @@ Position select:
 - Univerzál
 
 Stick side:
+
 - Levé
 - Pravé
 - Nevím
@@ -168,6 +177,7 @@ Stick side:
 List by date, not calendar.
 
 Example:
+
 ```text
 Neděle 27. 9.
 
@@ -180,8 +190,9 @@ MH · Šatna 4
 ```
 
 Primary actions:
-- + Trénink
-- + Série tréninků
+
+- - Trénink
+- - Série tréninků
 
 ## Session times and dates
 
@@ -192,6 +203,7 @@ travelling abroad must see the same training time as the coach.
 ## Coach: Session detail
 
 Show:
+
 - date/time
 - facility
 - changing room
@@ -206,6 +218,7 @@ Show:
 - roster
 
 Roster row:
+
 - athlete name
 - birth year
 - hockey profile summary
@@ -213,6 +226,7 @@ Roster row:
 - booking time
 
 Actions:
+
 - Přidat sportovce
 - Odebrat
 - Upravit trénink
@@ -246,6 +260,7 @@ Chcete sportovce přidat nad stanovenou kapacitu?
 ## Recurring series form
 
 Fields:
+
 - weekday / recurrence
 - date from
 - date to

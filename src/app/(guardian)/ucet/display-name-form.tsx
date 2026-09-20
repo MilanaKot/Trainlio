@@ -38,9 +38,7 @@ export function DisplayNameForm({ displayName }: { displayName: string }) {
           maxLength={100}
           className="rounded-lg border border-black/15 px-3 py-3 text-base dark:border-white/20"
         />
-        <span className="text-xs font-normal opacity-60">
-          {messages.account.displayNameHint}
-        </span>
+        <span className="text-xs font-normal opacity-60">{messages.account.displayNameHint}</span>
       </label>
 
       {error ? (

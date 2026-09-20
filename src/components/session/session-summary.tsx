@@ -12,13 +12,7 @@ export function venueLine(session: CoachSession): string {
     .join(' · ')
 }
 
-export function SessionSummary({
-  session,
-  timezone,
-}: {
-  session: CoachSession
-  timezone: string
-}) {
+export function SessionSummary({ session, timezone }: { session: CoachSession; timezone: string }) {
   const start = new Date(session.startAt)
   const end = new Date(session.endAt)
 

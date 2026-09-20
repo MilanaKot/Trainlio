@@ -154,12 +154,12 @@ Exit: every acceptance criterion maps to a named test. ✅
 
 Four defects were found by the new tests and fixed:
 
-| Found by | Defect |
-|---|---|
-| Browser flow | An ambiguous PostgREST embed made **every guardian's session list render empty**. `training_sessions` holds three foreign keys into `app_profiles`, so the bare embed was refused — and the refusal was discarded along with the rows. |
-| The same | Read paths destructured `{ data }` and dropped `error`, so any query failure looked like "nothing found". Now `rows()`/`maybeRow()` raise, and a lost session redirects to sign-in instead. |
-| Mobile review | The coach header links, the eligibility radios and every date input were under the 44px a thumb needs. |
-| Full suite | `validation_bookings.sql` paired `current_date` with a Prague-relative time, which lands on the next day late in the evening. |
+| Found by      | Defect                                                                                                                                                                                                                                 |
+| ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Browser flow  | An ambiguous PostgREST embed made **every guardian's session list render empty**. `training_sessions` holds three foreign keys into `app_profiles`, so the bare embed was refused — and the refusal was discarded along with the rows. |
+| The same      | Read paths destructured `{ data }` and dropped `error`, so any query failure looked like "nothing found". Now `rows()`/`maybeRow()` raise, and a lost session redirects to sign-in instead.                                            |
+| Mobile review | The coach header links, the eligibility radios and every date input were under the 44px a thumb needs.                                                                                                                                 |
+| Full suite    | `validation_bookings.sql` paired `current_date` with a Prague-relative time, which lands on the next day late in the evening.                                                                                                          |
 
 ## Phase 9 — deployment ✅
 
@@ -182,10 +182,10 @@ Exit: the deployment is reproducible from the documents, and nothing in
 
 Two defects were found by writing this phase:
 
-| Found by | Defect |
-|---|---|
-| The retention suite | `scrub_notification_emails()` dated settled deliveries by `updated_at`, which the `set_updated_at` trigger rewrites on every write — including the scrub's own. A failed delivery's address would never have been cleared. Now `sent_at`, then `claimed_at`. |
-| Writing the runbook | The repair procedure it first carried did not work. The occupancy trigger fires on `update of status`, not on any write, so an operator's only options were to wait for a parent to book or to fake a status change. `repair_occupancy()` is the answer, and the QA suite now asserts that touching a booking row does *not* recompute. |
+| Found by            | Defect                                                                                                                                                                                                                                                                                                                                  |
+| ------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| The retention suite | `scrub_notification_emails()` dated settled deliveries by `updated_at`, which the `set_updated_at` trigger rewrites on every write — including the scrub's own. A failed delivery's address would never have been cleared. Now `sent_at`, then `claimed_at`.                                                                            |
+| Writing the runbook | The repair procedure it first carried did not work. The occupancy trigger fires on `update of status`, not on any write, so an operator's only options were to wait for a parent to book or to fake a status change. `repair_occupancy()` is the answer, and the QA suite now asserts that touching a booking row does _not_ recompute. |
 
 ### Not done here, and why
 
@@ -208,6 +208,6 @@ Two checkpoints carry nearly all the irreversible risk:
 
 ## Before Phase 9 — done
 
-The account deletion and anonymisation *workflow* (D-18) was the one thing the
+The account deletion and anonymisation _workflow_ (D-18) was the one thing the
 plan required before production launch. It is decided, implemented and verified
 in Phase 9; `OPEN_DECISIONS.md` has nothing left open.

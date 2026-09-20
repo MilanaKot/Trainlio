@@ -85,9 +85,7 @@ export function SignInForm() {
       <header className="flex flex-col gap-2">
         <h1 className="text-2xl font-semibold">{t.signInTitle}</h1>
         <p className="text-sm opacity-70">
-          {stage.name === 'email'
-            ? t.signInIntro
-            : t.codeSentTo.replace('{email}', stage.email)}
+          {stage.name === 'email' ? t.signInIntro : t.codeSentTo.replace('{email}', stage.email)}
         </p>
       </header>
 
@@ -108,7 +106,11 @@ export function SignInForm() {
             />
           </label>
 
-          {error ? <p role="alert" className="text-sm text-red-600">{error}</p> : null}
+          {error ? (
+            <p role="alert" className="text-sm text-red-600">
+              {error}
+            </p>
+          ) : null}
 
           <button
             type="submit"
@@ -139,7 +141,11 @@ export function SignInForm() {
             />
           </label>
 
-          {error ? <p role="alert" className="text-sm text-red-600">{error}</p> : null}
+          {error ? (
+            <p role="alert" className="text-sm text-red-600">
+              {error}
+            </p>
+          ) : null}
 
           <button
             type="submit"
@@ -155,9 +161,7 @@ export function SignInForm() {
             disabled={pending || cooldown > 0}
             className="text-sm underline disabled:no-underline disabled:opacity-60"
           >
-            {cooldown > 0
-              ? t.resendIn.replace('{seconds}', String(cooldown))
-              : t.resend}
+            {cooldown > 0 ? t.resendIn.replace('{seconds}', String(cooldown)) : t.resend}
           </button>
 
           <button

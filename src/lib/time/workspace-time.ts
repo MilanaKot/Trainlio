@@ -20,7 +20,12 @@ function parts(at: Date, timeZone: Timezone, options: Intl.DateTimeFormatOptions
   return new Intl.DateTimeFormat(CZECH_LOCALE, { ...options, timeZone }).formatToParts(at)
 }
 
-function part(at: Date, timeZone: Timezone, options: Intl.DateTimeFormatOptions, type: Intl.DateTimeFormatPartTypes) {
+function part(
+  at: Date,
+  timeZone: Timezone,
+  options: Intl.DateTimeFormatOptions,
+  type: Intl.DateTimeFormatPartTypes,
+) {
   return parts(at, timeZone, options).find((p) => p.type === type)?.value ?? ''
 }
 

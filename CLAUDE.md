@@ -1,12 +1,14 @@
 # Claude Code Project Instructions
 
 ## Project
+
 Build Trainlio — Sports Training Booking Platform, a mobile-first booking
 platform for sports training sessions.
 
 The first production use case is a single hockey coach in Příbram, Czech Republic. The architecture must support multiple sports, multiple independent coaches/workspaces, and one athlete participating in several sports.
 
 ## Required reading before implementation
+
 Read all files in `/docs` and all files in `/supabase/migrations`.
 
 Start with `/docs/ARCHITECTURE.md`, which defines the five layers, and
@@ -15,6 +17,7 @@ Start with `/docs/ARCHITECTURE.md`, which defines the five layers, and
 Do not implement features that are explicitly marked out of MVP scope.
 
 ## Technical stack
+
 - Next.js
 - TypeScript
 - Supabase PostgreSQL
@@ -29,6 +32,7 @@ Do not implement features that are explicitly marked out of MVP scope.
 - Playwright
 
 ## Engineering principles
+
 1. Mobile-first.
 2. Simple UI over feature density.
 3. Database-enforced invariants.
@@ -48,10 +52,12 @@ Do not implement features that are explicitly marked out of MVP scope.
 12. Prefer explicit, maintainable domain logic over generic over-engineered frameworks.
 
 ## MVP language
+
 UI text: Czech.
 Code, schema, comments, docs: English.
 
 ## MVP product assumptions
+
 - One active workspace.
 - Sport = ice hockey.
 - Venue = Příbram.

@@ -9,7 +9,9 @@ export function AthleteCard({ athlete }: { athlete: GuardianAthlete }) {
   const hockey = athlete.sportProfiles.find((p) => p.sportCode === 'HOCKEY')
   const summary = [
     hockey?.position ? HOCKEY_POSITION_LABELS[hockey.position] : null,
-    hockey?.stickSide ? `${messages.athlete.stickSide}: ${STICK_SIDE_LABELS[hockey.stickSide]}` : null,
+    hockey?.stickSide
+      ? `${messages.athlete.stickSide}: ${STICK_SIDE_LABELS[hockey.stickSide]}`
+      : null,
     hockey?.jerseyNumber ? `#${hockey.jerseyNumber}` : null,
   ]
     .filter(Boolean)

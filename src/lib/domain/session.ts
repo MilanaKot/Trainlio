@@ -72,7 +72,11 @@ export function validateSession(input: SessionInput): SessionValidation {
   // Compared as wall-clock strings, which is what they are. No Date is
   // constructed here: the conversion to an instant happens on the server, in
   // the workspace timezone.
-  if (!errors.localStartTime && !errors.localEndTime && input.localEndTime <= input.localStartTime) {
+  if (
+    !errors.localStartTime &&
+    !errors.localEndTime &&
+    input.localEndTime <= input.localStartTime
+  ) {
     errors.localEndTime = 'INVALID_TIME_RANGE'
   }
 

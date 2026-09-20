@@ -15,13 +15,7 @@ const t = messages.cancellation
  * courtesy: the server evaluates the deadline on database time and refuses a
  * late request whatever the browser's clock says.
  */
-export function CancelBooking({
-  bookingId,
-  allowed,
-}: {
-  bookingId: string
-  allowed: boolean
-}) {
+export function CancelBooking({ bookingId, allowed }: { bookingId: string; allowed: boolean }) {
   const router = useRouter()
   const [error, setError] = useState<string | null>(null)
   const [pending, startTransition] = useTransition()

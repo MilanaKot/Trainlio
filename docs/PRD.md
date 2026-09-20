@@ -13,6 +13,7 @@ The system must be architected for later expansion into a commercial multi-sport
 ## 2. Product goals
 
 ### MVP goals
+
 - Make booking a training session fast and obvious.
 - Give coaches a reliable real-time roster and capacity view.
 - Support multiple children under one guardian account.
@@ -25,6 +26,7 @@ The system must be architected for later expansion into a commercial multi-sport
 - Provide an architecture suitable for later SaaS commercialization.
 
 ### Non-goals for MVP
+
 - Payments
 - Waiting list
 - Attendance / no-show tracking
@@ -42,16 +44,20 @@ The system must be architected for later expansion into a commercial multi-sport
 ## 3. User roles
 
 ### USER / Guardian
+
 A registered user who manages one or more athletes and can book/cancel for athletes they are authorized to access.
 
 ### COACH
+
 Can create and manage training sessions, view athlete profiles, manually add/remove athletes from sessions, change capacity, close booking, and cancel sessions.
 
 ### WORKSPACE_ADMIN
+
 Workspace-level administrator. May run coach operations and manage configuration
 within their own workspace. One account may hold both COACH and WORKSPACE_ADMIN.
 
 ### PLATFORM_ADMIN
+
 Technical/business administrator of the platform itself. Explicitly privileged and
 never inferred from workspace membership. Gains no workspace coach rights and no
 athlete data through the normal authorization path; platform support runs through
@@ -63,29 +69,37 @@ and workspace athlete membership.
 ## 4. Core domain model
 
 ### User
+
 Authenticated account.
 
 ### Athlete
+
 Sport-independent child/athlete identity.
 Core athlete data must not contain sport-specific attributes.
 
 ### Guardian access
+
 Many-to-many relationship between users and athletes.
 
 ### Sport
+
 Examples:
+
 - HOCKEY
 - FOOTBALL
 - SWIMMING
 - TENNIS
 
 ### Athlete sport profile
+
 One athlete may have multiple sport profiles.
 Examples:
+
 - Hockey profile
 - Swimming profile
 
 ### Workspace
+
 Logical tenant/business context.
 Current MVP: one hockey coach/workspace in Příbram.
 Future: each independent coach, academy, club, or organization may have its own workspace.
@@ -96,40 +110,50 @@ session display, series generation, day grouping — happens in the workspace
 timezone, never the device timezone.
 
 ### Workspace athlete membership
+
 Links an athlete and relevant sport profile to a workspace.
 
 ### Location
+
 Physical training venue or complex.
 
 ### Facility
+
 Bookable/training sub-location inside a location.
 
 Current hockey MVP:
+
 - Location: Příbram
 - Facility MH = Malá hala
 - Facility VH = Velká hala
 
 Future examples:
+
 - football pitch
 - tennis court
 - swimming lane
 - gym hall
 
 ### Training session
+
 One scheduled training occurrence.
 
 ### Booking
+
 Links athlete to a training session.
 
 ## 5. Athlete profile
 
 ### Core athlete data
+
 Required:
+
 - First name
 - Last name
 - Full date of birth
 
 Optional:
+
 - Profile photo
 - Active/inactive
 
@@ -138,16 +162,20 @@ sport profiles and workspace memberships are preserved, the bookings stay visibl
 to the guardian and the coach, and reactivation restores eligibility.
 
 ### Hockey sport profile
+
 Required:
+
 - Position
 - Stick side
 
 Optional:
+
 - Club
 - Team/category
 - Jersey number
 
 #### Hockey position values
+
 - GOALIE — Brankář
 - DEFENSE — Obránce
 - CENTER — Centr
@@ -156,6 +184,7 @@ Optional:
 - UTILITY — Univerzál
 
 #### Stick side values
+
 - LEFT — Levé
 - RIGHT — Pravé
 - UNKNOWN — Nevím
@@ -171,6 +200,7 @@ One athlete may later be linked to multiple guardians.
 Initial MVP may launch with one primary guardian per athlete from the UI, but the database must support multiple guardians from day one.
 
 Recommended later flow:
+
 1. Existing guardian opens athlete access settings.
 2. Invites another guardian by email.
 3. Invitation may cover one or more athletes.
@@ -182,6 +212,7 @@ Do not allow users to find children by name + date of birth.
 ## 7. Registration and authentication
 
 MVP:
+
 - Registration available to users who receive the application link from the coach.
 - Authentication: email + one-time password/code (OTP).
 - No password required.
@@ -191,6 +222,7 @@ The system should be ready for invitation-based access later.
 ## 8. Training session fields
 
 Required:
+
 - Workspace
 - Sport
 - Main coach
@@ -204,12 +236,14 @@ Required:
 - Status
 
 Optional:
+
 - Assistant coaches
 - Changing room (guardian-visible, may be added later)
 - Public notes (guardian-visible)
 - Internal notes (coach and admin only)
 
 Current default:
+
 - Capacity = 10
 
 Changing room may be blank at creation and added later.
@@ -217,8 +251,9 @@ Changing room may be blank at creation and added later.
 ## 9. Session eligibility
 
 Coach chooses:
+
 - All athletes
-OR
+  OR
 - Birth year from
 - Birth year to
 
@@ -232,6 +267,7 @@ Only athletes with a matching sport profile and workspace membership may be book
 ## 10. Booking behavior
 
 Normal user booking is allowed when:
+
 - session status is OPEN;
 - current time is before session start;
 - athlete is eligible;
@@ -239,6 +275,7 @@ Normal user booking is allowed when:
 - current confirmed booking count is below capacity.
 
 Coach manual booking:
+
 - may add eligible managed athletes;
 - may intentionally exceed capacity;
 - must be recorded as coach-created booking.
@@ -256,11 +293,13 @@ Coach manual additions remain independent single-athlete operations.
 ## 11. Cancellation behavior
 
 Guardian/user:
+
 - may cancel until 12 hours before session start;
 - inside 12 hours cancellation is unavailable;
 - UI displays: "Odhlášení již není možné. Kontaktujte trenéra."
 
 Coach:
+
 - may cancel/remove an athlete at any time.
 
 When a coach removes an athlete from a session, the guardian may not re-book that
@@ -298,6 +337,7 @@ Default capacity = 10.
 Coach may edit capacity per session.
 
 If current bookings = 8 and coach changes capacity from 10 to 6:
+
 - allow the change;
 - show explicit warning before save;
 - preserve all existing bookings;
@@ -312,6 +352,7 @@ Coach override may exceed capacity.
 ## 14. Updating a published session
 
 Coach may change:
+
 - date
 - start time
 - end time
@@ -326,10 +367,12 @@ main coach changes. A main-coach change counts because Trainlio is a system for
 booking training with a coach.
 
 User-facing marker:
+
 - show `Změněno` on a booking only when the significant change happened after that
   booking was made, so a guardian who booked after the change sees nothing.
 
 Email notification required for:
+
 - session cancellation;
 - date change;
 - start/end time change;
@@ -348,6 +391,7 @@ emailed and only the affected bookings show `Změněno`.
 ## 15. Session cancellation
 
 Cancelled session:
+
 - remains visible in My Bookings;
 - status shown as `Cancelled by coach` / Czech UI equivalent;
 - all booking history remains stored;
@@ -359,6 +403,7 @@ Cancelled session:
 Coach may create a series.
 
 Example:
+
 - every Sunday
 - 09:00–10:00
 - MH
@@ -384,12 +429,14 @@ Also provide Duplicate Session.
 ## 17. Parent navigation
 
 Primary mobile navigation:
+
 - Tréninky
 - Moje tréninky
 - Moji sportovci
 - Účet
 
 My Bookings sections:
+
 - Upcoming
 - Past
 
@@ -398,6 +445,7 @@ Cancelled future sessions remain visible.
 ## 18. Coach navigation
 
 Primary coach areas:
+
 - Tréninky
 - Vytvořit trénink
 - Série tréninků
@@ -405,6 +453,7 @@ Primary coach areas:
 - Session detail / roster
 
 Session detail actions:
+
 - Add athlete
 - Remove athlete
 - Edit session
@@ -423,8 +472,8 @@ That projection exposes no athlete identity, no booking identity and no
 per-booking timestamp, and it is the only booking-derived data a guardian may
 read or subscribe to.
 
-
 Other guardians must not see:
+
 - names of athletes booked into a session;
 - who booked another athlete;
 - other athlete profile details.
@@ -432,6 +481,7 @@ Other guardians must not see:
 Guardian session list shows only occupancy such as `3 / 10`.
 
 Coach may see:
+
 - athlete identity;
 - relevant athlete sport profile;
 - who created the booking;
@@ -442,6 +492,7 @@ Coach may see:
 Store only data required for the application.
 
 MVP intentionally avoids:
+
 - medical data
 - residential address
 - unnecessary identity data

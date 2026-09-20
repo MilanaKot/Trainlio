@@ -22,13 +22,7 @@ function errorText(code: string | undefined): string {
  * still only a preview: the dates are not submitted, because a stale or edited
  * one must not be able to decide what exists.
  */
-export function SeriesForm({
-  workspace,
-  today,
-}: {
-  workspace: CoachWorkspace
-  today: string
-}) {
+export function SeriesForm({ workspace, today }: { workspace: CoachWorkspace; today: string }) {
   const router = useRouter()
   const [byWeekday, setByWeekday] = useState('7')
   const [dateFrom, setDateFrom] = useState(today)

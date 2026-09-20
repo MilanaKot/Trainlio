@@ -17,7 +17,10 @@ function input(overrides: Partial<Parameters<typeof validateAthlete>[0]> = {}) {
 
 describe('athlete validation', () => {
   it('accepts a complete profile and trims it', () => {
-    const result = validateAthlete(input({ firstName: '  Ivan ', clubName: '  HC Příbram ' }), TODAY)
+    const result = validateAthlete(
+      input({ firstName: '  Ivan ', clubName: '  HC Příbram ' }),
+      TODAY,
+    )
     expect(result.ok).toBe(true)
     if (!result.ok) return
     expect(result.value.firstName).toBe('Ivan')

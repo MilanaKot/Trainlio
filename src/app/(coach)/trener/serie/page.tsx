@@ -31,15 +31,17 @@ export default async function SeriesListPage() {
               className="flex flex-col gap-1 rounded-xl border border-black/10 p-4 dark:border-white/15"
             >
               <span className="font-medium">
-                {t.weekdays[String(s.byWeekday) as keyof typeof t.weekdays]} ·{' '}
-                {s.localStartTime}–{s.localEndTime} · {s.facilityCode}
+                {t.weekdays[String(s.byWeekday) as keyof typeof t.weekdays]} · {s.localStartTime}–
+                {s.localEndTime} · {s.facilityCode}
               </span>
               <span className="text-sm opacity-70">
                 {formatLocalDateKey(s.localDateFrom)} — {formatLocalDateKey(s.localDateTo)}
               </span>
               <span className="text-sm opacity-70">
                 {plural(s.generatedCount, t.seriesGenerated)}
-                {s.cancelledCount > 0 ? ` · ${s.cancelledCount} ${messages.session.cancelled.toLowerCase()}` : ''}
+                {s.cancelledCount > 0
+                  ? ` · ${s.cancelledCount} ${messages.session.cancelled.toLowerCase()}`
+                  : ''}
               </span>
               {/* Provenance, not a live template: this is the zone the existing
                   occurrences were generated under, whatever the workspace uses now. */}

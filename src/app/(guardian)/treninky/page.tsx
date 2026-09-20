@@ -17,9 +17,7 @@ export default async function SessionsPage() {
   // with the server's own eligibility verdict.
   const athletesBySession = new Map(
     await Promise.all(
-      sessions.map(
-        async (session) => [session.id, await listPickerAthletes(session.id)] as const,
-      ),
+      sessions.map(async (session) => [session.id, await listPickerAthletes(session.id)] as const),
     ),
   )
 

@@ -123,7 +123,7 @@ export function composeNotificationEmail(
 
   const html = [
     '<!doctype html><html lang="cs"><body style="margin:0;padding:24px;background:#f5f5f5;',
-    'font-family:-apple-system,BlinkMacSystemFont,\'Segoe UI\',sans-serif;color:#111">',
+    "font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:#111\">",
     '<div style="max-width:520px;margin:0 auto;background:#fff;border-radius:12px;padding:24px">',
     lines
       .filter((line) => line !== '')

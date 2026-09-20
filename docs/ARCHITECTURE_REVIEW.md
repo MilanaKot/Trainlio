@@ -48,10 +48,10 @@ projection, not to `bookings`.
 
 This must be reconciled with `BR-050` ("confirmed booking count is derived from
 booking rows; it is not stored as a manually maintained counter"). The projection
-satisfies the *intent* of BR-050 — `bookings` remains the sole source of truth and
+satisfies the _intent_ of BR-050 — `bookings` remains the sole source of truth and
 no application code ever writes the counter — but it does store a count. I recommend
-amending BR-050 to read: *"…it is not maintained by application code. Any stored
-count must be a database-maintained projection of booking rows."* A nightly
+amending BR-050 to read: _"…it is not maintained by application code. Any stored
+count must be a database-maintained projection of booking rows."_ A nightly
 reconciliation assert should be part of Phase 8.
 
 **C-02 — DST breaks recurring series generation, using the PRD's own example.**
@@ -78,7 +78,7 @@ schema or the MVP scope.
 Resolution (recommended, no new features): accept open registration, and make it
 harmless by requiring workspace athlete membership for session visibility (see
 D-01). A self-registered stranger then sees an empty app. Amend PRD §7 to say the
-link is a *distribution* channel, not an access control. The alternative — building
+link is a _distribution_ channel, not an access control. The alternative — building
 an invite/allowlist gate — is new scope and I do not recommend it for MVP.
 
 **C-04 — "Série tréninků" is a navigable coach area with no entity behind it.**
@@ -100,28 +100,28 @@ all specification files sit at the repo root. Fix in Phase 0 by moving them (R-0
 Each of these must be answered before the corresponding phase. My recommendation is
 given; all are cheap to change if you disagree.
 
-| # | Question | Recommendation |
-|---|---|---|
-| D-01 | Which sessions can a guardian **see**? | Non-`DRAFT` sessions in workspaces where the guardian has ≥1 athlete with an active membership. `CLOSED`/full/ineligible sessions are visible with a disabled CTA (`UI_SPEC` shows this); `DRAFT` and other workspaces are invisible. This is the primary `training_sessions` SELECT policy. |
-| D-02 | Exact 12-hour boundary | `start_at - now() >= interval '12 hours'`. At exactly 12:00:00 cancellation is **allowed**. (`BR-040` "at least" and `AC-040` "more than" disagree; pick one.) |
-| D-03 | Is the 12h deadline a constant? | Store as `workspaces.cancellation_deadline_hours int not null default 12`. Same value, but not hardcoded — required by principle 11. |
-| D-04 | Who sets `COMPLETED`? | Nothing in the stack schedules jobs. Derive "Minulé" from `end_at < now()`; leave `COMPLETED` as an allowed manual/admin status with no MVP writer. Otherwise the Past/Upcoming split silently depends on a job nobody is building. |
-| D-05 | Booking N children when fewer places remain | **Decided otherwise.** The recommendation here was partial success; the approved rule is that multi-athlete guardian booking is atomic — all selected athletes or none, with the free-place count returned so the guardian can reduce the selection. One CTA must not split siblings into booked and not-booked states. See `BR-035a`–`BR-035c`. |
-| D-06 | Can a guardian re-book after `CANCELLED_BY_COACH`? | **No.** Otherwise a parent silently undoes a coach's removal. The coach can re-add. The partial unique index does not cover this — it needs an explicit RPC check. |
-| D-07 | Can a coach add athletes to a `CANCELLED` session? | No. Allowed on `DRAFT`/`OPEN`/`CLOSED`/`COMPLETED` (late roster correction). |
-| D-08 | Coach narrows the birth-year range on a session with bookings | Preserve existing bookings, warn the coach. Consistent with `BR-052` and principle 9. Never auto-cancel. |
-| D-09 | Athlete set to `is_active = false` | Blocks new bookings; existing bookings untouched; no cascade. |
-| D-10 | Who creates `workspace_athlete_memberships`? | `USER_FLOWS §1.9` implies automatic. MVP: auto-create for the single active workspace when a sport profile matching that workspace's primary sport is created, via `SECURITY DEFINER` RPC. Document it as the join mechanism that an explicit join/invite flow replaces post-MVP. Note the privacy consequence: creating a hockey profile makes the child visible to that coach. |
-| D-11 | Which changes set `ZMĚNĚNO`? Does it ever clear? | Set for date / start / end / facility / changing room / notes. **Not** for capacity-only or coach-roster-only changes (`BR-064`). Never cleared; shown only for future sessions to guardians with a confirmed booking. Replace the boolean with a timestamp (S-11). |
-| D-12 | Is `changing_room` visible to guardians? | Yes, but only to guardians with a confirmed booking on that session. `UI_SPEC` shows it on the coach card only; parents need it on the day. |
-| D-13 | Is `notes` visible to guardians? | Coach-internal for MVP. If parents should see it, it needs a second field — do not make one field dual-purpose. |
-| D-14 | `created_by_role` when a coach books their own child | The role under which the RPC was invoked. The normal booking RPC always records `USER`; the coach RPC always records `COACH`. Never inferred. |
-| D-15 | Transactional email provider and outbox drain | Not chosen anywhere. Recommend Resend + a Vercel Cron route handler that drains `notification_deliveries` using the service role. The alternative (`pg_cron` + `pg_net` → Edge Function) keeps it inside Supabase but adds a second runtime. |
-| D-16 | Supabase Auth SMTP | Default Supabase SMTP is rate-limited to a handful of emails per hour and is not viable for OTP login. Custom SMTP must be configured in Phase 1 or Phase 1 cannot be demonstrated. |
-| D-17 | Platform admin vs workspace admin | `DATA_MODEL` describes `user_roles` with a nullable `workspace_id`; the schema only has `workspace_members`, so there is nowhere to store a platform-level `ADMIN`. Recommend: `workspace_members` holds workspace-scoped roles; add a separate `platform_admins` table for platform staff. Reconcile the two documents. |
-| D-18 | GDPR: erasure of a child's record | Subjects are minors in the EU. Principle 9 forbids hard deletion, and the FKs currently cascade (S-01). Decide now: erasure is satisfied by **anonymization** (blank names, drop photo, retain booking rows keyed by ID) via an admin RPC, not `DELETE`. Also settle who is controller (coach) vs processor (platform) before launch. |
-| D-19 | Signed URL TTL for athlete photos | 60 minutes, generated server-side only. |
-| D-20 | Next.js router | App Router, Server Components, Server Actions for mutations. Should be stated so it is not rediscovered per-phase. |
+| #    | Question                                                      | Recommendation                                                                                                                                                                                                                                                                                                                                                                   |
+| ---- | ------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| D-01 | Which sessions can a guardian **see**?                        | Non-`DRAFT` sessions in workspaces where the guardian has ≥1 athlete with an active membership. `CLOSED`/full/ineligible sessions are visible with a disabled CTA (`UI_SPEC` shows this); `DRAFT` and other workspaces are invisible. This is the primary `training_sessions` SELECT policy.                                                                                     |
+| D-02 | Exact 12-hour boundary                                        | `start_at - now() >= interval '12 hours'`. At exactly 12:00:00 cancellation is **allowed**. (`BR-040` "at least" and `AC-040` "more than" disagree; pick one.)                                                                                                                                                                                                                   |
+| D-03 | Is the 12h deadline a constant?                               | Store as `workspaces.cancellation_deadline_hours int not null default 12`. Same value, but not hardcoded — required by principle 11.                                                                                                                                                                                                                                             |
+| D-04 | Who sets `COMPLETED`?                                         | Nothing in the stack schedules jobs. Derive "Minulé" from `end_at < now()`; leave `COMPLETED` as an allowed manual/admin status with no MVP writer. Otherwise the Past/Upcoming split silently depends on a job nobody is building.                                                                                                                                              |
+| D-05 | Booking N children when fewer places remain                   | **Decided otherwise.** The recommendation here was partial success; the approved rule is that multi-athlete guardian booking is atomic — all selected athletes or none, with the free-place count returned so the guardian can reduce the selection. One CTA must not split siblings into booked and not-booked states. See `BR-035a`–`BR-035c`.                                 |
+| D-06 | Can a guardian re-book after `CANCELLED_BY_COACH`?            | **No.** Otherwise a parent silently undoes a coach's removal. The coach can re-add. The partial unique index does not cover this — it needs an explicit RPC check.                                                                                                                                                                                                               |
+| D-07 | Can a coach add athletes to a `CANCELLED` session?            | No. Allowed on `DRAFT`/`OPEN`/`CLOSED`/`COMPLETED` (late roster correction).                                                                                                                                                                                                                                                                                                     |
+| D-08 | Coach narrows the birth-year range on a session with bookings | Preserve existing bookings, warn the coach. Consistent with `BR-052` and principle 9. Never auto-cancel.                                                                                                                                                                                                                                                                         |
+| D-09 | Athlete set to `is_active = false`                            | Blocks new bookings; existing bookings untouched; no cascade.                                                                                                                                                                                                                                                                                                                    |
+| D-10 | Who creates `workspace_athlete_memberships`?                  | `USER_FLOWS §1.9` implies automatic. MVP: auto-create for the single active workspace when a sport profile matching that workspace's primary sport is created, via `SECURITY DEFINER` RPC. Document it as the join mechanism that an explicit join/invite flow replaces post-MVP. Note the privacy consequence: creating a hockey profile makes the child visible to that coach. |
+| D-11 | Which changes set `ZMĚNĚNO`? Does it ever clear?              | Set for date / start / end / facility / changing room / notes. **Not** for capacity-only or coach-roster-only changes (`BR-064`). Never cleared; shown only for future sessions to guardians with a confirmed booking. Replace the boolean with a timestamp (S-11).                                                                                                              |
+| D-12 | Is `changing_room` visible to guardians?                      | Yes, but only to guardians with a confirmed booking on that session. `UI_SPEC` shows it on the coach card only; parents need it on the day.                                                                                                                                                                                                                                      |
+| D-13 | Is `notes` visible to guardians?                              | Coach-internal for MVP. If parents should see it, it needs a second field — do not make one field dual-purpose.                                                                                                                                                                                                                                                                  |
+| D-14 | `created_by_role` when a coach books their own child          | The role under which the RPC was invoked. The normal booking RPC always records `USER`; the coach RPC always records `COACH`. Never inferred.                                                                                                                                                                                                                                    |
+| D-15 | Transactional email provider and outbox drain                 | Not chosen anywhere. Recommend Resend + a Vercel Cron route handler that drains `notification_deliveries` using the service role. The alternative (`pg_cron` + `pg_net` → Edge Function) keeps it inside Supabase but adds a second runtime.                                                                                                                                     |
+| D-16 | Supabase Auth SMTP                                            | Default Supabase SMTP is rate-limited to a handful of emails per hour and is not viable for OTP login. Custom SMTP must be configured in Phase 1 or Phase 1 cannot be demonstrated.                                                                                                                                                                                              |
+| D-17 | Platform admin vs workspace admin                             | `DATA_MODEL` describes `user_roles` with a nullable `workspace_id`; the schema only has `workspace_members`, so there is nowhere to store a platform-level `ADMIN`. Recommend: `workspace_members` holds workspace-scoped roles; add a separate `platform_admins` table for platform staff. Reconcile the two documents.                                                         |
+| D-18 | GDPR: erasure of a child's record                             | Subjects are minors in the EU. Principle 9 forbids hard deletion, and the FKs currently cascade (S-01). Decide now: erasure is satisfied by **anonymization** (blank names, drop photo, retain booking rows keyed by ID) via an admin RPC, not `DELETE`. Also settle who is controller (coach) vs processor (platform) before launch.                                            |
+| D-19 | Signed URL TTL for athlete photos                             | 60 minutes, generated server-side only.                                                                                                                                                                                                                                                                                                                                          |
+| D-20 | Next.js router                                                | App Router, Server Components, Server Actions for mutations. Should be stated so it is not rediscovered per-phase.                                                                                                                                                                                                                                                               |
 
 ---
 
@@ -139,17 +139,18 @@ The problems below are integrity and enforcement gaps, not modelling mistakes.
 `bookings.athlete_id` are `on delete cascade`. Deleting one athlete row silently erases
 their entire booking history, contradicting principle 9, `BR-044` and `BR-071`. The same
 applies to `workspace_athlete_memberships` and to `training_sessions` → workspace.
-Meanwhile `bookings.created_by_user_id` has no cascade and would *block* user deletion —
+Meanwhile `bookings.created_by_user_id` has no cascade and would _block_ user deletion —
 so the deletion policy is currently self-contradictory.
 
 **M-02 — Composite FKs are missing; three cross-entity invariants are unenforced.**
+
 - `training_sessions(location_id, facility_id)` — nothing prevents a facility from a
   different location. `facilities` is unique on `(location_id, code)` but the session
   references the facility alone.
 - `training_sessions(workspace_id, location_id)` — nothing prevents a location from
   another workspace being used. This is a **multi-tenant leak in data**, not just a bug.
 - `workspace_athlete_memberships(athlete_id, athlete_sport_profile_id)` — nothing
-  prevents a profile belonging to a *different* athlete.
+  prevents a profile belonging to a _different_ athlete.
 - Nothing requires the membership's sport profile to match the workspace's primary sport.
 
 Principle 3 says invariants are database-enforced. These need composite unique keys plus
@@ -157,7 +158,7 @@ composite FKs (S-02..S-05).
 
 **M-03 — `confirmed_booking_count()` is wrong under RLS.** It is `stable` but not
 `security definer`, so it runs with the caller's privileges. A guardian calling it gets
-the count of *their own* bookings. Every occupancy display built on it will be wrong.
+the count of _their own_ bookings. Every occupancy display built on it will be wrong.
 Must be `security definer` with `set search_path = ''` (S-06).
 
 **M-04 — State columns have no consistency constraints.** Nothing requires
@@ -190,7 +191,7 @@ justified — you must know where a message was sent — but the table must be
 exception explicitly rather than leaving it as an apparent violation.
 
 **M-10 — Per-recipient email payload is missing.** `AC-073` requires one email listing
-*both* of a guardian's affected athletes. The event payload is per-session; the
+_both_ of a guardian's affected athletes. The event payload is per-session; the
 delivery row has no payload, so the athlete list cannot be personalized per recipient
 (S-12).
 
@@ -220,14 +221,14 @@ lost-update race: two transactions both read 9/10 and both insert. Postgres' def
 
 Serialization point: `SELECT ... FROM training_session_occupancy WHERE
 training_session_id = $1 FOR UPDATE` at the top of the booking RPC. This takes a real
-row lock on a per-session row, so concurrent bookings for *different* sessions do not
+row lock on a per-session row, so concurrent bookings for _different_ sessions do not
 contend. The occupancy projection introduced for C-01 thus does double duty. Advisory
 locks (`pg_advisory_xact_lock`) are the fallback if the projection is rejected.
 
 Order inside `book_athlete_normal`: lock occupancy row → re-read session → all
 validations → insert → trigger updates projection. Never validate before locking.
 
-**S-C2 — The unique index is a backstop, not the mechanism.** 
+**S-C2 — The unique index is a backstop, not the mechanism.**
 `uq_confirmed_booking_per_athlete_session` correctly prevents double-booking
 (`BR-031`, `AC-023`) and correctly allows rebooking after cancellation. The RPC must
 still check explicitly and return a typed error, because a raw `23505` surfaced to the
@@ -270,7 +271,7 @@ wants. State it as an explicit design decision so nobody "fixes" it later.
 
 **S-R4 — Guardians must not be able to `INSERT` or `UPDATE` bookings directly.** All
 booking mutations go through RPCs. `bookings` should have a guardian `SELECT` policy
-(own athletes) and *no* guardian `INSERT`/`UPDATE` policy. `PERMISSIONS` says "create
+(own athletes) and _no_ guardian `INSERT`/`UPDATE` policy. `PERMISSIONS` says "create
 normal bookings for own linked athletes" — that permission is exercised through the RPC,
 not through table access. Otherwise the client can insert a booking that bypasses
 capacity, eligibility and the 12-hour rule entirely.
@@ -310,8 +311,8 @@ FKs fix it permanently and cost nothing.
 
 **S-T3 — Athletes are global, not workspace-scoped, by design.** That is correct
 (`BR-102`) but it means the `athletes` SELECT policy is the most security-sensitive
-object in the system: it must grant coaches access **only** through an *active*
-`workspace_athlete_memberships` row in a workspace where they are an *active* member.
+object in the system: it must grant coaches access **only** through an _active_
+`workspace_athlete_memberships` row in a workspace where they are an _active_ member.
 A coach whose membership is deactivated must lose athlete visibility immediately.
 `AC-091` is the test for this.
 
@@ -343,19 +344,19 @@ workspace's athletes only, not a global search).
 All `SECURITY DEFINER`, `set search_path = ''`, each returning a typed result rather
 than raising bare exceptions:
 
-| Function | Notes |
-|---|---|
-| `create_athlete_with_access` | Atomic athlete + guardian access (M-08) |
-| `upsert_athlete_sport_profile` | Also auto-creates workspace membership (D-10) |
-| `book_athlete_normal` | Occupancy lock → all checks → insert. Accepts an athlete array (D-05) |
-| `book_athlete_as_coach` | Records `coach_capacity_override`, writes audit (BR-034) |
-| `cancel_booking_as_guardian` | Server-computed 12h rule (D-02, D-03). Never trusts a client flag |
-| `cancel_booking_as_coach` | Any time (BR-042) |
-| `update_training_session` | Change detection → marker + notification event + audit, atomically. Requires `p_confirm_over_capacity` (S-C5) |
-| `cancel_training_session` | Status + event + dedup recipient expansion |
-| `create_session_series` | One transaction, timezone-correct generation (C-02, S-C4) |
-| `duplicate_training_session` | Copies config and coaches; never bookings |
-| `session_occupancy(session_ids[])` | Bulk aggregate for list screens |
+| Function                           | Notes                                                                                                         |
+| ---------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| `create_athlete_with_access`       | Atomic athlete + guardian access (M-08)                                                                       |
+| `upsert_athlete_sport_profile`     | Also auto-creates workspace membership (D-10)                                                                 |
+| `book_athlete_normal`              | Occupancy lock → all checks → insert. Accepts an athlete array (D-05)                                         |
+| `book_athlete_as_coach`            | Records `coach_capacity_override`, writes audit (BR-034)                                                      |
+| `cancel_booking_as_guardian`       | Server-computed 12h rule (D-02, D-03). Never trusts a client flag                                             |
+| `cancel_booking_as_coach`          | Any time (BR-042)                                                                                             |
+| `update_training_session`          | Change detection → marker + notification event + audit, atomically. Requires `p_confirm_over_capacity` (S-C5) |
+| `cancel_training_session`          | Status + event + dedup recipient expansion                                                                    |
+| `create_session_series`            | One transaction, timezone-correct generation (C-02, S-C4)                                                     |
+| `duplicate_training_session`       | Copies config and coaches; never bookings                                                                     |
+| `session_occupancy(session_ids[])` | Bulk aggregate for list screens                                                                               |
 
 ---
 
@@ -447,57 +448,57 @@ Structural decisions worth stating:
 The existing `IMPLEMENTATION_PLAN.md` phases are kept; this version adds exit criteria
 and folds in the findings above. Nothing new is introduced to the product surface.
 
-**Phase 0 — foundation** *(awaiting your approval to start)*
+**Phase 0 — foundation** _(awaiting your approval to start)_
 Next.js App Router + TypeScript strict, Tailwind, shadcn/ui, Vitest, Playwright, ESLint
 with a `server-only` guard on the admin client, env schema validation, Czech message
 structure, docs moved to `/docs` (R-01), ADR files for every §1.2 decision, CI workflow.
-*Exit:* `pnpm lint typecheck test build` green; empty app deploys to Vercel.
+_Exit:_ `pnpm lint typecheck test build` green; empty app deploys to Vercel.
 
 **Phase 1 — database, authz and auth**
 Migrations 0001–0006 and 0013–0014. All schema changes from §6. RLS on every
 user-facing table; helper predicates as definer functions. Reference seed (HOCKEY,
 workspace, Příbram, MH/VH). Supabase Auth OTP with **custom SMTP** (D-16). Generated
 types.
-*Exit:* Supabase linter clean; pgTAP RLS matrix passes — a guardian cannot read another
+_Exit:_ Supabase linter clean; pgTAP RLS matrix passes — a guardian cannot read another
 family's athlete, booking or photo (`AC-091`); no table is writable without RLS.
 
 **Phase 2 — athlete management**
 Guardian athlete CRUD via `create_athlete_with_access`, hockey sport profile form,
 private photo upload with signed URLs, multi-child support, auto workspace membership.
-*Exit:* `AC-010`–`AC-015`, `AC-092`, `AC-100`–`AC-102`, `AC-110`–`AC-111`.
+_Exit:_ `AC-010`–`AC-015`, `AC-092`, `AC-100`–`AC-102`, `AC-110`–`AC-111`.
 
 **Phase 3 — coach session management**
 Create / edit / close / cancel / duplicate, capacity warning gated server-side,
 change detection feeding the marker.
-*Exit:* `AC-051`, `AC-052`, `AC-060`, `AC-062`, `AC-070`.
+_Exit:_ `AC-051`, `AC-052`, `AC-060`, `AC-062`, `AC-070`.
 
 **Phase 4 — recurring series**
 `session_series`, timezone-correct generation (C-02), date preview, one-transaction
 bulk creation.
-*Exit:* `AC-080`–`AC-082`, plus an explicit DST test: the PRD's own 4 Oct → 29 Nov 2026
+_Exit:_ `AC-080`–`AC-082`, plus an explicit DST test: the PRD's own 4 Oct → 29 Nov 2026
 series produces nine occurrences all at 09:00 Europe/Prague.
 
 **Phase 5 — booking engine**
 Occupancy projection, `book_athlete_normal` with the row lock, multi-athlete picker,
 guardian cancellation RPC, Realtime on the projection.
-*Exit:* `AC-020`–`AC-025`, `AC-030`–`AC-032`, `AC-040`, `AC-041`, `AC-043`, `AC-090`.
+_Exit:_ `AC-020`–`AC-025`, `AC-030`–`AC-032`, `AC-040`, `AC-041`, `AC-043`, `AC-090`.
 `AC-022` proven by a concurrency test with genuinely parallel connections, not a loop.
 
 **Phase 6 — coach roster**
 Roster with booked-by and timestamp, manual booking, override confirmation, coach
 cancellation.
-*Exit:* `AC-042`, `AC-050`, `BR-092`; audit rows exist for every override.
+_Exit:_ `AC-042`, `AC-050`, `BR-092`; audit rows exist for every override.
 
 **Phase 7 — notifications**
 Outbox drain job, email provider, change and cancellation emails, per-recipient
 deduplication with the athlete list.
-*Exit:* `AC-061`, `AC-071`–`AC-073`; verified that one guardian with two booked children
+_Exit:_ `AC-061`, `AC-071`–`AC-073`; verified that one guardian with two booked children
 receives exactly one email naming both.
 
 **Phase 8 — QA**
 Unit (domain), integration (RLS matrix, all RPCs, concurrency), Playwright guardian and
 coach flows, mobile viewport review, occupancy reconciliation assert.
-*Exit:* every AC has a named test.
+_Exit:_ every AC has a named test.
 
 **Phase 9 — deployment**
 Vercel production, Supabase production project, SMTP, secrets, cron secret, backup and

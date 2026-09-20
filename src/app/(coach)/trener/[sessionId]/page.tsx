@@ -78,10 +78,7 @@ export default async function SessionDetailPage({
         addable={session.status !== 'CANCELLED'}
       />
 
-      <SessionActions
-        session={session}
-        todayLocal={localDateKey(new Date(), workspace.timezone)}
-      />
+      <SessionActions session={session} todayLocal={localDateKey(new Date(), workspace.timezone)} />
     </main>
   )
 }

@@ -123,12 +123,12 @@ never touched again.
 
 One table resolves three otherwise-conflicting requirements:
 
-| Requirement | Without the projection |
-|---|---|
-| Guardians see `3 / 10` (BR-091) | A client-side count over `bookings` returns only the caller's own rows |
-| Guardians never read others' bookings (BR-090) | — |
-| Occupancy updates in real time | Realtime applies RLS per subscriber, so a guardian never receives events for another family's booking row |
-| Two concurrent bookings cannot exceed capacity (BR-032) | `count` then `insert` has no row to conflict on; the default isolation level does not prevent the race |
+| Requirement                                             | Without the projection                                                                                    |
+| ------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| Guardians see `3 / 10` (BR-091)                         | A client-side count over `bookings` returns only the caller's own rows                                    |
+| Guardians never read others' bookings (BR-090)          | —                                                                                                         |
+| Occupancy updates in real time                          | Realtime applies RLS per subscriber, so a guardian never receives events for another family's booking row |
+| Two concurrent bookings cannot exceed capacity (BR-032) | `count` then `insert` has no row to conflict on; the default isolation level does not prevent the race    |
 
 It holds a count and nothing else, is written only by a trigger on `bookings`, is
 the only booking-derived object in the realtime publication, and is the row every
@@ -162,11 +162,11 @@ The cost is one indirection: authorization resolves the caller through
 
 Three distinct things, deliberately not collapsed:
 
-| | Held in | Grants |
-|---|---|---|
-| Guardian | `guardian_athlete_access` + `workspace_athlete_memberships` | access to their own athletes and to sessions in workspaces where those athletes are members |
-| Workspace staff | `workspace_members`, role COACH or WORKSPACE_ADMIN | coach operations within that workspace only |
-| Platform admin | `platform_admins` | nothing through RLS; platform tooling runs under the service role |
+|                 | Held in                                                     | Grants                                                                                      |
+| --------------- | ----------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| Guardian        | `guardian_athlete_access` + `workspace_athlete_memberships` | access to their own athletes and to sessions in workspaces where those athletes are members |
+| Workspace staff | `workspace_members`, role COACH or WORKSPACE_ADMIN          | coach operations within that workspace only                                                 |
+| Platform admin  | `platform_admins`                                           | nothing through RLS; platform tooling runs under the service role                           |
 
 A guardian is never workspace staff, and platform administration is never
 inferred from workspace membership.

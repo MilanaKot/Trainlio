@@ -8,20 +8,17 @@ import type { BookingStatus, SessionStatus } from '@/types/database'
  * pressing it and being refused.
  */
 
-export type SessionAvailability =
-  | 'BOOKABLE'
-  | 'FULL'
-  | 'CLOSED'
-  | 'CANCELLED'
-  | 'STARTED'
-  | 'DRAFT'
+export type SessionAvailability = 'BOOKABLE' | 'FULL' | 'CLOSED' | 'CANCELLED' | 'STARTED' | 'DRAFT'
 
-export function sessionAvailability(session: {
-  status: SessionStatus
-  capacity: number
-  confirmedCount: number
-  startAt: string
-}, now: Date): SessionAvailability {
+export function sessionAvailability(
+  session: {
+    status: SessionStatus
+    capacity: number
+    confirmedCount: number
+    startAt: string
+  },
+  now: Date,
+): SessionAvailability {
   if (session.status === 'CANCELLED') return 'CANCELLED'
   if (session.status === 'DRAFT') return 'DRAFT'
   // PRD §10: bookable right up to the start, not to some earlier cutoff.

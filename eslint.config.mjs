@@ -79,7 +79,7 @@ const config = [
         'error',
         {
           selector:
-            "CallExpression[callee.property.name=/^(toLocaleDateString|toLocaleTimeString|toLocaleString)$/]",
+            'CallExpression[callee.property.name=/^(toLocaleDateString|toLocaleTimeString|toLocaleString)$/]',
           message:
             'Locale formatting uses the device timezone. Use the helpers in @/lib/time, which format in the workspace timezone.',
         },

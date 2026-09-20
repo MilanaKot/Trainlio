@@ -4,3 +4,9 @@ pnpm-lock.yaml
 src/types/database.generated.ts
 supabase/schema
 supabase/tests
+
+# Email templates. Prettier expands inline styles and puts `{{ .Token }}` on a
+# line of its own, which adds whitespace around the six-digit code in a
+# paragraph with letter-spacing — visible in some mail clients, and the code is
+# the one thing a parent copies. Hand-formatted for mail, not for the repo.
+supabase/templates

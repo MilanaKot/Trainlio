@@ -185,10 +185,7 @@ export async function listMyBookings(): Promise<{ upcoming: MyBooking[]; past: M
   const supabase = await createClient()
   const now = new Date()
 
-  const result = await supabase
-    .from('training_sessions')
-    .select(SESSION_COLUMNS)
-    .order('start_at')
+  const result = await supabase.from('training_sessions').select(SESSION_COLUMNS).order('start_at')
 
   const all: MyBooking[] = []
 
@@ -210,7 +207,6 @@ export async function listMyBookings(): Promise<{ upcoming: MyBooking[]; past: M
 
   return splitByTime(all, now)
 }
-
 
 /**
  * The workspace's own cancellation deadline, for rendering the disabled state.

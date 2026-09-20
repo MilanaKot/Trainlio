@@ -120,7 +120,10 @@ export function BookingPicker({
       </ul>
 
       {notice ? (
-        <div role="alert" className="flex flex-col gap-2 rounded-lg bg-black/5 p-3 dark:bg-white/10">
+        <div
+          role="alert"
+          className="flex flex-col gap-2 rounded-lg bg-black/5 p-3 dark:bg-white/10"
+        >
           <p className="text-sm leading-relaxed">{notice}</p>
           <button
             type="button"

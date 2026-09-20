@@ -44,6 +44,12 @@ jobs:
       - name: Lint
         run: pnpm lint
 
+      # The repository was not Prettier-clean until this was added, because
+      # `format:check` existed as a command and nothing ever ran it. A check
+      # that is always red is a check everybody learns to skip.
+      - name: Format
+        run: pnpm format:check
+
       # Before the typecheck, because the typecheck is the first thing a
       # missing variable breaks and this names which one rather than failing
       # inside `next typegen`.

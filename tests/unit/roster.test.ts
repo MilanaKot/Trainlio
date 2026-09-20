@@ -45,21 +45,27 @@ describe('splitting the roster', () => {
 
 describe('occupancy as the coach sees it', () => {
   it('counts only confirmed bookings (AC-043)', () => {
-    expect(
-      rosterOccupancy([entry(), entry({ status: 'CANCELLED_BY_USER' })], 10).confirmed,
-    ).toBe(1)
+    expect(rosterOccupancy([entry(), entry({ status: 'CANCELLED_BY_USER' })], 10).confirmed).toBe(1)
   })
 
   // AC-050: a coach override produces 11 / 10, and the display must say so
   // rather than clamping to the capacity.
   it('reports past capacity instead of clamping', () => {
-    const occupancy = rosterOccupancy(Array.from({ length: 11 }, () => entry()), 10)
+    const occupancy = rosterOccupancy(
+      Array.from({ length: 11 }, () => entry()),
+      10,
+    )
     expect(occupancy.confirmed).toBe(11)
     expect(occupancy.overCapacity).toBe(true)
   })
 
   it('a full session is not yet over capacity', () => {
-    expect(rosterOccupancy(Array.from({ length: 10 }, () => entry()), 10).overCapacity).toBe(false)
+    expect(
+      rosterOccupancy(
+        Array.from({ length: 10 }, () => entry()),
+        10,
+      ).overCapacity,
+    ).toBe(false)
   })
 })
 

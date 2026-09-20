@@ -82,7 +82,9 @@ describe('session validation', () => {
   })
 
   it('turns blank optional fields into null', () => {
-    const result = validateSession(input({ changingRoom: '  ', publicNotes: '', internalNotes: ' ' }))
+    const result = validateSession(
+      input({ changingRoom: '  ', publicNotes: '', internalNotes: ' ' }),
+    )
     expect(result.ok).toBe(true)
     if (!result.ok) return
     expect(result.value.changingRoom).toBeNull()

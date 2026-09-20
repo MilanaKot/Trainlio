@@ -3,6 +3,7 @@
 Trainlio — Sports Training Booking Platform
 
 ## General rule
+
 All application tables must have Row Level Security enabled.
 
 Do not trust client-side role checks.
@@ -18,13 +19,13 @@ functions, specified in `DOMAIN_OPERATIONS.md`.
 
 The division is deliberate and load-bearing:
 
-| Layer | Question | Mechanism |
-|---|---|---|
-| Database invariants | Can this row exist at all? | Constraints, composite foreign keys, triggers |
-| RLS authorization | May this identity see or touch this row? | Policies plus SECURITY DEFINER predicates |
-| Domain operations | Is this action permitted now, and what else must happen atomically? | RPC / server-side transactions |
-| Notification outbox | Who must be told, and was it delivered? | `notification_events` → `notification_deliveries` |
-| Audit trail | What happened, and by whom? | `audit_log`, append-only |
+| Layer               | Question                                                            | Mechanism                                         |
+| ------------------- | ------------------------------------------------------------------- | ------------------------------------------------- |
+| Database invariants | Can this row exist at all?                                          | Constraints, composite foreign keys, triggers     |
+| RLS authorization   | May this identity see or touch this row?                            | Policies plus SECURITY DEFINER predicates         |
+| Domain operations   | Is this action permitted now, and what else must happen atomically? | RPC / server-side transactions                    |
+| Notification outbox | Who must be told, and was it delivered?                             | `notification_events` → `notification_deliveries` |
+| Audit trail         | What happened, and by whom?                                         | `audit_log`, append-only                          |
 
 ## Mutations that are RPC-only
 
@@ -63,6 +64,7 @@ PostgreSQL default.
 ## Guardian
 
 May:
+
 - read own app profile;
 - read athletes with ACTIVE guardian access;
 - create an athlete and automatically receive guardian access;
@@ -77,6 +79,7 @@ May:
 - cancel own athletes' bookings only when server-side cancellation rule allows.
 
 May not:
+
 - read sessions of a workspace where they have no athlete;
 - read DRAFT sessions;
 - read other families' athlete identities;
@@ -94,6 +97,7 @@ May not:
 ## Coach
 
 May:
+
 - read sessions in workspace;
 - create/update/cancel sessions in workspace;
 - read athlete profiles for athletes active in workspace;
@@ -105,6 +109,7 @@ May:
 - see created_by user for bookings.
 
 May not:
+
 - edit athlete core profile;
 - edit guardian relationships except through explicit admin/support features.
 
@@ -114,10 +119,12 @@ May not:
 both, so role checks use existence, never equality.
 
 May:
+
 - run coach domain operations in their own workspace;
 - manage that workspace's configuration.
 
 May not:
+
 - read or modify anything in another workspace;
 - read `platform_admins`;
 - gain platform administration by any route.
@@ -148,6 +155,7 @@ Use a private Supabase Storage bucket.
 Signed URLs or authenticated access only.
 
 Access:
+
 - active guardian of athlete
 - coach in athlete's active workspace
 - authorized admin
@@ -200,6 +208,7 @@ Never accept a client-provided `can_cancel=true`.
 ## Session update RPC/server action
 
 If capacity is reduced below occupancy:
+
 - require explicit confirmation flag from coach;
 - verify coach permission;
 - preserve bookings.

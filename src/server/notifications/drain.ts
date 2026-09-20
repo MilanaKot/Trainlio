@@ -64,7 +64,9 @@ function toClaimedDelivery(row: ClaimRow): ClaimedDelivery {
       changingRoom: typeof session.changing_room === 'string' ? session.changing_room : null,
       reason: typeof session.reason === 'string' ? session.reason : null,
     },
-    athleteNames: Array.isArray(names) ? names.filter((n): n is string => typeof n === 'string') : [],
+    athleteNames: Array.isArray(names)
+      ? names.filter((n): n is string => typeof n === 'string')
+      : [],
     workspaceTimezone: row.workspace_timezone as Timezone,
   }
 }
@@ -81,8 +83,7 @@ export async function drainNotifications(options?: {
 }): Promise<DrainReport> {
   const env = getServerEnv()
   const supabase = createAdminClient()
-  const provider =
-    options?.provider ?? resendProvider(env.RESEND_API_KEY, env.AUTH_SENDER_EMAIL)
+  const provider = options?.provider ?? resendProvider(env.RESEND_API_KEY, env.AUTH_SENDER_EMAIL)
   const appUrl = `${publicEnv.NEXT_PUBLIC_SITE_URL.replace(/\/$/, '')}/moje-treninky`
 
   let expandedEvents = 0
@@ -133,7 +134,9 @@ export async function drainNotifications(options?: {
       ...(result.ok && result.providerMessageId
         ? { p_provider_message_id: result.providerMessageId }
         : {}),
-      ...(result.ok ? {} : { p_error: `${result.retryable ? 'retryable' : 'permanent'}: ${result.error}` }),
+      ...(result.ok
+        ? {}
+        : { p_error: `${result.retryable ? 'retryable' : 'permanent'}: ${result.error}` }),
     })
 
     if (result.ok) sent += 1

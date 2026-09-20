@@ -184,10 +184,7 @@ export async function setAthleteActive(
   return { ok: true, athleteId }
 }
 
-export async function uploadAthletePhoto(
-  athleteId: string,
-  form: FormData,
-): Promise<ActionResult> {
+export async function uploadAthletePhoto(athleteId: string, form: FormData): Promise<ActionResult> {
   const file = form.get('photo')
   if (!(file instanceof File)) return { ok: false, code: 'PHOTO_EMPTY' }
 
@@ -244,10 +241,7 @@ export async function removeAthletePhoto(athleteId: string): Promise<ActionResul
     .eq('id', athleteId)
     .maybeSingle()
 
-  const { error } = await supabase
-    .from('athletes')
-    .update({ photo_path: null })
-    .eq('id', athleteId)
+  const { error } = await supabase.from('athletes').update({ photo_path: null }).eq('id', athleteId)
 
   if (error) return { ok: false, code: 'NOT_AUTHORIZED_FOR_ATHLETE' }
 

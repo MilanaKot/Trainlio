@@ -23,8 +23,7 @@ export type TablesInsert<T extends keyof Database['public']['Tables']> =
 export type TablesUpdate<T extends keyof Database['public']['Tables']> =
   Database['public']['Tables'][T]['Update']
 
-export type Enums<T extends keyof Database['public']['Enums']> =
-  Database['public']['Enums'][T]
+export type Enums<T extends keyof Database['public']['Enums']> = Database['public']['Enums'][T]
 
 // The domain enums, so application code never restates a value the database
 // owns. A new hockey position is added in one place: a migration.

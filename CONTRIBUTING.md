@@ -15,23 +15,31 @@ refuse to start with a missing or malformed value and name the offending key.
 
 ## Commands
 
-| Command | Purpose |
-|---|---|
-| `pnpm dev` | Development server |
-| `pnpm lint` | ESLint, including the architectural guard rules below |
-| `pnpm typecheck` | `tsc --noEmit`, strict |
-| `pnpm test` | Vitest unit tests |
-| `pnpm test:e2e` | Playwright: the browser flows and the mobile viewport review. Needs a running Supabase stack (`pnpm db:start`) |
-| `pnpm qa:coverage` | Check that every acceptance criterion maps to a named test |
-| `pnpm qa:env` | Check that `.env.example` and every CI job agree with the schemas in `src/lib/env.ts` |
-| `pnpm build` | Production build |
-| `pnpm db:types` | Regenerate database types from the local Supabase stack |
-| `pnpm db:validate` | Apply every migration to a throwaway database, lint it, run every SQL suite and the concurrency proof |
-| `pnpm db:concurrency` | The concurrency proof on its own |
-| `pnpm db:integration` | The live-stack suite over HTTP. Needs `ANON` and `SERVICE_ROLE_KEY` from `supabase status` |
+| Command                             | Purpose                                                                                                        |
+| ----------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| `pnpm dev`                          | Development server                                                                                             |
+| `pnpm lint`                         | ESLint, including the architectural guard rules below                                                          |
+| `pnpm format` / `pnpm format:check` | Prettier. Both run in CI, so the repository stays clean rather than drifting                                   |
+| `pnpm typecheck`                    | `tsc --noEmit`, strict                                                                                         |
+| `pnpm test`                         | Vitest unit tests                                                                                              |
+| `pnpm test:e2e`                     | Playwright: the browser flows and the mobile viewport review. Needs a running Supabase stack (`pnpm db:start`) |
+| `pnpm qa:coverage`                  | Check that every acceptance criterion maps to a named test                                                     |
+| `pnpm qa:env`                       | Check that `.env.example` and every CI job agree with the schemas in `src/lib/env.ts`                          |
+| `pnpm build`                        | Production build                                                                                               |
+| `pnpm db:types`                     | Regenerate database types from the local Supabase stack                                                        |
+| `pnpm db:validate`                  | Apply every migration to a throwaway database, lint it, run every SQL suite and the concurrency proof          |
+| `pnpm db:concurrency`               | The concurrency proof on its own                                                                               |
+| `pnpm db:integration`               | The live-stack suite over HTTP. Needs `ANON` and `SERVICE_ROLE_KEY` from `supabase status`                     |
 
 `PLAYWRIGHT_CHROMIUM_EXECUTABLE` overrides the browser binary, for environments
 that ship a preinstalled Chromium of a different build.
+
+`supabase/templates` is excluded from Prettier (`.prettierignore`). Those are
+email templates: Prettier expands their inline styles and puts `{{ .Token }}` on
+a line of its own, which adds whitespace around the six-digit code in a
+paragraph with letter-spacing. The code is the one thing a parent copies out of
+that message, so the template is formatted for mail clients rather than for the
+repository.
 
 ## Architectural guard rules
 

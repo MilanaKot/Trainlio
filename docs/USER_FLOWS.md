@@ -3,6 +3,7 @@
 Trainlio — Sports Training Booking Platform
 
 ## 1. Registration
+
 1. User receives app link from coach. The link is a distribution channel, not
    authorization: an authenticated user with no athlete sees no workspace data.
 2. Opens app.
@@ -18,6 +19,7 @@ Trainlio — Sports Training Booking Platform
     visible to that workspace's coaches.
 
 ## 2. Add another child
+
 1. Guardian opens `Moji sportovci`.
 2. Taps `Přidat sportovce`.
 3. Enters core athlete data.
@@ -26,6 +28,7 @@ Trainlio — Sports Training Booking Platform
 6. New athlete appears in account.
 
 ## 3. Book a training
+
 1. Guardian opens `Tréninky`.
 2. Sees future non-DRAFT sessions for workspaces where they have an athlete.
 3. Session card shows date, time, facility, birth-year range, occupancy.
@@ -37,6 +40,7 @@ Trainlio — Sports Training Booking Platform
 9. Occupancy updates in real time from the occupancy projection.
 
 ## 3a. Not enough places for the whole selection (D-05)
+
 1. Guardian selects two children for a session with one place left.
 2. Guardian confirms.
 3. The transaction books neither child.
@@ -48,12 +52,14 @@ Trainlio — Sports Training Booking Platform
 A single confirmation never splits siblings into booked and not-booked states.
 
 ## 4. Full session
+
 1. Session occupancy reaches capacity.
 2. User sees full state.
 3. Booking CTA is disabled.
 4. Coach can still manually add an athlete using override.
 
 ## 5. Guardian cancellation
+
 1. Guardian opens My Bookings.
 2. Selects athlete/session.
 3. If >=12 hours before start, `Odhlásit` is enabled.
@@ -62,11 +68,13 @@ A single confirmation never splits siblings into booked and not-booked states.
 6. Occupancy updates.
 
 ## 6. Cancellation inside 12 hours
+
 1. Guardian opens booking.
 2. `Odhlásit` is disabled.
 3. UI displays `Odhlášení již není možné. Kontaktujte trenéra.`
 
 ## 7. Coach manually adds athlete
+
 1. Coach opens session detail.
 2. Taps `Přidat sportovce`.
 3. Selects athlete.
@@ -76,6 +84,7 @@ A single confirmation never splits siblings into booked and not-booked states.
 7. Roster updates.
 
 ## 8. Coach removes athlete
+
 1. Coach opens session roster.
 2. Selects athlete.
 3. Confirms removal.
@@ -85,6 +94,7 @@ A single confirmation never splits siblings into booked and not-booked states.
 7. Only the coach may add the athlete back (flow 7).
 
 ## 9. Coach edits session
+
 1. Coach opens session.
 2. Taps `Upravit trénink`.
 3. Changes fields.
@@ -95,6 +105,7 @@ A single confirmation never splits siblings into booked and not-booked states.
 8. If significant fields changed, email notification is queued.
 
 ## 10. Coach cancels session
+
 1. Coach opens session.
 2. Taps `Zrušit trénink`.
 3. Confirmation displayed.
@@ -102,12 +113,13 @@ A single confirmation never splits siblings into booked and not-booked states.
 5. Existing bookings are left untouched, preserving the roster as it stood.
 6. The session cannot be reopened and accepts no further bookings.
 7. Session remains in bookings/history as evidence of what was cancelled.
-7. All active guardians of booked athletes are collected.
-8. Recipient emails are deduplicated to one delivery per guardian.
-9. Each delivery lists all of that guardian's affected athletes.
-10. My Bookings shows cancelled status.
+8. All active guardians of booked athletes are collected.
+9. Recipient emails are deduplicated to one delivery per guardian.
+10. Each delivery lists all of that guardian's affected athletes.
+11. My Bookings shows cancelled status.
 
 ## 11. Create recurring series
+
 1. Coach selects `Série tréninků`.
 2. Enters recurrence pattern and common session data as local dates and times.
 3. UI previews the generated local occurrence dates and times.
@@ -120,6 +132,7 @@ A single confirmation never splits siblings into booked and not-booked states.
    never affected.
 
 ## 11a. Coach narrows eligibility with athletes already booked
+
 1. Coach opens `Upravit trénink`.
 2. Changes eligibility from 2016–2018 to 2017–2018.
 3. Warning names how many confirmed bookings fall outside the new range.
@@ -130,6 +143,7 @@ A single confirmation never splits siblings into booked and not-booked states.
 8. New booking attempts use the new range.
 
 ## 11b. Coach cancelled a session by mistake
+
 1. Coach realises the cancellation was wrong.
 2. The session cannot be reopened — cancellation emails may already have been sent.
 3. Coach opens the cancelled session and taps `Duplikovat`.
@@ -137,6 +151,7 @@ A single confirmation never splits siblings into booked and not-booked states.
 5. The cancelled session remains in history.
 
 ## 12. Duplicate session
+
 1. Coach opens existing session.
 2. Taps `Duplikovat`.
 3. Form opens prefilled.
@@ -144,6 +159,7 @@ A single confirmation never splits siblings into booked and not-booked states.
 5. New independent session is created.
 
 ## 13. Future second guardian invitation
+
 1. Existing guardian opens athlete access settings.
 2. Taps `Pozvat další osobu`.
 3. Enters recipient email.

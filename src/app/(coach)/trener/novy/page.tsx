@@ -15,7 +15,11 @@ export default async function NewSessionPage() {
         workspace={workspace}
         // Today in the workspace timezone, not the server's: a coach adding a
         // session late in the evening should see today's date, not tomorrow's.
-        initial={{ date: localDateKey(new Date(), workspace.timezone), start: '09:00', end: '10:00' }}
+        initial={{
+          date: localDateKey(new Date(), workspace.timezone),
+          start: '09:00',
+          end: '10:00',
+        }}
       />
     </main>
   )

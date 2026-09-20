@@ -35,7 +35,9 @@ const serverSchema = z.object({
 })
 
 function fail(what: string, error: z.ZodError): never {
-  const detail = error.issues.map((i) => `  ${i.path.join('.') || '(root)'}: ${i.message}`).join('\n')
+  const detail = error.issues
+    .map((i) => `  ${i.path.join('.') || '(root)'}: ${i.message}`)
+    .join('\n')
   throw new Error(`Invalid ${what} environment configuration:\n${detail}`)
 }
 
@@ -57,7 +59,9 @@ export const publicEnv = publicParsed.data
  */
 export function getServerEnv(): z.infer<typeof serverSchema> {
   if (typeof window !== 'undefined') {
-    throw new Error('getServerEnv() was called in the browser. Server secrets are not available there.')
+    throw new Error(
+      'getServerEnv() was called in the browser. Server secrets are not available there.',
+    )
   }
 
   const parsed = serverSchema.safeParse({

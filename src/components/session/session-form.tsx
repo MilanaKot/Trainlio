@@ -16,8 +16,7 @@ type Props = {
 }
 
 type Confirmation =
-  | { kind: 'capacity'; confirmed: number; capacity: number }
-  | { kind: 'eligibility'; count: number }
+  { kind: 'capacity'; confirmed: number; capacity: number } | { kind: 'eligibility'; count: number }
 
 function errorText(code: string | undefined): string {
   const table = t.errors as Record<string, string>
@@ -40,7 +39,10 @@ export function SessionForm({ workspace, session, initial }: Props) {
   const [mode, setMode] = useState(session?.eligibilityMode ?? 'ALL')
   const [pending, startTransition] = useTransition()
 
-  function submit(form: FormData, confirm: { overCapacity?: boolean; ineligibleBookings?: boolean }) {
+  function submit(
+    form: FormData,
+    confirm: { overCapacity?: boolean; ineligibleBookings?: boolean },
+  ) {
     startTransition(async () => {
       const result = session
         ? await updateSession(session.id, form, confirm)
@@ -91,7 +93,9 @@ export function SessionForm({ workspace, session, initial }: Props) {
     // not also confirm an eligibility narrowing the coach has not been shown.
     submit(
       data,
-      confirmation.kind === 'capacity' ? { overCapacity: true } : { overCapacity: true, ineligibleBookings: true },
+      confirmation.kind === 'capacity'
+        ? { overCapacity: true }
+        : { overCapacity: true, ineligibleBookings: true },
     )
   }
 
@@ -117,17 +121,35 @@ export function SessionForm({ workspace, session, initial }: Props) {
       <div className="grid gap-4 sm:grid-cols-3">
         <label className={label}>
           {t.date}
-          <input name="localDate" type="date" required defaultValue={initial.date} className={input} />
+          <input
+            name="localDate"
+            type="date"
+            required
+            defaultValue={initial.date}
+            className={input}
+          />
           {fieldError('localDate')}
         </label>
         <label className={label}>
           {t.startTime}
-          <input name="localStartTime" type="time" required defaultValue={initial.start} className={input} />
+          <input
+            name="localStartTime"
+            type="time"
+            required
+            defaultValue={initial.start}
+            className={input}
+          />
           {fieldError('localStartTime')}
         </label>
         <label className={label}>
           {t.endTime}
-          <input name="localEndTime" type="time" required defaultValue={initial.end} className={input} />
+          <input
+            name="localEndTime"
+            type="time"
+            required
+            defaultValue={initial.end}
+            className={input}
+          />
           {fieldError('localEndTime')}
         </label>
       </div>
@@ -135,7 +157,12 @@ export function SessionForm({ workspace, session, initial }: Props) {
       <div className="grid gap-4 sm:grid-cols-3">
         <label className={label}>
           {t.facility}
-          <select name="facilityId" required defaultValue={session ? undefined : ''} className={input}>
+          <select
+            name="facilityId"
+            required
+            defaultValue={session ? undefined : ''}
+            className={input}
+          >
             {workspace.facilities.map((facility) => (
               <option
                 key={facility.id}
@@ -247,12 +274,22 @@ export function SessionForm({ workspace, session, initial }: Props) {
       {/* D-13: two separate fields, because one is read by parents and one is not. */}
       <label className={label}>
         {t.publicNotes} <span className="font-normal opacity-60">— {t.publicNotesHint}</span>
-        <textarea name="publicNotes" rows={2} defaultValue={session?.publicNotes ?? ''} className={input} />
+        <textarea
+          name="publicNotes"
+          rows={2}
+          defaultValue={session?.publicNotes ?? ''}
+          className={input}
+        />
       </label>
 
       <label className={label}>
         {t.internalNotes} <span className="font-normal opacity-60">— {t.internalNotesHint}</span>
-        <textarea name="internalNotes" rows={2} defaultValue={session?.internalNotes ?? ''} className={input} />
+        <textarea
+          name="internalNotes"
+          rows={2}
+          defaultValue={session?.internalNotes ?? ''}
+          className={input}
+        />
       </label>
 
       {confirmation ? (

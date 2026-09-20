@@ -6,12 +6,7 @@
  * against those types: adding a database value without updating the array, or
  * the reverse, is a compile error.
  */
-import type {
-  BookingStatus,
-  EligibilityMode,
-  SessionStatus,
-  WorkspaceRole,
-} from '@/types/database'
+import type { BookingStatus, EligibilityMode, SessionStatus, WorkspaceRole } from '@/types/database'
 
 export type { BookingStatus, EligibilityMode, SessionStatus, WorkspaceRole }
 
@@ -23,7 +18,10 @@ export const SESSION_STATUSES = [
   'CANCELLED',
 ] as const satisfies readonly SessionStatus[]
 
-export const ELIGIBILITY_MODES = ['ALL', 'BIRTH_YEAR_RANGE'] as const satisfies readonly EligibilityMode[]
+export const ELIGIBILITY_MODES = [
+  'ALL',
+  'BIRTH_YEAR_RANGE',
+] as const satisfies readonly EligibilityMode[]
 
 export const BOOKING_STATUSES = [
   'CONFIRMED',
@@ -31,7 +29,10 @@ export const BOOKING_STATUSES = [
   'CANCELLED_BY_COACH',
 ] as const satisfies readonly BookingStatus[]
 
-export const WORKSPACE_ROLES = ['COACH', 'WORKSPACE_ADMIN'] as const satisfies readonly WorkspaceRole[]
+export const WORKSPACE_ROLES = [
+  'COACH',
+  'WORKSPACE_ADMIN',
+] as const satisfies readonly WorkspaceRole[]
 
 /** Error codes returned by the domain functions (DOMAIN_OPERATIONS.md). */
 export const DOMAIN_ERROR_CODES = [

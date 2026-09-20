@@ -32,7 +32,9 @@ export function SessionActions({
 
   const cancelled = session.status === 'CANCELLED'
 
-  function run(action: () => Promise<{ ok: boolean; code?: string; sessionId?: string | undefined }>) {
+  function run(
+    action: () => Promise<{ ok: boolean; code?: string; sessionId?: string | undefined }>,
+  ) {
     setError(null)
     startTransition(async () => {
       const result = await action()
