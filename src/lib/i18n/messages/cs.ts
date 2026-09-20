@@ -331,6 +331,41 @@ export const cs = {
     },
   },
 
+  /**
+   * Transactional email (BR-061, BR-072). Czech, like every other user-facing
+   * string; the event types and codes around them stay English.
+   */
+  email: {
+    greeting: 'Dobrý den,',
+    signature: 'Trainlio',
+    /* AC-073: one email per guardian, naming that guardian's own athletes. */
+    athletes: {
+      one: 'Přihlášený sportovec: {names}',
+      few: 'Přihlášení sportovci: {names}',
+      many: 'Přihlášení sportovci: {names}',
+    } satisfies PluralForms,
+    reason: 'Důvod: {reason}',
+    link: 'Podrobnosti najdete v aplikaci: {url}',
+    preserved: 'Přihlášky zůstávají v aplikaci k nahlédnutí.',
+    subjects: {
+      SESSION_CANCELLED: 'Zrušený trénink — {when}',
+      SESSION_SCHEDULE_CHANGED: 'Změna času tréninku — {when}',
+      SESSION_LOCATION_CHANGED: 'Změna místa tréninku — {when}',
+      SESSION_FACILITY_CHANGED: 'Změna haly — {when}',
+      SESSION_MAIN_COACH_CHANGED: 'Změna trenéra — {when}',
+      SESSION_ELIGIBILITY_NARROWED: 'Změna ročníků tréninku — {when}',
+    },
+    bodies: {
+      SESSION_CANCELLED: 'trénink {when}, {where}, byl zrušen.',
+      SESSION_SCHEDULE_CHANGED: 'trénink byl přesunut na {when}, {where}.',
+      SESSION_LOCATION_CHANGED: 'trénink {when} se koná na jiném místě: {where}.',
+      SESSION_FACILITY_CHANGED: 'trénink {when} se koná v jiné hale: {where}.',
+      SESSION_MAIN_COACH_CHANGED: 'trénink {when}, {where}, povede jiný trenér.',
+      SESSION_ELIGIBILITY_NARROWED:
+        'u tréninku {when}, {where}, se změnil rozsah ročníků. Vaše přihláška zůstává v platnosti.',
+    },
+  },
+
   account: {
     title: 'Účet',
     displayName: 'Jméno',

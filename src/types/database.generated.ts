@@ -394,6 +394,7 @@ export type Database = {
       notification_deliveries: {
         Row: {
           attempt_count: number
+          claimed_at: string | null
           created_at: string
           event_id: string
           id: string
@@ -408,6 +409,7 @@ export type Database = {
         }
         Insert: {
           attempt_count?: number
+          claimed_at?: string | null
           created_at?: string
           event_id: string
           id?: string
@@ -422,6 +424,7 @@ export type Database = {
         }
         Update: {
           attempt_count?: number
+          claimed_at?: string | null
           created_at?: string
           event_id?: string
           id?: string
@@ -1100,6 +1103,24 @@ export type Database = {
         Args: { p_reason?: string; p_training_session_id: string }
         Returns: Json
       }
+      claim_notification_deliveries: {
+        Args: {
+          p_limit?: number
+          p_max_attempts?: number
+          p_stale_after?: string
+        }
+        Returns: {
+          attempt_count: number
+          delivery_id: string
+          delivery_payload: Json
+          event_id: string
+          event_type: string
+          recipient_email: string
+          session_payload: Json
+          workspace_name: string
+          workspace_timezone: string
+        }[]
+      }
       coach_can_see_athlete: {
         Args: { p_athlete_id: string }
         Returns: boolean
@@ -1183,6 +1204,7 @@ export type Database = {
         Returns: Json
       }
       ensure_current_profile: { Args: never; Returns: string }
+      expand_notification_event: { Args: { p_event_id: string }; Returns: Json }
       facility_location_for_workspace: {
         Args: { p_facility_id: string; p_workspace_id: string }
         Returns: string
@@ -1233,6 +1255,28 @@ export type Database = {
           sport_code: string
           timezone: string
         }[]
+      }
+      notification_event_recipients: {
+        Args: { p_event_id: string }
+        Returns: {
+          athlete_ids: string[]
+          athlete_names: string[]
+          recipient_profile_id: string
+        }[]
+      }
+      notification_queue_depth: { Args: never; Returns: Json }
+      pending_notification_events: {
+        Args: { p_limit?: number }
+        Returns: string[]
+      }
+      record_notification_delivery: {
+        Args: {
+          p_delivery_id: string
+          p_error?: string
+          p_ok: boolean
+          p_provider_message_id?: string
+        }
+        Returns: Json
       }
       session_confirmed_count: {
         Args: { p_training_session_id: string }

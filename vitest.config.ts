@@ -14,6 +14,11 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),
+      // The `server-only` package throws on import under a client-ish module
+      // resolver, which jsdom is. The guard is a build-time contract with
+      // Next.js and is not what these tests are checking, so it is stubbed
+      // here rather than removed from the modules that rely on it.
+      'server-only': fileURLToPath(new URL('./tests/stubs/server-only.ts', import.meta.url)),
     },
   },
 })

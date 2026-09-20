@@ -41,3 +41,27 @@ PostgreSQL 16; set `PGHOST`/`PGUSER`/`PGPASSWORD`, or pass a full invocation in
 Concurrency and daylight-saving cases are run separately because they need two
 parallel connections and a date-generation comparison; both are recorded in
 `../VALIDATION.md`.
+
+
+## A note on the Realtime checks
+
+The Realtime section of `integration.mjs` verifies that a guardian subscribed to
+`training_session_occupancy` receives the count change when someone books
+(D-01, S-P2). Against a **freshly reset** local stack it does not route changes
+to an RLS-scoped subscriber, and the suite reports:
+
+```
+SKIP  Realtime checks — the local stack is not routing changes yet.
+```
+
+Run the suite a second time and they execute normally. The cause is in the
+Supabase CLI's container lifecycle around `supabase db reset`, not in Trainlio:
+a service-role subscriber on the same table routes immediately after a restart,
+and restarting the Realtime container by hand does not change the outcome —
+only having run the suite once does.
+
+The suite skips rather than fails so a red line here always means a real
+regression. If the checks skip on two consecutive runs, that is worth
+investigating: they are the only coverage of live occupancy, and a guardian who
+never sees the count move is a guardian who books into a session that filled
+while they were reading it.

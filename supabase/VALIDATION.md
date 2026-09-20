@@ -8,9 +8,9 @@ intent. Supabase-provided objects (`auth.users`, `auth.uid()`, `storage.objects`
 `storage.foldername`, the `supabase_realtime` publication, and the `anon`,
 `authenticated` and `service_role` roles) were stubbed locally.
 
-All sixteen files applied in order with no errors.
+All seventeen files applied in order with no errors.
 
-**320 of 320 cases pass**, and the database lint reports no error-level finding:
+**387 of 387 cases pass**, and the database lint reports no error-level finding:
 
 | Suite | Cases |
 |---|---|
@@ -23,6 +23,7 @@ All sixteen files applied in order with no errors.
 | [`tests/validation_series.sql`](tests/validation_series.sql) | 34 |
 | [`tests/validation_bookings.sql`](tests/validation_bookings.sql) | 42 |
 | [`tests/validation_roster.sql`](tests/validation_roster.sql) | 73 |
+| [`tests/validation_notifications.sql`](tests/validation_notifications.sql) | 67 |
 
 Plus the concurrency and daylight-saving cases below, which need parallel
 connections and are run separately.

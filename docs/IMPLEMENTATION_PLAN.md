@@ -111,14 +111,28 @@ Exit: AC-042, AC-042a to AC-042c, AC-050, AC-142. ✅
 `validation_roster.sql` (73 cases), `tests/unit/roster.test.ts` (13 cases) and
 the roster section of `integration.mjs` (24 checks over HTTP).
 
-## Phase 7 — notifications
+## Phase 7 — notifications ✅
 
-- Event expansion with per-guardian deduplication and per-recipient payload
-- Email service abstraction with a single Resend implementation
-- Vercel Cron drain route with retry and error recording
+- `notification_event_recipients` and `expand_notification_event`: one delivery
+  per guardian, carrying that guardian's own athletes, idempotent on both the
+  dispatch marker and the unique constraint
+- `claim_notification_deliveries` / `record_notification_delivery`: claim with
+  `SKIP LOCKED`, a bounded attempt budget, and reclaim of a delivery whose drain
+  died mid-flight
+- `EmailProvider` with a single Resend implementation, and a pure Czech message
+  composer above it
+- `/api/notifications/drain` on a five-minute Vercel Cron schedule, behind a
+  constant-time shared-secret check
 
-Exit: AC-061, AC-071 to AC-073, AC-150 to AC-152. Verified end to end that one
-guardian with two booked children receives exactly one email naming both.
+Exit: AC-061, AC-071 to AC-073, AC-150 to AC-152. ✅
+`validation_notifications.sql` (67 cases), `tests/unit/notifications.test.ts`
+(26) and `tests/unit/email.test.ts` (9), `tests/e2e/notifications.spec.ts` (4),
+and the outbox section of `integration.mjs` (31 checks over HTTP).
+
+Verified end to end that one guardian with two booked children receives exactly
+one email naming both: over HTTP in `integration.mjs` (`created === 2` for two
+families, one delivery for the family of two, `athlete_names` of length 2) and
+on the composed string in the unit suite.
 
 ## Phase 8 — QA
 

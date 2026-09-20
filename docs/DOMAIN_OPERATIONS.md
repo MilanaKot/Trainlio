@@ -495,3 +495,120 @@ database: `notification_deliveries.provider_message_id` is a generic column, and
 the drain job talks to an `EmailSender` interface with a single Resend
 implementation. Supabase Auth OTP uses Resend as custom SMTP (D-16); Supabase's
 default SMTP is not a production option.
+
+---
+
+## Notification outbox operations
+
+Every function in this section is **service_role only**. The drain job is the
+one caller and it runs outside any user's request. Expansion reads `auth.users`
+for the recipient's address; granting EXECUTE to `authenticated` would hand a
+guardian every booked family's email address through a function call, which is
+exactly the leak the grant and policy layers both exist to prevent.
+
+### `notification_event_recipients(p_event_id uuid) → setof`
+
+The guardians with ACTIVE access to an athlete holding a CONFIRMED booking on
+the event's session (`BR-072`), one row each, carrying `athlete_ids` and
+`athlete_names` for that guardian's own children. This is what makes `AC-072`
+and `AC-073` a property of the data rather than of the email template.
+
+D-08 narrows it: `SESSION_ELIGIBILITY_NARROWED` goes only to the guardians of
+the athletes in `payload.affected_athlete_ids`. The other booked families are
+unaffected and telling them would be noise.
+
+### `expand_notification_event(p_event_id uuid) → jsonb`
+
+Creates one `notification_deliveries` row per recipient and sets
+`dispatched_at`. Returns `{ created, already_dispatched }`.
+
+Idempotent (`AC-151`), and by two mechanisms that are both needed:
+
+- the row lock on the event, so two drains running at once do not both pass the
+  `dispatched_at` check and race into the same insert;
+- the `unique (event_id, recipient_profile_id)` constraint, which is also the
+  deduplication for `BR-073` — a guardian with two booked children cannot
+  produce two rows, so they cannot receive two emails. This holds even if
+  `dispatched_at` were cleared by hand.
+
+The recipient's address is snapshotted here rather than joined at send time.
+`auth_user_id` is severable (D-18): a profile whose login was removed keeps its
+delivery history, and a delivery already made keeps the address it was made to.
+
+| Code | Meaning |
+|---|---|
+| `EVENT_NOT_FOUND` | |
+
+### `pending_notification_events(p_limit integer default 50) → setof uuid`
+
+Undispatched events, oldest first.
+
+### `claim_notification_deliveries(p_limit, p_max_attempts, p_stale_after) → setof`
+
+Claims a batch to send: `FOR UPDATE SKIP LOCKED`, marking each row `SENDING`
+and stamping `claimed_at` inside the claiming transaction. Two overlapping drain
+runs — which a cron schedule plus a slow provider makes ordinary — must not both
+pick up the same delivery, because the second send is a duplicate email to a
+parent and cannot be recalled.
+
+Returns the recipient address, the attempt count, the workspace name and
+timezone, this guardian's athlete names, and a `session_payload` composed from
+the **event's** snapshot with the facility and location names resolved live. The
+snapshot matters: if a coach moves a session twice before the drain runs, the
+first email must describe the first move.
+
+Not claimed:
+
+- `attempt_count >= p_max_attempts`. The budget stops a permanently broken
+  address from being retried for the life of the workspace.
+- `recipient_email is null`. Left `PENDING` rather than failed — a future
+  anonymisation clears the address deliberately (D-18), and the record of the
+  intent is preserved either way.
+- a `SENDING` row claimed less than `p_stale_after` ago. Past that it **is**
+  reclaimed: that state means the process died between claiming and recording,
+  the one case where Trainlio cannot know whether the message went out.
+  Retrying is the right choice, because a parent who receives the cancellation
+  twice is inconvenienced while a parent who never receives it takes their child
+  to a training that is off.
+
+`claimed_at` is a column of its own rather than a reading of `updated_at`.
+`updated_at` is maintained by the `set_updated_at` trigger, so it answers "when
+was this row last touched at all" — any unrelated write resets it, and nothing
+outside the trigger can set it.
+
+### `record_notification_delivery(p_delivery_id, p_ok, p_provider_message_id, p_error) → jsonb`
+
+`SENT` with `sent_at`, or `FAILED` with `last_error`. The provider id is plain
+text in a column that names no vendor (`AC-152`).
+
+| Code | Meaning |
+|---|---|
+| `DELIVERY_NOT_FOUND` | |
+
+### `notification_queue_depth() → jsonb`
+
+Counts only, no addresses: `undispatched_events`, `pending`, `sending`,
+`failed`, `sent`. The drain returns it so an operator can see a backlog without
+reading the outbox.
+
+## The drain
+
+`src/server/notifications/drain.ts`, on a Vercel Cron schedule
+(`vercel.json`, every five minutes) behind `/api/notifications/drain`.
+
+Two phases, deliberately separate. Expansion is idempotent and cheap, so
+re-running it costs nothing; sending is neither, which is why a claim marks the
+row inside the claiming transaction. Each outcome is recorded one delivery at a
+time rather than batched at the end: a batch write means a crash halfway through
+loses the record of everything already sent, and the next run sends those emails
+again.
+
+The route is authenticated by a shared secret compared in constant time, not by
+being obscure — the approved review is explicit that possession of a URL is not
+authorization, and this route reads guardian email addresses with the service
+role.
+
+The provider lives behind `EmailProvider` with one implementation (Resend). A
+4xx from the provider is not retried, because the request is wrong in a way
+retrying cannot fix and the attempt budget is small enough that spending it
+there means a deliverable message never gets another attempt; 429 and 5xx are.
