@@ -612,3 +612,87 @@ The provider lives behind `EmailProvider` with one implementation (Resend). A
 4xx from the provider is not retried, because the request is wrong in a way
 retrying cannot fix and the attempt budget is small enough that spending it
 there means a deliverable message never gets another attempt; 429 and 5xx are.
+
+---
+
+## Retention and repair operations
+
+All **service_role only**. There is no interface for any of them and there is
+not meant to be: each is an administrative act, performed on a written request
+or during an incident. The procedures are in `RUNBOOK.md`.
+
+### `anonymization_preview(p_profile_id uuid) → jsonb`
+
+Read-only. Reports what an erasure would touch: how many bookings stay
+attributed, how many audit entries and delivery rows exist, how many guardian
+links would be revoked, and — the consequence an operator is most likely to
+miss — which athletes would be left with **no active guardian**.
+
+An erasure is irreversible by construction, so the blast radius is shown first.
+
+### `anonymize_profile(p_profile_id uuid, p_reason text, p_anonymize_athletes boolean) → jsonb`
+
+D-18's erasure. Six things happen:
+
+1. `display_name` is cleared and `anonymized_at` stamped;
+2. `auth_user_id` is severed and the `auth.users` row deleted, which is what
+   stops the person signing in again;
+3. `notification_deliveries.recipient_email` is scrubbed for that recipient;
+4. active `guardian_athlete_access` is set `REVOKED` — the rows stay, because
+   they are how past bookings are explained;
+5. `workspace_members.is_active` is cleared;
+6. one `PROFILE_ANONYMIZED` audit entry per workspace the person was active in,
+   recording who they were while that was still knowable.
+
+**Nothing is deleted**: no booking, session, audit entry or delivery row, and no
+actor reference is rewritten. A parent's erasure must not remove a training from
+the club's history, and the coach must still be able to answer "who was on the
+ice that evening".
+
+`p_anonymize_athletes` also clears the names of athletes this profile was the
+**last active guardian** of, deactivates them and removes the photograph
+reference. Off by default: an athlete is a different data subject, and erasing a
+child because a parent asked is a decision, not a side effect.
+
+| Code | Meaning |
+|---|---|
+| `PROFILE_NOT_FOUND` | |
+| `ALREADY_ANONYMIZED` | With `anonymized_at` in `details` |
+
+### `scrub_notification_emails() → jsonb`
+
+Clears `recipient_email` on settled deliveries (`SENT` or `FAILED`) older than
+`workspaces.delivery_email_retention_days`. A `PENDING` or `SENDING` row keeps
+its address however old — it still needs somewhere to go.
+
+Dated by `sent_at`, falling back to `claimed_at` and then `created_at`, and
+**not** by `updated_at`: the `set_updated_at` trigger rewrites that on every
+write, the scrub's own included, which would have left a failed delivery
+permanently one moment old and its address never cleared.
+
+Called from the notification drain rather than on a schedule of its own, because
+a retention job with its own schedule is a retention job that quietly stops
+running.
+
+### `dormant_profiles(p_inactive_days integer default 1095) → setof`
+
+Profiles with no booking and no audited action inside the window, excluding
+those already anonymised. A list for review, never an action: erasure is
+irreversible and a list is not a decision.
+
+### `repair_occupancy(p_training_session_id uuid default null) → jsonb`
+
+Recomputes the occupancy projection from the bookings, for one session or for
+every drifting one. Locks the occupancy row first, for the same reason every
+booking path does. Reports what it changed and appends `OCCUPANCY_REPAIRED`,
+because a count that moved without a booking moving is exactly the thing someone
+will later need explained.
+
+A session with **no** projection row is not created here. That case means a
+trigger did not fire when the session was created, and silently conjuring the
+row would destroy the evidence of a fault that can let two parents take the same
+last place. `sessions_without_occupancy()` reports it; a person decides.
+
+The projection trigger fires on `update of status`, not on any write, so
+touching a booking row does not recompute it — which is why this function exists
+rather than a documented trick.

@@ -161,13 +161,43 @@ Four defects were found by the new tests and fixed:
 | Mobile review | The coach header links, the eligibility radios and every date input were under the 44px a thumb needs. |
 | Full suite | `validation_bookings.sql` paired `current_date` with a Prague-relative time, which lands on the next day late in the evening. |
 
-## Phase 9 — deployment
+## Phase 9 — deployment ✅
 
-- Vercel production, Supabase production project
-- Resend domain verification for both SMTP and transactional sending
-- Secrets, including the cron shared secret
-- Backup and point-in-time recovery notes
-- Coach-facing incident runbook
+- The D-18 workflow, which the plan deferred until now (migration 19):
+  `anonymize_profile()`, `anonymization_preview()`,
+  `scrub_notification_emails()` and `dormant_profiles()`, all service-role only
+- `repair_occupancy()` (migration 20): the supported fix for projection drift,
+  which writing the runbook showed was missing
+- [`DEPLOYMENT.md`](DEPLOYMENT.md): Supabase, Resend, Vercel, the first coach
+  grant, the end-to-end verification, backups and point-in-time recovery,
+  and the data-protection summary
+- [`RUNBOOK.md`](RUNBOOK.md): the coach-facing incident runbook, with the Czech
+  a coach would actually send to a parent
+- Security headers, `robots.txt`, and `poweredByHeader: false`
+
+Exit: the deployment is reproducible from the documents, and nothing in
+`OPEN_DECISIONS.md` is open. ✅
+`validation_retention.sql` (61 cases) covers AC-224 to AC-231; AC-232 is in
+`validation_qa.sql`. **125 of 125** acceptance criteria map to a named test.
+
+Two defects were found by writing this phase:
+
+| Found by | Defect |
+|---|---|
+| The retention suite | `scrub_notification_emails()` dated settled deliveries by `updated_at`, which the `set_updated_at` trigger rewrites on every write — including the scrub's own. A failed delivery's address would never have been cleared. Now `sent_at`, then `claimed_at`. |
+| Writing the runbook | The repair procedure it first carried did not work. The occupancy trigger fires on `update of status`, not on any write, so an operator's only options were to wait for a parent to book or to fake a status change. `repair_occupancy()` is the answer, and the QA suite now asserts that touching a booking row does *not* recompute. |
+
+### Not done here, and why
+
+Provisioning itself needs the club's own Supabase, Vercel and Resend accounts,
+so `DEPLOYMENT.md` is written to be followed rather than executed. Two values in
+it are the club's policy to set, with defaults that work: the delivery-address
+retention window and the dormancy review window (`OPEN_DECISIONS.md`, D-18).
+
+A Content-Security-Policy is deliberately absent. Next injects inline bootstrap
+scripts, so a policy worth having needs per-request nonces threaded through the
+proxy; one with `unsafe-inline` would read like protection and not be any. It
+belongs after launch, not in the same change as everything else.
 
 ## Review checkpoints
 
@@ -176,9 +206,8 @@ Two checkpoints carry nearly all the irreversible risk:
 - after Phase 1, when the schema and the authorization model freeze;
 - after Phase 5, when booking correctness is established.
 
-## Before Phase 9
+## Before Phase 9 — done
 
-The account deletion and anonymisation *workflow* (D-18) must be decided before
-production launch. The architectural constraint is already applied and verified:
-no domain history depends on an `auth.users` row existing. See
-`OPEN_DECISIONS.md`.
+The account deletion and anonymisation *workflow* (D-18) was the one thing the
+plan required before production launch. It is decided, implemented and verified
+in Phase 9; `OPEN_DECISIONS.md` has nothing left open.

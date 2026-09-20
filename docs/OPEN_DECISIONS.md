@@ -2,19 +2,33 @@
 
 Trainlio — Sports Training Booking Platform
 
-**One item remains open.** D-01 through D-17 are all decided; the resulting
-design is in `ARCHITECTURE.md`, `DATA_MODEL.md`, `DOMAIN_OPERATIONS.md` and
+**Nothing remains open.** D-01 through D-20 are decided; the resulting design
+is in `ARCHITECTURE.md`, `DATA_MODEL.md`, `DOMAIN_OPERATIONS.md` and
 `/supabase/migrations`, and its behaviour is verified in
 `/supabase/VALIDATION.md`.
 
+D-18's workflow was the last to close, in Phase 9. Two of its values are
+**policy, not architecture**, and the club owns them — they are workspace
+settings with defaults, changed with SQL and not with a deploy:
+
+| Setting | Default | Meaning |
+|---|---|---|
+| `workspaces.delivery_email_retention_days` | 90 | How long the delivery audit keeps the address it sent to |
+| `dormant_profiles(p_inactive_days)` | 1095 (3 years) | The window a review uses to find inactive accounts. A parameter, not stored: dormancy never erases anything on its own. |
+
+Ninety days comfortably covers "did the cancellation reach the parents?", which
+is the only question the address itself answers. Three years is the length of a
+child's time in one age group, and it is a suggestion to a human reviewer rather
+than a rule anything acts on.
+
 ---
 
-## Deferred — due before Phase 9
+## Closed in Phase 9
 
 ### D-18 — Account deletion and anonymisation
 
-The **workflow** is deferred by decision, to be defined before production
-launch. The **architectural constraint** is applied now and is verified:
+The **architectural constraint** was applied in Phase 1 and has been verified
+since:
 
 - personally identifiable account data is separable from operational history —
   email lives only in `auth.users`, display name in `app_profiles`, and every
@@ -32,9 +46,36 @@ launch. The **architectural constraint** is applied now and is verified:
 Validation confirms all four: deleting a guardian's `auth.users` row left both
 their bookings attributed and both guardian links intact.
 
-Still to decide before launch: the retention period, the exact anonymisation
-procedure, whether `notification_deliveries.recipient_email` is scrubbed on a
-schedule, and who is controller (the coach) versus processor (the platform).
+**The workflow, decided in Phase 9** (migration 19, `validation_retention.sql`):
+
+- **Erasure is on request, never on a schedule.** `anonymize_profile()` clears
+  the display name, stamps `anonymized_at`, deletes the authentication record,
+  scrubs that recipient's addresses from the delivery audit, revokes their
+  active guardian access, and deactivates staff membership. It deletes no
+  booking, session, audit entry or delivery row, and rewrites no actor
+  reference: a parent's erasure must not remove a training from the club's
+  history.
+- **Look before acting.** `anonymization_preview()` reports the blast radius —
+  including which athletes would be left with no active guardian, the
+  consequence an operator is most likely to miss.
+- **A child is a different data subject.** Athlete names are cleared only on
+  explicit request, and only where the profile being erased was their last
+  active guardian.
+- **The erasure is audited**, one entry per workspace the person was active in,
+  recording who they were while that was still knowable.
+- **Addresses decay on a schedule.** `scrub_notification_emails()` runs from the
+  notification drain and clears `recipient_email` on settled deliveries past
+  `workspaces.delivery_email_retention_days`. The delivery record and its
+  profile attribution are kept.
+- **Dormancy is a list, never an action.** `dormant_profiles()` finds accounts a
+  retention policy would cover; a person decides. Erasure is irreversible by
+  construction, and a list is not a decision.
+- **Controller and processor.** The club is the controller and answers a
+  parent's request; Trainlio is the processor. The procedure a coach follows is
+  in `RUNBOOK.md`.
+
+Every function is `service_role` only. There is no interface for erasure and
+there is not meant to be.
 
 ---
 
@@ -60,3 +101,4 @@ schedule, and who is controller (the coach) versus processor (the platform).
 | D-17 | Platform vs workspace admin | `workspace_role` is COACH and WORKSPACE_ADMIN; platform administration is a separate `platform_admins` table and is never inferred from workspace membership. Guardians are not a staff role. The generic `app_role` enum is dropped. |
 | D-19 | Signed URL lifetime | 60 minutes, issued server-side. |
 | D-20 | Next.js router | App Router, Server Components, Server Actions calling the domain functions. |
+| D-18 | Account deletion and anonymisation | Closed in Phase 9 — see above. |

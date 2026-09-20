@@ -448,3 +448,37 @@ No operational table stores an email address except the notification delivery au
 
 AC-223  
 Audit entries remain attributable after an authentication record is removed.
+
+## Account anonymisation workflow (D-18)
+These were added with the workflow itself, in Phase 9. AC-220 to AC-223 above
+remain the architectural constraint they are built on.
+
+AC-224  
+Anonymisation is service-role only. No guardian, coach or workspace admin can run it, or read the dormancy list, through the API.
+
+AC-225  
+Given a profile  
+When an operator previews its anonymisation  
+Then they are told how much history stays attributed, and which athletes would be left with no active guardian.
+
+AC-226  
+An anonymisation clears the display name, stamps `anonymized_at`, deletes the authentication record, scrubs that recipient's addresses from the delivery audit, and revokes their active guardian access.
+
+AC-227  
+An anonymisation deletes no booking, session, audit entry or delivery row, and rewrites no actor reference. The trainings and rosters the person took part in remain.
+
+AC-228  
+An athlete is only anonymised on explicit request, and only when the profile being erased was their last active guardian. Their name is cleared, they are deactivated, and the photograph reference is removed.
+
+AC-229  
+An anonymisation appends one audit entry per workspace the person was active in, recording who they were and the state of their history at the time.
+
+AC-230  
+Recipient addresses in the delivery audit are cleared once they are older than the workspace's retention setting, for settled deliveries only. The delivery record itself is kept.
+
+AC-231  
+Dormancy is a list for review, never an automatic erasure: listing a profile changes nothing about it.
+
+## Operational repair
+AC-232  
+Occupancy drift has a supported repair that recomputes from the bookings, reports what it changed, and appends an audit entry. It is service-role only, and it does not create a missing projection row.

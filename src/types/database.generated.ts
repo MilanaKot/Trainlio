@@ -1021,6 +1021,7 @@ export type Database = {
         Row: {
           cancellation_deadline_hours: number
           created_at: string
+          delivery_email_retention_days: number
           id: string
           is_active: boolean
           name: string
@@ -1031,6 +1032,7 @@ export type Database = {
         Insert: {
           cancellation_deadline_hours?: number
           created_at?: string
+          delivery_email_retention_days?: number
           id?: string
           is_active?: boolean
           name: string
@@ -1041,6 +1043,7 @@ export type Database = {
         Update: {
           cancellation_deadline_hours?: number
           created_at?: string
+          delivery_email_retention_days?: number
           id?: string
           is_active?: boolean
           name?: string
@@ -1063,6 +1066,15 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      anonymization_preview: { Args: { p_profile_id: string }; Returns: Json }
+      anonymize_profile: {
+        Args: {
+          p_anonymize_athletes?: boolean
+          p_profile_id: string
+          p_reason?: string
+        }
+        Returns: Json
+      }
       assert_profile_is_workspace_staff: {
         Args: { p_profile_id: string; p_workspace_id: string }
         Returns: undefined
@@ -1193,6 +1205,16 @@ export type Database = {
         Returns: Json
       }
       current_profile_id: { Args: never; Returns: string }
+      dormant_profiles: {
+        Args: { p_inactive_days?: number }
+        Returns: {
+          bookings_created: number
+          display_name: string
+          has_login: boolean
+          last_activity: string
+          profile_id: string
+        }[]
+      }
       duplicate_training_session: {
         Args: {
           p_local_date: string
@@ -1265,6 +1287,15 @@ export type Database = {
         }[]
       }
       notification_queue_depth: { Args: never; Returns: Json }
+      occupancy_reconciliation: {
+        Args: never
+        Returns: {
+          actual: number
+          drift: number
+          projected: number
+          training_session_id: string
+        }[]
+      }
       pending_notification_events: {
         Args: { p_limit?: number }
         Returns: string[]
@@ -1278,6 +1309,11 @@ export type Database = {
         }
         Returns: Json
       }
+      repair_occupancy: {
+        Args: { p_training_session_id?: string }
+        Returns: Json
+      }
+      scrub_notification_emails: { Args: never; Returns: Json }
       session_confirmed_count: {
         Args: { p_training_session_id: string }
         Returns: number
@@ -1303,6 +1339,7 @@ export type Database = {
           stick_side_code: string
         }[]
       }
+      sessions_without_occupancy: { Args: never; Returns: string[] }
       set_session_booking_state: {
         Args: { p_open: boolean; p_training_session_id: string }
         Returns: Json

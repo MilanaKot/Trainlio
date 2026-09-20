@@ -13,20 +13,23 @@ domain model is intentionally designed for:
 
 ## Status
 
-Phases 0 to 8 complete.
+**All nine phases complete. The MVP is ready to deploy.**
 
 The database and its authorization model, email one-time-code sign-in, athlete
 management, coach session management, recurring series, the booking engine, the
-coach roster and transactional notifications are in place. Eighteen migrations
-apply clean, the database lint reports no error-level finding, and 428
-validation cases pass — plus a concurrency proof, a live-stack integration
-suite, 121 unit tests and 57 browser flows including a mobile viewport review.
+coach roster, transactional notifications and the account-anonymisation
+workflow are in place. Twenty migrations apply clean, the database lint reports
+no error-level finding, and 494 validation cases pass — plus a concurrency
+proof, a live-stack integration suite, 121 unit tests and 57 browser flows
+including a mobile viewport review.
 See [`supabase/VALIDATION.md`](supabase/VALIDATION.md).
 
-**All 116 acceptance criteria map to a named test**, checked mechanically by
-`pnpm qa:coverage` on every push.
+**All 125 acceptance criteria map to a named test**, checked mechanically by
+`pnpm qa:coverage` on every push. Nothing in
+[`docs/OPEN_DECISIONS.md`](docs/OPEN_DECISIONS.md) is open.
 
-Next: Phase 9 — deployment.
+To put it into production, follow [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md).
+When something goes wrong, [`docs/RUNBOOK.md`](docs/RUNBOOK.md).
 
 See [`CONTRIBUTING.md`](CONTRIBUTING.md) to run it.
 

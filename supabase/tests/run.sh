@@ -113,5 +113,7 @@ run_suite trainlio_notifications supabase/tests/validation_notifications.sql
 echo
 run_suite trainlio_qa supabase/tests/validation_qa.sql
 echo
+run_suite trainlio_retention supabase/tests/validation_retention.sql
+echo
 echo '── Concurrency ─────────────────────────────────────────────────────'
 bash supabase/tests/concurrency.sh

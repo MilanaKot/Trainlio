@@ -66,10 +66,16 @@ select pg_temp.check(
     where table_schema='public' and table_name='athletes' and column_name='date_of_birth'),
   'NO', 'and it is required');
 -- AC-222. The one deliberate exception is documented on the column itself.
+--
+-- Restricted to columns that could actually hold an address: a retention
+-- setting in days is named for email and cannot store one. Widening the scan
+-- to every matching name would make it noisy, and a noisy check gets an
+-- exception list, which is how a real `contact_email text` slips through.
 select pg_temp.check(
   (select coalesce(string_agg(table_name || '.' || column_name, ', ' order by table_name), 'none')
      from information_schema.columns
     where table_schema = 'public'
+      and data_type in ('text', 'character varying', 'character')
       and (column_name ilike '%email%' or column_name ilike '%e_mail%')),
   'notification_deliveries.recipient_email',
   'no operational table stores an email address (AC-222)');
@@ -249,8 +255,36 @@ select pg_temp.check(
   (select count(*)::text from public.occupancy_reconciliation()),
   '1', 'only the drifting session is reported');
 
--- A booking write puts it back, because the trigger recomputes rather than
--- adding a delta: a recount cannot inherit an earlier mistake.
+-- The supported repair (AC-232). It reports what it changed rather than fixing
+-- things quietly, because a count that moved without a booking moving is what
+-- someone will later need explained.
+select pg_temp.check(
+  (public.repair_occupancy('00000000-0000-0000-0000-0000000e0001'::uuid)
+   -> 'data' -> 'sessions' -> 0 ->> 'was') || '->' ||
+  (public.repair_occupancy('00000000-0000-0000-0000-0000000e0001'::uuid)
+   -> 'data' ->> 'repaired'),
+  '0->0', 'the repair names the count it found, and a second run finds nothing (AC-232)');
+select pg_temp.check(
+  (select count(*)::text from public.occupancy_reconciliation()),
+  '0', 'the drift is gone (AC-232)');
+select pg_temp.check(
+  (select (after ->> 'confirmed_count') from public.audit_log
+    where action = 'OCCUPANCY_REPAIRED'),
+  '2', 'and the repair is on the record (AC-232)');
+
+-- Touching a booking row does NOT repair it: the projection trigger fires on a
+-- status change, not on any write. The runbook said otherwise until this was
+-- run, which is why it is asserted rather than assumed.
+update public.training_session_occupancy set confirmed_count = 40
+ where training_session_id = '00000000-0000-0000-0000-0000000e0001';
+update public.bookings set updated_at = now()
+ where training_session_id = '00000000-0000-0000-0000-0000000e0001';
+select pg_temp.check(
+  (select count(*)::text from public.occupancy_reconciliation()),
+  '1', 'a plain write on a booking does not recompute the projection (AC-232)');
+
+-- A booking write does, because the trigger recomputes rather than adding a
+-- delta: a recount cannot inherit an earlier mistake.
 insert into public.bookings(training_session_id, athlete_id, created_by, created_by_role)
 values ('00000000-0000-0000-0000-0000000e0001', pg_temp.ath('Anna'),
         '00000000-0000-0000-0000-0000000fb000', 'USER');
@@ -261,6 +295,10 @@ select pg_temp.check(
   (select confirmed_count::text from public.training_session_occupancy
     where training_session_id = '00000000-0000-0000-0000-0000000e0001'),
   '3', 'to the true count, not to the wrong one plus a delta');
+
+select pg_temp.check(
+  pg_temp.as_user(:COACH, $$select (public.repair_occupancy() ->> 'ok')$$),
+  'DENIED', 'the repair is operational, not a client feature (AC-232)');
 
 select pg_temp.check(
   pg_temp.as_user(:COACH, $$select count(*)::text from public.occupancy_reconciliation()$$),

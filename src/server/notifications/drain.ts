@@ -31,6 +31,8 @@ export type DrainReport = {
   attempted: number
   sent: number
   failed: number
+  /** D-18: addresses cleared from the delivery audit on this run. */
+  scrubbed: number
   queue: Record<string, number>
 }
 
@@ -138,6 +140,16 @@ export async function drainNotifications(options?: {
     else failed += 1
   }
 
+  // D-18 address decay, on the same schedule and deliberately last: a delivery
+  // claimed earlier in this run still holds the address it is being sent to,
+  // and the scrub skips unsettled rows for exactly that reason.
+  //
+  // Here rather than on a cron of its own because it is cheap, idempotent, and
+  // a retention job that runs on its own schedule is a retention job that
+  // quietly stops running.
+  const { data: scrub } = await supabase.rpc('scrub_notification_emails')
+  const scrubbed = (scrub as { data?: { scrubbed?: number } } | null)?.data?.scrubbed ?? 0
+
   const { data: depth } = await supabase.rpc('notification_queue_depth')
 
   return {
@@ -146,6 +158,7 @@ export async function drainNotifications(options?: {
     attempted: (claimed ?? []).length,
     sent,
     failed,
+    scrubbed,
     queue: (depth as Record<string, number>) ?? {},
   }
 }
