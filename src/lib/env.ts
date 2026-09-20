@@ -15,6 +15,8 @@ import { z } from 'zod'
 const publicSchema = z.object({
   NEXT_PUBLIC_SUPABASE_URL: z.url(),
   NEXT_PUBLIC_SUPABASE_ANON_KEY: z.string().min(1),
+  /** Where OTP links and redirects come back to. Also read by supabase/config.toml. */
+  NEXT_PUBLIC_SITE_URL: z.url(),
 })
 
 const serverSchema = z.object({
@@ -25,6 +27,8 @@ const serverSchema = z.object({
    */
   SUPABASE_SERVICE_ROLE_KEY: z.string().min(1),
   RESEND_API_KEY: z.string().min(1),
+  /** Sender for Auth OTP and transactional mail. Must be on a Resend-verified domain. */
+  AUTH_SENDER_EMAIL: z.email(),
   /** Shared secret for the notification drain cron route. */
   CRON_SECRET: z.string().min(16),
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
@@ -40,6 +44,7 @@ function fail(what: string, error: z.ZodError): never {
 const publicParsed = publicSchema.safeParse({
   NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
   NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+  NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL,
 })
 
 if (!publicParsed.success) fail('public', publicParsed.error)
@@ -58,6 +63,7 @@ export function getServerEnv(): z.infer<typeof serverSchema> {
   const parsed = serverSchema.safeParse({
     SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY,
     RESEND_API_KEY: process.env.RESEND_API_KEY,
+    AUTH_SENDER_EMAIL: process.env.AUTH_SENDER_EMAIL,
     CRON_SECRET: process.env.CRON_SECRET,
     NODE_ENV: process.env.NODE_ENV,
   })
@@ -76,6 +82,7 @@ export function assertEnv(): void {
   const server = serverSchema.safeParse({
     SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY,
     RESEND_API_KEY: process.env.RESEND_API_KEY,
+    AUTH_SENDER_EMAIL: process.env.AUTH_SENDER_EMAIL,
     CRON_SECRET: process.env.CRON_SECRET,
     NODE_ENV: process.env.NODE_ENV,
   })

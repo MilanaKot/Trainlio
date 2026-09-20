@@ -83,7 +83,8 @@ host = "smtp.resend.com"
 port = 587
 user = "resend"
 pass = "env(RESEND_API_KEY)"
-admin_email = "trainink@example.com"
+# Must be an address on a domain verified in Resend, or delivery fails.
+admin_email = "env(AUTH_SENDER_EMAIL)"
 sender_name = "Trainlio"
 
 [auth.rate_limit]
