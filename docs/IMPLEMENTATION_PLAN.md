@@ -79,7 +79,7 @@ AC-194 (significant changes), AC-200 to AC-204 (notes and changing room).
 Exit: AC-080 to AC-080c. The daylight-saving case (AC-080a) is a required test,
 not a manual check.
 
-## Phase 5 — booking engine
+## Phase 5 — booking engine ✅
 
 - Occupancy projection and its triggers
 - Atomic multi-athlete guardian booking with the occupancy row lock

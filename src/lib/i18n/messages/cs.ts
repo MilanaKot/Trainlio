@@ -51,12 +51,26 @@ export const cs = {
   },
 
   session: {
+    listTitle: 'Tréninky',
+    noSessions: 'Zatím nejsou vypsané žádné tréninky.',
+    noSessionsHint: 'Jakmile trenér vypíše trénink, uvidíte ho zde.',
     allAthletes: 'Všichni sportovci',
     bookingClosed: 'Přihlašování uzavřeno',
     cancelled: 'ZRUŠENO TRENÉREM',
     changed: 'ZMĚNĚNO',
     book: 'Přihlásit',
     full: 'Trénink je plný.',
+    alreadyBooked: 'Přihlášeno',
+    booked: 'Přihlášeno',
+    started: 'Trénink již začal',
+  },
+
+  myBookingsPage: {
+    title: 'Moje tréninky',
+    none: 'Zatím nemáte žádné přihlášky.',
+    noneHint: 'Přihlaste sportovce v sekci Tréninky.',
+    nonePast: 'Žádné minulé tréninky.',
+    athlete: 'Sportovec',
   },
 
   booking: {
@@ -82,6 +96,27 @@ export const cs = {
     removedByCoach: 'Sportovce odebral trenér. Pro opětovné přihlášení kontaktujte trenéra.',
     sessionCancelled: 'Trénink byl zrušen.',
     acknowledge: 'Rozumím',
+    confirm: 'Přihlásit',
+    booking: 'Přihlašuji…',
+    noEligible: 'Žádný z vašich sportovců se na tento trénink nemůže přihlásit.',
+    noEligibleHint: 'Zkontrolujte ročník a hokejový profil sportovce.',
+    errors: {
+      EMPTY_SELECTION: 'Vyberte alespoň jednoho sportovce.',
+      DUPLICATE_ATHLETE_IN_REQUEST: 'Sportovec je ve výběru dvakrát.',
+      SESSION_NOT_FOUND: 'Trénink nebyl nalezen.',
+      SESSION_NOT_OPEN: 'Přihlašování na tento trénink je uzavřeno.',
+      SESSION_ALREADY_STARTED: 'Trénink již začal.',
+      SESSION_CANCELLED: 'Trénink byl zrušen.',
+      ALREADY_BOOKED: 'Sportovec už je na tento trénink přihlášen.',
+      REMOVED_BY_COACH: 'Sportovce odebral trenér. Pro opětovné přihlášení kontaktujte trenéra.',
+      NOT_ELIGIBLE: 'Sportovec nesplňuje podmínky tohoto tréninku.',
+      NOT_AUTHORIZED_FOR_ATHLETE: 'K tomuto sportovci nemáte přístup.',
+      NOT_AUTHENTICATED: 'Nejste přihlášeni.',
+      BOOKING_NOT_FOUND: 'Přihláška nebyla nalezena.',
+      BOOKING_NOT_CONFIRMED: 'Přihláška už není aktivní.',
+      CANCELLATION_DEADLINE_PASSED: 'Odhlášení již není možné. Kontaktujte trenéra.',
+      generic: 'Akce se nezdařila. Zkuste to prosím znovu.',
+    },
   },
 
   cancellation: {

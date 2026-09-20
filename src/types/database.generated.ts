@@ -1068,6 +1068,10 @@ export type Database = {
         Args: { p_athlete_id: string; p_training_session_id: string }
         Returns: string
       }
+      book_athletes_as_guardian: {
+        Args: { p_athlete_ids: string[]; p_training_session_id: string }
+        Returns: Json
+      }
       bookings_outside_birth_year_range: {
         Args: {
           p_birth_year_from: number
@@ -1075,6 +1079,10 @@ export type Database = {
           p_training_session_id: string
         }
         Returns: string[]
+      }
+      cancel_booking_as_guardian: {
+        Args: { p_booking_id: string }
+        Returns: Json
       }
       cancel_training_session: {
         Args: { p_reason?: string; p_training_session_id: string }
@@ -1161,6 +1169,19 @@ export type Database = {
       guardian_rebooking_blocked: {
         Args: { p_athlete_id: string; p_training_session_id: string }
         Returns: boolean
+      }
+      guardian_session_athletes: {
+        Args: { p_training_session_id: string }
+        Returns: {
+          athlete_id: string
+          booking_status: Database["public"]["Enums"]["booking_status"]
+          can_book: boolean
+          date_of_birth: string
+          eligibility: string
+          first_name: string
+          last_name: string
+          removed_by_coach: boolean
+        }[]
       }
       has_athlete_access: { Args: { p_athlete_id: string }; Returns: boolean }
       has_athlete_manage_access: {

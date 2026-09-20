@@ -10,7 +10,7 @@ intent. Supabase-provided objects (`auth.users`, `auth.uid()`, `storage.objects`
 
 All nine files applied in order with no errors.
 
-**205 of 205 cases pass**, and the database lint reports no error-level finding:
+**247 of 247 cases pass**, and the database lint reports no error-level finding:
 
 | Suite | Cases |
 |---|---|
@@ -21,6 +21,7 @@ All nine files applied in order with no errors.
 | [`tests/validation_athletes.sql`](tests/validation_athletes.sql) | 35 |
 | [`tests/validation_sessions.sql`](tests/validation_sessions.sql) | 51 |
 | [`tests/validation_series.sql`](tests/validation_series.sql) | 34 |
+| [`tests/validation_bookings.sql`](tests/validation_bookings.sql) | 42 |
 
 Plus the concurrency and daylight-saving cases below, which need parallel
 connections and are run separately.
@@ -168,21 +169,27 @@ No domain history depends on an `auth.users` row physically existing, which is
 the architectural property D-18 asked to preserve. The deletion and anonymisation
 *workflow* remains deferred.
 
-## Concurrency
+## Concurrency (AC-022, BR-032)
 
-Capacity 2, one place left, two transactions whose reads overlap.
+Run by [`tests/concurrency.sh`](tests/concurrency.sh) against the real
+`book_athletes_as_guardian`, with six guardians reaching for one place on
+genuinely parallel connections, five rounds.
 
-| Design | A | B | Bookings | Projection |
-|---|---|---|---|---|
-| Count-then-insert, no lock | read 1/2 → booked | read 1/2 → booked | **3 — capacity exceeded** | 3 (accurate) |
-| `SELECT … FOR UPDATE` on the occupancy row | read 1/2 → booked | read 2/2 → refused | 2 | 2 |
+| | Result |
+|---|---|
+| **Control** — count-then-insert, no lock | overbooks to **6/1** |
+| **Real** — the occupancy row lock | exactly 1 booking, 1/1, every round |
 
-This is `BR-032` and `AC-022`. The unlocked variant is what a straightforward
-implementation produces, and it overbooks.
+The control is not decoration. The first version of this script wrapped each
+attempt in an advisory lock so the two transactions would "overlap", which
+serialised them so completely that the occupancy lock was never contended: it
+passed while testing nothing. A concurrency test that cannot fail is worthless,
+so the suite now proves the harness observes overbooking before claiming the
+lock prevents it.
 
-The two mechanisms are separate and both are needed: the trigger's own lock
-guarantees the projection never lies about what exists, and the RPC's lock
-guarantees capacity is never exceeded in the first place.
+Two mechanisms, both needed: the trigger's own lock guarantees the projection
+never lies about what exists, and the RPC's lock guarantees capacity is never
+exceeded in the first place.
 
 ## Recurring series
 
@@ -368,6 +375,47 @@ creator's, and cannot be deleted.
 The two warnings are server-side gates, not dialogs. Without the flag the
 change is refused and the count comes back with it, so the interface cannot
 grant either one by failing to render it.
+
+## Booking engine
+
+| Check | Result |
+|---|---|
+| Two siblings booked in one action | both, occupancy 2/2 (AC-024) |
+| Two siblings into one free place | **neither** booked; the parent is told 1 place remains (AC-024a) |
+| Reducing the selection to one and retrying | succeeds (AC-024b) |
+| One ineligible child in the selection | the whole action refused, naming the child and reason (AC-024c) |
+| Booking into a full session | `INSUFFICIENT_CAPACITY`, 0 places reported (AC-021) |
+| The same athlete twice | `ALREADY_BOOKED` (AC-023); the same id twice in one call is refused outright |
+| A closed session with places free | `SESSION_NOT_OPEN` (BR-024) |
+| A started session | refuses everyone, for the one reason that applies |
+| A cancelled session | `SESSION_CANCELLED`; existing bookings preserved (AC-070a) |
+| An athlete a coach removed | `REMOVED_BY_COACH`, and the picker stops offering them (D-06) |
+| 2017 athlete into a 2017–2018 session | eligible (AC-030); a 2016 sibling is not |
+| Cancelling well before the session | allowed; occupancy drops (AC-040, AC-043) |
+| …inside the deadline | `CANCELLATION_DEADLINE_PASSED` (AC-041), and the booking stands |
+| Booking inside the deadline window | still allowed — the deadline governs cancelling, not booking (PRD §10) |
+| Another family cancelling your booking | `NOT_AUTHORIZED_FOR_ATHLETE` |
+| A cancelled booking | preserved as `CANCELLED_BY_USER`, never deleted (BR-044) |
+
+Every booking and cancellation writes its own audit entry.
+
+## Realtime occupancy
+
+Verified on the running stack, not asserted from the schema:
+
+| Check | Result |
+|---|---|
+| A guardian subscribes to `training_session_occupancy` | SUBSCRIBED |
+| A booking elsewhere | the count change arrives over the socket |
+| Another family reads the count | yes |
+| …and the bookings behind it | none (BR-090) |
+| A family with **no** athlete in the workspace | reads no occupancy at all (D-01) |
+
+That last row is the one worth keeping. Three probes failed before this was
+understood: Realtime applies row level security per subscriber, so a guardian
+with no athlete receives nothing — which is D-01 working, not a fault. The same
+property is why `bookings` is absent from the publication: a guardian would only
+ever receive their own rows, and the number would appear frozen.
 
 ## Reproducing
 

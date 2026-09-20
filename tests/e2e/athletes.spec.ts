@@ -12,6 +12,7 @@ test.describe('guardian area requires a session', () => {
     '/moji-sportovci/novy',
     '/ucet',
     '/treninky',
+    '/moje-treninky',
     '/trener',
     '/trener/novy',
     '/trener/serie',

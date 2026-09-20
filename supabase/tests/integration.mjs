@@ -406,6 +406,110 @@ if (!SERVICE) {
 
   r = await fetch(`${API}/rest/v1/session_series?select=id`, { headers: auth })
   ok('a guardian sees no series at all', (await r.json()).length === 0)
+
+  console.log('')
+  console.log('── Booking, over HTTP and over Realtime ────────────────────────────')
+
+  // A session the first family's athlete can book into.
+  res = await rpc('create_training_session', {
+    p_workspace_id: ws.id,
+    p_local_date: new Date(Date.now() + 30 * 86400000).toISOString().slice(0, 10),
+    p_local_start_time: '09:00',
+    p_local_end_time: '10:00',
+    p_facility_id: mh.id,
+    p_capacity: 1,
+    p_eligibility_mode: 'ALL',
+  })
+  const bookable = res.data?.training_session_id
+  ok('a coach opens a session with one place', res.ok === true, res.code ?? '')
+
+  // The picker's list comes from the server, so it cannot offer a child the
+  // write would refuse.
+  const picker = await rpc('guardian_session_athletes', { p_training_session_id: bookable }, auth)
+  ok('the picker offers the guardian their own athlete', picker.length === 1 && picker[0].can_book === true)
+
+  // Realtime, on the projection and never on bookings. Subscribed before the
+  // booking so the event has somewhere to arrive.
+  const { createClient } = await import('@supabase/supabase-js')
+  const rt = createClient(API, ANON)
+  // The socket carries its own token: Realtime applies row level security per
+  // subscriber, so without this the channel authenticates as anon and receives
+  // nothing — and a guardian with no athlete in the workspace receives nothing
+  // either, which is D-01 working rather than a fault.
+  rt.realtime.setAuth(first.token)
+
+  const occupancyEvents = []
+  const channel = rt.channel(`occupancy:${bookable}`).on(
+    'postgres_changes',
+    { event: 'UPDATE', schema: 'public', table: 'training_session_occupancy',
+      filter: `training_session_id=eq.${bookable}` },
+    (payload) => occupancyEvents.push(payload.new),
+  )
+  const subscribed = await new Promise((resolve) => {
+    channel.subscribe((status) => { if (status === 'SUBSCRIBED') resolve(true) })
+    setTimeout(() => resolve(false), 15000)
+  })
+  ok('a guardian can subscribe to the occupancy projection', subscribed === true)
+
+  // SUBSCRIBED means the channel joined; the server-side subscription row that
+  // actually routes changes is written just after. Booking before it exists
+  // produces a change with nobody yet listening.
+  await new Promise((s) => setTimeout(s, 2000))
+
+  res = await rpc('book_athletes_as_guardian', {
+    p_training_session_id: bookable,
+    p_athlete_ids: [athleteId],
+  }, auth)
+  ok('and book through the domain function', res.ok === true, res.code ?? '')
+
+  await new Promise((s) => setTimeout(s, 6000))
+  ok('the occupancy change arrives over Realtime',
+     occupancyEvents.some((e) => e.confirmed_count === 1),
+     `${occupancyEvents.length} event(s)`)
+
+  // The second family needs an athlete of their own before they can see this
+  // workspace at all (D-01) — which is itself the rule under test.
+  const beforeJoining = await (
+    await fetch(
+      `${API}/rest/v1/training_session_occupancy?training_session_id=eq.${bookable}&select=confirmed_count`,
+      { headers: auth2 },
+    )
+  ).json()
+  ok('a family with no athlete reads no occupancy at all (D-01)', beforeJoining.length === 0)
+
+  await fetch(`${API}/rest/v1/rpc/create_athlete_with_guardian`, {
+    method: 'POST',
+    headers: auth2,
+    body: JSON.stringify({
+      p_first_name: 'Anna', p_last_name: 'Kotova', p_date_of_birth: '2018-03-04',
+      p_workspace_id: ws.id, p_sport_code: 'HOCKEY',
+      p_attributes: { position: 'GOALIE', stick_side: 'RIGHT' },
+    }),
+  })
+
+  // Now they see the count move, without learning anything about who took the
+  // place — the point of projecting rather than publishing bookings.
+  const otherView = await (
+    await fetch(
+      `${API}/rest/v1/training_session_occupancy?training_session_id=eq.${bookable}&select=confirmed_count`,
+      { headers: auth2 },
+    )
+  ).json()
+  ok('another family reads the count', otherView[0]?.confirmed_count === 1)
+  const otherBookings = await (
+    await fetch(`${API}/rest/v1/bookings?training_session_id=eq.${bookable}&select=athlete_id`, { headers: auth2 })
+  ).json()
+  ok('but none of the bookings behind it (BR-090)', otherBookings.length === 0)
+
+  // D-05 over HTTP: the whole selection or none.
+  res = await rpc('book_athletes_as_guardian', {
+    p_training_session_id: bookable,
+    p_athlete_ids: [crypto.randomUUID()],
+  }, auth2)
+  ok('a full session refuses the next family', res.code === 'INSUFFICIENT_CAPACITY' ||
+     res.code === 'NOT_AUTHORIZED_FOR_ATHLETE', res.code ?? '')
+
+  await rt.removeChannel(channel)
 }
 
 console.log('')

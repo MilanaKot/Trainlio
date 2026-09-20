@@ -24,7 +24,8 @@ refuse to start with a missing or malformed value and name the offending key.
 | `pnpm test:e2e` | Playwright |
 | `pnpm build` | Production build |
 | `pnpm db:types` | Regenerate database types from the local Supabase stack |
-| `pnpm db:validate` | Apply every migration to a throwaway database, lint it, run all three suites |
+| `pnpm db:validate` | Apply every migration to a throwaway database, lint it, run every SQL suite and the concurrency proof |
+| `pnpm db:concurrency` | The concurrency proof on its own |
 
 `PLAYWRIGHT_CHROMIUM_EXECUTABLE` overrides the browser binary, for environments
 that ship a preinstalled Chromium of a different build.
