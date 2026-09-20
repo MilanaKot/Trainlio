@@ -84,3 +84,27 @@ export async function signOut(): Promise<void> {
   const supabase = await createClient()
   await supabase.auth.signOut()
 }
+
+/**
+ * The guardian's own display name — how the coach sees them on a roster.
+ *
+ * Only this column is writable: `app_profiles` grants
+ * `UPDATE (display_name)` and nothing else, so a client cannot move its profile
+ * to another login or mark itself anonymised (migration 10).
+ */
+export async function updateDisplayName(displayName: string): Promise<AuthResult> {
+  const trimmed = displayName.trim().slice(0, 100)
+  const supabase = await createClient()
+
+  const { data: profileId } = await supabase.rpc('current_profile_id')
+  if (!profileId) return { ok: false, message: messages.auth.errors.generic }
+
+  const { error } = await supabase
+    .from('app_profiles')
+    .update({ display_name: trimmed.length > 0 ? trimmed : null })
+    .eq('id', profileId)
+
+  if (error) return { ok: false, message: messages.auth.errors.generic }
+
+  return { ok: true }
+}

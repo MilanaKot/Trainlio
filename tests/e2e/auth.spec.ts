@@ -6,9 +6,9 @@ import { expect, test } from '@playwright/test'
  * project and belongs to the Phase 8 end-to-end suite.
  */
 test.describe('sign-in', () => {
-  test('offers email sign-in from the root', async ({ page }) => {
+  test('the root sends an anonymous visitor to email sign-in', async ({ page }) => {
     await page.goto('/')
-    await page.getByRole('link', { name: 'Přihlášení' }).click()
+    await expect(page).toHaveURL(/\/prihlaseni$/)
     await expect(page.getByRole('heading', { name: 'Přihlášení' })).toBeVisible()
     await expect(page.getByLabel('E-mail')).toBeVisible()
   })

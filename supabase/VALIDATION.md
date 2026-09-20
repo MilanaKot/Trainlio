@@ -10,7 +10,7 @@ intent. Supabase-provided objects (`auth.users`, `auth.uid()`, `storage.objects`
 
 All nine files applied in order with no errors.
 
-**85 of 85 cases pass**, and the database lint reports no error-level finding:
+**120 of 120 cases pass**, and the database lint reports no error-level finding:
 
 | Suite | Cases |
 |---|---|
@@ -18,6 +18,7 @@ All nine files applied in order with no errors.
 | [`tests/validation.sql`](tests/validation.sql) | 40 |
 | [`tests/validation_rls.sql`](tests/validation_rls.sql) | 28 |
 | [`tests/validation_auth.sql`](tests/validation_auth.sql) | 17 |
+| [`tests/validation_athletes.sql`](tests/validation_athletes.sql) | 35 |
 
 Plus the concurrency and daylight-saving cases below, which need parallel
 connections and are run separately.
@@ -282,6 +283,29 @@ grant simply does not extend to those columns for `authenticated`.
 Without this migration the authorization model is inert: signing in creates an
 `auth.users` row and nothing else, so every predicate returns null and the
 application reads as empty for everyone.
+
+## Athlete management
+
+| Check | Result |
+|---|---|
+| A guardian with no athlete sees no workspace row | 0 |
+| …but `joinable_workspaces()` offers one to register into | 1 |
+| Creating an athlete writes all four rows in one call | athlete, access, sport profile, membership |
+| The creator can then see their own athlete | yes |
+| A second family can see neither | 0 |
+| An invalid position, stick side, blank name or future birth date | rejected, and **no athlete row stranded** |
+| HOCKEY and SWIMMING profiles on one athlete | coexist |
+| Editing the hockey profile | leaves the swimming profile untouched |
+| A sport the workspace does not run | `SPORT_NOT_IN_WORKSPACE` |
+| Another family editing a sport profile | `NOT_AUTHORIZED_FOR_ATHLETE` |
+| A coach updating an athlete's core profile | matches no row; the profile is unchanged |
+| …though the coach can still read it | yes |
+| Deactivating an athlete | sport profiles and memberships survive; the athlete stays visible |
+
+The stranding cases are the point of the transactional function. Row level
+security grants no INSERT on `athletes` precisely because an athlete row without
+its `guardian_athlete_access` row is invisible to every policy, including its
+creator's, and cannot be deleted.
 
 ## Reproducing
 

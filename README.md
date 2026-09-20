@@ -13,14 +13,14 @@ domain model is intentionally designed for:
 
 ## Status
 
-Phases 0 and 1 complete.
+Phases 0 to 2 complete.
 
-The database, its authorization model and email one-time-code sign-in are in
-place. Ten migrations apply clean, the database lint reports no error-level
-finding, and 85 validation cases pass against PostgreSQL 16 — see
-[`supabase/VALIDATION.md`](supabase/VALIDATION.md).
+The database and its authorization model, email one-time-code sign-in, and
+athlete management are in place. Twelve migrations apply clean, the database
+lint reports no error-level finding, and 120 validation cases pass against
+PostgreSQL 16 — see [`supabase/VALIDATION.md`](supabase/VALIDATION.md).
 
-Next: Phase 2 — athlete management.
+Next: Phase 3 — coach session management.
 
 See [`CONTRIBUTING.md`](CONTRIBUTING.md) to run it.
 

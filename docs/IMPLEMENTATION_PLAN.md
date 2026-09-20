@@ -46,10 +46,12 @@ AC-210 to AC-214 (roles) and AC-220 to AC-223 (account data separability) hold.
 The pre-implementation validation in `/supabase/tests` already covers most of
 these; Phase 1 ports them to the Supabase CLI local stack.
 
-## Phase 2 — athlete management
+## Phase 2 — athlete management ✅
 
 - Transactional athlete creation: athlete, guardian access, sport profile and
   workspace membership in one operation
+- `joinable_workspaces()`, without which a parent registering their first child
+  can read no workspace at all and the form has nothing to submit
 - Hockey sport profile form driven by the enum codes
 - Private photo upload with server-issued signed URLs
 - Multiple children per guardian

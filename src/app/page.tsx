@@ -1,11 +1,10 @@
-import Link from 'next/link'
+import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import { signOut } from '@/server/auth/actions'
-import { messages } from '@/lib/i18n'
 
 /**
- * Placeholder root. Phase 2 replaces it with the guardian route group; for now
- * it shows whether the visitor is signed in, which is what Phase 1 delivers.
+ * The root sends people where they belong: signed-in guardians to their
+ * athletes, everyone else to sign-in. The coach area arrives in Phase 3 and
+ * branches here on workspace membership.
  */
 export default async function Home() {
   const supabase = await createClient()
@@ -13,27 +12,5 @@ export default async function Home() {
     data: { user },
   } = await supabase.auth.getUser()
 
-  return (
-    <main className="mx-auto flex min-h-dvh max-w-md flex-col justify-center gap-4 px-4">
-      <h1 className="text-2xl font-semibold">{messages.app.name}</h1>
-      <p className="text-sm opacity-70">Rezervace sportovních tréninků</p>
-
-      {user ? (
-        <form
-          action={async () => {
-            'use server'
-            await signOut()
-          }}
-        >
-          <button type="submit" className="text-sm underline">
-            {messages.auth.signOut}
-          </button>
-        </form>
-      ) : (
-        <Link href="/prihlaseni" className="text-sm underline">
-          {messages.auth.signInTitle}
-        </Link>
-      )}
-    </main>
-  )
+  redirect(user ? '/moji-sportovci' : '/prihlaseni')
 }

@@ -1080,6 +1080,20 @@ export type Database = {
         Args: { p_athlete_id: string }
         Returns: boolean
       }
+      create_athlete_with_guardian: {
+        Args: {
+          p_attributes?: Json
+          p_club_name?: string
+          p_date_of_birth: string
+          p_first_name: string
+          p_jersey_number?: string
+          p_last_name: string
+          p_sport_code: string
+          p_team_or_category?: string
+          p_workspace_id: string
+        }
+        Returns: Json
+      }
       current_profile_id: { Args: Record<PropertyKey, never>; Returns: string }
       ensure_current_profile: {
         Args: Record<PropertyKey, never>
@@ -1109,9 +1123,31 @@ export type Database = {
         Args: { p_workspace_id: string }
         Returns: boolean
       }
+      joinable_workspaces: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          id: string
+          name: string
+          primary_sport_id: string
+          sport_code: string
+          timezone: string
+        }[]
+      }
       session_confirmed_count: {
         Args: { p_training_session_id: string }
         Returns: number
+      }
+      upsert_athlete_sport_profile: {
+        Args: {
+          p_athlete_id: string
+          p_attributes?: Json
+          p_club_name?: string
+          p_jersey_number?: string
+          p_sport_code: string
+          p_team_or_category?: string
+          p_workspace_id?: string
+        }
+        Returns: Json
       }
     }
     Enums: {

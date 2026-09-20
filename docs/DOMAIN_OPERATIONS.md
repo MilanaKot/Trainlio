@@ -56,6 +56,14 @@ Czech message. Constraint violations still raise — those are bugs, not user er
 | `CAPACITY_BELOW_OCCUPANCY` | Coach must resend with the confirmation flag (`BR-051`) |
 | `BOOKINGS_WOULD_BECOME_INELIGIBLE` | D-08: narrowing the birth-year range past existing bookings |
 | `SERIES_EMPTY` | The recurrence pattern generates no occurrence |
+| `INVALID_NAME` | Athlete first or last name is blank |
+| `INVALID_DATE_OF_BIRTH` | Missing, before 1900, or in the future |
+| `INVALID_ATHLETE_DATA` | A core athlete constraint was violated |
+| `INVALID_SPORT_ATTRIBUTES` | Position, stick side, or an attribute key the sport does not define |
+| `SPORT_NOT_FOUND` | No sport with that code |
+| `SPORT_NOT_IN_WORKSPACE` | The workspace does not run that sport |
+| `SPORT_PROFILE_EXISTS` | The athlete already holds a profile for that sport |
+| `WORKSPACE_NOT_FOUND` | No such workspace, or it is inactive |
 
 ## The single serialization point
 
@@ -115,6 +123,38 @@ hockey profile makes the child visible to that workspace's coaches, which is wha
 makes booking possible. There is no separate join step in MVP.
 
 Returns `{ athlete_id, athlete_sport_profile_id, workspace_athlete_membership_id }`.
+
+The four inserts share the function's inner block, so a failure in any of them
+rolls back all four and the function still returns a structured error rather
+than raising. "All or nothing" therefore holds without the caller managing a
+transaction.
+
+### `joinable_workspaces() → setof (id, name, primary_sport_id, sport_code, timezone)`
+
+Workspaces the caller may register an athlete into.
+
+Exists because of a chicken-and-egg problem in the very first thing a parent
+does: `create_athlete_with_guardian` takes a workspace id, but
+`workspaces_select_related` only shows a workspace to someone who already has an
+athlete there (D-01). A parent with no athlete can read no workspace, so the
+registration form has nothing to submit.
+
+Widening the row policy would make every workspace readable to every
+authenticated user for all purposes. This exposes one fact — which workspaces
+accept a registration — and returns no member counts, coach identities or
+session counts. When invitation-based joining arrives (PRD §6, post-MVP), this
+function is the only thing that changes.
+
+### `upsert_athlete_sport_profile(...) → jsonb`
+
+Adds or updates one sport profile, and ensures the workspace membership when a
+workspace is given.
+
+This exists rather than letting the client insert through the row policy because
+an `athlete_sport_profiles` row without a matching membership is a profile the
+coach cannot see and the athlete cannot be booked with — broken in a way nothing
+reports. AC-101 follows from writing exactly one `(athlete, sport)` row: editing
+a hockey profile cannot touch a swimming one.
 
 ### `book_athletes_as_guardian(p_training_session_id uuid, p_athlete_ids uuid[]) → jsonb`
 

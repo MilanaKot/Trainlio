@@ -98,3 +98,5 @@ echo
 run_suite trainlio_rls supabase/tests/validation_rls.sql
 echo
 run_suite trainlio_auth supabase/tests/validation_auth.sql --no-fixtures
+echo
+run_suite trainlio_athletes supabase/tests/validation_athletes.sql
