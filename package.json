@@ -23,7 +23,8 @@
     "db:reset": "supabase db reset",
     "db:integration": "node supabase/tests/integration.mjs",
     "db:concurrency": "bash supabase/tests/concurrency.sh",
-    "qa:coverage": "node scripts/ac-coverage.mjs"
+    "qa:coverage": "node scripts/ac-coverage.mjs",
+    "qa:env": "node scripts/env-coverage.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",

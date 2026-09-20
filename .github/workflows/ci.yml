@@ -44,6 +44,12 @@ jobs:
       - name: Lint
         run: pnpm lint
 
+      # Before the typecheck, because the typecheck is the first thing a
+      # missing variable breaks and this names which one rather than failing
+      # inside `next typegen`.
+      - name: Environment configuration coverage
+        run: pnpm qa:env
+
       - name: Typecheck
         run: pnpm typecheck
 

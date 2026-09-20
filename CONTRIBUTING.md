@@ -23,6 +23,7 @@ refuse to start with a missing or malformed value and name the offending key.
 | `pnpm test` | Vitest unit tests |
 | `pnpm test:e2e` | Playwright: the browser flows and the mobile viewport review. Needs a running Supabase stack (`pnpm db:start`) |
 | `pnpm qa:coverage` | Check that every acceptance criterion maps to a named test |
+| `pnpm qa:env` | Check that `.env.example` and every CI job agree with the schemas in `src/lib/env.ts` |
 | `pnpm build` | Production build |
 | `pnpm db:types` | Regenerate database types from the local Supabase stack |
 | `pnpm db:validate` | Apply every migration to a throwaway database, lint it, run every SQL suite and the concurrency proof |
