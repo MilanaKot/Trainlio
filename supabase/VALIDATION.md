@@ -10,7 +10,7 @@ intent. Supabase-provided objects (`auth.users`, `auth.uid()`, `storage.objects`
 
 All nine files applied in order with no errors.
 
-**120 of 120 cases pass**, and the database lint reports no error-level finding:
+**171 of 171 cases pass**, and the database lint reports no error-level finding:
 
 | Suite | Cases |
 |---|---|
@@ -19,6 +19,7 @@ All nine files applied in order with no errors.
 | [`tests/validation_rls.sql`](tests/validation_rls.sql) | 28 |
 | [`tests/validation_auth.sql`](tests/validation_auth.sql) | 17 |
 | [`tests/validation_athletes.sql`](tests/validation_athletes.sql) | 35 |
+| [`tests/validation_sessions.sql`](tests/validation_sessions.sql) | 51 |
 
 Plus the concurrency and daylight-saving cases below, which need parallel
 connections and are run separately.
@@ -234,6 +235,21 @@ anywhere to explain it. Fixed by migration 10, which adds the trigger, a
 backfill for identities that predate it, and `ensure_current_profile()` for
 identities the trigger never saw.
 
+**5. Appending to a `text[]` treated the element as an array literal.**
+`v_events := v_events || 'SESSION_SCHEDULE_CHANGED'` raises *malformed array
+literal*: with no cast, Postgres parses the untyped literal on the right of `||`
+as an array rather than as one element. Every significant change therefore
+failed while every insignificant one succeeded — so a coach could rename a
+changing room but not move a session, and the failure surfaced only as a
+rejected call. Found by the session suite; fixed with an explicit `::text` on
+each append.
+
+**6. `Number('')` is `0`, not `NaN`.**
+An empty birth-year field passed the integer check and was reported as an
+out-of-range year instead of a missing one, sending a coach to look for a
+problem with the value they had not entered. Found by a unit test; both the
+birth-year and capacity fields now check for an empty string before converting.
+
 ## Database lint
 
 The Supabase database linter's rules, written out in
@@ -306,6 +322,31 @@ The stranding cases are the point of the transactional function. Row level
 security grants no INSERT on `athletes` precisely because an athlete row without
 its `guardian_athlete_access` row is invisible to every policy, including its
 creator's, and cannot be deleted.
+
+## Coach session management
+
+| Check | Result |
+|---|---|
+| A coach creates a session from local wall clock | stored as the right instant in the workspace zone |
+| A guardian creating a session | `NOT_AUTHORIZED` |
+| A workspace admin creating one | allowed (D-17) |
+| Changing room or notes changed | **not** significant; no marker, no email |
+| Capacity changed | **not** significant; audited, no email (BR-064) |
+| Date, time, facility or main coach changed | significant; marker set, event queued |
+| Capacity below occupancy without confirmation | `CAPACITY_BELOW_OCCUPANCY`, reporting how many are booked |
+| …with confirmation | applied, every booking preserved (AC-052) |
+| Narrowing past a booked athlete without confirmation | `BOOKINGS_WOULD_BECOME_INELIGIBLE`, naming the count |
+| …with confirmation | applied; nothing auto-cancelled; only the affected booking marked |
+| The eligibility event's payload | carries only the affected athletes (AC-174) |
+| A cancelled session: reopen, edit, cancel again | all refused (AC-160) |
+| A cancelled session: its bookings | untouched, preserving the roster (AC-070a) |
+| A cancelled session: duplicate | allowed — the recovery path (AC-164) |
+| A duplicate | copies the coach roster, never bookings or the change marker |
+| A duplicate onto a date past a DST change | keeps the same local time |
+
+The two warnings are server-side gates, not dialogs. Without the flag the
+change is refused and the count comes back with it, so the interface cannot
+grant either one by failing to render it.
 
 ## Reproducing
 

@@ -1076,6 +1076,10 @@ export type Database = {
         }
         Returns: string[]
       }
+      cancel_training_session: {
+        Args: { p_reason?: string; p_training_session_id: string }
+        Returns: Json
+      }
       coach_can_see_athlete: {
         Args: { p_athlete_id: string }
         Returns: boolean
@@ -1094,8 +1098,41 @@ export type Database = {
         }
         Returns: Json
       }
+      create_training_session: {
+        Args: {
+          p_birth_year_from?: number
+          p_birth_year_to?: number
+          p_capacity?: number
+          p_changing_room?: string
+          p_eligibility_mode?: Database["public"]["Enums"]["eligibility_mode"]
+          p_facility_id: string
+          p_internal_notes?: string
+          p_local_date: string
+          p_local_end_time: string
+          p_local_start_time: string
+          p_main_coach_profile_id?: string
+          p_public_notes?: string
+          p_status?: Database["public"]["Enums"]["session_status"]
+          p_workspace_id: string
+        }
+        Returns: Json
+      }
       current_profile_id: { Args: never; Returns: string }
+      duplicate_training_session: {
+        Args: {
+          p_local_date: string
+          p_local_end_time?: string
+          p_local_start_time?: string
+          p_status?: Database["public"]["Enums"]["session_status"]
+          p_training_session_id: string
+        }
+        Returns: Json
+      }
       ensure_current_profile: { Args: never; Returns: string }
+      facility_location_for_workspace: {
+        Args: { p_facility_id: string; p_workspace_id: string }
+        Returns: string
+      }
       guardian_can_see_workspace: {
         Args: { p_workspace_id: string }
         Returns: boolean
@@ -1133,6 +1170,30 @@ export type Database = {
       session_confirmed_count: {
         Args: { p_training_session_id: string }
         Returns: number
+      }
+      set_session_booking_state: {
+        Args: { p_open: boolean; p_training_session_id: string }
+        Returns: Json
+      }
+      update_training_session: {
+        Args: {
+          p_birth_year_from?: number
+          p_birth_year_to?: number
+          p_capacity: number
+          p_changing_room?: string
+          p_confirm_ineligible_bookings?: boolean
+          p_confirm_over_capacity?: boolean
+          p_eligibility_mode: Database["public"]["Enums"]["eligibility_mode"]
+          p_facility_id: string
+          p_internal_notes?: string
+          p_local_date: string
+          p_local_end_time: string
+          p_local_start_time: string
+          p_main_coach_profile_id?: string
+          p_public_notes?: string
+          p_training_session_id: string
+        }
+        Returns: Json
       }
       upsert_athlete_sport_profile: {
         Args: {

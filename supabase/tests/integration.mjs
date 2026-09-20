@@ -188,5 +188,146 @@ r = await fetch(`${API}/rest/v1/athletes?select=first_name`, { headers: { apikey
 ok('and anon reaches nothing at all', !r.ok, `${r.status}`)
 
 console.log('')
+console.log('── Coach session management ────────────────────────────────────────')
+
+// Making someone workspace staff is an administrative act with no interface
+// yet, exactly as the deployment notes say. Done here with the service key,
+// which is how an administrator would do it.
+const SERVICE = process.env.SERVICE_ROLE_KEY
+if (!SERVICE) {
+  console.log('SKIP  coach checks (SERVICE_ROLE_KEY not set)')
+} else {
+  const admin = {
+    apikey: SERVICE,
+    authorization: `Bearer ${SERVICE}`,
+    'content-type': 'application/json',
+    prefer: 'return=representation',
+  }
+
+  const coach = await signIn(`coach.${Date.now()}@example.test`)
+  const coachAuth = bearer(coach.token)
+  const coachProfile = (
+    await (await fetch(`${API}/rest/v1/app_profiles?select=id`, { headers: coachAuth })).json()
+  )[0]
+
+  const allWorkspaces = await (
+    await fetch(`${API}/rest/v1/workspaces?select=id,timezone`, { headers: admin })
+  ).json()
+  const ws = allWorkspaces[0]
+
+  r = await fetch(`${API}/rest/v1/workspace_members`, {
+    method: 'POST',
+    headers: admin,
+    body: JSON.stringify({ workspace_id: ws.id, profile_id: coachProfile.id, role: 'COACH' }),
+  })
+  ok('a coach can be granted workspace staff', r.ok, `${r.status}`)
+
+  const facilities = await (
+    await fetch(`${API}/rest/v1/facilities?select=id,code&order=code`, { headers: admin })
+  ).json()
+  const mh = facilities.find((f) => f.code === 'MH')
+  const vh = facilities.find((f) => f.code === 'VH')
+
+  const rpc = (fn, body, headers = coachAuth) =>
+    fetch(`${API}/rest/v1/rpc/${fn}`, { method: 'POST', headers, body: JSON.stringify(body) }).then((x) => x.json())
+
+  // Local wall clock in, correct instant out.
+  let res = await rpc('create_training_session', {
+    p_workspace_id: ws.id,
+    p_local_date: '2026-10-04',
+    p_local_start_time: '09:00',
+    p_local_end_time: '10:00',
+    p_facility_id: mh.id,
+    p_capacity: 10,
+    p_eligibility_mode: 'BIRTH_YEAR_RANGE',
+    p_birth_year_from: 2016,
+    p_birth_year_to: 2018,
+    p_internal_notes: 'Interní poznámka.',
+  })
+  ok('a coach can create a session', res.ok === true, res.code ?? '')
+  const sessionId = res.data?.training_session_id
+
+  const stored = (
+    await (
+      await fetch(`${API}/rest/v1/training_sessions?id=eq.${sessionId}&select=start_at`, { headers: coachAuth })
+    ).json()
+  )[0]
+  const localStart = new Intl.DateTimeFormat('en-GB', {
+    timeZone: ws.timezone, hour: '2-digit', minute: '2-digit', hour12: false,
+  }).format(new Date(stored.start_at))
+  ok('local wall-clock time round-trips through the workspace zone', localStart === '09:00', localStart)
+
+  // A guardian must not be able to reach any of it.
+  res = await rpc('create_training_session', {
+    p_workspace_id: ws.id, p_local_date: '2026-10-11', p_local_start_time: '09:00',
+    p_local_end_time: '10:00', p_facility_id: mh.id,
+  }, auth)
+  ok('a guardian cannot create a session', res.code === 'NOT_AUTHORIZED', res.code ?? '')
+
+  r = await fetch(`${API}/rest/v1/training_sessions?id=eq.${sessionId}`, {
+    method: 'PATCH', headers: auth, body: JSON.stringify({ capacity: 99 }),
+  })
+  ok('nor update one directly (AC-027)', !r.ok, `${r.status}`)
+
+  // D-13: internal notes are a separate table, so a guardian gets no row.
+  r = await fetch(`${API}/rest/v1/training_session_internal_notes?select=notes`, { headers: auth })
+  const guardianNotes = await r.json()
+  ok('a guardian reads no internal notes at all', Array.isArray(guardianNotes) && guardianNotes.length === 0)
+  // Scoped to this session: the fixtures carry a note of their own, and the
+  // coach can see that one too.
+  r = await fetch(
+    `${API}/rest/v1/training_session_internal_notes?training_session_id=eq.${sessionId}&select=notes`,
+    { headers: coachAuth },
+  )
+  ok('the coach reads them', (await r.json())[0]?.notes === 'Interní poznámka.')
+
+  // D-11: what counts as significant.
+  const edit = (extra) => rpc('update_training_session', {
+    p_training_session_id: sessionId,
+    p_local_date: '2026-10-04', p_local_start_time: '09:00', p_local_end_time: '10:00',
+    p_facility_id: mh.id, p_capacity: 10,
+    p_eligibility_mode: 'BIRTH_YEAR_RANGE', p_birth_year_from: 2016, p_birth_year_to: 2018,
+    ...extra,
+  })
+
+  // Note that edit() omits p_internal_notes: update is a full replace, so an
+  // omitted field is a cleared field. The form always submits every field.
+  res = await edit({ p_changing_room: 'Šatna 4' })
+  ok('a changing-room change is not significant (D-12)', res.data?.significant === false)
+
+  res = await edit({ p_capacity: 12 })
+  ok('a capacity change is not significant (BR-064)', res.data?.significant === false)
+
+  res = await edit({ p_capacity: 12, p_local_start_time: '08:00' })
+  ok('a time change is significant', res.data?.events?.[0] === 'SESSION_SCHEDULE_CHANGED')
+
+  res = await edit({ p_capacity: 12, p_local_start_time: '08:00', p_facility_id: vh.id })
+  ok('MH to VH is significant', res.data?.events?.[0] === 'SESSION_FACILITY_CHANGED')
+
+  // D-07: terminal.
+  res = await rpc('cancel_training_session', { p_training_session_id: sessionId })
+  ok('the session can be cancelled', res.ok === true, res.code ?? '')
+  res = await rpc('set_session_booking_state', { p_training_session_id: sessionId, p_open: true })
+  ok('and cannot be reopened (AC-160)', res.code === 'SESSION_CANCELLED', res.code ?? '')
+  res = await rpc('duplicate_training_session', { p_training_session_id: sessionId, p_local_date: '2026-11-01' })
+  ok('but can be duplicated, which is the recovery path (AC-164)', res.ok === true, res.code ?? '')
+
+  // The outbox and audit trail were written, and stay out of reach.
+  const events = await (
+    await fetch(`${API}/rest/v1/notification_events?select=event_type`, { headers: admin })
+  ).json()
+  ok('a cancellation queued its notification event',
+     events.some((e) => e.event_type === 'SESSION_CANCELLED'))
+  const audit = await (
+    await fetch(`${API}/rest/v1/audit_log?select=action`, { headers: admin })
+  ).json()
+  ok('the audit trail recorded the session actions',
+     ['SESSION_CREATED', 'SESSION_UPDATED', 'SESSION_CANCELLED', 'SESSION_DUPLICATED']
+       .every((a) => audit.some((row) => row.action === a)))
+  r = await fetch(`${API}/rest/v1/audit_log?select=action`, { headers: coachAuth })
+  ok('which even a coach cannot read', !r.ok, `${r.status}`)
+}
+
+console.log('')
 console.log(failures === 0 ? 'integration: all checks passed' : `integration: ${failures} failed`)
 process.exit(failures === 0 ? 0 : 1)

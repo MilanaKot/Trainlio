@@ -59,7 +59,7 @@ these; Phase 1 ports them to the Supabase CLI local stack.
 Exit: AC-010 to AC-015, AC-092, AC-100 to AC-102, AC-110, AC-111, AC-180 to
 AC-184 (athlete deactivation).
 
-## Phase 3 — coach session management
+## Phase 3 — coach session management ✅
 
 - Create, edit, close and reopen, cancel, duplicate
 - Server-side capacity warning gate

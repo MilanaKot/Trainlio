@@ -7,7 +7,14 @@ import { expect, test } from '@playwright/test'
  * without authenticating.
  */
 test.describe('guardian area requires a session', () => {
-  for (const path of ['/moji-sportovci', '/moji-sportovci/novy', '/ucet', '/treninky']) {
+  for (const path of [
+    '/moji-sportovci',
+    '/moji-sportovci/novy',
+    '/ucet',
+    '/treninky',
+    '/trener',
+    '/trener/novy',
+  ]) {
     test(`${path} redirects to sign-in`, async ({ page }) => {
       await page.goto(path)
       await expect(page).toHaveURL(/\/prihlaseni$/)
