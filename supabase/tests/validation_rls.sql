@@ -64,27 +64,27 @@ select pg_temp.check(pg_temp.as_user(:B, $$select count(*)::text from public.app
 \echo ''
 \echo '── Occupancy is the one cross-family aggregate (AC-090) ────────────'
 select pg_temp.check(pg_temp.as_user(:B, $$select confirmed_count::text from public.training_session_occupancy where training_session_id='00000000-0000-0000-0000-0000000e0002'$$),
-  '0', 'family B can read the occupancy count');
+  '0', 'family B can read the occupancy count (AC-090b)');
 select pg_temp.check(pg_temp.as_user(:A, $$select count(*)::text from public.training_session_occupancy$$),
   '2', 'guardian sees occupancy only for sessions they can see (DRAFT excluded)');
 
 \echo ''
 \echo '── D-01 visibility ─────────────────────────────────────────────────'
-select pg_temp.check(pg_temp.as_user(:STRANGER, $$select count(*)::text from public.training_sessions$$), '0', 'stranger sees no sessions');
+select pg_temp.check(pg_temp.as_user(:STRANGER, $$select count(*)::text from public.training_sessions$$), '0', 'stranger sees no sessions (AC-090c)');
 select pg_temp.check(pg_temp.as_user(:STRANGER, $$select count(*)::text from public.athletes$$), '0', 'stranger sees no athletes');
-select pg_temp.check(pg_temp.as_user(:A, $$select count(*)::text from public.training_sessions where status='DRAFT'$$), '0', 'guardian sees no DRAFT session');
+select pg_temp.check(pg_temp.as_user(:A, $$select count(*)::text from public.training_sessions where status='DRAFT'$$), '0', 'guardian sees no DRAFT session (AC-090d)');
 select pg_temp.check(pg_temp.as_user(:COACH, $$select count(*)::text from public.training_sessions where status='DRAFT'$$), '1', 'coach does see the DRAFT session');
 
 \echo ''
 \echo '── D-12 / D-13 notes and changing room ─────────────────────────────'
 select pg_temp.check(pg_temp.as_user(:A, $$select changing_room from public.training_sessions where id='00000000-0000-0000-0000-0000000e0002'$$),
-  'Šatna 4', 'changing room is guardian-visible');
+  'Šatna 4', 'changing room is guardian-visible (AC-203)');
 select pg_temp.check(pg_temp.as_user(:A, $$select public_notes from public.training_sessions where id='00000000-0000-0000-0000-0000000e0002'$$),
-  'Vezměte si chrániče.', 'public_notes are guardian-visible');
+  'Vezměte si chrániče.', 'public_notes are guardian-visible (AC-200)');
 select pg_temp.check(pg_temp.as_user(:A, $$select count(*)::text from public.training_session_internal_notes$$),
-  '0', 'internal notes return no rows to a guardian');
+  '0', 'internal notes return no rows to a guardian (AC-201)');
 select pg_temp.check(pg_temp.as_user(:COACH, $$select count(*)::text from public.training_session_internal_notes$$),
-  '2', 'internal notes are readable by the coach');
+  '2', 'internal notes are readable by the coach (AC-202)');
 
 \echo ''
 \echo '── D-11 coach identity is visible, email is not ────────────────────'
@@ -98,17 +98,17 @@ select pg_temp.check(pg_temp.as_user(:WSADMIN, $$select public.is_workspace_admi
 select pg_temp.check(pg_temp.as_user(:WSADMIN, $$select public.is_platform_admin()::text$$),
   'false', 'workspace admin is NOT a platform admin');
 select pg_temp.check(pg_temp.as_user(:WSADMIN, $$select count(*)::text from public.platform_admins$$),
-  'DENIED', 'workspace admin cannot read platform_admins');
+  'DENIED', 'workspace admin cannot read platform_admins (AC-211)');
 select pg_temp.check(pg_temp.as_user(:PLATFORM, $$select public.is_platform_admin()::text$$),
   'true', 'platform admin is a platform admin');
 select pg_temp.check(pg_temp.as_user(:PLATFORM, $$select public.is_workspace_coach((select id from public.workspaces where name like 'Příbram%'))::text$$),
-  'false', 'platform admin gains no workspace coach rights');
+  'false', 'platform admin gains no workspace coach rights (AC-212)');
 select pg_temp.check(pg_temp.as_user(:PLATFORM, $$select count(*)::text from public.athletes$$),
-  '0', 'platform admin reads no athlete data through RLS');
+  '0', 'platform admin reads no athlete data through RLS (AC-212)');
 select pg_temp.check(pg_temp.as_user(:A, $$select public.is_workspace_member((select id from public.workspaces where name like 'Příbram%'))::text$$),
-  'false', 'a guardian is never workspace staff');
+  'false', 'a guardian is never workspace staff (AC-213)');
 select pg_temp.check(pg_temp.as_user(:A, $$select public.guardian_can_see_workspace((select id from public.workspaces where name like 'Příbram%'))::text$$),
-  'true', 'guardian authorization runs through athlete membership instead');
+  'true', 'guardian authorization runs through athlete membership instead (AC-213)');
 
 \echo ''
 \echo '── RPC-only mutations (AC-026..028) ────────────────────────────────'
@@ -116,7 +116,7 @@ select pg_temp.check(pg_temp.as_user(:A, $$insert into public.bookings(training_
   'DENIED', 'guardian cannot insert a booking directly');
 select pg_temp.check(pg_temp.as_user(:COACH, $$update public.training_sessions set capacity=99 where id='00000000-0000-0000-0000-0000000e0002' returning '1'$$),
   'DENIED', 'coach cannot update a session directly');
-select pg_temp.check(pg_temp.as_user(:A, $$delete from public.bookings returning '1'$$), 'DENIED', 'no client role can delete a booking');
+select pg_temp.check(pg_temp.as_user(:A, $$delete from public.bookings returning '1'$$), 'DENIED', 'no client role can delete a booking (AC-028)');
 select pg_temp.check(pg_temp.as_user(:A, $$select count(*)::text from public.audit_log$$), 'DENIED', 'guardian cannot read the audit log');
 select pg_temp.check(pg_temp.as_user(:COACH, $$select count(*)::text from public.audit_log$$), 'DENIED', 'coach cannot read the audit log');
 select pg_temp.check(pg_temp.as_user(:A, $$select count(*)::text from public.notification_deliveries$$), 'DENIED', 'guardian cannot read guardian email addresses');

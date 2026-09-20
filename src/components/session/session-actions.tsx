@@ -86,7 +86,7 @@ export function SessionActions({
             type="date"
             value={duplicateDate}
             onChange={(e) => setDuplicateDate(e.target.value)}
-            className="rounded-lg border border-black/15 px-3 py-2 text-base dark:border-white/20"
+            className="min-h-11 rounded-lg border border-black/15 px-3 py-2 text-base dark:border-white/20"
           />
         </label>
         <button
@@ -109,7 +109,7 @@ export function SessionActions({
             <input
               value={reason}
               onChange={(e) => setReason(e.target.value)}
-              className="rounded-lg border border-black/15 px-3 py-2 text-base dark:border-white/20"
+              className="min-h-11 rounded-lg border border-black/15 px-3 py-2 text-base dark:border-white/20"
             />
           </label>
           <div className="flex gap-3">

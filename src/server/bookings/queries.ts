@@ -1,6 +1,8 @@
 import 'server-only'
 
 import { createClient } from '@/lib/supabase/server'
+import { maybeRow, rows } from '@/server/query-result'
+import { splitByTime } from '@/lib/domain/booking'
 import type { EligibilityMode, SessionStatus, BookingStatus } from '@/types/database'
 
 export type GuardianSession = {
@@ -49,13 +51,22 @@ export type MyBooking = {
  * `internal_notes` is absent — it is a different table with a staff-only
  * policy, so it cannot appear here even by mistake (D-13). `changing_room` and
  * `public_notes` are on the session row and are guardian-visible (D-12).
+ *
+ * The main coach is embedded through a *named* relationship. A bare
+ * `app_profiles ( display_name )` is ambiguous and PostgREST refuses it:
+ * training_sessions holds three foreign keys into app_profiles (created_by,
+ * cancelled_by, and the main-coach mirror). The refusal is a query error, and
+ * because a failed query returns no rows it renders as "no sessions at all" —
+ * which is how it went unnoticed until an end-to-end flow booked a real
+ * session and found the list empty.
  */
+
 const SESSION_COLUMNS = `
   id, start_at, end_at, status, capacity, changing_room, public_notes,
   eligibility_mode, birth_year_from, birth_year_to, significant_changed_at,
   facilities ( code ),
   locations ( name ),
-  app_profiles ( display_name ),
+  app_profiles!training_sessions_main_coach_profile_id_fkey ( display_name ),
   training_session_occupancy ( confirmed_count ),
   bookings ( id, status, athlete_id, created_at, eligibility_narrowed_at,
              athletes ( first_name, last_name ) )
@@ -122,35 +133,36 @@ function toSession(row: Row): GuardianSession {
 export async function listBookableSessions(): Promise<GuardianSession[]> {
   const supabase = await createClient()
 
-  const { data } = await supabase
+  const result = await supabase
     .from('training_sessions')
     .select(SESSION_COLUMNS)
     .gte('end_at', new Date().toISOString())
     .neq('status', 'CANCELLED')
     .order('start_at')
 
-  return ((data ?? []) as unknown as Row[]).map(toSession)
+  return (rows('listBookableSessions', result) as unknown as Row[]).map(toSession)
 }
 
 export async function getGuardianSession(sessionId: string): Promise<GuardianSession | null> {
   const supabase = await createClient()
-  const { data } = await supabase
+  const result = await supabase
     .from('training_sessions')
     .select(SESSION_COLUMNS)
     .eq('id', sessionId)
     .maybeSingle()
 
-  return data ? toSession(data as unknown as Row) : null
+  const row = maybeRow('getGuardianSession', result)
+  return row ? toSession(row as unknown as Row) : null
 }
 
 /** The picker's list, produced by the same rule the booking path enforces. */
 export async function listPickerAthletes(sessionId: string): Promise<PickerAthlete[]> {
   const supabase = await createClient()
-  const { data } = await supabase.rpc('guardian_session_athletes', {
+  const result = await supabase.rpc('guardian_session_athletes', {
     p_training_session_id: sessionId,
   })
 
-  return (data ?? []).map((row) => ({
+  return rows('guardian_session_athletes', result).map((row) => ({
     athleteId: row.athlete_id,
     firstName: row.first_name,
     lastName: row.last_name,
@@ -171,16 +183,16 @@ export async function listPickerAthletes(sessionId: string): Promise<PickerAthle
  */
 export async function listMyBookings(): Promise<{ upcoming: MyBooking[]; past: MyBooking[] }> {
   const supabase = await createClient()
-  const now = Date.now()
+  const now = new Date()
 
-  const { data } = await supabase
+  const result = await supabase
     .from('training_sessions')
     .select(SESSION_COLUMNS)
     .order('start_at')
 
   const all: MyBooking[] = []
 
-  for (const row of (data ?? []) as unknown as Row[]) {
+  for (const row of rows('listMyBookings', result) as unknown as Row[]) {
     const session = toSession(row)
     for (const booking of row.bookings ?? []) {
       const athlete = booking.athletes
@@ -196,14 +208,7 @@ export async function listMyBookings(): Promise<{ upcoming: MyBooking[]; past: M
     }
   }
 
-  return {
-    upcoming: all
-      .filter((b) => new Date(b.session.endAt).getTime() >= now)
-      .sort((a, b) => a.session.startAt.localeCompare(b.session.startAt)),
-    past: all
-      .filter((b) => new Date(b.session.endAt).getTime() < now)
-      .sort((a, b) => b.session.startAt.localeCompare(a.session.startAt)),
-  }
+  return splitByTime(all, now)
 }
 
 
@@ -215,11 +220,11 @@ export async function listMyBookings(): Promise<{ upcoming: MyBooking[]; past: M
  */
 export async function getCancellationDeadlineHours(): Promise<number> {
   const supabase = await createClient()
-  const { data } = await supabase
+  const result = await supabase
     .from('workspaces')
     .select('cancellation_deadline_hours')
     .limit(1)
     .maybeSingle()
 
-  return data?.cancellation_deadline_hours ?? 12
+  return maybeRow('getCancellationDeadlineHours', result)?.cancellation_deadline_hours ?? 12
 }

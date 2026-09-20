@@ -23,7 +23,14 @@ export default defineConfig({
     // Mobile-first: the guardian flows are specified for a phone, so that is
     // the default viewport rather than an afterthought.
     { name: 'mobile', use: { ...devices['Pixel 7'], ...chromium } },
-    { name: 'desktop', use: { ...devices['Desktop Chrome'], ...chromium } },
+    {
+      name: 'desktop',
+      use: { ...devices['Desktop Chrome'], ...chromium },
+      // The mobile review asserts things that are only true on a phone —
+      // no sideways scroll, thumb-sized controls, bottom navigation above the
+      // fold. Running it at 1280px would assert nothing and pass anyway.
+      testIgnore: /mobile\.spec\.ts/,
+    },
   ],
   webServer: {
     command: 'pnpm build && pnpm start',

@@ -80,7 +80,7 @@ export function AthleteForm({ workspaceId, workspaceName, timezone, athlete }: P
   }
 
   const inputClass =
-    'rounded-lg border border-black/15 px-3 py-3 text-base dark:border-white/20'
+    'min-h-11 rounded-lg border border-black/15 px-3 py-3 text-base dark:border-white/20'
 
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-6">

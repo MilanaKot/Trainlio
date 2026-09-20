@@ -13,16 +13,20 @@ domain model is intentionally designed for:
 
 ## Status
 
-Phases 0 to 7 complete.
+Phases 0 to 8 complete.
 
 The database and its authorization model, email one-time-code sign-in, athlete
 management, coach session management, recurring series, the booking engine, the
-coach roster and transactional notifications are in place. Seventeen migrations
-apply clean, the database lint reports no error-level finding, and 387
-validation cases pass — plus a concurrency proof and a live-stack integration
-suite. See [`supabase/VALIDATION.md`](supabase/VALIDATION.md).
+coach roster and transactional notifications are in place. Eighteen migrations
+apply clean, the database lint reports no error-level finding, and 428
+validation cases pass — plus a concurrency proof, a live-stack integration
+suite, 121 unit tests and 57 browser flows including a mobile viewport review.
+See [`supabase/VALIDATION.md`](supabase/VALIDATION.md).
 
-Next: Phase 8 — QA.
+**All 116 acceptance criteria map to a named test**, checked mechanically by
+`pnpm qa:coverage` on every push.
+
+Next: Phase 9 — deployment.
 
 See [`CONTRIBUTING.md`](CONTRIBUTING.md) to run it.
 

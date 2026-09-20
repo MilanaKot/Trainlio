@@ -43,6 +43,18 @@ parallel connections and a date-generation comparison; both are recorded in
 `../VALIDATION.md`.
 
 
+## Acceptance-criterion coverage
+
+`pnpm qa:coverage` parses `docs/ACCEPTANCE_CRITERIA.md` and greps every test
+file for each identifier. It fails on a criterion nothing cites, and on a test
+citing an identifier the specification no longer defines.
+
+A citation is a weak proof — it says a test *claims* the criterion, not that the
+test is right — so it is a floor, not a ceiling. Its value runs the other way:
+a criterion that appears nowhere is definitely untested, and that is the hole
+worth finding automatically. Documentation is excluded from the search on
+purpose: a plan or a contract citing an AC is intent, not coverage.
+
 ## A note on the Realtime checks
 
 The Realtime section of `integration.mjs` verifies that a guardian subscribed to

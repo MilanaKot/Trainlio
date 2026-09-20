@@ -1,6 +1,7 @@
 import 'server-only'
 
 import { createClient } from '@/lib/supabase/server'
+import { maybeRow, rows } from '@/server/query-result'
 import type { SessionStatus, EligibilityMode } from '@/types/database'
 
 export type CoachWorkspace = {
@@ -41,15 +42,18 @@ export type CoachSession = {
 export async function getCoachWorkspace(): Promise<CoachWorkspace | null> {
   const supabase = await createClient()
 
-  const { data: memberships } = await supabase
-    .from('workspace_members')
-    .select('workspace_id, workspaces ( id, name, timezone )')
-    .eq('is_active', true)
+  const memberships = rows(
+    'getCoachWorkspace memberships',
+    await supabase
+      .from('workspace_members')
+      .select('workspace_id, workspaces ( id, name, timezone )')
+      .eq('is_active', true),
+  )
 
-  const workspace = memberships?.[0]?.workspaces
+  const workspace = memberships[0]?.workspaces
   if (!workspace) return null
 
-  const [{ data: facilities }, { data: staff }] = await Promise.all([
+  const [facilitiesResult, staffResult] = await Promise.all([
     supabase
       .from('facilities')
       .select('id, code, name, locations!inner ( name, workspace_id )')
@@ -63,8 +67,11 @@ export async function getCoachWorkspace(): Promise<CoachWorkspace | null> {
       .eq('is_active', true),
   ])
 
+  const facilities = rows('getCoachWorkspace facilities', facilitiesResult)
+  const staff = rows('getCoachWorkspace staff', staffResult)
+
   const coaches = new Map<string, string | null>()
-  for (const member of staff ?? []) {
+  for (const member of staff) {
     const profile = member.app_profiles
     if (profile) coaches.set(profile.id, profile.display_name)
   }
@@ -73,7 +80,7 @@ export async function getCoachWorkspace(): Promise<CoachWorkspace | null> {
     id: workspace.id,
     name: workspace.name,
     timezone: workspace.timezone,
-    facilities: (facilities ?? []).map((f) => ({
+    facilities: facilities.map((f) => ({
       id: f.id,
       code: f.code,
       name: f.name,
@@ -83,13 +90,24 @@ export async function getCoachWorkspace(): Promise<CoachWorkspace | null> {
   }
 }
 
+/**
+ * Coach-facing session columns.
+ *
+ * The main coach is embedded through a *named* relationship. A bare
+ * `app_profiles ( display_name )` is ambiguous and PostgREST refuses it:
+ * training_sessions holds three foreign keys into app_profiles (created_by,
+ * cancelled_by, and the main-coach mirror). The refusal is a query error, and
+ * because a failed query returns no rows it renders as "no sessions at all" —
+ * which is how it went unnoticed until an end-to-end flow booked a real
+ * session and found the list empty.
+ */
 const SESSION_COLUMNS = `
   id, start_at, end_at, status, capacity, changing_room, public_notes,
   eligibility_mode, birth_year_from, birth_year_to, significant_changed_at,
   main_coach_profile_id,
   facilities ( code ),
   locations ( name ),
-  app_profiles ( display_name ),
+  app_profiles!training_sessions_main_coach_profile_id_fkey ( display_name ),
   training_session_occupancy ( confirmed_count ),
   training_session_internal_notes ( notes )
 `
@@ -147,7 +165,7 @@ export async function listCoachSessions(): Promise<{
   const supabase = await createClient()
   const now = new Date().toISOString()
 
-  const [{ data: upcoming }, { data: past }] = await Promise.all([
+  const [upcoming, past] = await Promise.all([
     supabase.from('training_sessions').select(SESSION_COLUMNS).gte('end_at', now).order('start_at'),
     supabase
       .from('training_sessions')
@@ -158,20 +176,21 @@ export async function listCoachSessions(): Promise<{
   ])
 
   return {
-    upcoming: ((upcoming ?? []) as unknown as Row[]).map(toSession),
-    past: ((past ?? []) as unknown as Row[]).map(toSession),
+    upcoming: (rows('listCoachSessions upcoming', upcoming) as unknown as Row[]).map(toSession),
+    past: (rows('listCoachSessions past', past) as unknown as Row[]).map(toSession),
   }
 }
 
 export async function getCoachSession(sessionId: string): Promise<CoachSession | null> {
   const supabase = await createClient()
-  const { data } = await supabase
+  const result = await supabase
     .from('training_sessions')
     .select(SESSION_COLUMNS)
     .eq('id', sessionId)
     .maybeSingle()
 
-  return data ? toSession(data as unknown as Row) : null
+  const row = maybeRow('getCoachSession', result)
+  return row ? toSession(row as unknown as Row) : null
 }
 
 export type CoachSeries = {
@@ -210,7 +229,7 @@ type SeriesRow = {
 export async function listCoachSeries(): Promise<CoachSeries[]> {
   const supabase = await createClient()
 
-  const { data } = await supabase
+  const result = await supabase
     .from('session_series')
     .select(
       `id, by_weekday, local_date_from, local_date_to, local_start_time, local_end_time,
@@ -220,7 +239,7 @@ export async function listCoachSeries(): Promise<CoachSeries[]> {
     )
     .order('created_at', { ascending: false })
 
-  return ((data ?? []) as unknown as SeriesRow[]).map((row) => {
+  return (rows('listCoachSeries', result) as unknown as SeriesRow[]).map((row) => {
     const occurrences = row.training_sessions ?? []
     return {
       id: row.id,

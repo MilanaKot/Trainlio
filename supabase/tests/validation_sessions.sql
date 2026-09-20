@@ -80,7 +80,7 @@ select pg_temp.check(
   pg_temp.as_user(:WSADMIN, format($$select (public.create_training_session(
     %L::uuid, date '2026-10-11', time '09:00', time '10:00', %L::uuid) ->> 'ok')$$,
     pg_temp.ws(), pg_temp.fac('VH'))),
-  'true', 'a workspace admin can (D-17)');
+  'true', 'a workspace admin can (D-17, AC-210)');
 select pg_temp.check(
   pg_temp.as_user(:COACH, format($$select (public.create_training_session(
     %L::uuid, date '2026-10-11', time '10:00', time '09:00', %L::uuid) ->> 'code')$$,
@@ -94,11 +94,11 @@ select pg_temp.check(
     %L::uuid, date '2026-10-04', time '09:00', time '10:00', %L::uuid,
     10, 'BIRTH_YEAR_RANGE', 2016, 2018, 'Šatna 7', 'Jiná poznámka.', 'Jiná interní.')
     -> 'data' ->> 'significant')$$, pg_temp.s1(), pg_temp.fac('MH'))),
-  'false', 'changing room and notes are NOT significant (D-12, D-13)');
+  'false', 'changing room and notes are NOT significant (D-12, D-13, AC-191)');
 select pg_temp.check(
   (select (significant_changed_at is null)::text from public.training_sessions where id=pg_temp.s1()),
-  'true', 'so no marker is set');
-select pg_temp.check((select count(*)::text from public.notification_events where training_session_id=pg_temp.s1()), '0', 'and no email is queued');
+  'true', 'so no marker is set (AC-191, AC-204)');
+select pg_temp.check((select count(*)::text from public.notification_events where training_session_id=pg_temp.s1()), '0', 'and no email is queued (AC-062, AC-204)');
 
 select pg_temp.check(
   pg_temp.as_user(:COACH, format($$select (public.update_training_session(
@@ -114,29 +114,29 @@ select pg_temp.check(
   pg_temp.as_user(:COACH, format($$select (public.update_training_session(
     %L::uuid, date '2026-10-04', time '08:00', time '09:00', %L::uuid, 16, 'BIRTH_YEAR_RANGE', 2016, 2018)
     -> 'data' -> 'events' ->> 0)$$, pg_temp.s1(), pg_temp.fac('MH'))),
-  'SESSION_SCHEDULE_CHANGED', 'a time change is significant');
+  'SESSION_SCHEDULE_CHANGED', 'a time change is significant (AC-190)');
 select pg_temp.check(
   (select (significant_changed_at is not null)::text from public.training_sessions where id=pg_temp.s1()),
-  'true', 'and sets the marker');
+  'true', 'and sets the marker (AC-190)');
 
 select pg_temp.check(
   pg_temp.as_user(:COACH, format($$select (public.update_training_session(
     %L::uuid, date '2026-10-04', time '08:00', time '09:00', %L::uuid, 16, 'BIRTH_YEAR_RANGE', 2016, 2018)
     -> 'data' -> 'events' ->> 0)$$, pg_temp.s1(), pg_temp.fac('VH'))),
-  'SESSION_FACILITY_CHANGED', 'MH to VH is significant');
+  'SESSION_FACILITY_CHANGED', 'MH to VH is significant (AC-190)');
 
 select pg_temp.check(
   pg_temp.as_user(:COACH, format($$select (public.update_training_session(
     %L::uuid, date '2026-10-04', time '08:00', time '09:00', %L::uuid, 16, 'BIRTH_YEAR_RANGE', 2016, 2018,
     null, null, null, %L::uuid) -> 'data' -> 'events' ->> 0)$$,
     pg_temp.s1(), pg_temp.fac('VH'), '00000000-0000-0000-0000-00000000c0ad')),
-  'SESSION_MAIN_COACH_CHANGED', 'a main-coach change is significant');
+  'SESSION_MAIN_COACH_CHANGED', 'a main-coach change is significant (AC-190, AC-194)');
 select pg_temp.check(
   (select p.display_name from public.training_sessions s join public.app_profiles p on p.id=s.main_coach_profile_id where s.id=pg_temp.s1()),
   'Trenér Dvořák', 'and the mirror follows the canonical row');
 select pg_temp.check(
   (select count(*)::text from public.audit_log where action='SESSION_MAIN_COACH_CHANGED' and entity_id=pg_temp.s1()),
-  '1', 'with its own audit entry');
+  '1', 'with its own audit entry (AC-194)');
 
 \echo ''
 \echo '── Capacity below occupancy (BR-051, AC-051, AC-052) ───────────────'

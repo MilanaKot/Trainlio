@@ -1,6 +1,7 @@
 import 'server-only'
 
 import { createClient } from '@/lib/supabase/server'
+import { rows } from '@/server/query-result'
 import { PHOTO_BUCKET, PHOTO_SIGNED_URL_SECONDS } from '@/lib/domain/photo'
 import type { HockeyPosition, StickSide } from '@/lib/enums/hockey'
 
@@ -68,6 +69,9 @@ async function signPhotos(
   const signed = new Map<string, string>()
   if (paths.length === 0) return signed
 
+  // Deliberately not raised. A photograph that will not sign costs the parent
+  // an avatar; raising would cost them the page, and the names, birth years and
+  // hockey profiles on it are the part they came for.
   const { data } = await supabase.storage
     .from(PHOTO_BUCKET)
     .createSignedUrls(paths, PHOTO_SIGNED_URL_SECONDS)
@@ -88,7 +92,7 @@ async function signPhotos(
 export async function listGuardianAthletes(): Promise<GuardianAthlete[]> {
   const supabase = await createClient()
 
-  const { data, error } = await supabase
+  const result = await supabase
     .from('athletes')
     .select(
       `id, first_name, last_name, date_of_birth, is_active, photo_path,
@@ -97,7 +101,7 @@ export async function listGuardianAthletes(): Promise<GuardianAthlete[]> {
     )
     .order('first_name', { ascending: true })
 
-  if (error || !data) return []
+  const data = rows('listGuardianAthletes', result)
 
   const photoPaths = data.map((a) => a.photo_path).filter((p): p is string => Boolean(p))
   const signed = await signPhotos(supabase, photoPaths)

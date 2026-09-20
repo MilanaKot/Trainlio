@@ -21,11 +21,13 @@ refuse to start with a missing or malformed value and name the offending key.
 | `pnpm lint` | ESLint, including the architectural guard rules below |
 | `pnpm typecheck` | `tsc --noEmit`, strict |
 | `pnpm test` | Vitest unit tests |
-| `pnpm test:e2e` | Playwright |
+| `pnpm test:e2e` | Playwright: the browser flows and the mobile viewport review. Needs a running Supabase stack (`pnpm db:start`) |
+| `pnpm qa:coverage` | Check that every acceptance criterion maps to a named test |
 | `pnpm build` | Production build |
 | `pnpm db:types` | Regenerate database types from the local Supabase stack |
 | `pnpm db:validate` | Apply every migration to a throwaway database, lint it, run every SQL suite and the concurrency proof |
 | `pnpm db:concurrency` | The concurrency proof on its own |
+| `pnpm db:integration` | The live-stack suite over HTTP. Needs `ANON` and `SERVICE_ROLE_KEY` from `supabase status` |
 
 `PLAYWRIGHT_CHROMIUM_EXECUTABLE` overrides the browser binary, for environments
 that ship a preinstalled Chromium of a different build.

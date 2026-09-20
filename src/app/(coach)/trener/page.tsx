@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { notFound } from 'next/navigation'
 import { getCoachWorkspace, listCoachSessions } from '@/server/sessions/queries'
 import { Occupancy, SessionSummary, StatusBadge } from '@/components/session/session-summary'
 import { messages } from '@/lib/i18n'
@@ -23,7 +24,11 @@ function SessionRow({ session, timezone }: { session: CoachSession; timezone: st
 
 export default async function CoachSessionsPage() {
   const workspace = await getCoachWorkspace()
-  if (!workspace) return null
+  // The layout redirects a non-coach before this runs, so this is the second
+  // line rather than the first. notFound() all the same, as every other coach
+  // route does: `return null` renders a blank 200, which is the wrong answer if
+  // the layout guard is ever moved or a route is added outside it.
+  if (!workspace) notFound()
 
   const { upcoming, past } = await listCoachSessions()
   const t = messages.coach

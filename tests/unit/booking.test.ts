@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest'
-import { canCancel, freePlaces, sessionAvailability, showsChangedBadge } from '@/lib/domain/booking'
+import {
+  canCancel,
+  freePlaces,
+  sessionAvailability,
+  showsChangedBadge,
+  splitByTime,
+} from '@/lib/domain/booking'
 
 const NOW = new Date('2026-10-04T06:00:00Z')
 
@@ -83,17 +89,17 @@ describe('cancellation deadline (D-02)', () => {
   })
 })
 
-describe('the ZMĚNĚNO badge (D-11, D-08)', () => {
+describe('the ZMĚNĚNO badge (D-11, D-08, AC-060)', () => {
   const bookedAt = '2026-09-01T10:00:00Z'
   const booking = { bookingCreatedAt: bookedAt, eligibilityNarrowedAt: null }
 
-  it('is shown when the change came after the booking', () => {
+  it('is shown when the change came after the booking (AC-193)', () => {
     expect(showsChangedBadge(booking, '2026-09-02T10:00:00Z')).toBe(true)
   })
 
   // The whole reason this is a timestamp and not a boolean: a parent who booked
   // after the change never experienced it.
-  it('is hidden when the parent booked after the change', () => {
+  it('is hidden when the parent booked after the change (AC-192)', () => {
     expect(showsChangedBadge(booking, '2026-08-30T10:00:00Z')).toBe(false)
   })
 
@@ -107,5 +113,75 @@ describe('the ZMĚNĚNO badge (D-11, D-08)', () => {
     const affected = { bookingCreatedAt: bookedAt, eligibilityNarrowedAt: '2026-09-03T10:00:00Z' }
     expect(showsChangedBadge(affected, null)).toBe(true)
     expect(showsChangedBadge(affected, '2026-08-30T10:00:00Z')).toBe(true)
+  })
+})
+
+/**
+ * D-04. Upcoming and Past are derived from `end_at` against the current
+ * instant, and from nothing else.
+ */
+describe('the Upcoming / Past split (AC-120 to AC-123)', () => {
+  const NOW_SPLIT = new Date('2026-10-04T12:00:00Z')
+
+  function booking(startAt: string, endAt: string, status = 'OPEN') {
+    return { session: { startAt, endAt, status } }
+  }
+
+  it('puts a session whose end is in the future into Upcoming (AC-120)', () => {
+    const b = booking('2026-10-05T09:00:00Z', '2026-10-05T10:00:00Z')
+    const { upcoming, past } = splitByTime([b], NOW_SPLIT)
+    expect(upcoming).toEqual([b])
+    expect(past).toEqual([])
+  })
+
+  it('puts a session whose end is in the past into Past (AC-121)', () => {
+    const b = booking('2026-10-03T09:00:00Z', '2026-10-03T10:00:00Z')
+    const { upcoming, past } = splitByTime([b], NOW_SPLIT)
+    expect(upcoming).toEqual([])
+    expect(past).toEqual([b])
+  })
+
+  // A training in progress is not over. A parent standing at the rink must not
+  // find it filed under Minulé.
+  it('keeps a session that has started but not ended in Upcoming (AC-120)', () => {
+    const b = booking('2026-10-04T11:00:00Z', '2026-10-04T13:00:00Z')
+    expect(splitByTime([b], NOW_SPLIT).upcoming).toEqual([b])
+  })
+
+  it('treats the exact end instant as not yet past', () => {
+    const b = booking('2026-10-04T11:00:00Z', '2026-10-04T12:00:00Z')
+    expect(splitByTime([b], NOW_SPLIT).upcoming).toEqual([b])
+  })
+
+  // AC-122: the parent needs to see that the training is off. Filing it under
+  // Past would hide the one thing they have to act on.
+  it('keeps a cancelled future session in Upcoming (AC-122)', () => {
+    const b = booking('2026-10-06T09:00:00Z', '2026-10-06T10:00:00Z', 'CANCELLED')
+    expect(splitByTime([b], NOW_SPLIT).upcoming).toEqual([b])
+  })
+
+  /**
+   * AC-123: no scheduled job is required.
+   *
+   * The proof is that the same input, read at a later instant, moves on its
+   * own — nothing wrote a COMPLETED status in between, and there was no window
+   * in which a finished training was still listed as upcoming because a cron
+   * had not fired.
+   */
+  it('moves a session to Past with the clock alone (AC-123)', () => {
+    const b = booking('2026-10-04T13:00:00Z', '2026-10-04T14:00:00Z')
+    expect(splitByTime([b], NOW_SPLIT).upcoming).toEqual([b])
+    expect(splitByTime([b], new Date('2026-10-04T14:00:01Z')).past).toEqual([b])
+  })
+
+  it('orders Upcoming soonest first and Past most recent first', () => {
+    const soon = booking('2026-10-05T09:00:00Z', '2026-10-05T10:00:00Z')
+    const later = booking('2026-10-09T09:00:00Z', '2026-10-09T10:00:00Z')
+    const recent = booking('2026-10-03T09:00:00Z', '2026-10-03T10:00:00Z')
+    const older = booking('2026-09-20T09:00:00Z', '2026-09-20T10:00:00Z')
+
+    const { upcoming, past } = splitByTime([later, older, soon, recent], NOW_SPLIT)
+    expect(upcoming).toEqual([soon, later])
+    expect(past).toEqual([recent, older])
   })
 })

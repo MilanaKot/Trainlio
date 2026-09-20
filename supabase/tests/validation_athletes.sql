@@ -118,7 +118,7 @@ select pg_temp.check(
   pg_temp.as_user(:STRANGER, $$select (public.upsert_athlete_sport_profile(
     (select id from public.athletes where first_name='Eva'),
     'SWIMMING', '{}'::jsonb, 'Plavecký klub') ->> 'ok')$$),
-  'true', 'an athlete can hold a second sport profile');
+  'true', 'an athlete can hold a second sport profile (AC-012)');
 select pg_temp.check(
   (select count(*)::text from public.athlete_sport_profiles p
    join public.athletes a on a.id=p.athlete_id where a.first_name='Eva'),

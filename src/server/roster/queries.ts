@@ -1,6 +1,7 @@
 import 'server-only'
 
 import { createClient } from '@/lib/supabase/server'
+import { rows } from '@/server/query-result'
 import type { BookingStatus, BookingCreatorRole } from '@/types/database'
 
 export type RosterEntry = {
@@ -44,11 +45,11 @@ export type CandidateAthlete = {
  */
 export async function getSessionRoster(sessionId: string): Promise<RosterEntry[]> {
   const supabase = await createClient()
-  const { data } = await supabase.rpc('session_roster', {
+  const result = await supabase.rpc('session_roster', {
     p_training_session_id: sessionId,
   })
 
-  return (data ?? []).map((row) => ({
+  return rows('session_roster', result).map((row) => ({
     bookingId: row.booking_id,
     athleteId: row.athlete_id,
     firstName: row.first_name,
@@ -78,11 +79,11 @@ export async function getSessionRoster(sessionId: string): Promise<RosterEntry[]
  */
 export async function listCandidates(sessionId: string): Promise<CandidateAthlete[]> {
   const supabase = await createClient()
-  const { data } = await supabase.rpc('coach_session_candidates', {
+  const result = await supabase.rpc('coach_session_candidates', {
     p_training_session_id: sessionId,
   })
 
-  return (data ?? []).map((row) => ({
+  return rows('coach_session_candidates', result).map((row) => ({
     athleteId: row.athlete_id,
     firstName: row.first_name,
     lastName: row.last_name,

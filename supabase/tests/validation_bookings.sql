@@ -91,7 +91,7 @@ select pg_temp.check(
   '2', 'each booking is audited separately (BR-036)');
 select pg_temp.check(
   (select string_agg(distinct created_by_role::text, ',') from public.bookings where training_session_id = pg_temp.s()),
-  'USER', 'recorded as guardian-created, never inferred (D-14)');
+  'USER', 'recorded as guardian-created, never inferred (D-14, AC-025)');
 
 \echo ''
 \echo '── A full session (AC-021) ─────────────────────────────────────────'
@@ -202,9 +202,16 @@ select pg_temp.check(
   'NOT_AUTHORIZED_FOR_ATHLETE', 'another family cannot cancel their booking');
 
 -- A session starting inside the 12-hour window.
+--
+-- The date and the time are both taken from the same instant. Pairing
+-- `current_date` with a Prague-relative time is wrong twice over: the server's
+-- date is UTC, and six hours past a late-evening Prague time lands on the next
+-- day — which produced a session in the past, and three failures that looked
+-- like the deadline rule breaking.
 insert into t_ids (k, v)
 select 'soon', (pg_temp.as_user(:COACH, format($$select (public.create_training_session(
-  %L::uuid, current_date, (now() at time zone 'Europe/Prague' + interval '6 hours')::time,
+  %L::uuid, (now() at time zone 'Europe/Prague' + interval '6 hours')::date,
+  (now() at time zone 'Europe/Prague' + interval '6 hours')::time,
   (now() at time zone 'Europe/Prague' + interval '7 hours')::time, %L::uuid, 10, 'ALL')
   -> 'data' ->> 'training_session_id')$$, pg_temp.ws(), pg_temp.fac())))::uuid;
 create or replace function pg_temp.soon() returns uuid language sql stable as
@@ -247,7 +254,7 @@ select pg_temp.check(
 select pg_temp.check(
   pg_temp.as_user(:B, format($$select (public.book_athletes_as_guardian(%L::uuid, array[%L::uuid]) ->> 'code')$$,
     pg_temp.s2(), pg_temp.ath('Anna'))),
-  'SESSION_CANCELLED', 'nobody can book into it');
+  'SESSION_CANCELLED', 'nobody can book into it (AC-161)');
 select pg_temp.check(
   pg_temp.as_user(:A, format($$select (public.cancel_booking_as_guardian(%L::uuid) ->> 'code')$$,
     pg_temp.booking(pg_temp.s2(), pg_temp.ath('Ivan')))),

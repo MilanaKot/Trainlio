@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Trainlio — AC-022 and BR-032.
+# Trainlio — AC-022, AC-022a and BR-032.
 #
 # Several guardians reach for the last place at the same instant, on genuinely
 # parallel connections. Exactly one booking must succeed, and occupancy must
@@ -166,8 +166,68 @@ for round in $(seq 1 "$ROUNDS"); do
 done
 
 echo ""
+echo "── AC-022a: the lock is per session, not global ────────────────────"
+#
+# The serialization point is a row, so two families booking different sessions
+# must not queue behind each other. A table-level lock would pass every test
+# above and still make the whole club wait on one parent's booking on a Monday
+# evening, which is the moment everyone books at once.
+#
+# Measured, because the claim is about time. Each session gets one slow
+# booking; if the sessions were serialised the total would be the sum of them,
+# and a per-row lock keeps it near the longest single one.
+$PSQL -q -d "$DB" >/dev/null <<SQL
+create or replace function public.book_slowly_for_test(p_session uuid, p_athlete uuid)
+returns boolean language plpgsql as \$fn\$
+begin
+  -- Takes the same occupancy row lock the real path takes, then holds the
+  -- transaction open. Anything that contends will show up as elapsed time.
+  perform 1 from public.training_session_occupancy o
+   where o.training_session_id = p_session for update;
+  perform pg_sleep(2);
+  insert into public.bookings (training_session_id, athlete_id, status, created_by, created_by_role)
+  values (p_session, p_athlete, 'CONFIRMED', '$GUARDIAN', 'USER');
+  return true;
+end \$fn\$;
+SQL
+
+session_a="$(new_session)"
+session_b="$(new_session)"
+
+started="$(date +%s)"
+$PSQL -q -d "$DB" -tAc "select public.book_slowly_for_test('$session_a'::uuid, '$(athlete_id 1)'::uuid);" >/dev/null 2>&1 &
+$PSQL -q -d "$DB" -tAc "select public.book_slowly_for_test('$session_b'::uuid, '$(athlete_id 2)'::uuid);" >/dev/null 2>&1 &
+wait
+parallel_elapsed=$(( $(date +%s) - started ))
+
+# Both on the SAME session, which must serialise: the comparison is what makes
+# the number above mean something rather than being a timing anecdote.
+session_c="$(new_session)"
+started="$(date +%s)"
+$PSQL -q -d "$DB" -tAc "select public.book_slowly_for_test('$session_c'::uuid, '$(athlete_id 3)'::uuid);" >/dev/null 2>&1 &
+$PSQL -q -d "$DB" -tAc "select public.book_slowly_for_test('$session_c'::uuid, '$(athlete_id 4)'::uuid);" >/dev/null 2>&1 &
+wait
+serialised_elapsed=$(( $(date +%s) - started ))
+
+if [ "$parallel_elapsed" -lt 4 ]; then
+  echo "PASS  two sessions booked concurrently in ${parallel_elapsed}s (AC-022a)"
+else
+  echo "FAIL  two different sessions took ${parallel_elapsed}s — they are blocking each other (AC-022a)"
+  failures=$((failures + 1))
+fi
+
+if [ "$serialised_elapsed" -ge 4 ]; then
+  echo "PASS  the same session serialised at ${serialised_elapsed}s, so the measurement is real"
+else
+  echo "FAIL  the same session took only ${serialised_elapsed}s; the lock is not being taken,"
+  echo "      so the ${parallel_elapsed}s above proves nothing"
+  failures=$((failures + 1))
+fi
+
+echo ""
 if [ "$failures" -ne 0 ]; then
-  echo "concurrency: $failures of $ROUNDS rounds failed" >&2
+  echo "concurrency: $failures check(s) failed" >&2
   exit 1
 fi
-echo "concurrency: $ROUNDS rounds of $CONTENDERS parallel attempts, exactly one booking each (AC-022, BR-032)"
+echo "concurrency: $ROUNDS rounds of $CONTENDERS parallel attempts, exactly one booking each (AC-022, BR-032);"
+echo "             separate sessions do not block one another (AC-022a)"

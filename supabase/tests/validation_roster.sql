@@ -133,7 +133,7 @@ select pg_temp.check(
 select pg_temp.check(
   pg_temp.as_user(:COACH, format($$select (public.book_athlete_as_coach(%L::uuid, %L::uuid) ->> 'ok')$$,
     pg_temp.s(), pg_temp.ath('Anna'))),
-  'true', 'the coach adds an athlete no guardian of theirs manages');
+  'true', 'the coach adds an athlete no guardian of theirs manages (AC-024d)');
 select pg_temp.check(
   pg_temp.as_user(:COACH, format($$select (public.book_athlete_as_coach(%L::uuid, %L::uuid) -> 'data' ->> 'capacity_override')$$,
     pg_temp.s(), pg_temp.ath('Anna'))),
@@ -148,7 +148,7 @@ select pg_temp.check(
 select pg_temp.check(
   (select created_by_role::text from public.bookings b
     where b.training_session_id = pg_temp.s() and b.athlete_id = pg_temp.ath('Anna')),
-  'COACH', 'the booking records the role it was created under (D-14)');
+  'COACH', 'the booking records the role it was created under (D-14, AC-025)');
 select pg_temp.check(
   pg_temp.as_user(:COACH, format($$select booked_by_name from public.session_roster(%L::uuid) where first_name='Anna'$$, pg_temp.s())),
   'Trenér Novák', 'and the roster attributes it to the coach');
@@ -311,7 +311,7 @@ select pg_temp.check(
 select pg_temp.check(
   pg_temp.as_user(:COACH, format($$select (public.book_athlete_as_coach(%L::uuid, %L::uuid, true) ->> 'code')$$,
     pg_temp.free(), pg_temp.ath('Ivan'))),
-  'SESSION_CANCELLED', 'and cannot add to it afterwards, even with the override');
+  'SESSION_CANCELLED', 'and cannot add to it afterwards, even with the override (AC-162)');
 select pg_temp.check(
   pg_temp.as_user(:COACH, format($$select string_agg(status::text, ',' order by status::text)
     from public.session_roster(%L::uuid)$$, pg_temp.free())),

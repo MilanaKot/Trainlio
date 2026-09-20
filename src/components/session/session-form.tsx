@@ -105,7 +105,11 @@ export function SessionForm({ workspace, session, initial }: Props) {
     )
   }
 
-  const input = 'rounded-lg border border-black/15 px-3 py-3 text-base dark:border-white/20'
+  // min-h-11 as well as the padding: a date input renders a shorter line box
+  // than a text input in Chromium, which left it two pixels under the 44px a
+  // thumb needs. Caught by the mobile viewport review, not by reading.
+  const input =
+    'min-h-11 rounded-lg border border-black/15 px-3 py-3 text-base dark:border-white/20'
   const label = 'flex flex-col gap-2 text-sm font-medium'
 
   return (
@@ -168,23 +172,28 @@ export function SessionForm({ workspace, session, initial }: Props) {
 
       <fieldset className="flex flex-col gap-3">
         <legend className="mb-1 text-sm font-medium">{t.eligibility}</legend>
-        <label className="flex items-center gap-2 text-sm">
+        {/* The label is the target, so it carries the height: a coach setting
+            this up on a phone gets a full row to hit, not a 13px dot. Same
+            shape as the guardian booking picker. */}
+        <label className="flex min-h-11 items-center gap-3 text-base">
           <input
             type="radio"
             name="eligibilityMode"
             value="ALL"
             checked={mode === 'ALL'}
             onChange={() => setMode('ALL')}
+            className="size-5"
           />
           {t.eligibilityAll}
         </label>
-        <label className="flex items-center gap-2 text-sm">
+        <label className="flex min-h-11 items-center gap-3 text-base">
           <input
             type="radio"
             name="eligibilityMode"
             value="BIRTH_YEAR_RANGE"
             checked={mode === 'BIRTH_YEAR_RANGE'}
             onChange={() => setMode('BIRTH_YEAR_RANGE')}
+            className="size-5"
           />
           {t.eligibilityRange}
         </label>

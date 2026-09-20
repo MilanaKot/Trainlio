@@ -75,3 +75,32 @@ export function showsChangedBadge(
   if (significantChangedAt === null) return false
   return new Date(significantChangedAt).getTime() > new Date(booking.bookingCreatedAt).getTime()
 }
+
+/**
+ * D-04: the Upcoming / Past split.
+ *
+ * Derived from `end_at` against the current instant, never from a `COMPLETED`
+ * status. That is the whole point of the decision: no scheduled job has to run
+ * for a parent to see the right list, so there is no window in which a training
+ * that finished an hour ago is still listed as upcoming because a cron did not
+ * fire (AC-123).
+ *
+ * A cancelled future session stays in Upcoming (AC-122). The parent needs to
+ * see that the training is off, and moving it to Past would hide exactly the
+ * thing they have to act on.
+ */
+export function splitByTime<T extends { session: { endAt: string; startAt: string } }>(
+  bookings: T[],
+  now: Date,
+): { upcoming: T[]; past: T[] } {
+  const instant = now.getTime()
+
+  return {
+    upcoming: bookings
+      .filter((b) => new Date(b.session.endAt).getTime() >= instant)
+      .sort((a, b) => a.session.startAt.localeCompare(b.session.startAt)),
+    past: bookings
+      .filter((b) => new Date(b.session.endAt).getTime() < instant)
+      .sort((a, b) => b.session.startAt.localeCompare(a.session.startAt)),
+  }
+}

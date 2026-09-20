@@ -503,7 +503,10 @@ if (!SERVICE) {
 
   await new Promise((s) => setTimeout(s, 6000))
   if (routing) {
-    ok('the occupancy change arrives over Realtime',
+    // AC-090a: the count moves for a subscribed guardian, and nothing that
+    // identifies the other family travels with it — proven by the two reads
+    // below, which see the count and none of the bookings behind it.
+    ok('the occupancy change arrives over Realtime (AC-090a)',
        occupancyEvents.some((e) => e.confirmed_count === 1),
        `${occupancyEvents.filter((e) => e.confirmed_count === 1).length} of ${occupancyEvents.length} event(s)`)
   }
@@ -541,7 +544,7 @@ if (!SERVICE) {
   const otherBookings = await (
     await fetch(`${API}/rest/v1/bookings?training_session_id=eq.${bookable}&select=athlete_id`, { headers: auth2 })
   ).json()
-  ok('but none of the bookings behind it (BR-090)', otherBookings.length === 0)
+  ok('but none of the bookings behind it (BR-090, AC-090a)', otherBookings.length === 0)
 
   // D-05 over HTTP: the whole selection or none.
   res = await rpc('book_athletes_as_guardian', {

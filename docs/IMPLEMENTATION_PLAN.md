@@ -134,15 +134,32 @@ one email naming both: over HTTP in `integration.mjs` (`created === 2` for two
 families, one delivery for the family of two, `athlete_names` of length 2) and
 on the composed string in the unit suite.
 
-## Phase 8 — QA
+## Phase 8 — QA ✅
 
-- Unit tests for the pure domain functions
-- Integration tests: RLS matrix, every domain function, concurrency
-- Occupancy reconciliation assert: the projection equals a recount of bookings
-- Playwright guardian and coach flows
-- Mobile viewport review
+- `scripts/ac-coverage.mjs`: parses the specification, greps the test corpus,
+  and fails on an uncovered criterion or on a test citing an identifier the
+  specification no longer defines
+- `validation_qa.sql`: the criteria no earlier suite reached — the shape of the
+  stored data, the roles matrix, the D-18 constraints
+- `occupancy_reconciliation()` and `sessions_without_occupancy()`: the
+  projection against a recount, with a case that drifts it first so the
+  assert's silence means something
+- `concurrency.sh` AC-022a: two sessions booked at once, measured against the
+  same session serialising, so the lock is shown to be per row
+- Playwright guardian and coach flows, signed in through the real OTP form
+- Mobile viewport review: no sideways scroll, every target thumb-sized
 
-Exit: every acceptance criterion maps to a named test.
+Exit: every acceptance criterion maps to a named test. ✅
+**116 of 116**, checked by `pnpm qa:coverage` in CI.
+
+Four defects were found by the new tests and fixed:
+
+| Found by | Defect |
+|---|---|
+| Browser flow | An ambiguous PostgREST embed made **every guardian's session list render empty**. `training_sessions` holds three foreign keys into `app_profiles`, so the bare embed was refused — and the refusal was discarded along with the rows. |
+| The same | Read paths destructured `{ data }` and dropped `error`, so any query failure looked like "nothing found". Now `rows()`/`maybeRow()` raise, and a lost session redirects to sign-in instead. |
+| Mobile review | The coach header links, the eligibility radios and every date input were under the 44px a thumb needs. |
+| Full suite | `validation_bookings.sql` paired `current_date` with a Prague-relative time, which lands on the next day late in the evening. |
 
 ## Phase 9 — deployment
 

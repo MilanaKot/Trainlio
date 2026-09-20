@@ -42,6 +42,13 @@ jobs:
       - name: Unit tests
         run: pnpm test
 
+      # Phase 8's exit criterion: every acceptance criterion maps to a named
+      # test. Fails on an uncovered criterion, and on a test that cites an
+      # identifier the specification no longer defines — a renamed AC whose
+      # test still claims it is a silent hole.
+      - name: Acceptance-criterion coverage
+        run: pnpm qa:coverage
+
       - name: Build
         run: pnpm build
 
@@ -67,3 +74,52 @@ jobs:
 
       - name: Apply migrations, lint and validate
         run: bash supabase/tests/run.sh
+
+  end-to-end:
+    # The browser flows, against a real Supabase stack: the OTP sign-in, the
+    # guardian's whole path, the coach roster, and the mobile viewport review.
+    # These are the only tests that exercise the pages, the server actions and
+    # the session cookies together — which is where the ambiguous PostgREST
+    # embed that emptied every guardian's session list was finally caught.
+    runs-on: ubuntu-latest
+    env:
+      NEXT_PUBLIC_SUPABASE_URL: http://127.0.0.1:54321
+      NEXT_PUBLIC_SITE_URL: http://127.0.0.1:3000
+      # The Supabase CLI's published local development keys. They authenticate
+      # nothing outside a local stack.
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0
+      SUPABASE_SERVICE_ROLE_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImV4cCI6MTk4MzgxMjk5Nn0.EGIM96RAZx35lJzdJsyH-qQwv8Hdp7fsn3W0YpN81IU
+      RESEND_API_KEY: ci-resend-key
+      AUTH_SENDER_EMAIL: trainlio@example.test
+      CRON_SECRET: ci-cron-secret-at-least-16
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec playwright install --with-deps chromium
+
+      - name: Start the Supabase stack
+        run: pnpm db:start
+
+      - name: Integration suite
+        env:
+          ANON: ${{ env.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+          SERVICE_ROLE_KEY: ${{ env.SUPABASE_SERVICE_ROLE_KEY }}
+        run: pnpm db:integration
+
+      - name: Browser flows and mobile review
+        run: pnpm test:e2e
+
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 7

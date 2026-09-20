@@ -62,7 +62,11 @@ export function SeriesForm({
     })
   }
 
-  const input = 'rounded-lg border border-black/15 px-3 py-3 text-base dark:border-white/20'
+  // min-h-11 as well as the padding: a date input renders a shorter line box
+  // than a text input in Chromium, which left it two pixels under the 44px a
+  // thumb needs. Caught by the mobile viewport review, not by reading.
+  const input =
+    'min-h-11 rounded-lg border border-black/15 px-3 py-3 text-base dark:border-white/20'
   const label = 'flex flex-col gap-2 text-sm font-medium'
 
   return (

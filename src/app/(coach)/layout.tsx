@@ -20,12 +20,21 @@ export default async function CoachLayout({ children }: { children: React.ReactN
 
   return (
     <div className="mx-auto min-h-dvh max-w-3xl px-4 py-6">
-      <header className="mb-6 flex flex-wrap items-center justify-between gap-4">
-        <div className="flex items-center gap-4">
-          <Link href="/trener" className="text-sm font-semibold">
+      {/* Every target here is thumb-sized. A coach reads this header at the
+          rink, on a phone, often with gloves half off — a 20px text link is
+          reachable with a mouse and not with a thumb. */}
+      <header className="mb-4 flex flex-wrap items-center justify-between gap-2">
+        <div className="flex items-center gap-2">
+          <Link
+            href="/trener"
+            className="flex min-h-11 items-center text-sm font-semibold"
+          >
             {workspace.name}
           </Link>
-          <Link href="/trener/serie" className="text-sm opacity-70">
+          <Link
+            href="/trener/serie"
+            className="flex min-h-11 items-center px-2 text-sm opacity-70"
+          >
             {messages.coach.series}
           </Link>
         </div>
@@ -35,7 +44,10 @@ export default async function CoachLayout({ children }: { children: React.ReactN
             await signOut()
           }}
         >
-          <button type="submit" className="text-sm underline opacity-70">
+          <button
+            type="submit"
+            className="flex min-h-11 items-center px-2 text-sm underline opacity-70"
+          >
             {messages.auth.signOut}
           </button>
         </form>

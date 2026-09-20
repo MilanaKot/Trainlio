@@ -22,7 +22,8 @@
     "db:stop": "supabase stop",
     "db:reset": "supabase db reset",
     "db:integration": "node supabase/tests/integration.mjs",
-    "db:concurrency": "bash supabase/tests/concurrency.sh"
+    "db:concurrency": "bash supabase/tests/concurrency.sh",
+    "qa:coverage": "node scripts/ac-coverage.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",
