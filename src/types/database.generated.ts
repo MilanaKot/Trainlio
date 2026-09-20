@@ -1068,6 +1068,14 @@ export type Database = {
         Args: { p_athlete_id: string; p_training_session_id: string }
         Returns: string
       }
+      book_athlete_as_coach: {
+        Args: {
+          p_athlete_id: string
+          p_confirm_over_capacity?: boolean
+          p_training_session_id: string
+        }
+        Returns: Json
+      }
       book_athletes_as_guardian: {
         Args: { p_athlete_ids: string[]; p_training_session_id: string }
         Returns: Json
@@ -1080,6 +1088,10 @@ export type Database = {
         }
         Returns: string[]
       }
+      cancel_booking_as_coach: {
+        Args: { p_booking_id: string; p_reason?: string }
+        Returns: Json
+      }
       cancel_booking_as_guardian: {
         Args: { p_booking_id: string }
         Returns: Json
@@ -1091,6 +1103,19 @@ export type Database = {
       coach_can_see_athlete: {
         Args: { p_athlete_id: string }
         Returns: boolean
+      }
+      coach_session_candidates: {
+        Args: { p_training_session_id: string }
+        Returns: {
+          athlete_id: string
+          birth_year: number
+          booking_status: Database["public"]["Enums"]["booking_status"]
+          can_add: boolean
+          eligibility: string
+          first_name: string
+          last_name: string
+          position_code: string
+        }[]
       }
       create_athlete_with_guardian: {
         Args: {
@@ -1212,6 +1237,27 @@ export type Database = {
       session_confirmed_count: {
         Args: { p_training_session_id: string }
         Returns: number
+      }
+      session_roster: {
+        Args: { p_training_session_id: string }
+        Returns: {
+          athlete_id: string
+          birth_year: number
+          booked_at: string
+          booked_by_name: string
+          booking_id: string
+          cancellation_reason: string
+          cancelled_at: string
+          capacity_override: boolean
+          club_name: string
+          created_by_role: Database["public"]["Enums"]["booking_creator_role"]
+          first_name: string
+          jersey_number: string
+          last_name: string
+          position_code: string
+          status: Database["public"]["Enums"]["booking_status"]
+          stick_side_code: string
+        }[]
       }
       set_session_booking_state: {
         Args: { p_open: boolean; p_training_session_id: string }

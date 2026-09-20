@@ -107,5 +107,7 @@ run_suite trainlio_series supabase/tests/validation_series.sql
 echo
 run_suite trainlio_bookings supabase/tests/validation_bookings.sql
 echo
+run_suite trainlio_roster supabase/tests/validation_roster.sql
+echo
 echo '── Concurrency ─────────────────────────────────────────────────────'
 bash supabase/tests/concurrency.sh

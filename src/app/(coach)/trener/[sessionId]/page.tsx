@@ -1,6 +1,8 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { getCoachSession, getCoachWorkspace } from '@/server/sessions/queries'
+import { getSessionRoster, listCandidates } from '@/server/roster/queries'
+import { SessionRoster } from '@/components/roster/session-roster'
 import { Occupancy, SessionSummary, StatusBadge } from '@/components/session/session-summary'
 import { SessionActions } from '@/components/session/session-actions'
 import { localDateKey } from '@/lib/time/workspace-time'
@@ -17,6 +19,11 @@ export default async function SessionDetailPage({
 
   const session = await getCoachSession(sessionId)
   if (!session) notFound()
+
+  const [entries, candidates] = await Promise.all([
+    getSessionRoster(sessionId),
+    listCandidates(sessionId),
+  ])
 
   const t = messages.coach
 
@@ -60,8 +67,16 @@ export default async function SessionDetailPage({
         </Link>
       ) : null}
 
-      {/* The roster and manual booking arrive with the booking engine. */}
-      <p className="rounded-lg bg-black/5 p-3 text-sm opacity-70 dark:bg-white/10">{t.rosterLater}</p>
+      {/* D-07: a cancelled session keeps its roster but accepts no addition or
+          removal, so the controls are hidden rather than left to be refused. */}
+      <SessionRoster
+        sessionId={session.id}
+        entries={entries}
+        candidates={candidates}
+        capacity={session.capacity}
+        timezone={workspace.timezone}
+        addable={session.status !== 'CANCELLED'}
+      />
 
       <SessionActions
         session={session}

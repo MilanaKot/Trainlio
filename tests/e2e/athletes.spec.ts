@@ -17,6 +17,10 @@ test.describe('guardian area requires a session', () => {
     '/trener/novy',
     '/trener/serie',
     '/trener/serie/nova',
+    // The roster is coach-only and names the guardian who made each booking
+    // (BR-092), so possession of the session id must not be enough to see it.
+    '/trener/00000000-0000-0000-0000-0000000e0001',
+    '/trener/00000000-0000-0000-0000-0000000e0001/upravit',
   ]) {
     test(`${path} redirects to sign-in`, async ({ page }) => {
       await page.goto(path)

@@ -92,13 +92,24 @@ Exit: AC-020 to AC-028, AC-030 to AC-032, AC-040 to AC-041, AC-043, AC-090 to
 AC-090d, AC-120 to AC-123. AC-022 is proven with genuinely parallel database
 connections.
 
-## Phase 6 — coach roster
+## Phase 6 — coach roster ✅
 
-- Roster with booked-by and booking time
-- Manual booking, over-capacity confirmation
-- Coach removal, and the re-booking block it creates
+- `session_roster`: who is booked, who booked them and when, with the
+  cancelled rows kept — a `SECURITY DEFINER` function rather than a widened
+  `app_profiles` policy, because a coach needs one guardian name and not every
+  guardian profile in the workspace
+- `coach_session_candidates`: workspace-wide, keeping the ineligible athletes
+  with their reason, unlike the guardian picker
+- `book_athlete_as_coach`: one athlete per call, with the capacity override as a
+  server-side gate that returns the numbers the warning has to show
+- `cancel_booking_as_coach`: no deadline, and it is what creates the D-06
+  re-booking block
+- Coach roster UI: the attendance list, the add picker, the over-capacity
+  confirmation and the removal warning that states the parent cannot undo it
 
-Exit: AC-042, AC-042a to AC-042c, AC-050, AC-142.
+Exit: AC-042, AC-042a to AC-042c, AC-050, AC-142. ✅
+`validation_roster.sql` (73 cases), `tests/unit/roster.test.ts` (13 cases) and
+the roster section of `integration.mjs` (24 checks over HTTP).
 
 ## Phase 7 — notifications
 

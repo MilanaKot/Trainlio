@@ -477,7 +477,7 @@ if (!SERVICE) {
   ).json()
   ok('a family with no athlete reads no occupancy at all (D-01)', beforeJoining.length === 0)
 
-  await fetch(`${API}/rest/v1/rpc/create_athlete_with_guardian`, {
+  const joined = await (await fetch(`${API}/rest/v1/rpc/create_athlete_with_guardian`, {
     method: 'POST',
     headers: auth2,
     body: JSON.stringify({
@@ -485,7 +485,8 @@ if (!SERVICE) {
       p_workspace_id: ws.id, p_sport_code: 'HOCKEY',
       p_attributes: { position: 'GOALIE', stick_side: 'RIGHT' },
     }),
-  })
+  })).json()
+  const otherAthleteId = joined.data?.athlete_id
 
   // Now they see the count move, without learning anything about who took the
   // place — the point of projecting rather than publishing bookings.
@@ -510,6 +511,110 @@ if (!SERVICE) {
      res.code === 'NOT_AUTHORIZED_FOR_ATHLETE', res.code ?? '')
 
   await rt.removeChannel(channel)
+
+  console.log('')
+  console.log('── The coach roster, over HTTP ─────────────────────────────────────')
+
+  // The guardian names themselves, which is the name BR-092 puts on the roster.
+  r = await fetch(`${API}/rest/v1/app_profiles?id=eq.${profiles[0].id}`, {
+    method: 'PATCH', headers: auth, body: JSON.stringify({ display_name: 'Rodina Kotov' }),
+  })
+  ok('a guardian may set their own display name', r.ok, `${r.status}`)
+
+  let roster = await rpc('session_roster', { p_training_session_id: bookable })
+  ok('the coach reads the roster', Array.isArray(roster) && roster.length === 1, JSON.stringify(roster).slice(0, 120))
+  ok('which names who booked (BR-092)', roster[0]?.booked_by_name === 'Rodina Kotov', roster[0]?.booked_by_name ?? '')
+  ok('under which role', roster[0]?.created_by_role === 'USER', roster[0]?.created_by_role ?? '')
+  ok('and when (AC-090)', typeof roster[0]?.booked_at === 'string')
+
+  // The guardian's own profile is readable to them; another family's is not,
+  // and the roster does not become a way around that.
+  const guardianRoster = await rpc('session_roster', { p_training_session_id: bookable }, auth)
+  ok('a guardian reads no roster at all (AC-091)', Array.isArray(guardianRoster) && guardianRoster.length === 0)
+  const strangerRoster = await rpc('session_roster', { p_training_session_id: bookable }, auth2)
+  ok('and neither does another family holding the session id', Array.isArray(strangerRoster) && strangerRoster.length === 0)
+
+  const candidates = await rpc('coach_session_candidates', { p_training_session_id: bookable })
+  const mine = candidates.find((c) => c.athlete_id === athleteId)
+  const theirs = candidates.find((c) => c.athlete_id === otherAthleteId)
+  ok('the coach picker spans the workspace, not one family',
+     mine !== undefined && theirs !== undefined, `${candidates.length} candidate(s)`)
+  ok('the already-booked athlete cannot be added twice', mine?.can_add === false)
+  ok('a full session is still not a bar for the coach (BR-033)', theirs?.can_add === true)
+  const guardianCandidates = await rpc('coach_session_candidates', { p_training_session_id: bookable }, auth)
+  ok('a guardian cannot enumerate the workspace through it', guardianCandidates.length === 0)
+
+  // AC-050 over HTTP. The session holds 1 of 1.
+  res = await rpc('book_athlete_as_coach', {
+    p_training_session_id: bookable, p_athlete_id: otherAthleteId,
+  })
+  ok('a full session refuses a manual addition without confirmation',
+     res.code === 'WOULD_EXCEED_CAPACITY', res.code ?? '')
+  ok('and returns the numbers the warning shows',
+     res.details?.capacity === 1 && res.details?.confirmed_count === 1, JSON.stringify(res.details ?? {}))
+
+  res = await rpc('book_athlete_as_coach', {
+    p_training_session_id: bookable, p_athlete_id: otherAthleteId, p_confirm_over_capacity: true,
+  })
+  ok('with the confirmation it succeeds', res.ok === true, res.code ?? '')
+  ok('and reports that it overrode', res.data?.capacity_override === true)
+
+  const over = await (
+    await fetch(
+      `${API}/rest/v1/training_session_occupancy?training_session_id=eq.${bookable}&select=confirmed_count`,
+      { headers: coachAuth },
+    )
+  ).json()
+  ok('occupancy passes capacity, as AC-050 requires', over[0]?.confirmed_count === 2, `${over[0]?.confirmed_count}`)
+
+  // A guardian must not be able to reach the bookings table directly, whatever
+  // the domain functions allow (defence in depth).
+  r = await fetch(`${API}/rest/v1/bookings`, {
+    method: 'POST', headers: auth,
+    body: JSON.stringify({ training_session_id: bookable, athlete_id: athleteId }),
+  })
+  ok('a guardian holds no INSERT on bookings', !r.ok, `${r.status}`)
+  res = await rpc('book_athlete_as_coach', {
+    p_training_session_id: bookable, p_athlete_id: athleteId, p_confirm_over_capacity: true,
+  }, auth)
+  ok('nor can they call the coach path', res.code === 'NOT_AUTHORIZED', res.code ?? '')
+
+  // AC-042: removal at any time, and the D-06 block it creates.
+  const myBooking = roster[0].booking_id
+  res = await rpc('cancel_booking_as_coach', { p_booking_id: myBooking, p_reason: 'Nemoc' })
+  ok('the coach removes an athlete (AC-042)', res.ok === true, res.code ?? '')
+
+  res = await rpc('book_athletes_as_guardian', {
+    p_training_session_id: bookable, p_athlete_ids: [athleteId],
+  }, auth)
+  ok('the guardian cannot book them back in (AC-042a)', res.code === 'REMOVED_BY_COACH', res.code ?? '')
+
+  res = await rpc('book_athlete_as_coach', {
+    p_training_session_id: bookable, p_athlete_id: athleteId, p_confirm_over_capacity: true,
+  })
+  ok('but the coach can (AC-042b)', res.ok === true, res.code ?? '')
+
+  roster = await rpc('session_roster', { p_training_session_id: bookable })
+  ok('and the removal stays on the roster rather than being deleted (BR-044)',
+     roster.filter((e) => e.status === 'CANCELLED_BY_COACH').length === 1, `${roster.length} row(s)`)
+  ok('with the reason the coach gave',
+     roster.find((e) => e.status === 'CANCELLED_BY_COACH')?.cancellation_reason === 'Nemoc')
+
+  // AC-142, and AC-150's sibling: the audit log is not client-readable.
+  // Refused outright rather than filtered to nothing: the table has no SELECT
+  // grant for any client role, so PostgREST answers 403 instead of an empty
+  // array. That distinction matters — a filtered-to-empty policy could be
+  // widened by a future policy change; a missing grant cannot.
+  r = await fetch(`${API}/rest/v1/audit_log?select=action`, { headers: coachAuth })
+  ok('no client role reads the audit log', r.status === 403, `${r.status}`)
+  const auditByService = await (
+    await fetch(
+      `${API}/rest/v1/audit_log?action=eq.BOOKING_CAPACITY_OVERRIDDEN&select=action,after`,
+      { headers: admin },
+    )
+  ).json()
+  ok('while the override is recorded for an administrator (AC-142)',
+     auditByService.length >= 1, `${auditByService.length} entr(y|ies)`)
 }
 
 console.log('')

@@ -53,7 +53,8 @@ Czech message. Constraint violations still raise — those are bugs, not user er
 | `BOOKING_NOT_FOUND` | |
 | `BOOKING_NOT_CONFIRMED` | Already cancelled |
 | `CANCELLATION_DEADLINE_PASSED` | `BR-040` |
-| `CAPACITY_BELOW_OCCUPANCY` | Coach must resend with the confirmation flag (`BR-051`) |
+| `CAPACITY_BELOW_OCCUPANCY` | Session edit: the requested capacity is below the confirmed count. Coach must resend with the confirmation flag (`BR-051`) |
+| `WOULD_EXCEED_CAPACITY` | Coach manual booking: the addition would take the count past capacity. Coach must resend with the confirmation flag (`BR-033`) |
 | `BOOKINGS_WOULD_BECOME_INELIGIBLE` | D-08: narrowing the birth-year range past existing bookings |
 | `SERIES_EMPTY` | The recurrence pattern generates no occurrence |
 | `INVALID_NAME` | Athlete first or last name is blank |
@@ -247,17 +248,73 @@ Differs from the guardian path in four ways:
 
 - `is_workspace_coach(session.workspace_id)` replaces guardian access;
 - capacity may be exceeded, but only when `p_confirm_over_capacity` is true —
-  otherwise `CAPACITY_BELOW_OCCUPANCY` is returned so the UI can show the
-  over-capacity warning (`AC-050`, `UI_SPEC`);
+  otherwise `WOULD_EXCEED_CAPACITY` is returned, with
+  `{ capacity, confirmed_count }` in `details`, so the UI can show the
+  over-capacity warning (`AC-050`, `UI_SPEC`).
+
+  A distinct code from the session-edit case, deliberately. Both are "the coach
+  must confirm exceeding capacity", but they are opposite movements:
+  `CAPACITY_BELOW_OCCUPANCY` is the capacity being lowered under a fixed
+  roster, `WOULD_EXCEED_CAPACITY` is the roster being raised past a fixed
+  capacity. They carry different `details`, produce different warning text and
+  are recovered from by different actions. Sharing one code would force the UI
+  to branch on which call it had just made rather than on what the server
+  said;
 - `guardian_rebooking_blocked` does **not** apply: this is how a coach restores a
   previously removed athlete (D-06);
 - allowed while the session is `DRAFT`, `OPEN`, `CLOSED` or `COMPLETED`; rejected
   when `CANCELLED`, which is terminal (D-07). The database enforces this too, so
   no code path can add a booking to a cancelled session.
 
+```
+1. lock occupancy row
+2. current_profile_id()                      -> NOT_AUTHENTICATED
+3. session exists                            -> SESSION_NOT_FOUND
+4. is_workspace_coach                        -> NOT_AUTHORIZED
+5. session.status <> 'CANCELLED'             -> SESSION_CANCELLED
+6. athlete_eligibility_for_session           -> NOT_ELIGIBLE { athlete_id, reason }
+7. no CONFIRMED booking for this athlete     -> ALREADY_BOOKED
+8. if confirmed_count >= capacity and not p_confirm_over_capacity
+                                             -> WOULD_EXCEED_CAPACITY
+                                                { capacity, confirmed_count }
+9. insert booking, append audit
+```
+
 Records `created_by_role = 'COACH'` and `coach_capacity_override = true` when the
 booking took the count past capacity. Appends `BOOKING_CREATED_BY_COACH`, plus
 `BOOKING_CAPACITY_OVERRIDDEN` when the override applied (`BR-034`).
+
+Eligibility is checked before capacity and is **not** overridable: PRD §10 gives
+the coach "eligible managed athletes", and capacity is the only rule the override
+flag reaches. A coach who needs an out-of-range athlete widens the session's
+birth-year range, which is a visible, audited change to the session.
+
+### `session_roster(p_training_session_id uuid) → setof`
+
+The roster a coach reads (`BR-092`, `AC-090`): every booking for the session,
+confirmed and cancelled, with the athlete's sport profile for the session's
+sport, `booked_by_name`, `booked_at`, `capacity_override` and the cancellation
+reason. Authorized by `is_workspace_coach(session.workspace_id)`; returns no rows
+to anyone else, including the guardian who made the booking.
+
+A `SECURITY DEFINER` function rather than a widened policy. `app_profiles` is
+readable only for your own profile or for visible workspace staff, so a
+guardian's profile is not coach-readable — deliberately. Widening that policy so
+the roster could join to it would make every guardian profile in the workspace
+readable by a coach for any purpose. This returns the one name, in the one place
+the specification asks for it.
+
+### `coach_session_candidates(p_training_session_id uuid) → setof`
+
+Who the coach may add: every athlete with an active membership of the session's
+workspace, each with `athlete_eligibility_for_session`'s verdict, their latest
+booking status, and `can_add`.
+
+Unlike `guardian_session_athletes` this keeps the ineligible athletes, with their
+reason. A coach adding a child by hand needs to know why a name is unavailable,
+because "wrong birth year" and "already booked" call for different actions; a
+guardian only needs to know who they may pick. `can_add` deliberately does not
+consider capacity: a full session is a warning the coach may override, not a bar.
 
 ### `cancel_booking_as_coach(p_booking_id uuid, p_reason text default null) → jsonb`
 
