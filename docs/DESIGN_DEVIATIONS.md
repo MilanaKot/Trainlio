@@ -59,3 +59,32 @@ six soft fills are pale tints built for white.
 guardian is the common case, not a rule — BR-002 has allowed several since the
 first migration — and a second parent should not be hidden from a coach trying
 to reach the family.
+
+## A parent cannot re-book a child the coach removed
+
+`guardian/SPEC.md` §G4b and §G6d put a `Přihlásit` button on the removed
+booking, and README decision 19 says the parent "may re-book if a place is
+free". They cannot.
+
+D-06 decided this before the design existed, `CLAUDE.md` states it as an MVP
+product assumption, the domain function refuses it with `REMOVED_BY_COACH`, and
+AC-042a asserts it. The reason is in the decision: a parent who can undo a
+removal makes the removal advisory, and the coach who removed a child for a
+reason sees them back in the list a minute later.
+
+Everything else on both screens is built as drawn — the orange badge, the
+notice, the coach's message, the e-mail, the released place. The footer says
+`Pro opětovné přihlášení kontaktujte trenéra.`, which is the sentence the
+application already uses for this case. The coach can re-add the athlete, as
+AC-042b has always allowed.
+
+## Removed and cancelled bookings move to "Minulé" when the session ends
+
+`guardian/SPEC.md` §G4b says a removed booking stays in `Nadcházející` until
+the session _starts_, and §G5 says the same for a cancelled session. The split
+is by `end_at` for everything, as D-04 and AC-120/AC-121 define it.
+
+The difference is one hour on a card that already carries an orange
+`Odhlášeno trenérem` badge, against a second rule inside the one function whose
+value is that it has exactly one. Worth revisiting if a parent is ever confused
+by it; not worth the branch now.

@@ -853,3 +853,30 @@ seen.
 | `NOT_AUTHENTICATED`          | no actor record resolved from the JWT    |
 | `BOOKING_NOT_FOUND`          | no such booking                          |
 | `NOT_AUTHORIZED_FOR_ATHLETE` | the caller has no access to this athlete |
+
+### `BOOKING_REMOVED_BY_COACH` (notification event)
+
+Raised by `cancel_booking_as_coach` when a coach takes one athlete off a
+training that still takes place. Until migration 25 that operation raised
+nothing at all, and the parent drove to the rink.
+
+The first event whose recipients are not found through the session's confirmed
+bookings. It cannot be: the booking it is about has just stopped being
+confirmed, so that join would return nobody — in the one case where silence
+costs the most. Recipients are the active guardians of the athletes named in
+`payload.affected_athlete_ids`, the same field `SESSION_ELIGIBILITY_NARROWED`
+uses to scope itself.
+
+`payload.reason` carries the coach's optional message to that parent, at most
+200 characters — the same limit the form shows, enforced again here because a
+caller that is not the form does not obey the form. `cancel_booking_as_coach`
+refuses a longer one with `MESSAGE_TOO_LONG` and removes nobody.
+
+The message lands on `bookings.cancellation_reason`, which the guardians of the
+athlete have always been able to read through the row policy. What migration 25
+changes is that it is now meant to be read: the specification calls it "Zpráva
+pro rodiče" and the e-mail quotes it as one.
+
+D-06 is untouched. The e-mail tells the parent to contact the coach, because
+`book_athletes_as_guardian` still refuses with `REMOVED_BY_COACH` and the coach
+is the one who can put the athlete back (AC-042b).

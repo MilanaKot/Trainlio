@@ -18,6 +18,7 @@ export const NOTIFICATION_EVENT_TYPES = [
   'SESSION_FACILITY_CHANGED',
   'SESSION_MAIN_COACH_CHANGED',
   'SESSION_ELIGIBILITY_NARROWED',
+  'BOOKING_REMOVED_BY_COACH',
 ] as const
 
 export type NotificationEventType = (typeof NOTIFICATION_EVENT_TYPES)[number]
@@ -100,11 +101,15 @@ export function composeNotificationEmail(
 
   const lines: string[] = [t.greeting, '', body, '']
 
+  const removal = delivery.eventType === 'BOOKING_REMOVED_BY_COACH'
+
   if (delivery.athleteNames.length > 0) {
     // Czech agreement changes the adjective and the noun with the count, so
-    // this is a plural set rather than a template.
+    // this is a plural set rather than a template. A removal needs its own
+    // set: "Přihlášený sportovec" would name the child as booked in the very
+    // message saying they are not.
     lines.push(
-      plural(delivery.athleteNames.length, t.athletes).replace(
+      plural(delivery.athleteNames.length, removal ? t.removedAthletes : t.athletes).replace(
         '{names}',
         delivery.athleteNames.join(', '),
       ),
@@ -113,9 +118,15 @@ export function composeNotificationEmail(
   }
 
   const reason = delivery.session.reason?.trim()
-  if (reason) lines.push(fill(t.reason, { reason }), '')
+  // The same field carries two different things. On a cancelled session it is
+  // why the training is off; on a removal the specification calls it a message
+  // to this parent, so it is introduced as one.
+  if (reason) lines.push(fill(removal ? t.coachMessage : t.reason, { reason }), '')
 
   if (delivery.eventType === 'SESSION_CANCELLED') lines.push(t.preserved, '')
+  // D-06: the parent cannot undo a coach's removal, so the message says what
+  // they can do instead of leaving them to find the disabled button.
+  if (removal) lines.push(t.contactCoach, '')
 
   lines.push(fill(t.link, { url: appUrl }), '', t.signature)
 

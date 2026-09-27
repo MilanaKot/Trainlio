@@ -386,5 +386,87 @@ select pg_temp.check(
   (select count(*)::text from public.notification_deliveries),
   'and the four states account for every delivery');
 
+\echo ''
+\echo '── A coach removes one child: the parent is told (AC-260) ───────────'
+-- Every other event finds its audience through the confirmed bookings on the
+-- session. This one is about a booking that has just stopped being confirmed,
+-- so that join would find nobody — and the one case where silence is worst is
+-- the one where the parent otherwise drives to the rink.
+--
+-- The ids are captured before the removal, because afterwards the booking is
+-- no longer confirmed and a lookup that filters on that finds nothing.
+insert into t_ids (k, v)
+select 'ivan_b', b.id from public.bookings b
+ where b.training_session_id = pg_temp.s() and b.athlete_id = pg_temp.ath('Ivan');
+insert into t_ids (k, v)
+select 'tomas_b', b.id from public.bookings b
+ where b.training_session_id = pg_temp.s() and b.athlete_id = pg_temp.ath('Tomáš');
+create or replace function pg_temp.ivan_b() returns uuid language sql stable as
+  $$ select v from t_ids where k = 'ivan_b' $$;
+create or replace function pg_temp.tomas_b() returns uuid language sql stable as
+  $$ select v from t_ids where k = 'tomas_b' $$;
+
+-- The form limits the message; a caller that is not the form does not.
+select pg_temp.check(
+  pg_temp.as_user(:COACH, format($$select (public.cancel_booking_as_coach(%L::uuid, %L) ->> 'code')$$,
+    pg_temp.ivan_b(), repeat('a', 201))),
+  'MESSAGE_TOO_LONG', 'a message longer than the form allows is refused (AC-260)');
+select pg_temp.check(
+  (select status::text from public.bookings where id = pg_temp.ivan_b()),
+  'CONFIRMED', 'and the refusal removed nobody (AC-260)');
+
+select pg_temp.check(
+  pg_temp.as_user(:COACH, format($$select (public.cancel_booking_as_coach(%L::uuid,
+    'Dnes trénují jen brankáři.') ->> 'ok')$$, pg_temp.ivan_b())),
+  'true', 'the coach removes the athlete with a message for the parent (AC-260)');
+
+create or replace function pg_temp.removal() returns uuid language sql stable as
+  $$ select id from public.notification_events
+      where event_type = 'BOOKING_REMOVED_BY_COACH' order by created_at desc limit 1 $$;
+
+select pg_temp.check(
+  (select (pg_temp.removal() is not null)::text),
+  'true', 'which raises an event, where before it raised none (AC-260)');
+select pg_temp.check(
+  (select count(*)::text from public.notification_event_recipients(pg_temp.removal())),
+  '1', 'the guardian of the removed athlete is a recipient, cancelled booking and all (AC-260)');
+select pg_temp.check(
+  (select array_to_string(athlete_names, ', ')
+     from public.notification_event_recipients(pg_temp.removal())),
+  'Ivan Kotov', 'named as the athlete this is about (AC-260)');
+select pg_temp.check(
+  (select (recipient_profile_id = '00000000-0000-0000-0000-0000000fa000')::text
+     from public.notification_event_recipients(pg_temp.removal())),
+  'true', 'and only that family — nobody else booked into the session hears it (AC-260)');
+select pg_temp.check(
+  (select payload ->> 'reason' from public.notification_events where id = pg_temp.removal()),
+  'Dnes trénují jen brankáři.', 'the coach message travels with the event (AC-260)');
+
+-- The message is for the parent, and the row policy has always let them read
+-- it. What is new is that it is meant to be read.
+select pg_temp.check(
+  pg_temp.as_user(:A, format($$select cancellation_reason from public.bookings where id = %L::uuid$$,
+    pg_temp.ivan_b())),
+  'Dnes trénují jen brankáři.', 'the parent can read it on their own booking (AC-260)');
+select pg_temp.check(
+  pg_temp.as_user(:B, format($$select count(*)::text from public.bookings where id = %L::uuid$$,
+    pg_temp.ivan_b())),
+  '0', 'and another family reads neither the booking nor the message (AC-260, AC-091)');
+
+-- The place is free again, which is the whole difference from a cancellation.
+select pg_temp.check(
+  (select confirmed_count::text from public.training_session_occupancy
+    where training_session_id = pg_temp.s()),
+  '2', 'the place is released immediately (AC-260, AC-043)');
+
+-- D-06 — that the parent cannot put the child back — is asserted in
+-- validation_roster.sql as AC-042a, against the same functions. Repeating it
+-- here would only prove that this suite cancelled the session earlier, which
+-- is a different refusal and says nothing about the rule.
+-- Everyone else on the session is unaffected.
+select pg_temp.check(
+  (select status::text from public.bookings where id = pg_temp.tomas_b()),
+  'CONFIRMED', 'the sibling keeps their place (AC-260)');
+
 drop function pg_temp.as_user(text,text);
 drop function pg_temp.check(text,text,text);

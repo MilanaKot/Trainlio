@@ -196,3 +196,63 @@ describe('a cancellation says the bookings are kept (BR-044, BR-070)', () => {
     expect(message?.text).not.toContain('zůstávají v aplikaci')
   })
 })
+
+/**
+ * The composer returns null for an event type it does not know, which is worth
+ * asserting once here rather than letting `message?.text` quietly pass a
+ * `not.toContain` against nothing.
+ */
+function composed(delivery: ClaimedDelivery) {
+  const message = composeNotificationEmail(delivery, 'https://trainlio.example')
+  if (message === null) throw new Error('a known event type must produce an email')
+  return message
+}
+
+describe('a coach removed one child (§G4b)', () => {
+  const delivery = {
+    deliveryId: 'd1',
+    eventType: 'BOOKING_REMOVED_BY_COACH',
+    recipientEmail: 'rodina@example.test',
+    workspaceTimezone: 'Europe/Prague',
+    session: {
+      startAt: '2026-10-04T07:00:00Z',
+      endAt: '2026-10-04T08:00:00Z',
+      facilityCode: 'MH',
+      locationName: 'Příbram',
+      changingRoom: '4',
+      reason: 'Dnes trénují jen brankáři.',
+    },
+    athleteNames: ['Ivan Kotov'],
+  }
+
+  it('says the training still happens, which is the whole difference', () => {
+    const message = composed(delivery)
+    expect(message.text).toContain('Trénink se koná')
+    expect(message.text).not.toContain('byl zrušen')
+  })
+
+  it('does not call the child booked in the message saying they are not', () => {
+    const message = composed(delivery)
+    expect(message.text).toContain('Odhlášený sportovec: Ivan Kotov')
+    expect(message.text).not.toContain('Přihlášený sportovec')
+  })
+
+  it("introduces the coach's words as a message, not as a reason", () => {
+    // The same column carries "why the training is off" on a cancellation and
+    // "what the coach wants this parent to know" here.
+    const message = composed(delivery)
+    expect(message.text).toContain('Zpráva od trenéra: Dnes trénují jen brankáři.')
+    expect(message.text).not.toContain('Důvod:')
+  })
+
+  it('tells the parent what they can do, because D-06 says they cannot re-book', () => {
+    const message = composed(delivery)
+    expect(message.text).toContain('kontaktujte trenéra')
+  })
+
+  it('carries no message when the coach wrote none', () => {
+    const message = composed({ ...delivery, session: { ...delivery.session, reason: null } })
+    expect(message.text).not.toContain('Zpráva od trenéra')
+    expect(message.text).toContain('Trénink se koná')
+  })
+})

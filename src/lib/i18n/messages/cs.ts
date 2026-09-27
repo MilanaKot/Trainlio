@@ -345,6 +345,15 @@ export const cs = {
       many: 'Přihlášení sportovci: {names}',
     } satisfies PluralForms,
     reason: 'Důvod: {reason}',
+    /* A message the coach wrote for this parent, not an internal note. */
+    coachMessage: 'Zpráva od trenéra: {reason}',
+    removedAthletes: {
+      one: 'Odhlášený sportovec: {names}',
+      few: 'Odhlášení sportovci: {names}',
+      many: 'Odhlášení sportovci: {names}',
+    } satisfies PluralForms,
+    /* D-06: the parent cannot put the child back themselves. */
+    contactCoach: 'Pro opětovné přihlášení kontaktujte trenéra.',
     link: 'Podrobnosti najdete v aplikaci: {url}',
     preserved: 'Přihlášky zůstávají v aplikaci k nahlédnutí.',
     subjects: {
@@ -354,6 +363,7 @@ export const cs = {
       SESSION_FACILITY_CHANGED: 'Změna haly — {when}',
       SESSION_MAIN_COACH_CHANGED: 'Změna trenéra — {when}',
       SESSION_ELIGIBILITY_NARROWED: 'Změna ročníků tréninku — {when}',
+      BOOKING_REMOVED_BY_COACH: 'Odhlášení z tréninku — {when}',
     },
     bodies: {
       SESSION_CANCELLED: 'trénink {when}, {where}, byl zrušen.',
@@ -363,6 +373,10 @@ export const cs = {
       SESSION_MAIN_COACH_CHANGED: 'trénink {when}, {where}, povede jiný trenér.',
       SESSION_ELIGIBILITY_NARROWED:
         'u tréninku {when}, {where}, se změnil rozsah ročníků. Vaše přihláška zůstává v platnosti.',
+      /* The training still happens — which is the whole difference from a
+         cancellation, and the reason a parent would otherwise drive there. */
+      BOOKING_REMOVED_BY_COACH:
+        'trenér odhlásil sportovce z tréninku {when}, {where}. Trénink se koná, sportovec na něm ale už není v sestavě.',
     },
   },
 

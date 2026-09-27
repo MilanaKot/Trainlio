@@ -586,3 +586,9 @@ The badge shows when a training moved after this booking was made and this guard
 
 AC-259  
 Only this family may mark their own booking seen, and only through the domain function: another family is refused, so is the coach, an unknown booking says so, and no client role holds an `UPDATE` on any column of `bookings`.
+
+## A coach removes one athlete (guardian/SPEC.md §G4b, §G6d)
+
+AC-260  
+Given a coach removes an athlete from a training that still takes place  
+Then the place is released at once, that athlete's guardians — and only they — receive an e-mail naming the athlete and carrying the coach's message if one was written, the guardian can read that message on their own booking and another family can read neither, a message longer than the form allows is refused and removes nobody, and the athlete's siblings keep their places. D-06 is unchanged: the guardian still cannot re-book (AC-042a).
