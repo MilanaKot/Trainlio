@@ -66,7 +66,12 @@ type SportProfile =
       stick: "left" | "right" | "unknown" | null; jerseyNumber: number | null }
   | { sport: "football" /* fields TBD */ };
 
-type BookingStatus = "active" | "cancelled_by_guardian" | "cancelled_by_coach_session";
+type BookingStatus =
+  | "active"
+  | "cancelled_by_guardian"        // parent cancelled ("Odhlášeno")
+  | "removed_by_coach"             // coach removed this athlete; session still happens ("Odhlášeno trenérem")
+  | "cancelled_by_coach_session";  // whole session cancelled ("Zrušeno trenérem")
+// removed_by_coach also carries: removedBy {firstName,lastName}, removedAt, coachMessage: string | null (≤200)
 interface Booking {
   id: string; session: SessionSummary; athlete: Pick<Athlete, "id" | "firstName" | "lastName">;
   status: BookingStatus; createdAt: string; createdBy: { firstName: string; lastName: string };
@@ -148,12 +153,21 @@ Footer:
 Changed booking (`significantChange && !changeSeenAt`): badge warning `Změněno` next to name; the changed value highlighted (warning-soft bg, warning text), meta starts with `Původně {oldValue}`.
 Cancel flow: tap `Odhlásit` → confirm Dialog: title `Odhlásit {Jméno}?`, text `{date} · {time}`, buttons `Ponechat` (outline) / `Odhlásit` (primary). Success → toast `Odhlášeno`; booking moves to Minulé as self-cancelled.
 Tap card → G6 (marks change seen).
+
+**G4b · Removed by coach** (`removed_by_coach`, session in the future): card stays in Nadcházející until session start.
+- Muted card (`#F8F9FB` + 1 px line border), avatar/name/time/date muted, **no strike-through** (the session still takes place).
+- Badge **warning (orange)** `Odhlášeno trenérem` + chevron.
+- Meta `Odhlásil {coach name} · {d. m. HH:MM}`.
+- Footer: hint `Místo je volné, můžete přihlásit znovu.` + **secondary** 124 px `Přihlásit` → opens G2 with this athlete preselected. If the session is full/closed/past deadline: hint `Znovu přihlásit nelze — trénink je obsazený.` / `…přihlašování je uzavřené.` and disabled `Přihlásit`.
+- After re-booking, the removed booking disappears from Nadcházející (history keeps it; show in Minulé only if the athlete ends up not attending).
+- Guardian receives an e-mail: subject `Odhlášení z tréninku {Ne 4. 10.}`, body `Trenér {coach} odhlásil sportovce {athlete} z tréninku {Ne 4. 10. · 09:00–10:00, Příbram · MH}.` + coach message if present + link to G6d.
 Empty: `Zatím nemáte žádný nadcházející trénink.` + button `Najít trénink` (→ G1).
 
 ### G5 · My trainings — past (`?tab=past`)
 Same list, descending. Variants (DS §6.6):
 - attended/finished — normal card, no badge (don't emphasise "completed");
 - cancelled by coach — muted card, struck time & date, danger badge `Zrušeno trenérem`, meta `Trénink se nekonal · {place}`;
+- removed by coach (after the session started) — same as G4b but without footer; orange badge `Odhlášeno trenérem`;
 - self-cancelled — muted card, no strike, neutral badge `Odhlášeno`, meta `Odhlásil {guardian name} · {d. m. HH:MM}` (always masculine form — DS §8).
 Upcoming sessions cancelled by the coach also appear in **Nadcházející** until their start time with the cancelled styling (so parents notice), then move to Minulé.
 
@@ -165,6 +179,8 @@ Section `INFORMACE PRO SPORTOVCE` (caption) + public note text (only if present)
 Sticky footer: deadline hint + outline lg `Odhlásit` — or, when locked (G6c), text `Odhlášení již není možné. Kontaktujte trenéra.` (ink, info icon) + disabled lg `Odhlásit`.
 On mount: `update bookings set change_seen_at = now()` when a change is unseen (badge disappears in G4 afterwards).
 Cancelled-by-coach booking: header strike-through + danger Notice `Trénink byl zrušen trenérem.`; no footer.
+
+**G6d · Removed by coach:** header muted (no strike) + orange badge `Odhlášeno trenérem` next to the name. Warning Notice (person-minus icon): title `Trenér odhlásil sportovce z tréninku`, text `Trénink se koná, ale {athlete} na něm není přihlášen.`, meta `Odhlásil {coach} · {d. m.} v {HH:MM}`. If `coachMessage`: section caption `ZPRÁVA OD TRENÉRA` + text. DetailList (Místo, Šatna, Hlavní trenér, Obsazenost — no Asistenti row needed). Sticky footer: helper `Místo je volné, sportovce můžete přihlásit znovu.` + primary lg `Přihlásit znovu` (→ G2 with athlete preselected); when not possible → disabled + reason (as G4b). No "Odhlásit" action.
 Screen may exceed 844 px → page scrolls; footer stays fixed.
 
 ### G7 · Athletes (`/athletes`)
@@ -221,6 +237,7 @@ E-mail (not designed here): booking confirmation (optional), significant session
 5. Coach changes time → G4 shows `Změněno`; after opening G6 and returning, badge gone; G6 notice still shows old/new time.
 6. Coach cancels session → card in G4/G5 struck through with `Zrušeno trenérem`; self-cancelled booking shows `Odhlášeno` without strike-through.
 7. Full session → `Obsazeno` disabled button, cobalt meter, no duplicate badge.
+7b. Coach removes a child → e-mail sent; G4 card shows orange `Odhlášeno trenérem`, no strike-through; `Přihlásit` re-opens G2 with that child preselected; after re-booking the card returns to the normal state.
 8. All card buttons measure 124 × 44.
 9. Axe: no serious violations on G1, G2, G4, G6, G9.
 

@@ -60,7 +60,7 @@ Design components so labels can grow ~40 % (English later). Never rely on fixed 
 |---|---|
 | Primary action, links, active nav, **date group heading**, **full capacity segments** | `primary` #2B55E0 |
 | "Dnes" (today) chip, success toast icon | `success` #13795B, white text |
-| Last places (≥ 80 % booked, not full), "Změněno" badge + highlighted changed value, form-changed fields | `warning` family |
+| Last places (≥ 80 % booked, not full), "Změněno" badge + highlighted changed value, "Odhlášeno trenérem" badge, form-changed fields | `warning` family |
 | "Zrušeno trenérem", destructive button, field errors | `danger` family |
 | Self-cancelled booking ("Odhlášeno"), "Obsazeno", "Přihlašování uzavřeno", over-capacity "+N" | neutral (`neutral-50` bg, `muted` text) |
 | Internal coach note | `internal` family + lock icon |
@@ -91,7 +91,7 @@ type ButtonProps = { variant: "primary" | "secondary" | "outline" | "danger" | "
 ```
 
 ### 6.2 Badge
-Height 24 (22 on coach list), radius 6, `text-badge`. Variants: `neutral` (Obsazeno, Odhlášeno, Neaktivní, Koncept), `warning` (Změněno, Poslední místa), `danger` (Zrušeno trenérem / Zrušeno), `success` (Přihlášeno). "Dnes" is a separate **TodayChip** (success bg, white, 12 px/700, radius 6, height 22, not uppercase).
+Height 24 (22 on coach list), radius 6, `text-badge`. Variants: `neutral` (Obsazeno, Odhlášeno, Neaktivní, Koncept), `warning` (Změněno, Poslední místa, Odhlášeno trenérem), `danger` (Zrušeno trenérem / Zrušeno), `success` (Přihlášeno). "Dnes" is a separate **TodayChip** (success bg, white, 12 px/700, radius 6, height 22, not uppercase).
 
 ### 6.3 BookedChip
 `primary-100` bg, `primary` text, 13/600, height 28, radius 8, check icon 16. Text: `Přihlášen: {Jméno Příjmení}` — always masculine form, regardless of gender (see §8).
@@ -123,7 +123,7 @@ Button logic → see guardian spec §G1.
 
 ### 6.6 BookingCard (guardian "Moje tréninky")
 Header row: small avatar (28, initials) + athlete name 15/700 + optional badge + chevron `›`. Then time, date line (15/600), meta. Upcoming cards have a footer (divider, deadline hint + 124 px `outline` "Odhlásit").
-Past variants: normal; `cancelledByCoach` (card bg `#F8F9FB` + 1 px line border, time/date struck through, danger badge, meta "Trénink se nekonal"); `selfCancelled` (same muted card, **no strike-through**, neutral badge "Odhlášeno", meta "Odhlásil {guardian} · {d. m. HH:MM}").
+Past variants: normal; `cancelledByCoach` (card bg `#F8F9FB` + 1 px line border, time/date struck through, danger badge, meta "Trénink se nekonal"); `removedByCoach` (muted card, **no strike-through**, warning badge "Odhlášeno trenérem", meta "Odhlásil {coach} · …", secondary `Přihlásit` to re-book while upcoming); `selfCancelled` (same muted card, **no strike-through**, neutral badge "Odhlášeno", meta "Odhlásil {guardian} · {d. m. HH:MM}").
 Whole card is a link (chevron indicates it). Footer button click must not trigger navigation (`stopPropagation`).
 
 ### 6.7 CoachTrainingRow (coach list)

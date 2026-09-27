@@ -82,7 +82,7 @@ Back `‹ Tréninky`. Page scrolls (tall).
 4. Public note panel: caption with globe icon `INFORMACE PRO SPORTOVCE · VIDÍ RODIČE`, text.
 5. Internal note panel (only if present): `internal` bg + border, caption with lock `INTERNÍ POZNÁMKA · JEN TRENÉŘI` (internal-ink), text.
 6. Roster: heading `Sportovci {n}` + small secondary button `+ Přidat sportovce` (→ K7). Rows (link to athlete detail, not designed): avatar 36, name 16/700, line `2017 · Centr · Levá hůl` (omit missing parts), meta 12 `Přihlásil Milana Kotova · 27. 9. 18:42` or `Přidal trenér Milan Filipi · 24. 9. 17:30` (always masculine form — DS §8). Club is not in the default row. Sorted by booking time.
-   Tap row → BottomSheet "athlete in session": avatar, name, `2017 · Centr · Levá hůl`, `Klub` (if set), DetailList `Rodič` (name), `Telefon` (number or `—`), `Přihlášeno` (date-time). If phone exists: primary lg `Zavolat {phone}` (`<a href="tel:…">`) + outline lg `Poslat SMS` (`sms:`). Bottom: outline-danger `Odhlásit z tréninku` (coach removes booking; confirm dialog `Odhlásit {name} z tréninku?` `Ponechat` / `Odhlásit`). Phone numbers are shown only to coaches/admins of the workspace (RLS).
+   Tap row → BottomSheet "athlete in session": avatar, name, `2017 · Centr · Levá hůl`, `Klub` (if set), DetailList `Rodič` (name), `Telefon` (number or `—`), `Přihlášeno` (date-time). If phone exists: primary lg `Zavolat {phone}` (`<a href="tel:…">`) + outline lg `Poslat SMS` (`sms:`). Bottom: outline-danger `Odhlásit z tréninku` → confirm Dialog: title `Odhlásit sportovce z tréninku?`, line `{athlete} · Ne 4. 10. · 09:00`, optional Textarea `Zpráva pro rodiče` (Nepovinné, max 200, counter), info line (mail icon) `Rodič dostane e-mail. Sportovce bude moci znovu přihlásit, pokud bude volné místo.`, buttons `Ponechat` (outline, initial focus) · `Odhlásit` (primary). Result: booking status `removed_by_coach`, place is freed immediately (bookedCount −1), guardian e-mailed; roster row disappears and a toast `Sportovec odhlášen` shows. Guardian UI: see guardian SPEC G4b / G6d. Phone numbers are shown only to coaches/admins of the workspace (RLS).
 7. Caption `AKCE` + list (56 px rows, icon + label): `Upravit trénink` (→ K3), `Duplikovat` (→ K4), `Zavřít přihlašování` (→ K5) / `Otevřít přihlašování` when closed.
 8. Separated by 32 px, outline-danger lg button `Zrušit trénink` (→ K6).
 Empty roster: text `Zatím nikdo není přihlášený.`
@@ -168,6 +168,7 @@ Title `Série tréninků`. Panels: `OPAKOVÁNÍ` (weekday toggles, Od/Do, Začá
 | Close / reopen registration | no | card state |
 | Cancel training | all with active bookings | cancelled styling |
 | Coach adds athlete manually | that athlete's guardian (optional, open) | booking appears |
+| Coach removes athlete from session | that athlete's guardian (with optional message) | orange `Odhlášeno trenérem`, may re-book if a place is free |
 
 The UI must always state the notification consequence **before** the coach confirms (footer notice in K3, K3c notice, K6 box, K9 line).
 

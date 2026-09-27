@@ -52,5 +52,6 @@ The prototypes are visual references with sample data (names like Jan Novák, El
 16. Toasts have no undo action.
 17. Czech actor verbs/participles always use the masculine form (`Přihlásil`, `Odhlásil`, `Přihlášen`, `Narozen`); gender is not collected.
 18. Coaches see the guardian's phone (optional field) and can call/SMS from the roster.
+19. Coach can remove a child from a session (optional message to the parent). Parent sees an orange `Odhlášeno trenérem` badge (no strike-through), gets an e-mail, and may re-book if a place is free.
 
 Open questions are listed at the end of each SPEC.md.

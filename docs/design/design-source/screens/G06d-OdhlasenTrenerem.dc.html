@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<title>Detail — odhlášeno trenérem</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@500;600;700&amp;family=Manrope:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0;background:#F3F5F9;font-family:Manrope,"Segoe UI",system-ui,sans-serif;color:#0E1726}
+.s{--bg:#F3F5F9;--surface:#FFFFFF;--ink:#0E1726;--muted:#55607A;--line:#DFE4EE;--segoff:#DCE2EC;--n50:#ECEFF5;--accent:#2B55E0;--accentsoft:#E5EBFD;--chg:#8F5200;--chgsoft:#FBF0DC;--disp:"Barlow Semi Condensed","Arial Narrow",sans-serif}
+.disp{font-family:var(--disp)}
+.meta{font-size:14px;line-height:20px;color:var(--muted)}
+.panel{background:var(--surface);border-radius:16px;padding:4px 16px}
+.row{display:grid;grid-template-columns:112px minmax(0,1fr);gap:12px;padding:12px 0;font-size:15px;line-height:22px;box-shadow:0 1px 0 var(--line)}
+.row:last-child{box-shadow:none}
+.row dt{color:var(--muted);font-size:14px}
+.row dd{margin:0;font-weight:600}
+.segs{display:flex;gap:3px}
+.seg{width:9px;height:16px;border-radius:2px;background:var(--segoff)}
+.seg.on{background:var(--ink)}
+.num{font-family:var(--disp);font-weight:600;font-size:18px;font-variant-numeric:tabular-nums}
+.av{width:28px;height:28px;border-radius:50%;background:#DFE4EE;color:var(--muted);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700}
+.badge{display:inline-flex;align-items:center;height:24px;padding:0 8px;border-radius:6px;font-size:11px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;background:var(--chgsoft);color:var(--chg)}
+.btn{height:52px;width:100%;border-radius:12px;border:0;font:700 16px/1 Manrope,system-ui,sans-serif;background:var(--accent);color:#fff}
+</style>
+</helmet>
+<div class="s" style="width: 390px; height: 960px; background: var(--bg); display: flex; flex-direction: column; overflow: hidden">
+<div style="padding: 52px 8px 0; display: flex; align-items: center; gap: 4px">
+<a href="G04b-OdhlasenTrenerem.dc.html" aria-label="Zpět" style="width: 44px; height: 44px; border-radius: 22px; display: flex; align-items: center; justify-content: center; color: var(--ink)"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m14.5 6-6 6 6 6"></path></svg></a>
+<span style="font-size: 15px; font-weight: 600; color: var(--muted)">Moje tréninky</span>
+</div>
+
+<main style="flex-grow: 1; overflow: hidden; padding: 8px 16px 16px; display: flex; flex-direction: column; gap: 16px">
+<header style="display: flex; flex-direction: column; gap: 4px; padding: 0 4px">
+<div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 4px">
+<span style="display: flex; align-items: center; gap: 8px; font-size: 15px; font-weight: 700; color: var(--muted)"><span class="av">AK</span>Anna Kotova</span>
+<span class="badge">Odhlášeno trenérem</span>
+</div>
+<h1 class="disp" style="margin: 0; font-size: 44px; line-height: 48px; font-weight: 700; color: var(--muted); font-variant-numeric: tabular-nums">09:00–10:00</h1>
+<div style="font-size: 24px; line-height: 30px; font-weight: 700; color: var(--muted)">Neděle 4. října</div>
+</header>
+
+<div role="status" style="display: flex; gap: 12px; padding: 14px; border-radius: 12px; background: var(--chgsoft)">
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#8F5200" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; margin-top: 1px"><circle cx="9" cy="8.5" r="3.2"></circle><path d="M3.5 19c.6-3 2.8-4.8 5.5-4.8s4.9 1.8 5.5 4.8M16 11h5"></path></svg>
+<div style="display: flex; flex-direction: column; gap: 4px">
+<b style="font-size: 15px; line-height: 22px; font-weight: 700">Trenér odhlásil sportovce z tréninku</b>
+<span style="font-size: 14px; line-height: 20px">Trénink se koná, ale Anna Kotova na něm není přihlášená.</span>
+<span class="meta" style="font-size: 13px">Odhlásil Milan Filipi · 26. 9. v 14:10</span>
+</div>
+</div>
+
+<section style="display: flex; flex-direction: column; gap: 6px; padding: 14px 16px; border-radius: 16px; background: var(--surface)">
+<h2 style="margin: 0; font-size: 12px; line-height: 16px; font-weight: 700; letter-spacing: .8px; text-transform: uppercase; color: var(--muted)">Zpráva od trenéra</h2>
+<p style="margin: 0; font-size: 15px; line-height: 22px">[Text zprávy od trenéra — nepovinné, max. 200 znaků]</p>
+</section>
+
+<dl class="panel" style="margin: 0">
+<div class="row"><dt>Místo</dt><dd>Příbram · Malá hala (MH)</dd></div>
+<div class="row"><dt>Šatna</dt><dd>4</dd></div>
+<div class="row"><dt>Hlavní trenér</dt><dd>Milan Filipi</dd></div>
+<div class="row" style="align-items: center"><dt>Obsazenost</dt><dd style="display: flex; align-items: center; gap: 10px"><span class="segs"><sc-for list="{{s6}}" as="s" hint-placeholder-count="10"><span class="{{s.c}}"></span></sc-for></span><span class="num">6 / 10</span></dd></div>
+</dl>
+</main>
+
+<footer style="padding: 12px 16px 28px; background: var(--surface); box-shadow: 0 -1px 0 var(--line); display: flex; flex-direction: column; gap: 10px">
+<div class="meta" style="text-align: center; font-size: 13px">Místo je volné, sportovce můžete přihlásit znovu.</div>
+<button class="btn">Přihlásit znovu</button>
+</footer>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":960}}'>
+class Component extends DCLogic {
+renderVals() {
+const seg = (filled, cap) => Array.from({ length: cap }, (_, i) => ({ c: i < filled ? 'seg on' : 'seg' }));
+return { s6: seg(6, 10) };
+}
+}
+</script>
+</body>
+</html>
