@@ -1,0 +1,39 @@
+@import 'tailwindcss';
+
+/*
+ * Mobile-first (CLAUDE.md principle 1). Large tap targets, simple UI over
+ * feature density.
+ */
+@theme {
+  --font-sans: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+}
+
+:root {
+  --background: #ffffff;
+  --foreground: #101828;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #101828;
+    --foreground: #f2f4f7;
+  }
+}
+
+html {
+  /* Czech typography and hyphenation. */
+  lang: cs;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  -webkit-text-size-adjust: 100%;
+}
+
+/* Minimum comfortable tap target on a phone. */
+button,
+a[role='button'] {
+  min-height: 44px;
+}
