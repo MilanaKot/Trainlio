@@ -10,3 +10,9 @@ supabase/tests
 # paragraph with letter-spacing — visible in some mail clients, and the code is
 # the one thing a parent copies. Hand-formatted for mail, not for the repo.
 supabase/templates
+
+# The design brief is written and re-uploaded outside this repository, so
+# reformatting it would turn every new version into a CI failure over blank
+# lines. Its content is the input to the design work; its whitespace is not
+# this project's business.
+DESIGN_BRIEF.md
