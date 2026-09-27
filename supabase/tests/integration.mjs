@@ -581,10 +581,24 @@ if (!SERVICE) {
   console.log('── The coach roster, over HTTP ─────────────────────────────────────')
 
   // The guardian names themselves, which is the name BR-092 puts on the roster.
+  // Two columns since migration 21; display_name is composed by the database.
   r = await fetch(`${API}/rest/v1/app_profiles?id=eq.${profiles[0].id}`, {
-    method: 'PATCH', headers: auth, body: JSON.stringify({ display_name: 'Rodina Kotov' }),
+    method: 'PATCH', headers: auth,
+    body: JSON.stringify({ first_name: 'Rodina', last_name: 'Kotov' }),
   })
-  ok('a guardian may set their own display name', r.ok, `${r.status}`)
+  ok('a guardian may set their own name', r.ok, `${r.status}`)
+
+  const named = await (
+    await fetch(`${API}/rest/v1/app_profiles?select=display_name&id=eq.${profiles[0].id}`,
+      { headers: auth })
+  ).json()
+  ok('and display_name comes back composed, over HTTP (AC-244)',
+     named[0]?.display_name === 'Rodina Kotov', named[0]?.display_name ?? '')
+
+  r = await fetch(`${API}/rest/v1/app_profiles?id=eq.${profiles[0].id}`, {
+    method: 'PATCH', headers: auth, body: JSON.stringify({ display_name: 'Cokoliv' }),
+  })
+  ok('but PostgREST refuses a direct write to the derived column (AC-244)', !r.ok, `${r.status}`)
 
   let roster = await rpc('session_roster', { p_training_session_id: bookable })
   ok('the coach reads the roster', Array.isArray(roster) && roster.length === 1, JSON.stringify(roster).slice(0, 120))

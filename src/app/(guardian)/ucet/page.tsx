@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { signOut } from '@/server/auth/actions'
 import { messages } from '@/lib/i18n'
-import { DisplayNameForm } from './display-name-form'
+import { NameForm } from './name-form'
 
 export default async function AccountPage() {
   const supabase = await createClient()
@@ -14,7 +14,7 @@ export default async function AccountPage() {
 
   const { data: profile } = await supabase
     .from('app_profiles')
-    .select('id, display_name')
+    .select('id, first_name, last_name')
     .maybeSingle()
 
   return (
@@ -23,7 +23,7 @@ export default async function AccountPage() {
 
       <p className="text-sm opacity-70">{user?.email}</p>
 
-      <DisplayNameForm displayName={profile?.display_name ?? ''} />
+      <NameForm firstName={profile?.first_name ?? ''} lastName={profile?.last_name ?? ''} />
 
       <form
         action={async () => {

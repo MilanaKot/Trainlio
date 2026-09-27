@@ -703,3 +703,92 @@ last place. `sessions_without_occupancy()` reports it; a person decides.
 The projection trigger fires on `update of status`, not on any write, so
 touching a booking row does not recompute it — which is why this function exists
 rather than a documented trick.
+
+## Coaching staff operations
+
+D-11 says the coach is the product: a guardian must be able to see who leads a
+session. These are what makes that reachable. All four are client-callable by an
+authenticated user; each decides for itself what that user may do.
+
+The name is stored as `first_name` and `last_name`, exactly as an athlete's has
+always been. `display_name` is composed from them by a trigger and is writable
+by nobody — no client role holds the grant, and the trigger would overwrite it
+anyway. Stamping `anonymized_at` clears both columns, wherever the stamp comes
+from (D-18).
+
+### `workspace_staff(p_workspace_id uuid) → setof`
+
+The staff list the Trenéři screen reads: profile id, both name columns, the
+composed name, the roles held, whether the membership is active, whether the
+person has ever signed in, whether the caller may edit the row, and how many
+future trainings they lead.
+
+Three of those cannot come from a plain query, which is why this is a function:
+
+- **inactive members.** An authenticated caller cannot see a deactivated
+  member's profile at all — staff visibility covers _active_ staff — so without
+  this a coach who left could never be brought back.
+- **`is_editable`.** The same predicate `set_member_name` enforces, so a row the
+  screen offers to edit is a row the write will accept.
+- **`future_sessions`.** The same count `set_member_active` refuses on, so the
+  warning and the refusal cannot disagree.
+
+Returns nothing at all to a caller who is not a member of the workspace.
+
+### `set_member_name(p_workspace_id, p_profile_id, p_first_name, p_last_name) → jsonb`
+
+| Code                | Meaning                                                       |
+| ------------------- | ------------------------------------------------------------- |
+| `NOT_AUTHENTICATED` | no actor record resolved from the JWT                         |
+| `NOT_AUTHORIZED`    | the caller does not administer this workspace                 |
+| `MEMBER_NOT_FOUND`  | the profile is not this workspace's staff, or has been erased |
+| `NAME_REQUIRED`     | a coach needs both halves — a parent asks for "trenér Novák"  |
+
+Not a column grant: a grant wide enough to let an administrator write another
+profile's row would also let them write every guardian's. Membership need not be
+active — a coach who has left is still on last season's rosters, and correcting
+a misspelling there is the same act. An erased profile is refused as
+`MEMBER_NOT_FOUND` rather than with its own code, because saying which of the
+two it is answers a question about someone who asked to be forgotten.
+
+Appends `MEMBER_NAME_CHANGED`. Setting _your own_ name is a plain column update
+and is not audited: it is not a club event.
+
+### `create_workspace_coach(p_workspace_id, p_first_name, p_last_name, p_role) → jsonb`
+
+Creates a profile with **no login** and makes it active staff. The club's first
+coach exists on the ice before they exist in a database, and an administrator
+building next month's schedule should not have to wait for them to open an
+email. D-18 already made this representable: `auth_user_id` is nullable because
+a profile outlives its login, and the same nullability lets one exist before it.
+
+Such a profile is a real actor record — it can lead sessions, appear on rosters
+and be named to guardians. Linking it to a login when the coach does eventually
+sign up is deliberately **not** done here: the signup trigger gives them a new
+profile, and merging two profiles with history attached to both needs its own
+operation and its own audit entry.
+
+Codes: `NOT_AUTHENTICATED`, `NOT_AUTHORIZED`, `NAME_REQUIRED`. Appends
+`MEMBER_ADDED`.
+
+### `set_member_active(p_workspace_id, p_profile_id, p_is_active, p_confirm) → jsonb`
+
+A coach leaves, or comes back. Never a delete: `workspace_members.profile_id` is
+`on delete restrict` precisely so nobody can remove a coach from a training they
+led.
+
+| Code                    | Meaning                                                                                   |
+| ----------------------- | ----------------------------------------------------------------------------------------- |
+| `MEMBER_NOT_FOUND`      | not this workspace's staff, or erased                                                     |
+| `LAST_ADMIN`            | a workspace with no active administrator has nobody who can undo anything, including this |
+| `LEADS_FUTURE_SESSIONS` | returns `details.future_sessions`; repeat with `p_confirm`                                |
+
+The confirmation is a server-side gate, not a dialog the client chooses to show
+— the same shape as the over-capacity booking warning (BR-033). It exists
+because `enforce_session_main_coach_is_staff` requires the main coach to be
+active staff, so deactivating one leaves their future trainings uneditable until
+someone else is named.
+
+Repeating a call that changes nothing returns `{"ok": true, "unchanged": true}`
+and appends no audit entry. Otherwise appends `MEMBER_ACTIVATED` or
+`MEMBER_DEACTIVATED`.

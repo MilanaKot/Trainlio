@@ -31,6 +31,12 @@ export default async function CoachLayout({ children }: { children: React.ReactN
           <Link href="/trener/serie" className="flex min-h-11 items-center px-2 text-sm opacity-70">
             {messages.coach.series}
           </Link>
+          <Link
+            href="/trener/treneri"
+            className="flex min-h-11 items-center px-2 text-sm opacity-70"
+          >
+            {messages.staff.link}
+          </Link>
         </div>
         <form
           action={async () => {

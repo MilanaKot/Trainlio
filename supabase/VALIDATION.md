@@ -8,16 +8,16 @@ intent. Supabase-provided objects (`auth.users`, `auth.uid()`, `storage.objects`
 `storage.foldername`, the `supabase_realtime` publication, and the `anon`,
 `authenticated` and `service_role` roles) were stubbed locally.
 
-All twenty files applied in order with no errors.
+All twenty-one files applied in order with no errors.
 
-**494 of 494 cases pass**, and the database lint reports no error-level finding:
+**557 of 557 cases pass**, and the database lint reports no error-level finding:
 
 | Suite                                                                      | Cases                      |
 | -------------------------------------------------------------------------- | -------------------------- |
 | [`tests/lint.sql`](tests/lint.sql)                                         | 0 errors, 33 informational |
 | [`tests/validation.sql`](tests/validation.sql)                             | 40                         |
 | [`tests/validation_rls.sql`](tests/validation_rls.sql)                     | 28                         |
-| [`tests/validation_auth.sql`](tests/validation_auth.sql)                   | 17                         |
+| [`tests/validation_auth.sql`](tests/validation_auth.sql)                   | 18                         |
 | [`tests/validation_athletes.sql`](tests/validation_athletes.sql)           | 35                         |
 | [`tests/validation_sessions.sql`](tests/validation_sessions.sql)           | 51                         |
 | [`tests/validation_series.sql`](tests/validation_series.sql)               | 34                         |
@@ -26,6 +26,7 @@ All twenty files applied in order with no errors.
 | [`tests/validation_notifications.sql`](tests/validation_notifications.sql) | 67                         |
 | [`tests/validation_qa.sql`](tests/validation_qa.sql)                       | 46                         |
 | [`tests/validation_retention.sql`](tests/validation_retention.sql)         | 61                         |
+| [`tests/validation_staff.sql`](tests/validation_staff.sql)                 | 63                         |
 
 Plus the concurrency and daylight-saving cases below, which need parallel
 connections and are run separately.

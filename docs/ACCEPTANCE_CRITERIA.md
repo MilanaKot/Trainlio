@@ -507,3 +507,50 @@ Dormancy is a list for review, never an automatic erasure: listing a profile cha
 
 AC-232  
 Occupancy drift has a supported repair that recomputes from the bookings, reports what it changed, and appends an audit entry. It is service-role only, and it does not create a missing projection row.
+
+## Coaching staff (D-11, DESIGN_BRIEF §34)
+
+The coach is the product: a guardian must be able to see who leads a session.
+Until these, the schema could not deliver that — the only name column was
+writable by its owner alone, so a coach who never opened Účet was permanently
+"—" to every parent, and no administrator could correct it.
+
+AC-240  
+Given a workspace administrator  
+When they set a staff member's given name and surname  
+Then guardians see that name as the session's main coach, and the roster the screen reads comes back with each member's roles and whether they have ever signed in.
+
+AC-241  
+A coach who is not an administrator sees the same staff list and can change none of it. A guardian reaches neither the screen nor the list.
+
+AC-242  
+An administrator can name the staff of the workspace they administer and nobody else — not a guardian, and not another workspace's staff. A member who has left may still be corrected, because they are still on last season's rosters.
+
+AC-243  
+A staff name requires both halves. A blank given name or surname is refused, and a refused call writes nothing.
+
+AC-244  
+`display_name` is composed by the database from the two name columns. No client role may write it, and a one-word name composes to itself without a trailing space.
+
+AC-245  
+Naming a member appends one audit entry per successful call, recording who changed it, which profile, and from what to what.
+
+AC-246  
+A person may set their own given name and surname, which is trimmed before it is composed and needs no audit entry. A surname with no given name is refused.
+
+AC-247  
+Anonymisation clears both name columns wherever the stamp comes from, and an erased profile cannot be given a name again.
+
+AC-248  
+Given a coach who has never signed in  
+When an administrator adds them by name  
+Then a profile with no login is created, is active staff from that moment, can lead a session, and is read by guardians like any other coach. The addition is audited.
+
+AC-249  
+A coach who leaves is deactivated, never deleted: the profile and its history are kept, the deactivation is audited, it can be reversed, and repeating it changes nothing and records nothing. Inactive members stay on the staff list, or nobody could bring them back.
+
+AC-250  
+A workspace always keeps at least one active administrator. The last one cannot deactivate themselves until another exists.
+
+AC-251  
+Deactivating a coach who still leads future trainings is refused until it is confirmed, and the refusal carries the number of trainings so the warning quotes the server rather than a count the client worked out.

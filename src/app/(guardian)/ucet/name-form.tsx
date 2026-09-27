@@ -3,11 +3,19 @@
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { messages } from '@/lib/i18n'
-import { updateDisplayName } from '@/server/auth/actions'
+import { updateOwnName } from '@/server/auth/actions'
 
-export function DisplayNameForm({ displayName }: { displayName: string }) {
+/**
+ * Your own name, in the two parts the schema stores (migration 21).
+ *
+ * A surname is optional here, deliberately: a parent may be "Jana" on a roster
+ * if that is how they want to be known. A coach's name is not optional, but a
+ * coach's name is set on the team screen, not this one.
+ */
+export function NameForm({ firstName, lastName }: { firstName: string; lastName: string }) {
   const router = useRouter()
-  const [value, setValue] = useState(displayName)
+  const [first, setFirst] = useState(firstName)
+  const [last, setLast] = useState(lastName)
   const [saved, setSaved] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [pending, startTransition] = useTransition()
@@ -18,9 +26,9 @@ export function DisplayNameForm({ displayName }: { displayName: string }) {
     setSaved(false)
 
     startTransition(async () => {
-      const result = await updateDisplayName(value)
+      const result = await updateOwnName(first, last)
       if (!result.ok) {
-        setError(messages.athlete.errors.generic)
+        setError(result.message)
         return
       }
       setSaved(true)
@@ -28,18 +36,33 @@ export function DisplayNameForm({ displayName }: { displayName: string }) {
     })
   }
 
+  const field = 'rounded-lg border border-black/15 px-3 py-3 text-base dark:border-white/20'
+
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-3">
       <label className="flex flex-col gap-2 text-sm font-medium">
-        {messages.account.displayName}
+        {messages.account.firstName}
         <input
-          value={value}
-          onChange={(e) => setValue(e.target.value)}
+          name="firstName"
+          value={first}
+          onChange={(e) => setFirst(e.target.value)}
           maxLength={100}
-          className="rounded-lg border border-black/15 px-3 py-3 text-base dark:border-white/20"
+          className={field}
         />
-        <span className="text-xs font-normal opacity-60">{messages.account.displayNameHint}</span>
       </label>
+
+      <label className="flex flex-col gap-2 text-sm font-medium">
+        {messages.account.lastName}
+        <input
+          name="lastName"
+          value={last}
+          onChange={(e) => setLast(e.target.value)}
+          maxLength={100}
+          className={field}
+        />
+      </label>
+
+      <span className="text-xs opacity-60">{messages.account.nameHint}</span>
 
       {error ? (
         <p role="alert" className="text-sm text-red-600">

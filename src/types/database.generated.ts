@@ -15,7 +15,9 @@ export type Database = {
           auth_user_id: string | null
           created_at: string
           display_name: string | null
+          first_name: string | null
           id: string
+          last_name: string | null
           updated_at: string
         }
         Insert: {
@@ -23,7 +25,9 @@ export type Database = {
           auth_user_id?: string | null
           created_at?: string
           display_name?: string | null
+          first_name?: string | null
           id?: string
+          last_name?: string | null
           updated_at?: string
         }
         Update: {
@@ -31,7 +35,9 @@ export type Database = {
           auth_user_id?: string | null
           created_at?: string
           display_name?: string | null
+          first_name?: string | null
           id?: string
+          last_name?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -1204,6 +1210,15 @@ export type Database = {
         }
         Returns: Json
       }
+      create_workspace_coach: {
+        Args: {
+          p_first_name: string
+          p_last_name: string
+          p_role?: Database["public"]["Enums"]["workspace_role"]
+          p_workspace_id: string
+        }
+        Returns: Json
+      }
       current_profile_id: { Args: never; Returns: string }
       dormant_profiles: {
         Args: { p_inactive_days?: number }
@@ -1340,6 +1355,24 @@ export type Database = {
         }[]
       }
       sessions_without_occupancy: { Args: never; Returns: string[] }
+      set_member_active: {
+        Args: {
+          p_confirm?: boolean
+          p_is_active: boolean
+          p_profile_id: string
+          p_workspace_id: string
+        }
+        Returns: Json
+      }
+      set_member_name: {
+        Args: {
+          p_first_name: string
+          p_last_name: string
+          p_profile_id: string
+          p_workspace_id: string
+        }
+        Returns: Json
+      }
       set_session_booking_state: {
         Args: { p_open: boolean; p_training_session_id: string }
         Returns: Json
@@ -1383,6 +1416,20 @@ export type Database = {
           p_local_date_to: string
         }
         Returns: string[]
+      }
+      workspace_staff: {
+        Args: { p_workspace_id: string }
+        Returns: {
+          display_name: string
+          first_name: string
+          future_sessions: number
+          has_login: boolean
+          is_active: boolean
+          is_editable: boolean
+          last_name: string
+          profile_id: string
+          roles: Database["public"]["Enums"]["workspace_role"][]
+        }[]
       }
     }
     Enums: {

@@ -86,14 +86,25 @@ export async function signOut(): Promise<void> {
 }
 
 /**
- * The guardian's own display name — how the coach sees them on a roster.
+ * A person's own name — how the coach sees them on a roster.
  *
- * Only this column is writable: `app_profiles` grants
- * `UPDATE (display_name)` and nothing else, so a client cannot move its profile
- * to another login or mark itself anonymised (migration 10).
+ * Two columns, as athletes have always had, and only those two are writable:
+ * `app_profiles` grants `UPDATE (first_name, last_name)` and nothing else, so a
+ * client cannot move its profile to another login, mark itself anonymised, or
+ * write the composed `display_name` the trigger derives (migrations 10 and 21).
+ *
+ * A surname alone is refused by a CHECK constraint rather than here; this maps
+ * that refusal to something a parent can act on, because "uložení se nezdařilo"
+ * would leave them retyping the same thing.
  */
-export async function updateDisplayName(displayName: string): Promise<AuthResult> {
-  const trimmed = displayName.trim().slice(0, 100)
+export async function updateOwnName(firstName: string, lastName: string): Promise<AuthResult> {
+  const first = firstName.trim().slice(0, 100)
+  const last = lastName.trim().slice(0, 100)
+
+  if (first.length === 0 && last.length > 0) {
+    return { ok: false, message: messages.account.errors.lastNameNeedsFirst }
+  }
+
   const supabase = await createClient()
 
   const { data: profileId } = await supabase.rpc('current_profile_id')
@@ -101,7 +112,10 @@ export async function updateDisplayName(displayName: string): Promise<AuthResult
 
   const { error } = await supabase
     .from('app_profiles')
-    .update({ display_name: trimmed.length > 0 ? trimmed : null })
+    .update({
+      first_name: first.length > 0 ? first : null,
+      last_name: last.length > 0 ? last : null,
+    })
     .eq('id', profileId)
 
   if (error) return { ok: false, message: messages.auth.errors.generic }

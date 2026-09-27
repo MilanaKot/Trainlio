@@ -118,6 +118,14 @@ export function asUser(token: string) {
 export async function grantCoach(
   email: string,
 ): Promise<{ workspaceId: string; profileId: string }> {
+  return grantWorkspaceRole(email, 'COACH')
+}
+
+/** The same administrative act, for either workspace role (D-17). */
+export async function grantWorkspaceRole(
+  email: string,
+  role: 'COACH' | 'WORKSPACE_ADMIN',
+): Promise<{ workspaceId: string; profileId: string }> {
   const profileId = await profileFor(email)
 
   const workspaces = (await (
@@ -130,9 +138,9 @@ export async function grantCoach(
   const response = await fetch(`${STACK}/rest/v1/workspace_members`, {
     method: 'POST',
     headers: admin,
-    body: JSON.stringify({ workspace_id: workspaceId, profile_id: profileId, role: 'COACH' }),
+    body: JSON.stringify({ workspace_id: workspaceId, profile_id: profileId, role }),
   })
-  if (!response.ok) throw new Error(`Could not grant coach: ${response.status}`)
+  if (!response.ok) throw new Error(`Could not grant ${role}: ${response.status}`)
 
   return { workspaceId, profileId }
 }

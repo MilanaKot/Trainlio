@@ -368,8 +368,45 @@ export const cs = {
 
   account: {
     title: 'Účet',
-    displayName: 'Jméno',
-    displayNameHint: 'Jak vás uvidí trenér.',
+    firstName: 'Jméno',
+    lastName: 'Příjmení',
+    nameHint: 'Jak vás uvidí trenér.',
+    errors: {
+      lastNameNeedsFirst: 'Zadejte prosím i jméno, ne jen příjmení.',
+    },
+  },
+
+  /* The coaching staff (D-11, DESIGN_BRIEF §34): an administrator adds coaches
+     and fills in the names guardians read on the session page. */
+  staff: {
+    title: 'Trenéři',
+    link: 'Trenéři',
+    intro: 'Jméno trenéra uvidí rodiče u tréninku. Spravuje je správce klubu.',
+    roleCOACH: 'Trenér',
+    roleWORKSPACE_ADMIN: 'Správce',
+    noName: 'Bez jména',
+    neverSignedIn: 'Bez přihlášení',
+    inactive: 'Neaktivní',
+    editName: 'Upravit jméno',
+    addCoach: '+ Přidat trenéra',
+    addCoachTitle: 'Nový trenér',
+    deactivate: 'Deaktivovat',
+    activate: 'Znovu aktivovat',
+    /* AC-251. The count comes from the server's refusal, so the warning never
+       states a number the client made up. */
+    leadsFutureSessions: {
+      one: 'Tento trenér vede {count} nadcházející trénink. Po deaktivaci ho nepůjde upravit, dokud u něj nezměníte hlavního trenéra.',
+      few: 'Tento trenér vede {count} nadcházející tréninky. Po deaktivaci je nepůjde upravit, dokud u nich nezměníte hlavního trenéra.',
+      many: 'Tento trenér vede {count} nadcházejících tréninků. Po deaktivaci je nepůjde upravit, dokud u nich nezměníte hlavního trenéra.',
+    } satisfies PluralForms,
+    errors: {
+      NOT_AUTHENTICATED: 'Přihlaste se prosím znovu.',
+      NOT_AUTHORIZED: 'Na tuto změnu nemáte právo.',
+      MEMBER_NOT_FOUND: 'Tato osoba už není členem klubu.',
+      NAME_REQUIRED: 'Zadejte jméno i příjmení.',
+      LAST_ADMIN: 'Klub musí mít aspoň jednoho aktivního správce.',
+      generic: 'Uložení se nezdařilo. Zkuste to prosím znovu.',
+    },
   },
 
   placeholder: {

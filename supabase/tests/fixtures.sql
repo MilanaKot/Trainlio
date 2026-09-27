@@ -10,17 +10,19 @@ insert into auth.users(id,email) values
 -- signup creates them. The fixtures only name them: the id is aligned with the
 -- authentication id so the rest of this file stays readable, which is a test
 -- convenience and not how production ids are assigned.
+-- display_name is derived from the two name columns (migration 21), so the
+-- fixtures set the parts and let the trigger compose them.
 update public.app_profiles p
-   set id = v.auth_id, display_name = v.name
+   set id = v.auth_id, first_name = v.first, last_name = v.last
 from (values
-  ('00000000-0000-0000-0000-00000000c0ac'::uuid, 'Trenér Novák'),
-  ('00000000-0000-0000-0000-00000000c0ad'::uuid, 'Trenér Dvořák'),
-  ('00000000-0000-0000-0000-0000000fa000'::uuid, 'Rodina A'),
-  ('00000000-0000-0000-0000-0000000fb000'::uuid, 'Rodina B'),
-  ('00000000-0000-0000-0000-0000005f4a46'::uuid, 'Cizinec'),
-  ('00000000-0000-0000-0000-00000000ad11'::uuid, 'Workspace Admin'),
-  ('00000000-0000-0000-0000-00000000a170'::uuid, 'Platform Admin')
-) v(auth_id, name)
+  ('00000000-0000-0000-0000-00000000c0ac'::uuid, 'Trenér', 'Novák'),
+  ('00000000-0000-0000-0000-00000000c0ad'::uuid, 'Trenér', 'Dvořák'),
+  ('00000000-0000-0000-0000-0000000fa000'::uuid, 'Rodina', 'A'),
+  ('00000000-0000-0000-0000-0000000fb000'::uuid, 'Rodina', 'B'),
+  ('00000000-0000-0000-0000-0000005f4a46'::uuid, 'Cizinec', null),
+  ('00000000-0000-0000-0000-00000000ad11'::uuid, 'Workspace', 'Admin'),
+  ('00000000-0000-0000-0000-00000000a170'::uuid, 'Platform', 'Admin')
+) v(auth_id, first, last)
 where p.auth_user_id = v.auth_id;
 
 insert into public.platform_admins(profile_id) values ('00000000-0000-0000-0000-00000000a170');

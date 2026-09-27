@@ -64,8 +64,11 @@ select pg_temp.check((select count(*)::text from public.app_profiles), '2', 'ens
 \echo ''
 \echo '── A client cannot forge or move an actor identity ──────────────────'
 select pg_temp.check(
-  pg_temp.as_user(:A, $$update public.app_profiles set display_name='Jana Kotová' where id=public.current_profile_id() returning display_name$$),
-  'Jana Kotová', 'a guardian may set their own display_name');
+  pg_temp.as_user(:A, $$update public.app_profiles set first_name='Jana', last_name='Kotová' where id=public.current_profile_id() returning display_name$$),
+  'Jana Kotová', 'a guardian may set their own name, and display_name is composed from it');
+select pg_temp.check(
+  pg_temp.as_user(:A, $$update public.app_profiles set display_name='Jana Kotová' where id=public.current_profile_id() returning '1'$$),
+  'DENIED', 'display_name itself is not writable — it is derived (migration 21)');
 select pg_temp.check(
   pg_temp.as_user(:A, $$update public.app_profiles set auth_user_id='00000000-0000-0000-0000-00000000bbbb' where id=public.current_profile_id() returning '1'$$),
   'DENIED', 'a guardian cannot move their profile to another login');
@@ -80,7 +83,7 @@ select pg_temp.check(
 -- Both outcomes are correct; only the mechanism differs, and the assertion that
 -- follows is the one that actually proves nothing changed.
 select pg_temp.check(
-  pg_temp.as_user(:A, $$update public.app_profiles set display_name='hacked' where auth_user_id='00000000-0000-0000-0000-00000000bbbb' returning '1'$$),
+  pg_temp.as_user(:A, $$update public.app_profiles set first_name='hacked' where auth_user_id='00000000-0000-0000-0000-00000000bbbb' returning '1'$$),
   null, 'a guardian update of another profile matches no row');
 select pg_temp.check(
   (select coalesce(display_name,'(null)') from public.app_profiles where auth_user_id='00000000-0000-0000-0000-00000000bbbb'),
