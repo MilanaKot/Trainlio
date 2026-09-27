@@ -554,3 +554,24 @@ A workspace always keeps at least one active administrator. The last one cannot 
 
 AC-251  
 Deactivating a coach who still leads future trainings is refused until it is confirmed, and the refusal carries the number of trainings so the warning quotes the server rather than a count the client worked out.
+
+## The guardian's telephone number (DESIGN_BRIEF decision 18)
+
+The first personal contact detail the schema stores. The email never was one —
+it lives in `auth.users` and is read server-side only — so these criteria are
+mostly about the half that is not "a coach can ring the family".
+
+AC-252  
+A guardian may record an optional telephone number on their own profile. It is stored only in E.164, trimmed, and clearing the field leaves null rather than an empty string.
+
+AC-253  
+No policy exposes the number. A coach cannot read a guardian's profile row at all, another family cannot either, the roster does not carry it, and `anon` holds no read on the column.
+
+AC-254  
+A coach or administrator of the workspace running a session can read the number of the guardians of an athlete booked into it, one booking at a time. A guardian reading their own booking gets nothing from it, another family gets nothing, a stranger gets nothing, and a coach who has left the workspace gets nothing. Every active guardian of the athlete is returned, not whichever one comes first; a revoked guardian is not.
+
+AC-255  
+Stamping a profile anonymised clears the telephone number with the name, whatever path set the stamp, and the coach can no longer reach them.
+
+AC-256  
+The number is never copied: no audit entry and no notification delivery record contains one, and the column exists in exactly one table.

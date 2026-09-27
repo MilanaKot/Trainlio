@@ -18,6 +18,7 @@ export type Database = {
           first_name: string | null
           id: string
           last_name: string | null
+          phone: string | null
           updated_at: string
         }
         Insert: {
@@ -28,6 +29,7 @@ export type Database = {
           first_name?: string | null
           id?: string
           last_name?: string | null
+          phone?: string | null
           updated_at?: string
         }
         Update: {
@@ -38,6 +40,7 @@ export type Database = {
           first_name?: string | null
           id?: string
           last_name?: string | null
+          phone?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -1100,6 +1103,14 @@ export type Database = {
       book_athletes_as_guardian: {
         Args: { p_athlete_ids: string[]; p_training_session_id: string }
         Returns: Json
+      }
+      booking_guardians: {
+        Args: { p_booking_id: string }
+        Returns: {
+          display_name: string
+          phone: string
+          profile_id: string
+        }[]
       }
       bookings_outside_birth_year_range: {
         Args: {

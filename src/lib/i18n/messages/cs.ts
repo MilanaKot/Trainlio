@@ -371,8 +371,16 @@ export const cs = {
     firstName: 'Jméno',
     lastName: 'Příjmení',
     nameHint: 'Jak vás uvidí trenér.',
+    /* DESIGN_BRIEF decision 18. The reason is given in the field, because a
+       parent deciding whether to hand over a phone number deserves to know
+       who sees it and what for. */
+    phone: 'Telefon',
+    phoneHint: 'Trenér vás může kontaktovat, když se trénink změní na poslední chvíli.',
+    phonePlaceholder: '+420 123 456 789',
     errors: {
       lastNameNeedsFirst: 'Zadejte prosím i jméno, ne jen příjmení.',
+      phoneCountryCode: 'Zadejte číslo i s předvolbou, například +420 123 456 789.',
+      phoneFormat: 'Telefonní číslo není platné. Zkuste například +420 123 456 789.',
     },
   },
 

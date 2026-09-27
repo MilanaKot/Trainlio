@@ -208,11 +208,25 @@ select pg_temp.check(
 \echo '── Coach removal, at any time (AC-042, BR-042) ─────────────────────'
 -- A session starting inside the guardian cancellation window: the one case
 -- where the two cancellation paths visibly differ.
+-- One instant for the date and both times, and held back from the very end of
+-- the day: a training cannot span midnight, so a session starting at 23:05 and
+-- running an hour has an end time earlier than its start and is refused. Run
+-- at any hour, this used to fail between 17:00 and 18:00 Prague time, and the
+-- failure it reported was the coach-removal rule.
+create or replace function pg_temp.soon_at() returns timestamp language sql stable as $$
+  select case
+    when ((now() at time zone 'Europe/Prague') + interval '6 hours')::time > time '23:00'
+      then date_trunc('day', (now() at time zone 'Europe/Prague') + interval '6 hours')
+             + interval '23 hours'
+    else (now() at time zone 'Europe/Prague') + interval '6 hours'
+  end
+$$;
+
 insert into t_ids (k, v)
 select 'soon', (pg_temp.as_user(:COACH, format($$select (public.create_training_session(
-  %L::uuid, (now() at time zone 'Europe/Prague' + interval '6 hours')::date,
-  (now() at time zone 'Europe/Prague' + interval '6 hours')::time,
-  (now() at time zone 'Europe/Prague' + interval '7 hours')::time, %L::uuid, 10, 'ALL')
+  %L::uuid, pg_temp.soon_at()::date,
+  pg_temp.soon_at()::time,
+  (pg_temp.soon_at() + interval '30 minutes')::time, %L::uuid, 10, 'ALL')
   -> 'data' ->> 'training_session_id')$$, pg_temp.ws(), pg_temp.fac())))::uuid;
 create or replace function pg_temp.soon() returns uuid language sql stable as
   $$ select v from t_ids where k = 'soon' $$;

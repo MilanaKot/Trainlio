@@ -2,6 +2,7 @@
 
 import { z } from 'zod'
 import { createClient } from '@/lib/supabase/server'
+import { normalisePhone } from '@/lib/domain/phone'
 import { messages } from '@/lib/i18n'
 
 /**
@@ -86,7 +87,8 @@ export async function signOut(): Promise<void> {
 }
 
 /**
- * A person's own name — how the coach sees them on a roster.
+ * A person's own details — how the coach sees them on a roster, and how they
+ * reach the family when a training moves at short notice.
  *
  * Two columns, as athletes have always had, and only those two are writable:
  * `app_profiles` grants `UPDATE (first_name, last_name)` and nothing else, so a
@@ -97,12 +99,30 @@ export async function signOut(): Promise<void> {
  * that refusal to something a parent can act on, because "uložení se nezdařilo"
  * would leave them retyping the same thing.
  */
-export async function updateOwnName(firstName: string, lastName: string): Promise<AuthResult> {
+export async function updateOwnProfile(
+  firstName: string,
+  lastName: string,
+  phone: string,
+): Promise<AuthResult> {
   const first = firstName.trim().slice(0, 100)
   const last = lastName.trim().slice(0, 100)
 
   if (first.length === 0 && last.length > 0) {
     return { ok: false, message: messages.account.errors.lastNameNeedsFirst }
+  }
+
+  // The column refuses anything that is not E.164 (migration 22). This turns
+  // that refusal into a sentence a parent can act on, and tells the two
+  // mistakes apart: a missing country code is not the same as a typo.
+  const number = normalisePhone(phone)
+  if (!number.ok) {
+    return {
+      ok: false,
+      message:
+        number.reason === 'MISSING_COUNTRY_CODE'
+          ? messages.account.errors.phoneCountryCode
+          : messages.account.errors.phoneFormat,
+    }
   }
 
   const supabase = await createClient()
@@ -115,6 +135,7 @@ export async function updateOwnName(firstName: string, lastName: string): Promis
     .update({
       first_name: first.length > 0 ? first : null,
       last_name: last.length > 0 ? last : null,
+      phone: number.value,
     })
     .eq('id', profileId)
 

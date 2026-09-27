@@ -792,3 +792,26 @@ someone else is named.
 Repeating a call that changes nothing returns `{"ok": true, "unchanged": true}`
 and appends no audit entry. Otherwise appends `MEMBER_ACTIVATED` or
 `MEMBER_DEACTIVATED`.
+
+### `booking_guardians(p_booking_id uuid) → setof`
+
+The families behind one booking: profile id, composed name, and the optional
+telephone number the guardian gave (migration 22).
+
+Per booking, not per roster, and that is the whole design. The roster is a list
+a coach reads at the rink with twenty rows on it; the number belongs to the one
+athlete they tapped. Returning every family's number with the list would put
+twenty of them on the wire to answer a question about one.
+
+Readable only by an active coach or administrator of the workspace that runs
+the session. A guardian calling it for their own booking gets nothing — that is
+not how a family reads its own data — and so does a coach who has left.
+
+Returns every **active** guardian of the athlete (BR-002), not whichever one
+comes first: the design shows a single row because one guardian is the common
+case, not because a second should be hidden from someone trying to reach the
+family. Anonymised profiles are excluded.
+
+There is no companion write operation. The number is written by its owner
+through the column grant, exactly as their name is, and the D-18 stamp erases
+it in the same trigger — so no function has to remember to.

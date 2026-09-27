@@ -203,16 +203,32 @@ select pg_temp.check(
 
 -- A session starting inside the 12-hour window.
 --
--- The date and the time are both taken from the same instant. Pairing
--- `current_date` with a Prague-relative time is wrong twice over: the server's
--- date is UTC, and six hours past a late-evening Prague time lands on the next
--- day — which produced a session in the past, and three failures that looked
--- like the deadline rule breaking.
+-- Everything about this session comes from one instant. Pairing `current_date`
+-- with a Prague-relative time was wrong twice over — the server's date is UTC,
+-- and six hours past a late-evening Prague time lands on the next day — which
+-- produced a session in the past and three failures that looked like the
+-- deadline rule breaking.
+--
+-- The start is then held back from the very end of the day. A training cannot
+-- span midnight: the domain takes one date with a start and an end time, so a
+-- session beginning at 23:05 and ending an hour later has an end time earlier
+-- than its start, and creation is refused. Run at any hour, this suite used to
+-- fail for that one reason between 17:00 and 18:00 Prague time, and the
+-- failure it reported was the deadline rule.
+create or replace function pg_temp.soon_at() returns timestamp language sql stable as $$
+  select case
+    when ((now() at time zone 'Europe/Prague') + interval '6 hours')::time > time '23:00'
+      then date_trunc('day', (now() at time zone 'Europe/Prague') + interval '6 hours')
+             + interval '23 hours'
+    else (now() at time zone 'Europe/Prague') + interval '6 hours'
+  end
+$$;
+
 insert into t_ids (k, v)
 select 'soon', (pg_temp.as_user(:COACH, format($$select (public.create_training_session(
-  %L::uuid, (now() at time zone 'Europe/Prague' + interval '6 hours')::date,
-  (now() at time zone 'Europe/Prague' + interval '6 hours')::time,
-  (now() at time zone 'Europe/Prague' + interval '7 hours')::time, %L::uuid, 10, 'ALL')
+  %L::uuid, pg_temp.soon_at()::date,
+  pg_temp.soon_at()::time,
+  (pg_temp.soon_at() + interval '30 minutes')::time, %L::uuid, 10, 'ALL')
   -> 'data' ->> 'training_session_id')$$, pg_temp.ws(), pg_temp.fac())))::uuid;
 create or replace function pg_temp.soon() returns uuid language sql stable as
   $$ select v from t_ids where k = 'soon' $$;
