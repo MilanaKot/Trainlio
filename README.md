@@ -20,7 +20,7 @@ The database and its authorization model, email one-time-code sign-in, athlete
 management, coach session management, recurring series, the booking engine, the
 coach roster, transactional notifications and the account-anonymisation
 workflow are in place. Twenty migrations apply clean, the database lint reports
-no error-level finding, and 583 validation cases pass — plus a concurrency
+no error-level finding, and 584 validation cases pass — plus a concurrency
 proof, a live-stack integration suite, 121 unit tests and 57 browser flows
 including a mobile viewport review.
 See [`supabase/VALIDATION.md`](supabase/VALIDATION.md).

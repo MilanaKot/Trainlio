@@ -376,11 +376,12 @@ export const cs = {
        who sees it and what for. */
     phone: 'Telefon',
     phoneHint: 'Trenér vás může kontaktovat, když se trénink změní na poslední chvíli.',
-    phonePlaceholder: '+420 123 456 789',
+    /* A parent writes their own number the way they say it. The placeholder
+       shows that form; a number with a předvolba is accepted just the same. */
+    phonePlaceholder: '777 123 456',
     errors: {
       lastNameNeedsFirst: 'Zadejte prosím i jméno, ne jen příjmení.',
-      phoneCountryCode: 'Zadejte číslo i s předvolbou, například +420 123 456 789.',
-      phoneFormat: 'Telefonní číslo není platné. Zkuste například +420 123 456 789.',
+      phoneFormat: 'Telefonní číslo není platné. Zkuste například 777 123 456.',
     },
   },
 

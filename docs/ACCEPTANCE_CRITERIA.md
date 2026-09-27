@@ -562,7 +562,7 @@ it lives in `auth.users` and is read server-side only — so these criteria are
 mostly about the half that is not "a coach can ring the family".
 
 AC-252  
-A guardian may record an optional telephone number on their own profile. It is stored only in E.164, trimmed, and clearing the field leaves null rather than an empty string.
+A guardian may record an optional telephone number on their own profile, in the national form they would write it down or with a country code. A number starting with `+` is held to E.164; anything else is plain national digits of a plausible length. Separators are stripped, and clearing the field leaves null rather than an empty string.
 
 AC-253  
 No policy exposes the number. A coach cannot read a guardian's profile row at all, another family cannot either, the roster does not carry it, and `anon` holds no read on the column.

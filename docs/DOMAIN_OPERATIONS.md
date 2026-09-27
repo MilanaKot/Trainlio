@@ -812,6 +812,13 @@ comes first: the design shows a single row because one guardian is the common
 case, not because a second should be hidden from someone trying to reach the
 family. Anonymised profiles are excluded.
 
+The number is stored in E.164 when the guardian gave a country code and as
+plain national digits otherwise: a parent writes `777 123 456`, and demanding
+`+420` would be a form telling someone their own telephone number is wrong.
+Both ends of the call are in the same country, and a `tel:` link on a national
+number dials from the coach's phone at the rink. A number that does start with
+`+` is held to E.164 strictly, so a family abroad still works.
+
 There is no companion write operation. The number is written by its owner
 through the column grant, exactly as their name is, and the D-18 stamp erases
 it in the same trigger — so no function has to remember to.

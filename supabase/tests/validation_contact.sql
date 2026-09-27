@@ -55,14 +55,21 @@ select pg_temp.check(
   pg_temp.as_user(:A, $$update public.app_profiles set phone='  +420123456789  '
     where id=public.current_profile_id() returning phone$$),
   '+420123456789', 'which is trimmed before it is stored (AC-252)');
+-- A parent writes their own number without a předvolba, and both ends of the
+-- call are in the same country. Refusing it would be a form telling someone
+-- their own telephone number is wrong.
 select pg_temp.check(
-  pg_temp.as_user(:A, $$update public.app_profiles set phone='777 123 456'
-    where id=public.current_profile_id() returning '1'$$),
-  'DENIED', 'a number that is not E.164 is refused by the database (AC-252)');
+  pg_temp.as_user(:A, $$update public.app_profiles set phone='777123456'
+    where id=public.current_profile_id() returning phone$$),
+  '777123456', 'a national number is stored as given (AC-252)');
 select pg_temp.check(
   pg_temp.as_user(:A, $$update public.app_profiles set phone='+0123456789'
     where id=public.current_profile_id() returning '1'$$),
-  'DENIED', 'including one with a leading zero after the plus (AC-252)');
+  'DENIED', 'but a plus means the international form, and that one is strict (AC-252)');
+select pg_temp.check(
+  pg_temp.as_user(:A, $$update public.app_profiles set phone='12345'
+    where id=public.current_profile_id() returning '1'$$),
+  'DENIED', 'and something too short to be a number is still refused (AC-252)');
 select pg_temp.check(
   pg_temp.as_user(:A, $$update public.app_profiles set phone=''
     where id=public.current_profile_id() returning coalesce(phone,'(null)')$$),

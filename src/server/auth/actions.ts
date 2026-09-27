@@ -111,18 +111,11 @@ export async function updateOwnProfile(
     return { ok: false, message: messages.account.errors.lastNameNeedsFirst }
   }
 
-  // The column refuses anything that is not E.164 (migration 22). This turns
-  // that refusal into a sentence a parent can act on, and tells the two
-  // mistakes apart: a missing country code is not the same as a typo.
+  // A national number is as welcome as an international one (migration 22),
+  // so the only refusal left is a number that is not a number.
   const number = normalisePhone(phone)
   if (!number.ok) {
-    return {
-      ok: false,
-      message:
-        number.reason === 'MISSING_COUNTRY_CODE'
-          ? messages.account.errors.phoneCountryCode
-          : messages.account.errors.phoneFormat,
-    }
+    return { ok: false, message: messages.account.errors.phoneFormat }
   }
 
   const supabase = await createClient()

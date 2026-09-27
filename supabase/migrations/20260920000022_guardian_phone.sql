@@ -30,15 +30,23 @@
 
 alter table public.app_profiles add column phone text;
 
--- E.164, which is what a `tel:` link needs to dial reliably from a phone in a
--- different country — the Czech clubs this serves have families abroad. The
--- form normalises what a parent types; this refuses what the form did not.
+-- Two shapes, and the reason is who types them.
+--
+-- A parent writing down their own number writes `777 123 456`. Demanding
+-- `+420` first is a form telling someone their own telephone number is wrong,
+-- and both ends of this call are in the same country — a `tel:` link on a
+-- local number dials perfectly well from the coach's phone.
+--
+-- So: a leading `+` means the international form and is held to E.164 strictly,
+-- and anything else is a plain national number of a sane length. The form
+-- strips the spaces, brackets and dashes people write; this refuses what the
+-- form did not.
 alter table public.app_profiles
-  add constraint app_profiles_phone_e164
-    check (phone is null or phone ~ '^\+[1-9][0-9]{7,14}$');
+  add constraint app_profiles_phone_shape
+    check (phone is null or phone ~ '^(\+[1-9][0-9]{7,14}|[0-9]{6,15})$');
 
 comment on column public.app_profiles.phone is
-  'Optional E.164 contact number the guardian provides. No policy exposes it: coaches read it through booking_guardians() for one booking at a time, and the D-18 stamp clears it.';
+  'Optional contact number the guardian provides, in E.164 when it starts with + and national digits otherwise. No policy exposes it: coaches read it through booking_guardians() for one booking at a time, and the D-18 stamp clears it.';
 
 -- ---------------------------------------------------------------------------
 -- The stamp clears the number as well as the name.
