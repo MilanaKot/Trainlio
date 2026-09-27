@@ -97,3 +97,21 @@ export async function cancelBooking(bookingId: string): Promise<BookingResult> {
   refresh()
   return { ok: true }
 }
+
+/**
+ * The parent opened a booking whose training had moved.
+ *
+ * Through an RPC, because guardians hold no UPDATE grant on `bookings` at all
+ * (principle 10) — the same grant that stops a client cancelling by writing a
+ * status also stops it writing this. The function reaches only the caller's own
+ * bookings and stamps nothing when there is nothing unseen, so opening a
+ * booking twice writes once (migration 24).
+ *
+ * Failure is deliberately silent. This is a side effect of reading a page; a
+ * parent who came to check what time the training moved to should not be shown
+ * an error about a badge.
+ */
+export async function markBookingChangeSeen(bookingId: string): Promise<void> {
+  const supabase = await createClient()
+  await supabase.rpc('mark_booking_change_seen', { p_booking_id: bookingId })
+}

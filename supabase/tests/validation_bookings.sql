@@ -292,5 +292,76 @@ select pg_temp.check(
     pg_temp.s(), pg_temp.ath('Ivan'))),
   'REMOVED_BY_COACH', 'and the booking path refuses it');
 
+\echo ''
+\echo '── "Změněno" until the parent has looked (AC-258, AC-259) ───────────'
+-- s2 is a future session family A is booked into. Move it significantly.
+create or replace function pg_temp.a_booking() returns uuid language sql stable security definer as
+  $$ select b.id from public.bookings b
+      where b.training_session_id = pg_temp.s2() and b.status = 'CONFIRMED'
+      order by b.created_at limit 1 $$;
+
+select pg_temp.check(
+  (select (change_seen_at is null)::text from public.bookings where id = pg_temp.a_booking()),
+  'true', 'a new booking has seen nothing, because nothing has happened (AC-258)');
+select pg_temp.check(
+  pg_temp.as_user(:A, format($$select (public.mark_booking_change_seen(%L::uuid) ->> 'unchanged')$$,
+    pg_temp.a_booking())),
+  'true', 'and marking it seen writes nothing at all (AC-258)');
+
+update public.training_sessions set significant_changed_at = now() where id = pg_temp.s2();
+
+select pg_temp.check(
+  (select (s.significant_changed_at > b.created_at)::text
+     from public.bookings b join public.training_sessions s on s.id = b.training_session_id
+    where b.id = pg_temp.a_booking()),
+  'true', 'the training moved after this parent booked, so the badge is due (AC-258)');
+select pg_temp.check(
+  pg_temp.as_user(:A, format($$select (public.mark_booking_change_seen(%L::uuid) ->> 'unchanged')$$,
+    pg_temp.a_booking())),
+  'false', 'opening the booking stamps it (AC-258)');
+select pg_temp.check(
+  (select (change_seen_at is not null)::text from public.bookings where id = pg_temp.a_booking()),
+  'true', 'which is what silences the badge (AC-258)');
+
+-- Opening it again must not move updated_at: a trigger maintains that column,
+-- and a no-op write on every page view would make it useless.
+select pg_temp.check(
+  pg_temp.as_user(:A, format($$select (public.mark_booking_change_seen(%L::uuid) ->> 'unchanged')$$,
+    pg_temp.a_booking())),
+  'true', 'opening it a second time writes nothing (AC-258)');
+
+-- A further change outranks an earlier reading.
+update public.training_sessions set significant_changed_at = now() + interval '1 minute'
+ where id = pg_temp.s2();
+select pg_temp.check(
+  pg_temp.as_user(:A, format($$select (public.mark_booking_change_seen(%L::uuid) ->> 'unchanged')$$,
+    pg_temp.a_booking())),
+  'false', 'a later change brings the badge back (AC-258)');
+
+\echo ''
+\echo '── Only this family may mark it, and only through the function ──────'
+select pg_temp.check(
+  pg_temp.as_user(:B, format($$select (public.mark_booking_change_seen(%L::uuid) ->> 'code')$$,
+    pg_temp.a_booking())),
+  'NOT_AUTHORIZED_FOR_ATHLETE', 'another family cannot mark it seen (AC-259, AC-091)');
+select pg_temp.check(
+  pg_temp.as_user(:COACH, format($$select (public.mark_booking_change_seen(%L::uuid) ->> 'code')$$,
+    pg_temp.a_booking())),
+  'NOT_AUTHORIZED_FOR_ATHLETE', 'nor can the coach: a parent''s badge is not theirs to read (AC-259)');
+select pg_temp.check(
+  pg_temp.as_user(:A, $$select (public.mark_booking_change_seen(
+    '00000000-0000-0000-0000-00000000dead'::uuid) ->> 'code')$$),
+  'BOOKING_NOT_FOUND', 'a booking that does not exist says so (AC-259)');
+-- Principle 10: the column is not writable by hand, by anyone.
+select pg_temp.check(
+  pg_temp.as_user(:A, format($$update public.bookings set change_seen_at = now()
+    where id = %L::uuid returning '1'$$, pg_temp.a_booking())),
+  'DENIED', 'and no guardian holds an UPDATE on bookings to do it directly (AC-259)');
+select pg_temp.check(
+  (select count(*)::text from information_schema.column_privileges
+    where table_name = 'bookings' and privilege_type = 'UPDATE'
+      and grantee in ('authenticated', 'anon')),
+  '0', 'no client role holds one on any column of the table (AC-259)');
+
 drop function pg_temp.as_user(text,text);
 drop function pg_temp.check(text,text,text);

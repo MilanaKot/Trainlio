@@ -187,3 +187,75 @@ describe('the Upcoming / Past split (AC-120 to AC-123)', () => {
     expect(past).toEqual([recent, older])
   })
 })
+
+describe('showsChangedBadge — once the parent has looked (§G4)', () => {
+  const booked = '2026-09-20T10:00:00Z'
+  const moved = '2026-09-21T10:00:00Z'
+
+  it('shows while the change is unseen', () => {
+    expect(
+      showsChangedBadge(
+        { bookingCreatedAt: booked, eligibilityNarrowedAt: null, changeSeenAt: null },
+        moved,
+      ),
+    ).toBe(true)
+  })
+
+  it('stops once the booking has been opened', () => {
+    expect(
+      showsChangedBadge(
+        {
+          bookingCreatedAt: booked,
+          eligibilityNarrowedAt: null,
+          changeSeenAt: '2026-09-21T11:00:00Z',
+        },
+        moved,
+      ),
+    ).toBe(false)
+  })
+
+  it('comes back when the training moves again', () => {
+    // A later change outranks an earlier reading, which is why these are two
+    // timestamps and not a flag.
+    expect(
+      showsChangedBadge(
+        {
+          bookingCreatedAt: booked,
+          eligibilityNarrowedAt: null,
+          changeSeenAt: '2026-09-21T11:00:00Z',
+        },
+        '2026-09-22T09:00:00Z',
+      ),
+    ).toBe(true)
+  })
+
+  it('still ignores a change that predates the booking, seen or not', () => {
+    expect(
+      showsChangedBadge(
+        { bookingCreatedAt: moved, eligibilityNarrowedAt: null, changeSeenAt: null },
+        booked,
+      ),
+    ).toBe(false)
+  })
+
+  it('does not let opening the booking clear an eligibility narrowing', () => {
+    // That one says the rule moved under a child who is still booked. The
+    // spec leaves whether it fades as an open question, so it does not.
+    expect(
+      showsChangedBadge(
+        {
+          bookingCreatedAt: booked,
+          eligibilityNarrowedAt: '2026-09-21T10:00:00Z',
+          changeSeenAt: '2026-09-23T10:00:00Z',
+        },
+        null,
+      ),
+    ).toBe(true)
+  })
+
+  it('behaves as before when the caller knows nothing about seen state', () => {
+    expect(
+      showsChangedBadge({ bookingCreatedAt: booked, eligibilityNarrowedAt: null }, moved),
+    ).toBe(true)
+  })
+})

@@ -178,7 +178,7 @@ Four defects were found by the new tests and fixed:
 Exit: the deployment is reproducible from the documents, and nothing in
 `OPEN_DECISIONS.md` is open. ✅
 `validation_retention.sql` (61 cases) covers AC-224 to AC-231; AC-232 is in
-`validation_qa.sql`. **143 of 143** acceptance criteria map to a named test.
+`validation_qa.sql`. **145 of 145** acceptance criteria map to a named test.
 
 Two defects were found by writing this phase:
 

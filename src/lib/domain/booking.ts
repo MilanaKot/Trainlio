@@ -61,16 +61,35 @@ export function canCancel(
  * booking was made, so a parent who booked afterwards is not told about a
  * change they never experienced.
  *
+ * guardian/SPEC.md §G4 adds the other end of it: the badge stops once this
+ * parent has opened the booking. Per booking, not per session — two children
+ * in one training are two bookings, and a parent who opened one has not
+ * thereby been told about the other.
+ *
+ * A later change outranks an earlier reading, which is why the two timestamps
+ * are compared rather than a boolean being flipped.
+ *
  * D-08 adds the per-booking case: an eligibility narrowing marks only the
- * bookings it actually affects.
+ * bookings it actually affects. It is not cleared by opening the booking —
+ * that one says the rule moved under a child who is still booked, and the
+ * spec leaves whether it should fade as an open question (§4).
  */
 export function showsChangedBadge(
-  booking: { bookingCreatedAt: string; eligibilityNarrowedAt: string | null },
+  booking: {
+    bookingCreatedAt: string
+    eligibilityNarrowedAt: string | null
+    changeSeenAt?: string | null
+  },
   significantChangedAt: string | null,
 ): boolean {
   if (booking.eligibilityNarrowedAt !== null) return true
   if (significantChangedAt === null) return false
-  return new Date(significantChangedAt).getTime() > new Date(booking.bookingCreatedAt).getTime()
+
+  const changedAt = new Date(significantChangedAt).getTime()
+  if (changedAt <= new Date(booking.bookingCreatedAt).getTime()) return false
+
+  const seenAt = booking.changeSeenAt
+  return seenAt === undefined || seenAt === null || changedAt > new Date(seenAt).getTime()
 }
 
 /**

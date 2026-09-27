@@ -822,3 +822,34 @@ number dials from the coach's phone at the rink. A number that does start with
 There is no companion write operation. The number is written by its owner
 through the column grant, exactly as their name is, and the D-18 stamp erases
 it in the same trigger — so no function has to remember to.
+
+### `mark_booking_change_seen(p_booking_id uuid) → jsonb`
+
+The parent opened a booking whose training had moved, so the `Změněno` badge
+goes quiet (guardian/SPEC.md §G4).
+
+A function rather than an update, because guardians hold no `UPDATE` grant on
+`bookings` at all — the grant that stops a client cancelling by writing a status
+also stops it writing this, so the specification's `update bookings set
+change_seen_at = now()` cannot be what happens. Authorised by
+`has_athlete_access`, the same predicate the row policies use: a coach has no
+business marking a parent's badge read.
+
+Stamps only when there is something unseen, and returns `unchanged: true`
+otherwise. That is not an optimisation — `updated_at` is maintained by a trigger
+on this table, and a no-op write on every page view would make it useless to
+anyone asking when a booking last really changed.
+
+Per booking, not per session: two children in one training are two bookings, and
+a parent who opened one has not thereby been told about the other. A later
+change outranks an earlier reading, because the two timestamps are compared.
+
+Only the badge. §G6 is explicit that the notice inside the booking keeps
+explaining what moved until the training starts, whether or not it has been
+seen.
+
+| Code                         | Meaning                                  |
+| ---------------------------- | ---------------------------------------- |
+| `NOT_AUTHENTICATED`          | no actor record resolved from the JWT    |
+| `BOOKING_NOT_FOUND`          | no such booking                          |
+| `NOT_AUTHORIZED_FOR_ATHLETE` | the caller has no access to this athlete |

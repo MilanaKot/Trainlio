@@ -578,3 +578,11 @@ The number is never copied: no audit entry and no notification delivery record c
 
 AC-257  
 Deactivating a coach does not take their name off the trainings they lead. A guardian still reads it, a correction to it still reaches them, and this holds for a coach who never had a login. The widening is the narrow one: a former coach who was never named on a training stays invisible, no membership row becomes readable, and no other family does either.
+
+## "Změněno" until the parent has looked (guardian/SPEC.md §G4)
+
+AC-258  
+The badge shows when a training moved after this booking was made and this guardian has not opened it since. Opening the booking silences it; opening it again writes nothing; a later change brings it back. A booking whose training never moved records nothing at all.
+
+AC-259  
+Only this family may mark their own booking seen, and only through the domain function: another family is refused, so is the coach, an unknown booking says so, and no client role holds an `UPDATE` on any column of `bookings`.

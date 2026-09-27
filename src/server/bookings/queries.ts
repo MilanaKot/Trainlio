@@ -42,6 +42,8 @@ export type MyBooking = {
   bookingCreatedAt: string
   status: BookingStatus
   eligibilityNarrowedAt: string | null
+  /** When this guardian last opened the booking after a change (§G4). */
+  changeSeenAt: string | null
   session: GuardianSession
 }
 
@@ -68,7 +70,7 @@ const SESSION_COLUMNS = `
   locations ( name ),
   app_profiles!training_sessions_main_coach_profile_id_fkey ( display_name ),
   training_session_occupancy ( confirmed_count ),
-  bookings ( id, status, athlete_id, created_at, eligibility_narrowed_at,
+  bookings ( id, status, athlete_id, created_at, eligibility_narrowed_at, change_seen_at,
              athletes ( first_name, last_name ) )
 `
 
@@ -94,6 +96,7 @@ type Row = {
     athlete_id: string
     created_at: string
     eligibility_narrowed_at: string | null
+    change_seen_at: string | null
     athletes: { first_name: string; last_name: string } | null
   }[]
 }
@@ -200,6 +203,7 @@ export async function listMyBookings(): Promise<{ upcoming: MyBooking[]; past: M
         bookingCreatedAt: booking.created_at,
         status: booking.status,
         eligibilityNarrowedAt: booking.eligibility_narrowed_at,
+        changeSeenAt: booking.change_seen_at,
         session,
       })
     }

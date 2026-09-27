@@ -192,6 +192,7 @@ export type Database = {
           cancellation_reason: string | null
           cancelled_at: string | null
           cancelled_by: string | null
+          change_seen_at: string | null
           coach_capacity_override: boolean
           created_at: string
           created_by: string
@@ -207,6 +208,7 @@ export type Database = {
           cancellation_reason?: string | null
           cancelled_at?: string | null
           cancelled_by?: string | null
+          change_seen_at?: string | null
           coach_capacity_override?: boolean
           created_at?: string
           created_by: string
@@ -222,6 +224,7 @@ export type Database = {
           cancellation_reason?: string | null
           cancelled_at?: string | null
           cancelled_by?: string | null
+          change_seen_at?: string | null
           coach_capacity_override?: boolean
           created_at?: string
           created_by?: string
@@ -1303,6 +1306,10 @@ export type Database = {
           sport_code: string
           timezone: string
         }[]
+      }
+      mark_booking_change_seen: {
+        Args: { p_booking_id: string }
+        Returns: Json
       }
       notification_event_recipients: {
         Args: { p_event_id: string }
