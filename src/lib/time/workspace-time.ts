@@ -140,3 +140,85 @@ export function weeklyOccurrenceDates(
   }
   return dates
 }
+
+/*
+ * DESIGN_SYSTEM §7. The specification calls this module `lib/format.ts`; it
+ * lives here instead, because every function below needs the workspace
+ * timezone and splitting them from the ones above would put two halves of the
+ * same rule in two files.
+ *
+ * Weekday abbreviations come from a table rather than from Intl. `weekday:
+ * "short"` in Czech is an ICU detail that has changed between versions, and
+ * the design pins the exact two letters: Po Út St Čt Pá So Ne.
+ */
+const WEEKDAY_SHORT = ['Ne', 'Po', 'Út', 'St', 'Čt', 'Pá', 'So'] as const
+
+function weekdayIndex(at: Date, timeZone: Timezone): number {
+  // Formatting to an ISO-ish key and reading the day back is the only way to
+  // ask "which weekday is it *there*" without reimplementing the zone rules.
+  const key = localDateKey(at, timeZone)
+  const [year, month, day] = key.split('-').map(Number) as [number, number, number]
+  return new Date(Date.UTC(year, month - 1, day, 12)).getUTCDay()
+}
+
+function shortWeekday(at: Date, timeZone: Timezone): string {
+  const index = weekdayIndex(at, timeZone)
+  return WEEKDAY_SHORT[index] ?? ''
+}
+
+/** `Neděle 27. září` — the date heading a list groups by. */
+export function formatDateGroup(at: Date, timeZone: Timezone): string {
+  const weekday = part(at, timeZone, { weekday: 'long' }, 'weekday')
+  const day = part(at, timeZone, { day: 'numeric' }, 'day')
+  const month = part(at, timeZone, { month: 'long' }, 'month')
+  const capitalised = weekday.charAt(0).toLocaleUpperCase(CZECH_LOCALE) + weekday.slice(1)
+  return `${capitalised} ${day}. ${month}`
+}
+
+/** `Ne 27. 9.` — the compact form used inside sheets and summaries. */
+export function formatDateShort(at: Date, timeZone: Timezone): string {
+  const day = part(at, timeZone, { day: 'numeric' }, 'day')
+  const month = part(at, timeZone, { month: 'numeric' }, 'month')
+  return `${shortWeekday(at, timeZone)} ${day}. ${month}.`
+}
+
+/**
+ * `so 3. 10. 21:00` — a deadline inside running text, so the weekday is
+ * lowercase and the time is part of the same phrase.
+ */
+export function formatDeadline(at: Date, timeZone: Timezone): string {
+  const weekday = shortWeekday(at, timeZone).toLocaleLowerCase(CZECH_LOCALE)
+  const day = part(at, timeZone, { day: 'numeric' }, 'day')
+  const month = part(at, timeZone, { month: 'numeric' }, 'month')
+  return `${weekday} ${day}. ${month}. ${formatTime(at, timeZone)}`
+}
+
+/** `27. 9. 18:42` — when a booking was made, on a roster row. */
+export function formatDateTime(at: Date, timeZone: Timezone): string {
+  const day = part(at, timeZone, { day: 'numeric' }, 'day')
+  const month = part(at, timeZone, { month: 'numeric' }, 'month')
+  return `${day}. ${month}. ${formatTime(at, timeZone)}`
+}
+
+/**
+ * `Dnes`, `Zítra`, or nothing — what the chip on a date heading says.
+ *
+ * Tomorrow is the next calendar date in the workspace timezone, not "now plus
+ * 24 hours": on the night the clocks go back those are different days, and the
+ * one a parent means is the calendar one.
+ */
+export function relativeDayLabel(
+  at: Date,
+  now: Date,
+  timeZone: Timezone,
+): 'TODAY' | 'TOMORROW' | null {
+  const target = localDateKey(at, timeZone)
+  const today = localDateKey(now, timeZone)
+  if (target === today) return 'TODAY'
+
+  const [year, month, day] = today.split('-').map(Number) as [number, number, number]
+  const next = new Date(Date.UTC(year, month - 1, day + 1, 12))
+  const tomorrow = `${next.getUTCFullYear()}-${String(next.getUTCMonth() + 1).padStart(2, '0')}-${String(next.getUTCDate()).padStart(2, '0')}`
+
+  return target === tomorrow ? 'TOMORROW' : null
+}
