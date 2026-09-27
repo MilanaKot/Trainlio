@@ -353,3 +353,74 @@ select pg_temp.check(
   pg_temp.as_user(:COACH, $$select future_sessions::text from public.workspace_staff(pg_temp.ws())
     where display_name = 'Petr Málek'$$),
   '1', 'and the count that makes the warning predictable (AC-251)');
+
+\echo ''
+\echo '── A coach who leaves keeps their name on their trainings (AC-257) ──'
+-- By now the fixture session is led by Petr Málek, the coach added above who
+-- has never signed in. That makes the case stronger rather than weaker: his
+-- profile has no login at all, and a parent must still read his name.
+select pg_temp.check(
+  pg_temp.as_user(:A, $$select p.display_name from public.training_sessions s
+    join public.app_profiles p on p.id = s.main_coach_profile_id
+   where s.id='00000000-0000-0000-0000-0000000e0001'$$),
+  'Petr Málek', 'a guardian reads the name while the coach is active (AC-257, D-11)');
+
+-- The section above left the fixture administrator stepped down, and the second
+-- administrator it created has no login to act as. Restore the first, so this
+-- section has a working one — and assert every administrative call, because a
+-- refused one would let the cases below pass without proving anything.
+update public.workspace_members set is_active = true where profile_id = :ADMIN;
+
+select pg_temp.check(
+  pg_temp.as_user(:ADMIN, $$select public.set_member_active(pg_temp.ws(),
+    pg_temp.malek(), false, true) ->> 'ok'$$),
+  'true', 'the administrator deactivates the coach who leads the session (AC-257)');
+
+-- The defect this migration exists for: an administrative act that has nothing
+-- to do with the parent used to blank the name on every training the coach led.
+select pg_temp.check(
+  pg_temp.as_user(:A, $$select p.display_name from public.training_sessions s
+    join public.app_profiles p on p.id = s.main_coach_profile_id
+   where s.id='00000000-0000-0000-0000-0000000e0001'$$),
+  'Petr Málek', 'and still reads it after the coach is deactivated (AC-257)');
+select pg_temp.check(
+  pg_temp.as_user(:A, $$select public.is_visible_staff_profile(pg_temp.malek())::text$$),
+  'true', 'because they are named on a training the guardian can see (AC-257)');
+
+-- Renaming a departed coach still reaches the guardian (admin/SPEC.md test 3).
+select pg_temp.check(
+  pg_temp.as_user(:ADMIN, $$select public.set_member_name(pg_temp.ws(),
+    pg_temp.malek(), 'Petr', 'Novotný') ->> 'display_name'$$),
+  'Petr Novotný', 'the administrator corrects the departed coach name (AC-257)');
+select pg_temp.check(
+  pg_temp.as_user(:A, $$select p.display_name from public.training_sessions s
+    join public.app_profiles p on p.id = s.main_coach_profile_id
+   where s.id='00000000-0000-0000-0000-0000000e0001'$$),
+  'Petr Novotný', 'and a correction to their name still reaches the parent (AC-257)');
+
+-- The widening is the narrow one: being former staff is not by itself enough.
+select pg_temp.as_user(:ADMIN, $$select public.create_workspace_coach(pg_temp.ws(),
+  'Nikdy', 'Nevedl')$$);
+create or replace function pg_temp.never() returns uuid language sql stable security definer as
+  $$ select id from public.app_profiles where display_name = 'Nikdy Nevedl' $$;
+update public.workspace_members set is_active = false where profile_id = pg_temp.never();
+select pg_temp.check(
+  pg_temp.as_user(:A, $$select public.is_visible_staff_profile(pg_temp.never())::text$$),
+  'false', 'a former coach who never led anything stays invisible (AC-257)');
+select pg_temp.check(
+  pg_temp.as_user(:A, $$select count(*)::text from public.app_profiles
+    where id = pg_temp.never()$$),
+  '0', 'and their profile is not readable at all (AC-257)');
+
+-- Nothing else about the departed coach opened up.
+select pg_temp.check(
+  pg_temp.as_user(:A, $$select count(*)::text from public.workspace_members
+    where profile_id = '00000000-0000-0000-0000-00000000c0ac'$$),
+  '0', 'the guardian still reads no membership row (AC-257, D-17)');
+select pg_temp.check(
+  pg_temp.as_user(:A, $$select count(*)::text from public.app_profiles
+    where id = '00000000-0000-0000-0000-0000000fb000'$$),
+  '0', 'and no other family became visible along the way (AC-257, AC-091)');
+
+update public.workspace_members set is_active = true
+ where profile_id = :COACH and workspace_id = pg_temp.ws();

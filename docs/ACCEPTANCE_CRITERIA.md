@@ -575,3 +575,6 @@ Stamping a profile anonymised clears the telephone number with the name, whateve
 
 AC-256  
 The number is never copied: no audit entry and no notification delivery record contains one, and the column exists in exactly one table.
+
+AC-257  
+Deactivating a coach does not take their name off the trainings they lead. A guardian still reads it, a correction to it still reaches them, and this holds for a coach who never had a login. The widening is the narrow one: a former coach who was never named on a training stays invisible, no membership row becomes readable, and no other family does either.
