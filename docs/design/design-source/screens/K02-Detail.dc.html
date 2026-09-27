@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<title>Detail tréninku — trenér</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@500;600;700&amp;family=Manrope:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0;background:#F3F5F9;font-family:Manrope,"Segoe UI",system-ui,sans-serif;color:#0E1726}
+.s{--bg:#F3F5F9;--surface:#FFFFFF;--ink:#0E1726;--muted:#55607A;--line:#DFE4EE;--segoff:#DCE2EC;--n50:#ECEFF5;--accent:#2B55E0;--accentsoft:#E5EBFD;--danger:#B42318;--disp:"Barlow Semi Condensed","Arial Narrow",sans-serif}
+.disp{font-family:var(--disp)}
+.meta{font-size:14px;line-height:20px;color:var(--muted)}
+.cap{margin:0;font-size:12px;line-height:16px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--muted)}
+.panel{background:var(--surface);border-radius:16px;padding:4px 16px}
+.row{display:grid;grid-template-columns:112px minmax(0,1fr);gap:12px;padding:12px 0;font-size:15px;line-height:22px;box-shadow:0 1px 0 var(--line)}
+.row:last-child{box-shadow:none}
+.row dt{color:var(--muted);font-size:14px}
+.row dd{margin:0;font-weight:600}
+.segs{display:flex;gap:3px}
+.seg{width:9px;height:16px;border-radius:2px;background:var(--segoff)}
+.seg.on{background:var(--ink)}
+.num{font-family:var(--disp);font-weight:700;font-size:32px;line-height:34px;font-variant-numeric:tabular-nums}
+.ath{display:flex;align-items:center;gap:12px;padding:12px 0;box-shadow:0 1px 0 var(--line);text-decoration:none;color:inherit}
+.ath:last-child{box-shadow:none}
+.av{width:36px;height:36px;border-radius:50%;background:var(--accentsoft);color:var(--accent);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0}
+.ab{display:flex;flex-direction:column;flex-grow:1;min-width:0}
+.ab b{font-size:16px;line-height:22px;font-weight:700}
+.ab .d{font-size:14px;line-height:20px}
+.ab .by{font-size:12px;line-height:16px;color:var(--muted);margin-top:2px}
+.act{display:flex;align-items:center;gap:12px;min-height:56px;padding:0 16px;border:0;background:transparent;width:100%;font:600 16px/1 Manrope,system-ui,sans-serif;color:var(--ink);box-shadow:0 1px 0 var(--line);text-align:left}
+.act:last-child{box-shadow:none}
+.btn-s{height:40px;padding:0 14px;border-radius:10px;border:0;background:var(--accentsoft);color:var(--accent);font:700 14px/1 Manrope,system-ui,sans-serif;display:inline-flex;align-items:center;gap:6px}
+</style>
+</helmet>
+<div class="s" style="width: 390px; height: 1860px; background: var(--bg); display: flex; flex-direction: column; overflow: hidden">
+<div style="padding: 52px 8px 0">
+<a href="K01-Treninky.dc.html" style="height: 44px; display: inline-flex; align-items: center; gap: 4px; color: var(--muted); text-decoration: none; font-size: 15px; font-weight: 600"><span style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; color: var(--ink)"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m14.5 6-6 6 6 6"></path></svg></span>Tréninky</a>
+</div>
+
+<main style="flex-grow: 1; padding: 8px 16px 40px; display: flex; flex-direction: column; gap: 16px">
+<header style="display: flex; flex-direction: column; gap: 4px; padding: 0 4px">
+<div style="display: flex; align-items: center; gap: 8px"><span style="font-size: 20px; line-height: 28px; font-weight: 700; color: var(--accent)">Neděle 27. září</span><span style="height: 22px; padding: 0 8px; border-radius: 6px; background: #13795B; color: #fff; font-size: 12px; font-weight: 700; display: inline-flex; align-items: center">Dnes</span></div>
+<h1 class="disp" style="margin: 0; font-size: 44px; line-height: 48px; font-weight: 700; font-variant-numeric: tabular-nums">16:00–17:00</h1>
+<div class="meta" style="font-size: 15px">Příbram · Malá hala (MH) · Šatna 4 · Ročníky 2017–2018</div>
+</header>
+
+<section style="display: flex; align-items: center; justify-content: space-between; padding: 16px; border-radius: 16px; background: var(--surface)">
+<div style="display: flex; flex-direction: column; gap: 8px"><span class="cap">Obsazenost</span><span class="segs"><sc-for list="{{s8}}" as="s" hint-placeholder-count="10"><span class="{{s.c}}"></span></sc-for></span></div>
+<span class="num">8 / 10</span>
+</section>
+
+<dl class="panel" style="margin: 0">
+<div class="row"><dt>Hlavní trenér</dt><dd>Milan Filipi</dd></div>
+<div class="row"><dt>Asistenti</dt><dd>Jan Novák</dd></div>
+</dl>
+
+<section style="display: flex; flex-direction: column; gap: 6px; padding: 14px 16px; border-radius: 16px; background: var(--surface)">
+<h2 class="cap" style="display: flex; align-items: center; gap: 6px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"></circle><path d="M3.5 12h17M12 3.5c2.5 2.3 3.8 5.2 3.8 8.5s-1.3 6.2-3.8 8.5c-2.5-2.3-3.8-5.2-3.8-8.5s1.3-6.2 3.8-8.5z"></path></svg>Informace pro sportovce · vidí rodiče</h2>
+<p style="margin: 0; font-size: 15px; line-height: 22px">Přineste si láhev s vodou. Sraz 15 minut před začátkem.</p>
+</section>
+
+<section style="display: flex; flex-direction: column; gap: 6px; padding: 14px 16px; border-radius: 16px; background: #FBF7EC; box-shadow: inset 0 0 0 1.5px #E9D9A8">
+<h2 class="cap" style="display: flex; align-items: center; gap: 6px; color: #7A5A00"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="10.5" width="14" height="10" rx="2"></rect><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5"></path></svg>Interní poznámka · jen trenéři</h2>
+<p style="margin: 0; font-size: 15px; line-height: 22px">Připravit kužely na střelbu.</p>
+</section>
+
+<section style="display: flex; flex-direction: column; gap: 8px">
+<div style="display: flex; align-items: center; justify-content: space-between; padding: 0 4px">
+<h2 style="margin: 0; font-size: 20px; line-height: 28px; font-weight: 700">Sportovci <span style="color: var(--muted); font-weight: 600">8</span></h2>
+<button class="btn-s"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg>Přidat sportovce</button>
+</div>
+<div class="panel">
+<a class="ath" href="#"><span class="av">IK</span><span class="ab"><b>Ivan Kotov</b><span class="d">2017 · Centr · Levá hůl</span><span class="by">Přihlásil Milana Kotova · 27. 9. 18:42</span></span></a>
+<a class="ath" href="#"><span class="av">AK</span><span class="ab"><b>Anna Kotova</b><span class="d">2018 · Obránce · Pravá hůl</span><span class="by">Přihlásil Milana Kotova · 27. 9. 18:42</span></span></a>
+<a class="ath" href="#"><span class="av">JD</span><span class="ab"><b>Jakub Dvořák</b><span class="d">2017 · Brankář · Levá hůl</span><span class="by">Přihlásil Petr Dvořák · 25. 9. 20:15</span></span></a>
+<a class="ath" href="#"><span class="av">TN</span><span class="ab"><b>Tereza Nováková</b><span class="d">2018 · Levé křídlo · Levá hůl</span><span class="by">Přihlásil Eva Nováková · 25. 9. 09:03</span></span></a>
+<a class="ath" href="#"><span class="av">MS</span><span class="ab"><b>Matěj Svoboda</b><span class="d">2017 · Univerzál · Pravá hůl</span><span class="by">Přidal trenér Milan Filipi · 24. 9. 17:30</span></span></a>
+<a class="ath" href="#"><span class="av">OH</span><span class="ab"><b>Ondřej Horák</b><span class="d">2018 · Pravé křídlo</span><span class="by">Přihlásil Tomáš Horák · 23. 9. 21:48</span></span></a>
+<a class="ath" href="#"><span class="av">LČ</span><span class="ab"><b>Lukáš Černý</b><span class="d">2017 · Obránce · Levá hůl</span><span class="by">Přihlásil Jana Černá · 23. 9. 12:10</span></span></a>
+<a class="ath" href="#"><span class="av">AV</span><span class="ab"><b>Adam Veselý</b><span class="d">2018 · Centr · Nevím</span><span class="by">Přihlásil Martin Veselý · 22. 9. 19:55</span></span></a>
+</div>
+</section>
+
+<section style="display: flex; flex-direction: column; gap: 8px; margin-top: 8px">
+<h2 class="cap" style="padding: 0 4px">Akce</h2>
+<div style="background: var(--surface); border-radius: 16px; overflow: hidden">
+<button class="act"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19 9l-4-4L4 16v4z"></path></svg>Upravit trénink</button>
+<button class="act"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="8" width="12" height="12" rx="2"></rect><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"></path></svg>Duplikovat</button>
+<button class="act"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="10.5" width="14" height="10" rx="2"></rect><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5"></path></svg>Zavřít přihlašování</button>
+</div>
+</section>
+
+<button style="margin-top: 32px; height: 52px; border-radius: 12px; border: 0; background: transparent; box-shadow: inset 0 0 0 1.5px #F1C4BF; color: var(--danger); font: 700 16px/1 Manrope, system-ui, sans-serif">Zrušit trénink</button>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":1860}}'>
+class Component extends DCLogic {
+renderVals() {
+const seg = (filled, cap) => Array.from({ length: cap }, (_, i) => ({ c: i < filled ? 'seg on' : 'seg' }));
+return { s8: seg(8, 10) };
+}
+}
+</script>
+</body>
+</html>

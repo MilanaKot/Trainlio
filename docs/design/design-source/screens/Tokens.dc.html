@@ -1,0 +1,257 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<title>Trainlio — design tokeny C3</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@500;600;700&amp;family=Manrope:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0;background:#F3F5F9;font-family:Manrope,"Segoe UI",system-ui,sans-serif;color:#0E1726}
+.s{--bg:#F3F5F9;--surface:#FFFFFF;--ink:#0E1726;--muted:#55607A;--line:#DFE4EE;--segoff:#DCE2EC;--n50:#ECEFF5;--accent:#2B55E0;--accentpress:#2347C2;--accentsoft:#E5EBFD;--accent200:#C7D4FA;--warn:#8F5200;--warnseg:#E3A034;--warnsoft:#FBF0DC;--info:#8F5200;--infosoft:#FBF0DC;--danger:#B42318;--dangersoft:#FBE9E7;--success:#13795B;--successsoft:#E3F4EC;--full:#8791A6;--disp:"Barlow Semi Condensed","Arial Narrow",sans-serif}
+.disp{font-family:var(--disp)}
+h2{margin:0;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted)}
+.panel{background:#fff;border-radius:20px;padding:28px;display:flex;flex-direction:column;gap:20px}
+.sw{display:flex;flex-direction:column;gap:6px;font-size:12px;line-height:16px;color:var(--muted)}
+.sw b{color:var(--ink);font-weight:600}
+.chip{height:52px;border-radius:10px}
+.meta{font-size:14px;line-height:20px;color:var(--muted)}
+.spec{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+.trow{display:grid;grid-template-columns:200px minmax(0,1fr);align-items:baseline;gap:16px;padding:10px 0;box-shadow:0 1px 0 var(--line)}
+.btn{height:44px;padding:0 18px;border-radius:10px;border:0;font:600 15px/1 Manrope,system-ui,sans-serif;white-space:nowrap;display:inline-flex;align-items:center;justify-content:center;gap:8px}
+.btn.primary{background:var(--accent);color:#fff}
+.btn.primary.pr{background:var(--accentpress)}
+.btn.second{background:var(--accentsoft);color:var(--accent)}
+.btn.second.pr{background:var(--accent200)}
+.btn.ghost{background:#fff;color:var(--ink);box-shadow:inset 0 0 0 1.5px var(--line)}
+.btn.ghost.pr{background:var(--n50)}
+.btn.danger{background:var(--danger);color:#fff}
+.btn.danger.pr{background:#931B12}
+.btn.fo{outline:2px solid var(--accent);outline-offset:2px}
+.btn[disabled]{background:var(--n50);color:#8791A6;box-shadow:none}
+.mx{display:grid;grid-template-columns:120px repeat(5,minmax(0,1fr));gap:12px;align-items:center}
+.mx .h{font-size:12px;font-weight:600;color:var(--muted)}
+.badge{display:inline-flex;align-items:center;gap:5px;height:24px;padding:0 8px;border-radius:6px;font-size:11px;font-weight:700;letter-spacing:.6px;text-transform:uppercase}
+.b-info{background:var(--infosoft);color:var(--info)}
+.b-danger{background:var(--dangersoft);color:var(--danger)}
+.b-muted{background:var(--n50);color:var(--muted)}
+.b-warn{background:var(--warnsoft);color:var(--warn)}
+.b-ok{background:var(--successsoft);color:var(--success)}
+.booked{display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 10px;border-radius:8px;background:var(--accentsoft);color:var(--accent);font-size:13px;font-weight:600}
+.segs{display:flex;gap:3px}
+.seg{width:9px;height:16px;border-radius:2px;background:var(--segoff)}
+.seg.on{background:var(--ink)}
+.seg.warn{background:var(--warnseg)}
+.seg.full{background:var(--accent)}
+.seg.mute{background:#B4BCCC}
+.num{font-family:var(--disp);font-weight:600;font-size:18px;font-variant-numeric:tabular-nums}
+.cap{display:flex;align-items:center;gap:10px}
+.field{display:flex;flex-direction:column;gap:6px;flex-grow:1}
+.field label{font-size:14px;font-weight:600}
+.inp{height:52px;border-radius:10px;border:0;box-shadow:inset 0 0 0 1.5px var(--line);background:#fff;padding:0 14px;font:500 16px Manrope,sans-serif;color:var(--ink)}
+.inp.focus{box-shadow:inset 0 0 0 2px var(--accent),0 0 0 4px var(--accentsoft)}
+.inp.err{box-shadow:inset 0 0 0 2px var(--danger)}
+.err-t{font-size:13px;color:var(--danger);font-weight:600}
+.pick{display:flex;align-items:center;gap:12px;min-height:64px;padding:10px 14px;border-radius:12px;background:#fff;box-shadow:inset 0 0 0 1.5px var(--line);box-sizing:border-box;flex-grow:1}
+.pick.on{box-shadow:inset 0 0 0 2px var(--accent);background:#F7F9FF}
+.pick.off{background:var(--n50);box-shadow:none;color:var(--muted)}
+.pick{position:relative}
+.pick input{position:absolute;width:1px;height:1px;opacity:0;margin:0}
+.cb{width:24px;height:24px;border-radius:7px;flex-shrink:0;box-sizing:border-box;display:flex;align-items:center;justify-content:center;background:#fff;box-shadow:inset 0 0 0 2px #B4BCCC;color:#fff}
+.pick.on .cb{background:var(--accent);box-shadow:none}
+.pick.off .cb{background:#DFE4EE;box-shadow:none}
+.av{width:36px;height:36px;border-radius:50%;background:var(--accentsoft);color:var(--accent);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0}
+.box{display:flex;align-items:center;justify-content:center;background:var(--accentsoft);color:var(--accent);font-size:12px;font-weight:700}
+</style>
+</helmet>
+<div class="s" style="width: 1560px; height: 2000px; box-sizing: border-box; padding: 64px; display: flex; flex-direction: column; gap: 28px; background: #F3F5F9">
+
+<div style="display: flex; align-items: flex-end; justify-content: space-between">
+<div class="disp" style="font-size: 56px; line-height: 56px; font-weight: 700; letter-spacing: -.5px; display: flex; align-items: flex-end; gap: 4px">trainlio<span style="width: 11px; height: 24px; border-radius: 2px; background: var(--accent); margin-bottom: 8px"></span></div>
+<div class="meta">Design tokeny · směr C3 „Tablo / Kobalt“</div>
+</div>
+
+<div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px">
+<section class="panel">
+<h2>Primární · kobalt</h2>
+<div style="display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px">
+<div class="sw"><div class="chip" style="background: #EEF2FE; box-shadow: inset 0 0 0 1px var(--line)"></div><b>50</b>#EEF2FE</div>
+<div class="sw"><div class="chip" style="background: #E5EBFD"></div><b>100 soft</b>#E5EBFD</div>
+<div class="sw"><div class="chip" style="background: #C7D4FA"></div><b>200</b>#C7D4FA</div>
+<div class="sw"><div class="chip" style="background: #2B55E0"></div><b>500</b>#2B55E0</div>
+<div class="sw"><div class="chip" style="background: #2347C2"></div><b>600 press</b>#2347C2</div>
+</div>
+<div class="meta">500 na bílé: 5,3 : 1 — text i výplň tlačítka s bílým textem.</div>
+</section>
+<section class="panel">
+<h2>Neutrální</h2>
+<div style="display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 10px">
+<div class="sw"><div class="chip" style="background: #F3F5F9; box-shadow: inset 0 0 0 1px var(--line)"></div><b>bg</b>#F3F5F9</div>
+<div class="sw"><div class="chip" style="background: #ECEFF5"></div><b>50</b>#ECEFF5</div>
+<div class="sw"><div class="chip" style="background: #DFE4EE"></div><b>line</b>#DFE4EE</div>
+<div class="sw"><div class="chip" style="background: #8791A6"></div><b>400</b>#8791A6</div>
+<div class="sw"><div class="chip" style="background: #55607A"></div><b>muted</b>#55607A</div>
+<div class="sw"><div class="chip" style="background: #0E1726"></div><b>ink</b>#0E1726</div>
+</div>
+<div class="meta">400 jen pro neaktivní prvky a plné kapacity, nikdy pro čitelný text.</div>
+</section>
+<section class="panel">
+<h2>Stavy</h2>
+<div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px">
+<div class="sw"><div class="chip" style="background: #13795B"></div><b>Úspěch · Dnes</b>#13795B · #E3F4EC</div>
+<div class="sw"><div class="chip" style="background: #E3A034"></div><b>Poslední místa · Změněno</b>#E3A034 · text #8F5200 · #FBF0DC</div>
+<div class="sw"><div class="chip" style="background: #B42318"></div><b>Zrušeno</b>#B42318 · #FBE9E7</div>
+<div class="sw"><div class="chip" style="background: #FBF7EC; box-shadow: inset 0 0 0 1.5px #E9D9A8"></div><b>Interní</b>#FBF7EC · #E9D9A8</div>
+</div>
+<div class="meta">Každý stav má i text nebo ikonu — nikdy jen barvu.</div>
+</section>
+</div>
+
+<div style="display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: 20px">
+<section class="panel" style="gap: 4px">
+<h2 style="margin-bottom: 8px">Typografie · Barlow Semi Condensed + Manrope</h2>
+<div class="trow"><span class="spec">Nadpis stránky · Barlow 700 · 40/44</span><span class="disp" style="font-size: 40px; line-height: 44px; font-weight: 700">Tréninky</span></div>
+<div class="trow"><span class="spec">Čas · Barlow 700 · 28/32 · tabular</span><span class="disp" style="font-size: 28px; line-height: 32px; font-weight: 700; font-variant-numeric: tabular-nums">09:00–10:00</span></div>
+<div class="trow"><span class="spec">Datum / sekce · Manrope 700 · 17/24</span><span style="font-size: 17px; line-height: 24px; font-weight: 700">Neděle 27. září</span></div>
+<div class="trow"><span class="spec">Text · Manrope 400 · 16/24</span><span style="font-size: 16px; line-height: 24px">Přineste si láhev s vodou. Sraz 15 minut před začátkem.</span></div>
+<div class="trow"><span class="spec">Popisek · Manrope 600 · 14/20</span><span style="font-size: 14px; line-height: 20px; font-weight: 600">Datum narození</span></div>
+<div class="trow"><span class="spec">Metadata · Manrope 400 · 14/20 · muted</span><span class="meta">Příbram · MH · Šatna 4</span></div>
+<div class="trow" style="box-shadow: none"><span class="spec">Kapacita · Barlow 600 · 18 · tabular</span><span class="num">7 / 10</span></div>
+</section>
+<section class="panel">
+<h2>Mezery · rádiusy · stín</h2>
+<div style="display: flex; align-items: flex-end; gap: 10px">
+<div class="box" style="width: 4px; height: 4px"></div>
+<div class="box" style="width: 8px; height: 8px"></div>
+<div class="box" style="width: 12px; height: 12px"></div>
+<div class="box" style="width: 16px; height: 16px"></div>
+<div class="box" style="width: 24px; height: 24px"></div>
+<div class="box" style="width: 32px; height: 32px"></div>
+<div class="box" style="width: 48px; height: 48px"></div>
+</div>
+<div class="spec">4 · 8 · 12 · 16 · 24 · 32 · 48 — okraj obrazovky 16, mezi kartami 12</div>
+<div style="display: flex; gap: 12px">
+<div class="box" style="width: 56px; height: 56px; border-radius: 6px">6</div>
+<div class="box" style="width: 56px; height: 56px; border-radius: 10px">10</div>
+<div class="box" style="width: 56px; height: 56px; border-radius: 16px">16</div>
+<div class="box" style="width: 56px; height: 56px; border-radius: 24px">24</div>
+</div>
+<div class="spec">odznak 6 · tlačítko / pole 10 · karta 16 · spodní panel 24</div>
+<div style="display: flex; gap: 16px">
+<div style="width: 96px; height: 56px; border-radius: 16px; background: #fff; box-shadow: 0 1px 2px rgba(14,23,38,.06), 0 0 0 1px var(--line)"></div>
+<div style="width: 96px; height: 56px; border-radius: 16px; background: #fff; box-shadow: 0 12px 32px rgba(14,23,38,.16)"></div>
+</div>
+<div class="spec">karta: téměř bez stínu · panel / dialog: jeden měkký stín</div>
+</section>
+</div>
+
+<section class="panel">
+<h2>Tlačítka · stavy</h2>
+<div class="mx">
+<span></span><span class="h">Výchozí</span><span class="h">Stisknuto</span><span class="h">Fokus</span><span class="h">Neaktivní</span><span class="h">Načítání</span>
+<span class="h">Primární</span>
+<div><button class="btn primary">Přihlásit</button></div>
+<div><button class="btn primary pr">Přihlásit</button></div>
+<div><button class="btn primary fo">Přihlásit</button></div>
+<div><button class="btn primary" disabled>Obsazeno</button></div>
+<div><button class="btn primary" aria-label="Načítání"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 3a9 9 0 1 1-9 9"></path></svg>Přihlašuji…</button></div>
+<span class="h">Sekundární</span>
+<div><button class="btn second">Přihlásit dalšího</button></div>
+<div><button class="btn second pr">Přihlásit dalšího</button></div>
+<div><button class="btn second fo">Přihlásit dalšího</button></div>
+<div><button class="btn second" disabled>Přihlásit dalšího</button></div>
+<div><button class="btn second"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 3a9 9 0 1 1-9 9"></path></svg>Načítám…</button></div>
+<span class="h">Obrysové</span>
+<div><button class="btn ghost">Odhlásit</button></div>
+<div><button class="btn ghost pr">Odhlásit</button></div>
+<div><button class="btn ghost fo">Odhlásit</button></div>
+<div><button class="btn ghost" disabled>Odhlásit</button></div>
+<div><button class="btn ghost"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 3a9 9 0 1 1-9 9"></path></svg>Odhlašuji…</button></div>
+<span class="h">Destruktivní</span>
+<div><button class="btn danger">Zrušit trénink</button></div>
+<div><button class="btn danger pr">Zrušit trénink</button></div>
+<div><button class="btn danger fo">Zrušit trénink</button></div>
+<div><button class="btn danger" disabled>Zrušit trénink</button></div>
+<div><button class="btn danger"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 3a9 9 0 1 1-9 9"></path></svg>Ruším…</button></div>
+</div>
+</section>
+
+<div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px">
+<section class="panel">
+<h2>Odznaky a kapacita</h2>
+<div style="display: flex; flex-wrap: wrap; gap: 8px">
+<span class="badge b-muted">Obsazeno</span><span class="badge b-warn">Poslední místa</span><span class="badge b-info">Změněno</span><span class="badge b-danger">Zrušeno trenérem</span><span class="badge b-muted">Odhlášeno</span><span class="badge b-ok">Přihlášeno</span><span class="badge b-muted">Koncept</span>
+</div>
+<span class="booked" style="align-self: flex-start"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"></path></svg>Přihlášen: Ivan Kotov</span>
+<div style="display: flex; flex-direction: column; gap: 10px">
+<div class="cap"><div class="segs"><sc-for list="{{s7}}" as="s" hint-placeholder-count="10"><span class="{{s.c}}"></span></sc-for></div><span class="num">7 / 10</span><span class="spec">volno</span></div>
+<div class="cap"><div class="segs"><sc-for list="{{s9}}" as="s" hint-placeholder-count="10"><span class="{{s.c}}"></span></sc-for></div><span class="num">9 / 10</span><span class="spec">poslední místa (≥ 80 %)</span></div>
+<div class="cap"><div class="segs"><sc-for list="{{s10}}" as="s" hint-placeholder-count="10"><span class="{{s.c}}"></span></sc-for></div><span class="num">10 / 10</span><span class="spec">obsazeno</span></div>
+<div class="cap"><div class="segs"><sc-for list="{{s6f}}" as="s" hint-placeholder-count="6"><span class="{{s.c}}"></span></sc-for></div><span class="badge b-muted" style="height: 20px">+2</span><span class="num">8 / 6</span><span class="spec">nad kapacitu</span></div>
+</div>
+<div class="spec">Nad 16 míst se segmenty mění v tenký pruh, číslo zůstává.</div>
+</section>
+<section class="panel">
+<h2>Pole · stavy</h2>
+<div class="field"><label for="t1">E-mail</label><input id="t1" class="inp" value="milana.kotova@email.cz"></div>
+<div class="field"><label for="t2">Jméno</label><input id="t2" class="inp focus" value="Ivan"></div>
+<div class="field"><label for="t3">Datum narození</label><input id="t3" class="inp err" value="31. 2. 2017"><span class="err-t">Zadejte platné datum, např. 23. 10. 2017.</span></div>
+</section>
+<section class="panel">
+<h2>Výběr sportovce</h2>
+<label class="pick"><input type="checkbox"><span class="cb" aria-hidden="true"></span><span class="av">AK</span><span style="display: flex; flex-direction: column"><b style="font-size: 16px; font-weight: 600">Anna Kotova</b><span class="meta">2018</span></span></label>
+<label class="pick on"><input type="checkbox" checked><span class="cb" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"></path></svg></span><span class="av">IK</span><span style="display: flex; flex-direction: column"><b style="font-size: 16px; font-weight: 600">Ivan Kotov</b><span class="meta">2017</span></span></label>
+<label class="pick off"><input type="checkbox" disabled><span class="cb" aria-hidden="true"></span><span class="av" style="background: #DFE4EE; color: #55607A">TK</span><span style="display: flex; flex-direction: column"><b style="font-size: 16px; font-weight: 600">Tomáš Kotov</b><span class="meta">2020 · mimo ročníky 2017–2018</span></span></label>
+</section>
+</div>
+
+<div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px">
+<section class="panel" style="background: var(--bg); box-shadow: inset 0 0 0 1px var(--line)">
+<h2>Karta tréninku</h2>
+<article style="background: #fff; border-radius: 16px; padding: 16px; display: flex; flex-direction: column; gap: 6px; box-shadow: 0 1px 2px rgba(14,23,38,.06)">
+<div class="disp" style="font-size: 28px; line-height: 32px; font-weight: 700; font-variant-numeric: tabular-nums">16:00–17:00</div>
+<div class="meta">Příbram · MH · Šatna 4</div>
+<div class="meta">Ročníky 2017–2018</div>
+<div style="display: flex; align-items: center; justify-content: space-between; margin-top: 8px"><div class="cap"><div class="segs"><sc-for list="{{s7}}" as="s" hint-placeholder-count="10"><span class="{{s.c}}"></span></sc-for></div><span class="num">7 / 10</span></div><button class="btn primary" style="width: 124px">Přihlásit</button></div>
+</article>
+<div class="spec">Všechna tlačítka na kartě 124 × 44 · datum skupiny kobalt 17/24 · „Dnes“ zelený štítek</div>
+<div style="display: flex; align-items: center; gap: 8px"><span style="font-size: 17px; font-weight: 700; color: var(--accent)">Neděle 27. září</span><span style="height: 22px; padding: 0 8px; border-radius: 6px; background: #13795B; color: #fff; font-size: 12px; font-weight: 700; display: inline-flex; align-items: center">Dnes</span></div>
+</section>
+
+<section class="panel" style="background: var(--bg); box-shadow: inset 0 0 0 1px var(--line)">
+<h2>Oznámení · dialog · panel</h2>
+<div style="display: flex; align-items: center; gap: 12px; padding: 8px 12px; border-radius: 16px; background: #fff; font-size: 15px; font-weight: 600; box-shadow: 0 12px 32px rgba(14,23,38,.16), 0 0 0 1px var(--line); min-height: 44px"><span style="width: 32px; height: 32px; border-radius: 50%; background: #E3F4EC; display: flex; align-items: center; justify-content: center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#13795B" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"></path></svg></span>Uloženo</div>
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px"><button class="btn ghost">Zrušit</button><button class="btn primary">Přesto uložit</button></div>
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px"><button class="btn ghost">Nezrušovat</button><button class="btn danger">Zrušit trénink</button></div>
+<div class="spec">Panel (sheet) zdola: běžné volby, radius 24 · Dialog uprostřed: potvrzení a rizikové akce · Hlavní akce vždy kobalt, červená jen pro zrušení tréninku</div>
+</section>
+
+<section class="panel" style="background: var(--bg); box-shadow: inset 0 0 0 1px var(--line)">
+<h2>Navigace · poznámky</h2>
+<nav style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); height: 68px; background: #fff; border-radius: 12px; box-shadow: 0 0 0 1px var(--line)">
+<span style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; font-size: 11px; font-weight: 600; color: var(--accent)"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15" rx="2.5"></rect><path d="M3.5 10h17M8 3v4M16 3v4"></path></svg>Tréninky</span>
+<span style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; font-size: 11px; font-weight: 600; color: var(--muted)"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4" width="17" height="16" rx="2.5"></rect><path d="m8.5 12 2.5 2.5 4.5-5"></path></svg>Moje tréninky</span>
+<span style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; font-size: 11px; font-weight: 600; color: var(--muted)"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8.5" r="3.2"></circle><path d="M3.5 19c.6-3 2.8-4.8 5.5-4.8s4.9 1.8 5.5 4.8"></path></svg>Moji sportovci</span>
+<span style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; font-size: 11px; font-weight: 600; color: var(--muted)"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"></circle><circle cx="12" cy="10" r="3"></circle></svg>Účet</span>
+</nav>
+<div style="padding: 12px 14px; border-radius: 12px; background: #fff; box-shadow: inset 0 0 0 1.5px var(--line); font-size: 14px">Informace pro sportovce · vidí rodiče</div>
+<div style="padding: 12px 14px; border-radius: 12px; background: #FBF7EC; box-shadow: inset 0 0 0 1.5px #E9D9A8; font-size: 14px; color: #7A5A00; font-weight: 600">Interní poznámka · jen trenéři</div>
+<div class="spec">Rodič: 4 položky · Trenér: Tréninky, Sportovci, Více · Otevíratelné karty mají šipku ›</div>
+</section>
+</div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1560,"height":2000}}'>
+class Component extends DCLogic {
+renderVals() {
+const seg = (filled, cap, kind) => Array.from({ length: cap }, (_, i) => ({ c: i < filled ? 'seg ' + (kind || 'on') : 'seg' }));
+return { s7: seg(7, 10), s9: seg(9, 10, 'warn'), s10: seg(10, 10, 'full'), s6f: seg(6, 6) };
+}
+}
+</script>
+</body>
+</html>

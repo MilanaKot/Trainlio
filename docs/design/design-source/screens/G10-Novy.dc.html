@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<title>Nový sportovec — rodič</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@500;600;700&amp;family=Manrope:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0;background:#F3F5F9;font-family:Manrope,"Segoe UI",system-ui,sans-serif;color:#0E1726}
+.s{--bg:#F3F5F9;--surface:#FFFFFF;--ink:#0E1726;--muted:#55607A;--line:#DFE4EE;--n50:#ECEFF5;--accent:#2B55E0;--accentsoft:#E5EBFD;--disp:"Barlow Semi Condensed","Arial Narrow",sans-serif}
+.disp{font-family:var(--disp)}
+.field{display:flex;flex-direction:column;gap:6px}
+.lbl{display:flex;align-items:baseline;justify-content:space-between;font-size:14px;line-height:20px;font-weight:600}
+.lbl span{font-weight:400;font-size:13px;color:var(--muted)}
+.inp{height:52px;border-radius:10px;border:0;box-shadow:inset 0 0 0 1.5px var(--line);background:#fff;padding:0 14px;font:500 16px Manrope,sans-serif;color:var(--ink);box-sizing:border-box;width:100%}
+.inp::placeholder{color:#8791A6}
+.cap{margin:0;padding:0 4px;font-size:12px;line-height:16px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--muted)}
+.panel{background:var(--surface);border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:18px}
+.opts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;border:0;padding:0;margin:0}
+.opts3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.opt{position:relative;display:flex;align-items:center;justify-content:center;gap:6px;height:44px;border-radius:10px;background:#fff;box-shadow:inset 0 0 0 1.5px var(--line);font-size:15px;font-weight:600;cursor:pointer}
+.opt input{position:absolute;width:1px;height:1px;opacity:0;margin:0}
+.opt.on{background:var(--accentsoft);color:var(--accent);box-shadow:inset 0 0 0 2px var(--accent)}
+legend{padding:0;margin-bottom:6px;font-size:14px;line-height:20px;font-weight:600}
+.btn{height:52px;width:100%;border-radius:12px;border:0;font:700 16px/1 Manrope,system-ui,sans-serif;background:var(--accent);color:#fff}
+.link{height:44px;padding:0 4px;border:0;background:transparent;color:var(--accent);font:700 15px/1 Manrope,system-ui,sans-serif}
+</style>
+</helmet>
+<div class="s" style="width: 390px; height: 1220px; background: var(--bg); display: flex; flex-direction: column; overflow: hidden">
+<div style="padding: 52px 16px 0; display: flex; align-items: center; justify-content: space-between">
+<a href="G07-Sportovci.dc.html" class="link" style="display: flex; align-items: center; text-decoration: none">Zrušit</a>
+</div>
+
+<main style="flex-grow: 1; overflow: hidden; padding: 4px 16px 24px; display: flex; flex-direction: column; gap: 16px">
+<h1 class="disp" style="margin: 0; padding: 0 4px; font-size: 36px; line-height: 40px; font-weight: 700">Nový sportovec</h1>
+
+<div style="display: flex; align-items: center; gap: 16px; padding: 4px">
+<span style="width: 72px; height: 72px; border-radius: 50%; background: var(--n50); color: #8791A6; display: flex; align-items: center; justify-content: center; flex-shrink: 0"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="9" r="3.5"></circle><path d="M5.5 19.5c1.2-3 3.6-4.5 6.5-4.5s5.3 1.5 6.5 4.5"></path></svg></span>
+<div style="display: flex; flex-direction: column"><button class="link" style="align-self: flex-start">Přidat fotografii</button><span style="font-size: 13px; color: var(--muted)">Nepovinné</span></div>
+</div>
+
+<div class="panel">
+<div class="field"><label class="lbl" for="f1">Jméno</label><input id="f1" class="inp" value=""></div>
+<div class="field"><label class="lbl" for="f2">Příjmení</label><input id="f2" class="inp" value=""></div>
+<div class="field"><label class="lbl" for="f3">Datum narození</label>
+<div style="position: relative"><input id="f3" class="inp" placeholder="dd. mm. rrrr" style="padding-right: 48px"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#55607A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="position: absolute; right: 14px; top: 16px"><rect x="3.5" y="5" width="17" height="15" rx="2.5"></rect><path d="M3.5 10h17M8 3v4M16 3v4"></path></svg></div></div>
+</div>
+
+<h2 class="cap" style="margin-top: 4px">Lední hokej</h2>
+<div class="panel">
+<div class="field"><label class="lbl" for="f4">Klub <span>Nepovinné</span></label><input id="f4" class="inp" placeholder="Např. název klubu"></div>
+<div class="field"><label class="lbl" for="f5">Tým / kategorie <span>Nepovinné</span></label><input id="f5" class="inp" placeholder="Např. U10"></div>
+
+<fieldset class="opts">
+<legend>Pozice</legend>
+<label class="opt"><input type="radio" name="poz">Brankář</label>
+<label class="opt"><input type="radio" name="poz">Obránce</label>
+<label class="opt"><input type="radio" name="poz">Centr</label>
+<label class="opt"><input type="radio" name="poz">Univerzál</label>
+<label class="opt"><input type="radio" name="poz">Levé křídlo</label>
+<label class="opt"><input type="radio" name="poz">Pravé křídlo</label>
+</fieldset>
+
+<fieldset class="opts opts3">
+<legend>Hůl</legend>
+<label class="opt"><input type="radio" name="hul">Levá</label>
+<label class="opt"><input type="radio" name="hul">Pravá</label>
+<label class="opt"><input type="radio" name="hul">Nevím</label>
+</fieldset>
+
+<div class="field" style="width: 50%"><label class="lbl" for="f6">Číslo dresu <span>Nepovinné</span></label><input id="f6" class="inp" value="" inputmode="numeric"></div>
+</div>
+</main>
+
+<footer style="padding: 12px 16px 28px; background: var(--surface); box-shadow: 0 -1px 0 var(--line)">
+<button class="btn">Přidat sportovce</button>
+</footer>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":1220}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

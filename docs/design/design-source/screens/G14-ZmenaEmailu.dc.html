@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<title>Změna e-mailu — rodič</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@500;600;700&amp;family=Manrope:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0;background:#F3F5F9;font-family:Manrope,"Segoe UI",system-ui,sans-serif;color:#0E1726}
+.s{--bg:#F3F5F9;--surface:#FFFFFF;--ink:#0E1726;--muted:#55607A;--line:#DFE4EE;--accent:#2B55E0;--accentsoft:#E5EBFD;--disp:"Barlow Semi Condensed","Arial Narrow",sans-serif}
+.disp{font-family:var(--disp)}
+.lbl{font-size:14px;line-height:20px;font-weight:600}
+.inp{height:52px;border-radius:10px;border:0;background:#fff;padding:0 14px;font:500 16px Manrope,sans-serif;color:var(--ink);box-sizing:border-box;width:100%;box-shadow:inset 0 0 0 2px var(--accent),0 0 0 4px var(--accentsoft)}
+.inp::placeholder{color:#8791A6}
+.btn{height:52px;width:100%;border-radius:12px;border:0;font:700 16px/1 Manrope,system-ui,sans-serif;background:var(--accent);color:#fff}
+</style>
+</helmet>
+<div class="s" style="width: 390px; height: 844px; background: var(--bg); box-sizing: border-box; padding: 52px 20px 32px; display: flex; flex-direction: column; gap: 24px">
+<a href="G13-Ucet.dc.html" style="height: 44px; margin-left: -12px; display: flex; align-items: center; gap: 4px; color: var(--muted); text-decoration: none; font-size: 15px; font-weight: 600"><span style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; color: var(--ink)"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m14.5 6-6 6 6 6"></path></svg></span>Účet</a>
+
+<h1 class="disp" style="margin: 0; font-size: 40px; line-height: 44px; font-weight: 700">Změna e-mailu</h1>
+
+<div style="display: flex; flex-direction: column; gap: 2px; padding: 14px 16px; border-radius: 12px; background: var(--surface)">
+<span style="font-size: 13px; line-height: 18px; color: var(--muted)">Současný e-mail</span>
+<span style="font-size: 16px; line-height: 24px; font-weight: 600">jmeno@email.cz</span>
+</div>
+
+<form style="display: flex; flex-direction: column; gap: 16px">
+<div style="display: flex; flex-direction: column; gap: 6px"><label class="lbl" for="ne">Nový e-mail</label><input id="ne" class="inp" type="email" placeholder="novy@email.cz" autocomplete="email"></div>
+<p style="margin: 0; font-size: 14px; line-height: 20px; color: var(--muted)">Na nový e-mail pošleme kód pro ověření. Dokud ho nezadáte, zůstane platný současný e-mail.</p>
+<button class="btn" type="submit">Poslat kód</button>
+</form>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

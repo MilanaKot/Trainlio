@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<title>Přidat sportovce — trenér</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@500;600;700&amp;family=Manrope:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0;background:#F3F5F9;font-family:Manrope,"Segoe UI",system-ui,sans-serif;color:#0E1726}
+.s{--bg:#F3F5F9;--ink:#0E1726;--muted:#55607A;--line:#DFE4EE;--n50:#ECEFF5;--accent:#2B55E0;--accentsoft:#E5EBFD;--segoff:#DCE2EC;--disp:"Barlow Semi Condensed","Arial Narrow",sans-serif}
+.disp{font-family:var(--disp)}
+.meta{font-size:14px;line-height:20px;color:var(--muted)}
+.pick{position:relative;display:flex;align-items:center;gap:12px;min-height:64px;padding:8px 14px;border-radius:12px;background:#fff;box-shadow:inset 0 0 0 1.5px var(--line);box-sizing:border-box;cursor:pointer}
+.pick.on{box-shadow:inset 0 0 0 2px var(--accent);background:#F7F9FF}
+.pick input{position:absolute;width:1px;height:1px;opacity:0;margin:0}
+.box{width:24px;height:24px;border-radius:7px;flex-shrink:0;box-sizing:border-box;display:flex;align-items:center;justify-content:center;background:#fff;box-shadow:inset 0 0 0 2px #B4BCCC;color:#fff}
+.pick.on .box{background:var(--accent);box-shadow:none}
+.av{width:36px;height:36px;border-radius:50%;background:var(--accentsoft);color:var(--accent);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0}
+.who{display:flex;flex-direction:column;min-width:0}
+.who b{font-size:16px;line-height:22px;font-weight:600}
+.who .d{font-size:14px;line-height:20px}
+.who .p{font-size:12px;line-height:16px;color:var(--muted)}
+.segs{display:flex;gap:2px}
+.seg{width:6px;height:12px;border-radius:1.5px;background:var(--segoff)}
+.seg.on{background:var(--ink)}
+.btn{height:52px;width:100%;border-radius:12px;border:0;font:700 16px/1 Manrope,system-ui,sans-serif;background:var(--accent);color:#fff}
+</style>
+</helmet>
+<div class="s" style="width: 390px; height: 844px; background: var(--bg); position: relative; overflow: hidden">
+<div style="position: absolute; inset: 0; background: rgba(14, 23, 38, 0.45)"></div>
+
+<section role="dialog" aria-modal="true" aria-labelledby="t" style="position: absolute; left: 0; right: 0; top: 48px; bottom: 0; background: #fff; border-radius: 24px 24px 0 0; padding: 10px 20px 28px; display: flex; flex-direction: column; gap: 14px; box-shadow: 0 -12px 32px rgba(14,23,38,.16)">
+<div style="width: 40px; height: 4px; border-radius: 2px; background: var(--line); align-self: center"></div>
+<div style="display: flex; align-items: center; justify-content: space-between; gap: 12px">
+<h2 id="t" class="disp" style="margin: 0; font-size: 28px; line-height: 32px; font-weight: 700">Přidat sportovce</h2>
+<button aria-label="Zavřít" style="width: 44px; height: 44px; border: 0; border-radius: 22px; background: var(--n50); color: var(--ink); display: flex; align-items: center; justify-content: center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"></path></svg></button>
+</div>
+
+<div style="display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; border-radius: 12px; background: var(--bg)">
+<span style="font-size: 14px; line-height: 20px; font-weight: 600; font-variant-numeric: tabular-nums">Ne 27. 9. · 16:00 · 2017–2018</span>
+<span style="display: flex; align-items: center; gap: 8px"><span class="segs"><sc-for list="{{s8}}" as="s" hint-placeholder-count="10"><span class="{{s.c}}"></span></sc-for></span><span class="disp" style="font-size: 18px; font-weight: 700; font-variant-numeric: tabular-nums">8 / 10</span></span>
+</div>
+
+<label style="position: relative; display: block">
+<span style="position: absolute; width: 1px; height: 1px; overflow: hidden">Hledat sportovce</span>
+<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#55607A" stroke-width="2" stroke-linecap="round" style="position: absolute; left: 14px; top: 14px"><circle cx="11" cy="11" r="6.5"></circle><path d="m16 16 4 4"></path></svg>
+<input placeholder="Hledat jméno" style="width: 100%; height: 48px; box-sizing: border-box; padding: 0 14px 0 44px; border: 0; border-radius: 10px; background: var(--n50); font: 500 16px Manrope, sans-serif; color: var(--ink)">
+</label>
+
+<span class="meta" style="font-size: 13px">Sportovci z ročníků 2017–2018, kteří ještě nejsou přihlášení</span>
+
+<div style="display: flex; flex-direction: column; gap: 8px; flex-grow: 1; overflow: hidden">
+<label class="pick on"><input type="checkbox" checked=""><span class="box" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"></path></svg></span><span class="av">EP</span><span class="who"><b>Eliška Procházková</b><span class="d">2018 · Obránce · Levá hůl</span><span class="p">Rodič: Hana Procházková</span></span></label>
+<label class="pick"><input type="checkbox"><span class="box" aria-hidden="true"></span><span class="av">FK</span><span class="who"><b>Filip Kučera</b><span class="d">2017 · Centr · Pravá hůl</span><span class="p">Rodič: Pavel Kučera</span></span></label>
+<label class="pick"><input type="checkbox"><span class="box" aria-hidden="true"></span><span class="av">VP</span><span class="who"><b>Vojtěch Pokorný</b><span class="d">2018 · Brankář</span><span class="p">Rodič: Lenka Pokorná</span></span></label>
+<label class="pick"><input type="checkbox"><span class="box" aria-hidden="true"></span><span class="av">KM</span><span class="who"><b>Kristýna Malá</b><span class="d">2017 · Levé křídlo · Levá hůl</span><span class="p">Rodič: Jiří Malý</span></span></label>
+</div>
+
+<button class="btn">Přidat 1 sportovce</button>
+</section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+renderVals() {
+const seg = (filled, cap) => Array.from({ length: cap }, (_, i) => ({ c: i < filled ? 'seg on' : 'seg' }));
+return { s8: seg(8, 10) };
+}
+}
+</script>
+</body>
+</html>

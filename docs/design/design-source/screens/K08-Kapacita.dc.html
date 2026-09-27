@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<title>Snížení kapacity — trenér</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@500;600;700&amp;family=Manrope:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0;background:#F3F5F9;font-family:Manrope,"Segoe UI",system-ui,sans-serif;color:#0E1726}
+.s{--bg:#F3F5F9;--ink:#0E1726;--muted:#55607A;--line:#DFE4EE;--n50:#ECEFF5;--accent:#2B55E0;--segoff:#DCE2EC;--disp:"Barlow Semi Condensed","Arial Narrow",sans-serif}
+.disp{font-family:var(--disp)}
+.segs{display:flex;gap:3px;align-items:center}
+.seg{width:9px;height:16px;border-radius:2px;background:var(--ink)}
+.plus{height:20px;padding:0 6px;border-radius:5px;background:var(--n50);color:var(--muted);font-size:12px;font-weight:700;display:inline-flex;align-items:center}
+.btn{height:52px;width:100%;border-radius:12px;border:0;font:700 16px/1 Manrope,system-ui,sans-serif}
+.stepper{display:flex;align-items:center;height:52px;border-radius:10px;box-shadow:inset 0 0 0 1.5px var(--line);overflow:hidden;width:180px;background:#fff}
+.stepper span.b{width:52px;height:52px;background:var(--n50);display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:600}
+.stepper span.v{flex-grow:1;text-align:center;font-family:var(--disp);font-size:24px;font-weight:700}
+</style>
+</helmet>
+<div class="s" style="width: 390px; height: 844px; background: var(--bg); position: relative; overflow: hidden">
+
+<div aria-hidden="true" style="padding: 100px 16px 16px; display: flex; flex-direction: column; gap: 16px">
+<div class="disp" style="font-size: 36px; line-height: 40px; font-weight: 700">Upravit trénink</div>
+<div style="background: #fff; border-radius: 16px; padding: 16px; display: flex; flex-direction: column; gap: 6px">
+<span style="font-size: 14px; font-weight: 600">Kapacita</span>
+<div class="stepper"><span class="b">−</span><span class="v">6</span><span class="b">+</span></div>
+</div>
+<div style="height: 220px; border-radius: 16px; background: #fff"></div>
+</div>
+
+<div style="position: absolute; inset: 0; background: rgba(14, 23, 38, 0.5)"></div>
+
+<section role="alertdialog" aria-modal="true" aria-labelledby="t" aria-describedby="d" style="position: absolute; left: 20px; right: 20px; top: 50%; transform: translateY(-50%); background: #fff; border-radius: 24px; padding: 24px 20px 20px; display: flex; flex-direction: column; gap: 16px; box-shadow: 0 24px 48px rgba(14,23,38,.25)">
+<div style="width: 52px; height: 52px; border-radius: 16px; background: var(--n50); display: flex; align-items: center; justify-content: center"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#0E1726" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8.5" r="3.2"></circle><path d="M3.5 19c.6-3 2.8-4.8 5.5-4.8s4.9 1.8 5.5 4.8M15.5 5.6a3 3 0 0 1 0 5.8M17.5 14.6c1.6.6 2.6 2.1 3 4.4"></path></svg></div>
+<h2 id="t" class="disp" style="margin: 0; font-size: 26px; line-height: 30px; font-weight: 700">Na tento trénink je již přihlášeno 8 sportovců.</h2>
+
+<div style="display: flex; align-items: center; justify-content: space-between; padding: 14px; border-radius: 12px; background: var(--bg)">
+<span class="segs"><span class="seg"></span><span class="seg"></span><span class="seg"></span><span class="seg"></span><span class="seg"></span><span class="seg"></span><span class="plus" style="margin-left: 3px">+2</span></span>
+<span class="disp" style="font-size: 26px; font-weight: 700; font-variant-numeric: tabular-nums">8 / 6</span>
+</div>
+
+<div id="d" style="display: flex; flex-direction: column; gap: 4px; font-size: 16px; line-height: 24px">
+<span>Nová kapacita je 6.</span>
+<span>Stávající přihlášky zůstanou zachovány.</span>
+</div>
+<p style="margin: 0; font-size: 14px; line-height: 20px; color: var(--muted)">Nové přihlášky budou možné, až počet sportovců klesne pod 6.</p>
+
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: 4px">
+<button class="btn" style="background: transparent; color: var(--ink); box-shadow: inset 0 0 0 1.5px var(--line)">Zrušit</button>
+<button class="btn" style="background: var(--accent); color: #fff">Přesto uložit</button>
+</div>
+</section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

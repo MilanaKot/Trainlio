@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<title>Více — trenér / admin</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@500;600;700&amp;family=Manrope:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0;background:#F3F5F9;font-family:Manrope,"Segoe UI",system-ui,sans-serif;color:#0E1726}
+.s{--bg:#F3F5F9;--surface:#FFFFFF;--ink:#0E1726;--muted:#55607A;--line:#DFE4EE;--accent:#2B55E0;--accentsoft:#E5EBFD;--danger:#B42318;--disp:"Barlow Semi Condensed","Arial Narrow",sans-serif}
+.disp{font-family:var(--disp)}
+.cap{margin:0;padding:0 4px;font-size:12px;line-height:16px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--muted)}
+.list{background:var(--surface);border-radius:16px;padding:0 16px;display:flex;flex-direction:column}
+.item{display:flex;align-items:center;gap:12px;min-height:56px;font-size:16px;font-weight:600;color:inherit;text-decoration:none;box-shadow:0 1px 0 var(--line)}
+.item:last-child{box-shadow:none}
+.item .v{margin-left:auto;display:flex;align-items:center;gap:6px;font-weight:400;color:var(--muted);font-size:15px}
+.out{height:52px;border-radius:12px;border:0;background:var(--surface);color:var(--danger);font:700 16px/1 Manrope,system-ui,sans-serif}
+.nav{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));height:76px;padding-bottom:8px;box-sizing:border-box;background:var(--surface);box-shadow:0 -1px 0 var(--line)}
+.nav a{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font-size:11px;font-weight:600;color:var(--muted);text-decoration:none}
+.nav a.act{color:var(--accent)}
+</style>
+</helmet>
+<div class="s" style="width: 390px; height: 844px; background: var(--bg); display: flex; flex-direction: column; overflow: hidden">
+<main style="flex-grow: 1; overflow: hidden; padding: 60px 16px 16px; display: flex; flex-direction: column; gap: 14px">
+<h1 class="disp" style="margin: 0; padding: 0 4px; font-size: 40px; line-height: 44px; font-weight: 700">Více</h1>
+
+<div style="display: flex; align-items: center; gap: 14px; padding: 16px; border-radius: 16px; background: var(--surface)">
+<span style="width: 56px; height: 56px; border-radius: 50%; background: var(--accentsoft); color: var(--accent); display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 700; flex-shrink: 0">MF</span>
+<div style="display: flex; flex-direction: column"><span style="font-size: 17px; line-height: 24px; font-weight: 700">Milan Filipi</span><span style="font-size: 14px; color: var(--muted)">Trenér · Administrátor</span></div>
+</div>
+
+<h2 class="cap" style="margin-top: 6px">Správa</h2>
+<nav class="list" aria-label="Správa">
+<a class="item" href="A01-Treneri.dc.html"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.5"></circle><path d="M5 20c.8-3.6 3.6-5.5 7-5.5s6.2 1.9 7 5.5"></path><path d="m16.5 3.5 1 1.8 2 .3-1.5 1.4.4 2-1.9-1-1.9 1 .4-2-1.5-1.4 2-.3z"></path></svg>Trenéři<span class="v">4<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8791A6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9.5 6 6 6-6 6"></path></svg></span></a>
+</nav>
+
+<h2 class="cap" style="margin-top: 6px">Účet</h2>
+<nav class="list" aria-label="Účet">
+<a class="item" href="#"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"></circle><circle cx="12" cy="10" r="3"></circle><path d="M6.5 18.2c1.2-2 3.1-3 5.5-3s4.3 1 5.5 3"></path></svg>Osobní údaje a e-mail<span class="v"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8791A6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9.5 6 6 6-6 6"></path></svg></span></a>
+</nav>
+
+<button class="out" style="margin-top: 6px">Odhlásit se z aplikace</button>
+</main>
+<nav class="nav" aria-label="Hlavní navigace">
+<a href="#"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15" rx="2.5"></rect><path d="M3.5 10h17M8 3v4M16 3v4"></path></svg>Tréninky</a>
+<a href="#"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8.5" r="3.2"></circle><path d="M3.5 19c.6-3 2.8-4.8 5.5-4.8s4.9 1.8 5.5 4.8M15.5 5.6a3 3 0 0 1 0 5.8M17.5 14.6c1.6.6 2.6 2.1 3 4.4"></path></svg>Sportovci</a>
+<a class="act" href="#" aria-current="page"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="5.5" cy="12" r="1.3"></circle><circle cx="12" cy="12" r="1.3"></circle><circle cx="18.5" cy="12" r="1.3"></circle></svg>Více</a>
+</nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

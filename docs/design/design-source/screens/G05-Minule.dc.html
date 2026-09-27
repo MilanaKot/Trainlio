@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<title>Moje tréninky — minulé</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@500;600;700&amp;family=Manrope:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0;background:#F3F5F9;font-family:Manrope,"Segoe UI",system-ui,sans-serif;color:#0E1726}
+.s{--bg:#F3F5F9;--surface:#FFFFFF;--ink:#0E1726;--muted:#55607A;--line:#DFE4EE;--n50:#ECEFF5;--accent:#2B55E0;--accentsoft:#E5EBFD;--danger:#B42318;--dangersoft:#FBE9E7;--disp:"Barlow Semi Condensed","Arial Narrow",sans-serif}
+.disp{font-family:var(--disp)}
+.card{background:var(--surface);border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:4px;box-shadow:0 1px 2px rgba(14,23,38,.06)}
+.card.off{background:#F8F9FB;box-shadow:inset 0 0 0 1px var(--line)}
+.who{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px}
+.who span.n{display:flex;align-items:center;gap:8px;font-size:15px;font-weight:700}
+.av{width:28px;height:28px;border-radius:50%;background:var(--accentsoft);color:var(--accent);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700}
+.off .av{background:#DFE4EE;color:var(--muted)}
+.time{font-family:var(--disp);font-weight:700;font-size:28px;line-height:32px;font-variant-numeric:tabular-nums}
+.date{font-size:15px;line-height:22px;font-weight:600}
+.meta{font-size:14px;line-height:20px;color:var(--muted)}
+.badge{display:inline-flex;align-items:center;height:24px;padding:0 8px;border-radius:6px;font-size:11px;font-weight:700;letter-spacing:.6px;text-transform:uppercase}
+.segctl{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px;padding:4px;border-radius:12px;background:var(--n50)}
+.segctl button{height:40px;border:0;border-radius:9px;background:transparent;font:600 15px/1 Manrope,system-ui,sans-serif;color:var(--muted)}
+.segctl button.on{background:#fff;color:var(--ink);box-shadow:0 1px 2px rgba(14,23,38,.08)}
+.nav{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));height:76px;padding-bottom:8px;box-sizing:border-box;background:var(--surface);box-shadow:0 -1px 0 var(--line)}
+.nav a{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font-size:11px;font-weight:600;color:var(--muted);text-decoration:none}
+.nav a.act{color:var(--accent)}
+</style>
+</helmet>
+<div class="s" style="width: 390px; height: 844px; background: var(--bg); display: flex; flex-direction: column; overflow: hidden">
+<main style="flex-grow: 1; overflow: hidden; padding: 60px 16px 16px; display: flex; flex-direction: column; gap: 12px">
+<h1 class="disp" style="margin: 0; padding: 0 4px; font-size: 40px; line-height: 44px; font-weight: 700">Moje tréninky</h1>
+<div class="segctl" role="tablist" style="margin-bottom: 4px"><button role="tab" aria-selected="false">Nadcházející</button><button class="on" role="tab" aria-selected="true">Minulé</button></div>
+
+<article class="card">
+<div class="who"><span class="n"><span class="av">IK</span>Ivan Kotov</span><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8791A6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9.5 6 6 6-6 6"></path></svg></div>
+<div class="time">16:00–17:00</div>
+<div class="date">Neděle 20. září</div>
+<div class="meta">Příbram · MH · Šatna 4</div>
+</article>
+
+<article class="card off">
+<div class="who"><span class="n" style="color: var(--muted)"><span class="av">AK</span>Anna Kotova</span><span style="display: flex; align-items: center; gap: 6px"><span class="badge" style="background: var(--dangersoft); color: var(--danger)">Zrušeno trenérem</span><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8791A6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9.5 6 6 6-6 6"></path></svg></span></div>
+<div class="time" style="color: #8791A6; text-decoration: line-through">17:00–18:00</div>
+<div class="date" style="color: var(--muted); text-decoration: line-through">Středa 23. září</div>
+<div class="meta">Trénink se nekonal · Příbram · MH</div>
+</article>
+
+<article class="card off">
+<div class="who"><span class="n" style="color: var(--muted)"><span class="av">IK</span>Ivan Kotov</span><span style="display: flex; align-items: center; gap: 6px"><span class="badge" style="background: var(--n50); color: var(--muted)">Odhlášeno</span><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8791A6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9.5 6 6 6-6 6"></path></svg></span></div>
+<div class="time" style="color: var(--muted)">09:00–10:00</div>
+<div class="date" style="color: var(--muted)">Neděle 13. září</div>
+<div class="meta">Odhlásil Milana Kotova · 12. 9. 18:20</div>
+</article>
+
+<article class="card">
+<div class="who"><span class="n"><span class="av">AK</span>Anna Kotova</span><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8791A6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9.5 6 6 6-6 6"></path></svg></div>
+<div class="time">09:00–10:00</div>
+<div class="date">Neděle 6. září</div>
+<div class="meta">Příbram · MH · Šatna 4</div>
+</article>
+</main>
+<nav class="nav" aria-label="Hlavní navigace">
+<a href="#"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15" rx="2.5"></rect><path d="M3.5 10h17M8 3v4M16 3v4"></path></svg>Tréninky</a>
+<a class="act" href="#" aria-current="page"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4" width="17" height="16" rx="2.5"></rect><path d="m8.5 12 2.5 2.5 4.5-5"></path></svg>Moje tréninky</a>
+<a href="#"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8.5" r="3.2"></circle><path d="M3.5 19c.6-3 2.8-4.8 5.5-4.8s4.9 1.8 5.5 4.8M15.5 5.6a3 3 0 0 1 0 5.8M17.5 14.6c1.6.6 2.6 2.1 3 4.4"></path></svg>Moji sportovci</a>
+<a href="#"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"></circle><circle cx="12" cy="10" r="3"></circle><path d="M6.5 18.2c1.2-2 3.1-3 5.5-3s4.3 1 5.5 3"></path></svg>Účet</a>
+</nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

@@ -16,3 +16,8 @@ supabase/templates
 # lines. Its content is the input to the design work; its whitespace is not
 # this project's business.
 DESIGN_BRIEF.md
+
+# The design handoff, as delivered. Its own copy of the tokens and the 47
+# screen sources are a record of what the design said, not code this
+# repository formats; src/app/tokens.css is the live copy.
+docs/design

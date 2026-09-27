@@ -1,0 +1,128 @@
+/*
+ * Trainlio — design tokens (direction C3 "Tablo / Cobalt")
+ *
+ * The live copy. docs/design/shared/tokens.css is the handoff artifact as
+ * delivered and is not built; this is the one globals.css imports. Keep any
+ * change here in step with a redelivery of that file.
+ * Tailwind CSS 4 — configuration lives in CSS (no tailwind.config.js).
+ *
+ * Usage: import once from app/globals.css:
+ *   @import "tailwindcss";
+ *   @import "./tokens.css";
+ *
+ * Fonts: load with next/font/google in app/layout.tsx and expose them as
+ * CSS variables --font-manrope and --font-barlow (subsets: ["latin", "latin-ext"]).
+ */
+
+@theme {
+  /* ---------- Color: neutrals ---------- */
+  --color-bg: #f3f5f9; /* app background */
+  --color-surface: #ffffff; /* cards, sheets, dialogs, nav */
+  --color-ink: #0e1726; /* primary text, filled capacity segments */
+  --color-muted: #55607a; /* secondary text (4.5:1+ on white and bg) */
+  --color-subtle: #8791a6; /* disabled text, chevrons, icons ONLY — never body text */
+  --color-line: #dfe4ee; /* borders, dividers, outline buttons */
+  --color-neutral-50: #eceff5; /* disabled fills, segmented control track, neutral badges */
+  --color-neutral-200: #dfe4ee; /* inactive avatar fill */
+  --color-neutral-300: #b4bccc; /* unchecked checkbox/radio border */
+  --color-seg-off: #dce2ec; /* empty capacity segment */
+
+  /* ---------- Color: primary (cobalt) ---------- */
+  --color-primary-50: #eef2fe;
+  --color-primary-100: #e5ebfd; /* soft fills: booked chip, secondary button, avatar */
+  --color-primary-200: #c7d4fa; /* secondary pressed */
+  --color-primary: #2b55e0; /* primary buttons, links, active nav, date group headings, FULL capacity */
+  --color-primary-600: #2347c2; /* primary pressed */
+  --color-selected-bg: #f7f9ff; /* selected picker row */
+
+  /* ---------- Color: status ---------- */
+  --color-success: #13795b; /* "Dnes" chip, success toast icon, positive list icons */
+  --color-success-soft: #e3f4ec;
+
+  --color-warning: #8f5200; /* text for "Zbývá 1 místo", "Změněno", notices */
+  --color-warning-fill: #e3a034; /* last-places capacity segments, changed-field outline */
+  --color-warning-soft: #fbf0dc; /* "Změněno" badge bg, notice bg */
+  --color-warning-field: #fffbf2; /* background of a changed form field */
+
+  --color-danger: #b42318; /* "Zrušeno trenérem", destructive button, form errors */
+  --color-danger-600: #931b12; /* destructive pressed */
+  --color-danger-soft: #fbe9e7;
+  --color-danger-border: #f1c4bf;
+
+  /* Internal (coach-only) note */
+  --color-internal: #fbf7ec;
+  --color-internal-border: #e9d9a8;
+  --color-internal-ink: #7a5a00;
+
+  --color-scrim: rgb(14 23 38 / 0.45);
+  --color-scrim-strong: rgb(14 23 38 / 0.55); /* centered dialogs */
+
+  /* ---------- Typography ---------- */
+  --font-sans: var(--font-manrope), 'Segoe UI', system-ui, sans-serif;
+  --font-display: var(--font-barlow), 'Arial Narrow', sans-serif;
+
+  /* Display (Barlow Semi Condensed 700) */
+  --text-page: 2.5rem; /* 40px — page title "Tréninky" */
+  --text-page--line-height: 2.75rem;
+  --text-hero: 2.75rem; /* 44px — time on detail screens */
+  --text-hero--line-height: 3rem;
+  --text-form-title: 2.25rem; /* 36px — form screen titles */
+  --text-form-title--line-height: 2.5rem;
+  --text-sheet-title: 1.75rem; /* 28px — sheet/dialog title, card time */
+  --text-sheet-title--line-height: 2rem;
+  --text-count: 1.125rem; /* 18px Barlow 600 — "7 / 10" inside cards */
+  --text-count--line-height: 1.5rem;
+
+  /* Text (Manrope) */
+  --text-date: 1.0625rem; /* 17px 700 — date group heading */
+  --text-date--line-height: 1.5rem;
+  --text-body: 1rem; /* 16px 400 */
+  --text-body--line-height: 1.5rem;
+  --text-row: 0.9375rem; /* 15px 600 — list values, buttons in dialogs */
+  --text-row--line-height: 1.375rem;
+  --text-meta: 0.875rem; /* 14px 400 muted — "Příbram · MH · Šatna 4" */
+  --text-meta--line-height: 1.25rem;
+  --text-hint: 0.8125rem; /* 13px 600 — deadlines, helper text */
+  --text-hint--line-height: 1.125rem;
+  --text-caption: 0.75rem; /* 12px 700 uppercase, tracking .8px — section captions */
+  --text-caption--line-height: 1rem;
+  --text-badge: 0.6875rem; /* 11px 700 uppercase, tracking .6px */
+  --text-badge--line-height: 1rem;
+
+  /* ---------- Radius ---------- */
+  --radius-seg: 2px;
+  --radius-badge: 6px;
+  --radius-chip: 8px;
+  --radius-control: 10px; /* buttons 44px, inputs */
+  --radius-control-lg: 12px; /* 52px block buttons, notices, picker rows */
+  --radius-card: 16px;
+  --radius-sheet: 24px;
+
+  /* ---------- Shadow ---------- */
+  --shadow-card: 0 1px 2px rgb(14 23 38 / 0.06);
+  --shadow-nav: 0 -1px 0 var(--color-line);
+  --shadow-sheet: 0 -12px 32px rgb(14 23 38 / 0.16);
+  --shadow-dialog: 0 24px 48px rgb(14 23 38 / 0.25);
+  --shadow-toast: 0 12px 32px rgb(14 23 38 / 0.16), 0 0 0 1px var(--color-line);
+  --shadow-focus: 0 0 0 2px #ffffff, 0 0 0 4px var(--color-primary);
+  --shadow-field-focus: inset 0 0 0 2px var(--color-primary), 0 0 0 4px var(--color-primary-100);
+
+  /* ---------- Sizes ---------- */
+  --spacing-touch: 2.75rem; /* 44px minimum touch target */
+  --spacing-btn-block: 3.25rem; /* 52px block buttons & inputs */
+  --spacing-card-btn: 7.75rem; /* 124px — every button on a training/booking card has this width */
+  --spacing-nav: 4.75rem; /* 76px bottom navigation */
+}
+
+/* Tabular numerals for all times, dates and counts */
+@utility nums {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Capacity segment (see DESIGN_SYSTEM.md → CapacityMeter) */
+@utility seg {
+  width: 9px;
+  height: 16px;
+  border-radius: var(--radius-seg);
+  background: var(--color-seg-off);
+}

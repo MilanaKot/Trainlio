@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Trainlio — Admin prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@500;600;700&family=Manrope:wght@400;500;600;700&display=swap">
+<style>
+:root{--bg:#E6EAF1;--panel:#FFFFFF;--ink:#0E1726;--muted:#55607A;--line:#DFE4EE;--accent:#2B55E0;--accentsoft:#E5EBFD}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--bg);font-family:Manrope,system-ui,sans-serif;color:var(--ink);display:grid;grid-template-columns:300px minmax(0,1fr);min-height:100vh}
+aside{background:var(--panel);border-right:1px solid var(--line);padding:20px 16px;overflow:auto;height:100vh;position:sticky;top:0}
+aside h1{margin:0 0 4px;font:700 22px/1.2 "Barlow Semi Condensed",sans-serif}
+aside p{margin:0 0 16px;font-size:13px;color:var(--muted);line-height:1.4}
+aside h2{margin:18px 0 6px;font-size:11px;letter-spacing:.8px;text-transform:uppercase;color:var(--muted)}
+aside button.s{display:block;width:100%;text-align:left;border:0;background:transparent;padding:9px 10px;border-radius:8px;font:500 14px Manrope,sans-serif;color:var(--ink);cursor:pointer}
+aside button.s:hover{background:#F3F5F9}
+aside button.s[aria-current="true"]{background:var(--accentsoft);color:var(--accent);font-weight:700}
+.tools{display:flex;align-items:center;gap:8px;margin-top:20px;padding-top:16px;border-top:1px solid var(--line);font-size:13px;color:var(--muted)}
+main{display:flex;flex-direction:column;align-items:center;padding:28px 16px 48px;gap:14px}
+.cap{font-size:13px;color:var(--muted)}
+.cap b{color:var(--ink)}
+.phone{width:390px;height:844px;border-radius:44px;background:#F3F5F9;overflow:auto;box-shadow:0 0 0 10px #0E1726,0 30px 60px rgba(14,23,38,.25);position:relative;scrollbar-width:none}
+.phone::-webkit-scrollbar{display:none}
+.nav-row{display:flex;gap:8px}
+.nav-row button{height:40px;padding:0 14px;border-radius:10px;border:1px solid var(--line);background:#fff;font:600 14px Manrope,sans-serif;cursor:pointer}
+@media (max-width:760px){body{grid-template-columns:1fr}aside{position:static;height:auto}}
+</style>
+</head>
+<body>
+<aside>
+<h1 id="ptitle"></h1>
+<p>Clickable prototype. Tap buttons and cards inside the phone, or pick a screen here. Screen IDs match SPEC.md.</p>
+<nav id="list"></nav>
+<label class="tools"><input type="checkbox" id="hs"> Highlight clickable areas</label>
+</aside>
+<main>
+<div class="cap" id="cap"></div>
+<div class="phone" id="phone"><div id="host"></div></div>
+<div class="nav-row"><button id="prev">← Previous</button><button id="next">Next →</button></div>
+</main>
+<script id="data" type="application/json">{"title": "Trainlio — Admin prototype", "groups": [{"name": "Coach management", "items": [{"id": "A00-Vice", "label": "A0 · More (Více)"}, {"id": "A01-Treneri", "label": "A1 · Coach list"}, {"id": "A02-Pridat", "label": "A2 · Add coach"}, {"id": "A03-Upravit", "label": "A3 · Edit coach"}]}], "screens": {"A00-Vice": {"css": ":host{display:block;margin:0;background:#F3F5F9;font-family:Manrope,\"Segoe UI\",system-ui,sans-serif;color:#0E1726}\n.s{--bg:#F3F5F9;--surface:#FFFFFF;--ink:#0E1726;--muted:#55607A;--line:#DFE4EE;--accent:#2B55E0;--accentsoft:#E5EBFD;--danger:#B42318;--disp:\"Barlow Semi Condensed\",\"Arial Narrow\",sans-serif}\n.disp{font-family:var(--disp)}\n.cap{margin:0;padding:0 4px;font-size:12px;line-height:16px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--muted)}\n.list{background:var(--surface);border-radius:16px;padding:0 16px;display:flex;flex-direction:column}\n.item{display:flex;align-items:center;gap:12px;min-height:56px;font-size:16px;font-weight:600;color:inherit;text-decoration:none;box-shadow:0 1px 0 var(--line)}\n.item:last-child{box-shadow:none}\n.item .v{margin-left:auto;display:flex;align-items:center;gap:6px;font-weight:400;color:var(--muted);font-size:15px}\n.out{height:52px;border-radius:12px;border:0;background:var(--surface);color:var(--danger);font:700 16px/1 Manrope,system-ui,sans-serif}\n.nav{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));height:76px;padding-bottom:8px;box-sizing:border-box;background:var(--surface);box-shadow:0 -1px 0 var(--line)}\n.nav a{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font-size:11px;font-weight:600;color:var(--muted);text-decoration:none}\n.nav a.act{color:var(--accent)}\n", "html": "<div class=\"s\" style=\"width: 390px; height: 844px; background: var(--bg); display: flex; flex-direction: column; overflow: hidden\">\n<main style=\"flex-grow: 1; overflow: hidden; padding: 60px 16px 16px; display: flex; flex-direction: column; gap: 14px\">\n<h1 class=\"disp\" style=\"margin: 0; padding: 0 4px; font-size: 40px; line-height: 44px; font-weight: 700\">Více<\/h1>\n\n<div style=\"display: flex; align-items: center; gap: 14px; padding: 16px; border-radius: 16px; background: var(--surface)\">\n<span style=\"width: 56px; height: 56px; border-radius: 50%; background: var(--accentsoft); color: var(--accent); display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 700; flex-shrink: 0\">MF<\/span>\n<div style=\"display: flex; flex-direction: column\"><span style=\"font-size: 17px; line-height: 24px; font-weight: 700\">Milan Filipi<\/span><span style=\"font-size: 14px; color: var(--muted)\">Trenér · Administrátor<\/span><\/div>\n<\/div>\n\n<h2 class=\"cap\" style=\"margin-top: 6px\">Správa<\/h2>\n<nav class=\"list\" aria-label=\"Správa\">\n<a class=\"item\" href=\"#A01-Treneri\" data-go=\"A01-Treneri\"><svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"12\" cy=\"8\" r=\"3.5\"><\/circle><path d=\"M5 20c.8-3.6 3.6-5.5 7-5.5s6.2 1.9 7 5.5\"><\/path><path d=\"m16.5 3.5 1 1.8 2 .3-1.5 1.4.4 2-1.9-1-1.9 1 .4-2-1.5-1.4 2-.3z\"><\/path><\/svg>Trenéři<span class=\"v\">4<svg width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"#8791A6\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"m9.5 6 6 6-6 6\"><\/path><\/svg><\/span><\/a>\n<\/nav>\n\n<h2 class=\"cap\" style=\"margin-top: 6px\">Účet<\/h2>\n<nav class=\"list\" aria-label=\"Účet\">\n<a class=\"item\" href=\"#\"><svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"12\" cy=\"12\" r=\"8.5\"><\/circle><circle cx=\"12\" cy=\"10\" r=\"3\"><\/circle><path d=\"M6.5 18.2c1.2-2 3.1-3 5.5-3s4.3 1 5.5 3\"><\/path><\/svg>Osobní údaje a e-mail<span class=\"v\"><svg width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"#8791A6\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"m9.5 6 6 6-6 6\"><\/path><\/svg><\/span><\/a>\n<\/nav>\n\n<button class=\"out\" style=\"margin-top: 6px\">Odhlásit se z aplikace<\/button>\n<\/main>\n<nav class=\"nav\" aria-label=\"Hlavní navigace\">\n<a href=\"#\"><svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect x=\"3.5\" y=\"5\" width=\"17\" height=\"15\" rx=\"2.5\"><\/rect><path d=\"M3.5 10h17M8 3v4M16 3v4\"><\/path><\/svg>Tréninky<\/a>\n<a href=\"#\"><svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"9\" cy=\"8.5\" r=\"3.2\"><\/circle><path d=\"M3.5 19c.6-3 2.8-4.8 5.5-4.8s4.9 1.8 5.5 4.8M15.5 5.6a3 3 0 0 1 0 5.8M17.5 14.6c1.6.6 2.6 2.1 3 4.4\"><\/path><\/svg>Sportovci<\/a>\n<a class=\"act\" href=\"#\" aria-current=\"page\"><svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"5.5\" cy=\"12\" r=\"1.3\"><\/circle><circle cx=\"12\" cy=\"12\" r=\"1.3\"><\/circle><circle cx=\"18.5\" cy=\"12\" r=\"1.3\"><\/circle><\/svg>Více<\/a>\n<\/nav>\n<\/div>", "title": "Více — trenér / admin"}, "A01-Treneri": {"css": ":host{display:block;margin:0;background:#F3F5F9;font-family:Manrope,\"Segoe UI\",system-ui,sans-serif;color:#0E1726}\n.s{--bg:#F3F5F9;--surface:#FFFFFF;--ink:#0E1726;--muted:#55607A;--line:#DFE4EE;--n50:#ECEFF5;--accent:#2B55E0;--accentsoft:#E5EBFD;--disp:\"Barlow Semi Condensed\",\"Arial Narrow\",sans-serif}\n.disp{font-family:var(--disp)}\n.cap{margin:0;padding:0 4px;font-size:12px;line-height:16px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--muted)}\n.list{background:var(--surface);border-radius:16px;padding:0 16px;display:flex;flex-direction:column}\n.row{display:flex;align-items:center;gap:12px;min-height:64px;color:inherit;text-decoration:none;box-shadow:0 1px 0 var(--line)}\n.row:last-child{box-shadow:none}\n.av{width:40px;height:40px;border-radius:50%;background:var(--accentsoft);color:var(--accent);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0}\n.nm{display:flex;flex-direction:column;flex-grow:1}\n.nm b{font-size:16px;line-height:22px;font-weight:600}\n.nm span{font-size:13px;line-height:18px;color:var(--muted)}\n.badge{display:inline-flex;align-items:center;height:24px;padding:0 8px;border-radius:6px;font-size:11px;font-weight:700;letter-spacing:.6px;text-transform:uppercase}\n.off .av{background:#DFE4EE;color:var(--muted)}\n.off .nm b{color:var(--muted)}\n.btn{height:44px;padding:0 16px;border-radius:10px;border:0;background:var(--accent);color:#fff;font:700 15px/1 Manrope,system-ui,sans-serif;display:inline-flex;align-items:center;gap:6px}\n", "html": "<div class=\"s\" style=\"width: 390px; height: 844px; background: var(--bg); display: flex; flex-direction: column; overflow: hidden\">\n<div style=\"padding: 52px 8px 0\">\n<a href=\"#A00-Vice\" data-go=\"A00-Vice\" style=\"height: 44px; display: inline-flex; align-items: center; gap: 4px; color: var(--muted); text-decoration: none; font-size: 15px; font-weight: 600\"><span style=\"width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; color: var(--ink)\"><svg width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"m14.5 6-6 6 6 6\"><\/path><\/svg><\/span>Více<\/a>\n<\/div>\n\n<main style=\"padding: 4px 16px 16px; display: flex; flex-direction: column; gap: 14px\">\n<div style=\"display: flex; align-items: center; justify-content: space-between; padding: 0 4px 6px\">\n<h1 class=\"disp\" style=\"margin: 0; font-size: 40px; line-height: 44px; font-weight: 700\">Trenéři<\/h1>\n<a class=\"btn\" href=\"#A02-Pridat\" data-go=\"A02-Pridat\" style=\"text-decoration: none\"><svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.4\" stroke-linecap=\"round\"><path d=\"M12 5v14M5 12h14\"><\/path><\/svg>Přidat trenéra<\/a>\n<\/div>\n\n<h2 class=\"cap\">Aktivní · 3<\/h2>\n<nav class=\"list\" aria-label=\"Aktivní trenéři\">\n<a class=\"row\" href=\"#A03-Upravit\" data-go=\"A03-Upravit\"><span class=\"av\">MF<\/span><span class=\"nm\"><b>Milan Filipi<\/b><span>Administrátor<\/span><\/span><svg width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"#8791A6\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"m9.5 6 6 6-6 6\"><\/path><\/svg><\/a>\n<a class=\"row\" href=\"#A03-Upravit\" data-go=\"A03-Upravit\"><span class=\"av\">JN<\/span><span class=\"nm\"><b>Jan Novák<\/b><\/span><svg width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"#8791A6\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"m9.5 6 6 6-6 6\"><\/path><\/svg><\/a>\n<a class=\"row\" href=\"#A03-Upravit\" data-go=\"A03-Upravit\"><span class=\"av\">PS<\/span><span class=\"nm\"><b>Petr Svoboda<\/b><\/span><svg width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"#8791A6\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"m9.5 6 6 6-6 6\"><\/path><\/svg><\/a>\n<\/nav>\n\n<h2 class=\"cap\" style=\"margin-top: 6px\">Neaktivní · 1<\/h2>\n<nav class=\"list\" aria-label=\"Neaktivní trenéři\">\n<a class=\"row off\" href=\"#A03-Upravit\" data-go=\"A03-Upravit\"><span class=\"av\">LM<\/span><span class=\"nm\"><b>Lucie Marková<\/b><span>Nezobrazuje se při výběru trenérů<\/span><\/span><span class=\"badge\" style=\"background: var(--n50); color: var(--muted)\">Neaktivní<\/span><svg width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"#8791A6\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"m9.5 6 6 6-6 6\"><\/path><\/svg><\/a>\n<\/nav>\n<\/main>\n<\/div>", "title": "Trenéři — admin"}, "A02-Pridat": {"css": ":host{display:block;margin:0;background:#F3F5F9;font-family:Manrope,\"Segoe UI\",system-ui,sans-serif;color:#0E1726}\n.s{--bg:#F3F5F9;--surface:#FFFFFF;--ink:#0E1726;--muted:#55607A;--line:#DFE4EE;--accent:#2B55E0;--accentsoft:#E5EBFD;--danger:#B42318;--disp:\"Barlow Semi Condensed\",\"Arial Narrow\",sans-serif}\n.disp{font-family:var(--disp)}\n.field{display:flex;flex-direction:column;gap:6px}\n.lbl{font-size:14px;line-height:20px;font-weight:600}\n.lbl i{font-style:normal;color:var(--danger)}\n.inp{height:52px;border-radius:10px;border:0;box-shadow:inset 0 0 0 1.5px var(--line);background:#fff;padding:0 14px;font:500 16px Manrope,sans-serif;color:var(--ink);box-sizing:border-box;width:100%}\n.inp.f{box-shadow:inset 0 0 0 2px var(--accent),0 0 0 4px var(--accentsoft)}\n.inp.err{box-shadow:inset 0 0 0 2px var(--danger)}\n.btn{height:52px;width:100%;border-radius:12px;border:0;font:700 16px/1 Manrope,system-ui,sans-serif;background:var(--accent);color:#fff}\n", "html": "<div class=\"s\" style=\"width: 390px; height: 844px; background: var(--bg); display: flex; flex-direction: column; overflow: hidden\">\n<div style=\"padding: 52px 16px 0\">\n<a href=\"#A01-Treneri\" data-go=\"A01-Treneri\" style=\"height: 44px; display: inline-flex; align-items: center; color: var(--accent); text-decoration: none; font-size: 15px; font-weight: 700\">Zrušit<\/a>\n<\/div>\n\n<main style=\"flex-grow: 1; padding: 4px 16px 24px; display: flex; flex-direction: column; gap: 16px\">\n<h1 class=\"disp\" style=\"margin: 0; padding: 0 4px; font-size: 36px; line-height: 40px; font-weight: 700\">Nový trenér<\/h1>\n\n<div style=\"background: var(--surface); border-radius: 16px; padding: 16px; display: flex; flex-direction: column; gap: 18px\">\n<div class=\"field\"><label class=\"lbl\" for=\"j\">Jméno <i aria-hidden=\"true\">*<\/i><\/label><input id=\"j\" class=\"inp\" value=\"Tomáš\" required=\"\"><\/div>\n<div class=\"field\"><label class=\"lbl\" for=\"p\">Příjmení <i aria-hidden=\"true\">*<\/i><\/label><input id=\"p\" class=\"inp err\" value=\"\" required=\"\" aria-invalid=\"true\" aria-describedby=\"pe\"><span id=\"pe\" style=\"font-size: 13px; font-weight: 600; color: var(--danger)\">Vyplňte příjmení.<\/span><\/div>\n<\/div>\n\n<p style=\"margin: 0; padding: 0 4px; font-size: 14px; line-height: 20px; color: var(--muted)\">Trenér bude hned k dispozici při výběru hlavního trenéra a asistentů. Pozvánku do aplikace e-mailem lze poslat později.<\/p>\n<\/main>\n\n<footer style=\"padding: 12px 16px 28px; background: var(--surface); box-shadow: 0 -1px 0 var(--line)\">\n<button class=\"btn\">Přidat trenéra<\/button>\n<\/footer>\n<\/div>", "title": "Přidat trenéra — admin"}, "A03-Upravit": {"css": ":host{display:block;margin:0;background:#F3F5F9;font-family:Manrope,\"Segoe UI\",system-ui,sans-serif;color:#0E1726}\n.s{--bg:#F3F5F9;--surface:#FFFFFF;--ink:#0E1726;--muted:#55607A;--line:#DFE4EE;--n50:#ECEFF5;--accent:#2B55E0;--accentsoft:#E5EBFD;--danger:#B42318;--disp:\"Barlow Semi Condensed\",\"Arial Narrow\",sans-serif}\n.disp{font-family:var(--disp)}\n.field{display:flex;flex-direction:column;gap:6px}\n.lbl{font-size:14px;line-height:20px;font-weight:600}\n.lbl i{font-style:normal;color:var(--danger)}\n.inp{height:52px;border-radius:10px;border:0;box-shadow:inset 0 0 0 1.5px var(--line);background:#fff;padding:0 14px;font:500 16px Manrope,sans-serif;color:var(--ink);box-sizing:border-box;width:100%}\n.cap{margin:0;padding:0 4px;font-size:12px;line-height:16px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--muted)}\n.sw{position:relative;width:52px;height:32px;border-radius:16px;background:#13795B;flex-shrink:0}\n.sw::after{content:\"\";position:absolute;top:3px;left:23px;width:26px;height:26px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.2)}\n.btn{height:52px;width:100%;border-radius:12px;border:0;font:700 16px/1 Manrope,system-ui,sans-serif;background:var(--accent);color:#fff}\n", "html": "<div class=\"s\" style=\"width: 390px; height: 844px; background: var(--bg); display: flex; flex-direction: column; overflow: hidden\">\n<div style=\"padding: 52px 16px 0\">\n<a href=\"#A01-Treneri\" data-go=\"A01-Treneri\" style=\"height: 44px; display: inline-flex; align-items: center; color: var(--accent); text-decoration: none; font-size: 15px; font-weight: 700\">Zrušit<\/a>\n<\/div>\n\n<main style=\"flex-grow: 1; padding: 4px 16px 24px; display: flex; flex-direction: column; gap: 16px\">\n<h1 class=\"disp\" style=\"margin: 0; padding: 0 4px; font-size: 36px; line-height: 40px; font-weight: 700\">Upravit trenéra<\/h1>\n\n<div style=\"background: var(--surface); border-radius: 16px; padding: 16px; display: flex; flex-direction: column; gap: 18px\">\n<div class=\"field\"><label class=\"lbl\" for=\"j\">Jméno <i aria-hidden=\"true\">*<\/i><\/label><input id=\"j\" class=\"inp\" value=\"Jan\" required=\"\"><\/div>\n<div class=\"field\"><label class=\"lbl\" for=\"p\">Příjmení <i aria-hidden=\"true\">*<\/i><\/label><input id=\"p\" class=\"inp\" value=\"Novák\" required=\"\"><\/div>\n<\/div>\n\n<h2 class=\"cap\" style=\"margin-top: 4px\">Stav<\/h2>\n<div style=\"background: var(--surface); border-radius: 16px; padding: 16px; display: flex; flex-direction: column; gap: 12px\">\n<label style=\"display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 44px\">\n<span style=\"display: flex; flex-direction: column\"><b style=\"font-size: 16px; font-weight: 600\">Aktivní trenér<\/b><span style=\"font-size: 13px; line-height: 18px; color: var(--muted)\">Lze ho vybrat pro nové tréninky<\/span><\/span>\n<input type=\"checkbox\" role=\"switch\" checked=\"\" style=\"position: absolute; opacity: 0; width: 1px; height: 1px\"><span class=\"sw\" aria-hidden=\"true\"><\/span>\n<\/label>\n<div style=\"padding: 12px 14px; border-radius: 12px; background: var(--bg); font-size: 14px; line-height: 20px; color: var(--muted)\">Po deaktivaci zůstane Jan Novák u všech minulých i naplánovaných tréninků (nyní 12). Trenéra nelze smazat, jen deaktivovat.<\/div>\n<\/div>\n<\/main>\n\n<footer style=\"padding: 12px 16px 28px; background: var(--surface); box-shadow: 0 -1px 0 var(--line)\">\n<button class=\"btn\">Uložit<\/button>\n<\/footer>\n<\/div>", "title": "Upravit trenéra — admin"}}, "hotspots": {"A00-Vice": [["Trenéři", "A01-Treneri"]], "A01-Treneri": [["Přidat trenéra", "A02-Pridat"], ["a.row", "A03-Upravit"]], "A02-Pridat": [["Přidat trenéra", "A01-Treneri"]], "A03-Upravit": [["Uložit", "A01-Treneri"]]}, "nav": {}}</script>
+<script>
+(function () {
+  var D = JSON.parse(document.getElementById('data').textContent);
+  document.getElementById('ptitle').textContent = D.title;
+  var order = [];
+  var list = document.getElementById('list');
+  D.groups.forEach(function (g) {
+    var h = document.createElement('h2'); h.textContent = g.name; list.appendChild(h);
+    g.items.forEach(function (it) {
+      order.push(it);
+      var b = document.createElement('button'); b.className = 's'; b.textContent = it.label; b.dataset.id = it.id;
+      b.addEventListener('click', function () { go(it.id); });
+      list.appendChild(b);
+    });
+  });
+  var hostEl = document.getElementById('host');
+  var root = hostEl.attachShadow({ mode: 'open' });
+  var highlight = false;
+  document.getElementById('hs').addEventListener('change', function (e) { highlight = e.target.checked; render(current); });
+  var current = null;
+
+  function labelOf(id) { for (var i = 0; i < order.length; i++) if (order[i].id === id) return order[i].label; return id; }
+  function go(id) { if (!D.screens[id]) return; location.hash = id; }
+  function textOf(el) { return (el.textContent || '').replace(/\s+/g, ' ').trim(); }
+
+  function bind(el, target) {
+    el.style.cursor = 'pointer';
+    if (highlight) { el.style.outline = '2px dashed #E3A034'; el.style.outlineOffset = '2px'; }
+    el.addEventListener('click', function (ev) { ev.preventDefault(); ev.stopPropagation(); go(target); });
+  }
+
+  function render(id) {
+    var s = D.screens[id]; if (!s) return;
+    current = id;
+    root.innerHTML = '<style>' + s.css + '</style>' + s.html;
+    root.querySelectorAll('[data-go]').forEach(function (a) { if (D.screens[a.dataset.go]) bind(a, a.dataset.go); });
+    var rules = (D.hotspots[id] || []);
+    var candidates = root.querySelectorAll('button, a, label, span, article, div[role="tab"], span[role="tab"]');
+    rules.forEach(function (r) {
+      var key = r[0], target = r[1];
+      if (!D.screens[target]) return;
+      if (/^(a\.|article|div\.|span\.)/.test(key) || key === 'article') {
+        root.querySelectorAll(key).forEach(function (el) { bind(el, target); });
+        return;
+      }
+      var hit = null;
+      candidates.forEach(function (el) { if (!hit && /^(BUTTON|A)$/.test(el.tagName) && (textOf(el) === key || el.getAttribute('aria-label') === key)) hit = el; });
+      if (!hit) candidates.forEach(function (el) { if (!hit && textOf(el) === key) hit = el; });
+      if (!hit) candidates.forEach(function (el) { if (!hit && /^(BUTTON|A)$/.test(el.tagName) && textOf(el).indexOf(key) === 0) hit = el; });
+      if (hit) bind(hit.closest('button, a, label') || hit, target);
+    });
+    root.querySelectorAll('nav a').forEach(function (a) {
+      var t = D.nav[textOf(a)];
+      if (t && D.screens[t]) bind(a, t);
+    });
+    document.getElementById('phone').scrollTop = 0;
+    document.getElementById('cap').innerHTML = '<b>' + labelOf(id) + '</b> · ' + s.title;
+    list.querySelectorAll('button.s').forEach(function (b) { b.setAttribute('aria-current', b.dataset.id === id ? 'true' : 'false'); });
+  }
+
+  function step(d) {
+    var i = order.findIndex(function (o) { return o.id === current; });
+    var n = order[(i + d + order.length) % order.length];
+    go(n.id);
+  }
+  document.getElementById('prev').addEventListener('click', function () { step(-1); });
+  document.getElementById('next').addEventListener('click', function () { step(1); });
+  window.addEventListener('hashchange', function () { render(location.hash.slice(1)); });
+  render(D.screens[location.hash.slice(1)] ? location.hash.slice(1) : order[0].id);
+})();
+</script>
+</body>
+</html>

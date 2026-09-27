@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<title>Vybrat asistenty — trenér</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@500;600;700&amp;family=Manrope:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0;background:#F3F5F9;font-family:Manrope,"Segoe UI",system-ui,sans-serif;color:#0E1726}
+.s{--bg:#F3F5F9;--surface:#FFFFFF;--ink:#0E1726;--muted:#55607A;--line:#DFE4EE;--n50:#ECEFF5;--accent:#2B55E0;--accentsoft:#E5EBFD;--disp:"Barlow Semi Condensed","Arial Narrow",sans-serif}
+.disp{font-family:var(--disp)}
+.meta{font-size:14px;line-height:20px;color:var(--muted)}
+.pick{position:relative;display:flex;align-items:center;gap:12px;min-height:60px;padding:8px 14px;border-radius:12px;background:#fff;box-shadow:inset 0 0 0 1.5px var(--line);box-sizing:border-box;cursor:pointer}
+.pick.on{box-shadow:inset 0 0 0 2px var(--accent);background:#F7F9FF}
+.pick.off{background:var(--n50);box-shadow:none;color:var(--muted);cursor:not-allowed}
+.pick input{position:absolute;width:1px;height:1px;opacity:0;margin:0}
+.box{width:24px;height:24px;border-radius:7px;flex-shrink:0;box-sizing:border-box;display:flex;align-items:center;justify-content:center;background:#fff;box-shadow:inset 0 0 0 2px #B4BCCC;color:#fff}
+.pick.on .box{background:var(--accent);box-shadow:none}
+.pick.off .box{background:#DFE4EE;box-shadow:none}
+.av{width:36px;height:36px;border-radius:50%;background:var(--accentsoft);color:var(--accent);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0}
+.pick.off .av{background:#DFE4EE;color:var(--muted)}
+.who{display:flex;flex-direction:column}
+.who b{font-size:16px;line-height:22px;font-weight:600}
+.btn{height:52px;width:100%;border-radius:12px;border:0;font:700 16px/1 Manrope,system-ui,sans-serif;background:var(--accent);color:#fff}
+</style>
+</helmet>
+<div class="s" style="width: 390px; height: 844px; background: var(--bg); position: relative; overflow: hidden">
+
+<div aria-hidden="true" style="padding: 100px 16px 16px; display: flex; flex-direction: column; gap: 16px">
+<div class="disp" style="font-size: 36px; line-height: 40px; font-weight: 700">Upravit trénink</div>
+<div style="height: 180px; border-radius: 16px; background: #fff"></div>
+</div>
+
+<div style="position: absolute; inset: 0; background: rgba(14, 23, 38, 0.45)"></div>
+
+<section role="dialog" aria-modal="true" aria-labelledby="t" style="position: absolute; left: 0; right: 0; bottom: 0; background: #fff; border-radius: 24px 24px 0 0; padding: 10px 20px 28px; display: flex; flex-direction: column; gap: 16px; box-shadow: 0 -12px 32px rgba(14,23,38,.16)">
+<div style="width: 40px; height: 4px; border-radius: 2px; background: var(--line); align-self: center"></div>
+<div style="display: flex; align-items: center; justify-content: space-between; gap: 12px">
+<h2 id="t" class="disp" style="margin: 0; font-size: 28px; line-height: 32px; font-weight: 700">Asistenti</h2>
+<button aria-label="Zavřít" style="width: 44px; height: 44px; border: 0; border-radius: 22px; background: var(--n50); color: var(--ink); display: flex; align-items: center; justify-content: center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"></path></svg></button>
+</div>
+<p class="meta" style="margin: -8px 0 0">Vyberte jednoho nebo více trenérů. Nikoho vybírat nemusíte.</p>
+
+<div style="display: flex; flex-direction: column; gap: 8px">
+<label class="pick off"><input type="checkbox" disabled=""><span class="box" aria-hidden="true"></span><span class="av">MF</span><span class="who"><b>Milan Filipi</b><span class="meta" style="font-size: 13px">Hlavní trenér tohoto tréninku</span></span></label>
+<label class="pick on"><input type="checkbox" checked=""><span class="box" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"></path></svg></span><span class="av">JN</span><span class="who"><b>Jan Novák</b></span></label>
+<label class="pick"><input type="checkbox"><span class="box" aria-hidden="true"></span><span class="av">PS</span><span class="who"><b>Petr Svoboda</b></span></label>
+<label class="pick"><input type="checkbox"><span class="box" aria-hidden="true"></span><span class="av">LM</span><span class="who"><b>Lucie Marková</b></span></label>
+</div>
+
+<p class="meta" style="margin: 0; font-size: 13px; line-height: 18px">Zobrazují se jen aktivní trenéři. Seznam spravuje administrátor.</p>
+<button class="btn">Hotovo · 1 asistent</button>
+</section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

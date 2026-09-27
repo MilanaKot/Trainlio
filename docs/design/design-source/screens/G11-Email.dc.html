@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<title>Přihlášení — e-mail</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@500;600;700&amp;family=Manrope:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0;background:#F3F5F9;font-family:Manrope,"Segoe UI",system-ui,sans-serif;color:#0E1726}
+.s{--bg:#F3F5F9;--ink:#0E1726;--muted:#55607A;--line:#DFE4EE;--accent:#2B55E0;--accentsoft:#E5EBFD;--disp:"Barlow Semi Condensed","Arial Narrow",sans-serif}
+.disp{font-family:var(--disp)}
+.lbl{font-size:14px;line-height:20px;font-weight:600}
+.inp{height:52px;border-radius:10px;border:0;background:#fff;padding:0 14px;font:500 16px Manrope,sans-serif;color:var(--ink);box-sizing:border-box;width:100%;box-shadow:inset 0 0 0 2px var(--accent),0 0 0 4px var(--accentsoft)}
+.inp::placeholder{color:#8791A6}
+.btn{height:52px;width:100%;border-radius:12px;border:0;font:700 16px/1 Manrope,system-ui,sans-serif;background:var(--accent);color:#fff}
+</style>
+</helmet>
+<div class="s" style="width: 390px; height: 844px; background: var(--bg); box-sizing: border-box; padding: 96px 20px 32px; display: flex; flex-direction: column; gap: 40px">
+<div class="disp" style="font-size: 36px; line-height: 36px; font-weight: 700; letter-spacing: -.3px; display: flex; align-items: flex-end; gap: 3px">trainlio<span style="width: 8px; height: 17px; border-radius: 2px; background: var(--accent); margin-bottom: 5px"></span></div>
+
+<div style="display: flex; flex-direction: column; gap: 8px">
+<h1 class="disp" style="margin: 0; font-size: 40px; line-height: 44px; font-weight: 700">Přihlášení</h1>
+<p style="margin: 0; font-size: 16px; line-height: 24px; color: var(--muted)">Zadejte svůj e-mail. Pošleme vám jednorázový kód, heslo nepotřebujete.</p>
+</div>
+
+<form style="display: flex; flex-direction: column; gap: 16px">
+<div style="display: flex; flex-direction: column; gap: 6px"><label class="lbl" for="em">E-mail</label><input id="em" class="inp" type="email" placeholder="jmeno@email.cz" autocomplete="email"></div>
+<button class="btn" type="submit">Poslat kód</button>
+</form>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

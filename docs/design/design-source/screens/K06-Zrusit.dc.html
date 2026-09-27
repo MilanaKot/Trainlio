@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<title>Zrušit trénink — trenér</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@500;600;700&amp;family=Manrope:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0;background:#F3F5F9;font-family:Manrope,"Segoe UI",system-ui,sans-serif;color:#0E1726}
+.s{--bg:#F3F5F9;--ink:#0E1726;--muted:#55607A;--line:#DFE4EE;--accent:#2B55E0;--danger:#B42318;--dangersoft:#FBE9E7;--disp:"Barlow Semi Condensed","Arial Narrow",sans-serif}
+.disp{font-family:var(--disp)}
+.btn{height:52px;width:100%;border-radius:12px;border:0;font:700 16px/1 Manrope,system-ui,sans-serif}
+</style>
+</helmet>
+<div class="s" style="width: 390px; height: 844px; background: var(--bg); position: relative; overflow: hidden">
+
+<div aria-hidden="true" style="padding: 100px 20px 16px; display: flex; flex-direction: column; gap: 6px">
+<span style="font-size: 20px; font-weight: 700; color: var(--accent)">Neděle 27. září</span>
+<span class="disp" style="font-size: 44px; line-height: 48px; font-weight: 700">16:00–17:00</span>
+<span style="font-size: 15px; color: var(--muted)">Příbram · Malá hala (MH) · Šatna 4</span>
+<div style="height: 80px; border-radius: 16px; background: #fff; margin-top: 10px"></div>
+<div style="height: 300px; border-radius: 16px; background: #fff; margin-top: 10px"></div>
+</div>
+
+<div style="position: absolute; inset: 0; background: rgba(14, 23, 38, 0.55)"></div>
+
+<section role="alertdialog" aria-modal="true" aria-labelledby="t" aria-describedby="d" style="position: absolute; left: 20px; right: 20px; top: 50%; transform: translateY(-50%); background: #fff; border-radius: 24px; padding: 24px 20px 20px; display: flex; flex-direction: column; gap: 16px; box-shadow: 0 24px 48px rgba(14,23,38,.25)">
+<div style="width: 52px; height: 52px; border-radius: 16px; background: var(--dangersoft); display: flex; align-items: center; justify-content: center"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#B42318" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"></circle><path d="M8.5 8.5l7 7M15.5 8.5l-7 7"></path></svg></div>
+<div style="display: flex; flex-direction: column; gap: 6px">
+<h2 id="t" class="disp" style="margin: 0; font-size: 28px; line-height: 32px; font-weight: 700">Zrušit trénink?</h2>
+<span style="font-size: 15px; font-weight: 600; font-variant-numeric: tabular-nums">Ne 27. 9. · 16:00–17:00 · MH</span>
+</div>
+<p id="d" style="margin: 0; font-size: 15px; line-height: 22px; color: var(--ink)">Trénink zůstane v historii a všichni rodiče přihlášených sportovců obdrží e-mail.</p>
+<div style="display: flex; flex-direction: column; gap: 6px; padding: 12px 14px; border-radius: 12px; background: #F3F5F9; font-size: 14px; line-height: 20px">
+<span style="display: flex; gap: 8px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#55607A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; margin-top: 1px"><rect x="3.5" y="5.5" width="17" height="13" rx="2"></rect><path d="m4 7 8 6 8-6"></path></svg>E-mail dostanou rodiče 8 sportovců</span>
+<span style="display: flex; gap: 8px; color: var(--danger); font-weight: 600"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; margin-top: 1px"><circle cx="12" cy="12" r="8.5"></circle><path d="M12 7.5v5M12 16h.01"></path></svg>Zrušený trénink už nelze znovu otevřít</span>
+</div>
+<div style="display: flex; flex-direction: column; gap: 8px; margin-top: 4px">
+<button class="btn" style="background: transparent; color: var(--ink); box-shadow: inset 0 0 0 1.5px var(--line)">Nezrušovat</button>
+<button class="btn" style="background: var(--danger); color: #fff">Zrušit trénink</button>
+</div>
+</section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<title>Trénink je již plný — trenér</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@500;600;700&amp;family=Manrope:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0;background:#F3F5F9;font-family:Manrope,"Segoe UI",system-ui,sans-serif;color:#0E1726}
+.s{--bg:#F3F5F9;--ink:#0E1726;--muted:#55607A;--line:#DFE4EE;--n50:#ECEFF5;--accent:#2B55E0;--segoff:#DCE2EC;--disp:"Barlow Semi Condensed","Arial Narrow",sans-serif}
+.disp{font-family:var(--disp)}
+.segs{display:flex;gap:3px;align-items:center}
+.seg{width:9px;height:16px;border-radius:2px;background:var(--segoff)}
+.seg.full{background:var(--accent)}
+.plus{width:9px;height:16px;border-radius:2px;background:#fff;box-shadow:inset 0 0 0 2px #E3A034}
+.btn{height:52px;width:100%;border-radius:12px;border:0;font:700 16px/1 Manrope,system-ui,sans-serif}
+</style>
+</helmet>
+<div class="s" style="width: 390px; height: 844px; background: var(--bg); position: relative; overflow: hidden">
+
+<div aria-hidden="true" style="position: absolute; left: 0; right: 0; top: 48px; bottom: 0; background: #fff; border-radius: 24px 24px 0 0; padding: 30px 20px; display: flex; flex-direction: column; gap: 14px">
+<div class="disp" style="font-size: 28px; font-weight: 700">Přidat sportovce</div>
+<div style="height: 44px; border-radius: 12px; background: var(--bg)"></div>
+<div style="height: 64px; border-radius: 12px; box-shadow: inset 0 0 0 2px var(--accent)"></div>
+<div style="height: 64px; border-radius: 12px; box-shadow: inset 0 0 0 1.5px var(--line)"></div>
+</div>
+
+<div style="position: absolute; inset: 0; background: rgba(14, 23, 38, 0.55)"></div>
+
+<section role="alertdialog" aria-modal="true" aria-labelledby="t" aria-describedby="d" style="position: absolute; left: 20px; right: 20px; top: 50%; transform: translateY(-50%); background: #fff; border-radius: 24px; padding: 24px 20px 20px; display: flex; flex-direction: column; gap: 16px; box-shadow: 0 24px 48px rgba(14,23,38,.25)">
+<div style="width: 52px; height: 52px; border-radius: 16px; background: #FBF0DC; display: flex; align-items: center; justify-content: center"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#8F5200" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4 2.5 20h19L12 4z"></path><path d="M12 10v4.5M12 17.5h.01"></path></svg></div>
+<h2 id="t" class="disp" style="margin: 0; font-size: 28px; line-height: 32px; font-weight: 700">Trénink je již plný</h2>
+
+<div style="display: flex; align-items: center; justify-content: space-between; padding: 14px; border-radius: 12px; background: var(--bg)">
+<span class="segs"><sc-for list="{{s10}}" as="s" hint-placeholder-count="10"><span class="{{s.c}}"></span></sc-for><span class="plus" aria-hidden="true"></span></span>
+<span style="display: flex; align-items: baseline; gap: 8px"><span class="disp" style="font-size: 26px; font-weight: 700; font-variant-numeric: tabular-nums">10 / 10</span><span style="font-size: 14px; font-weight: 700; color: #8F5200; font-variant-numeric: tabular-nums">→ 11</span></span>
+</div>
+
+<p id="d" style="margin: 0; font-size: 16px; line-height: 24px">Chcete sportovce přidat nad stanovenou kapacitu?<br><b>Eliška Procházková</b> <span style="color: var(--muted)">· 2018</span></p>
+<p style="margin: 0; font-size: 14px; line-height: 20px; color: var(--muted)">Kapacita se nezmění. Trénink bude mít 11 sportovců a rodiče se dál přihlásit nemohou.</p>
+
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: 4px">
+<button class="btn" style="background: transparent; color: var(--ink); box-shadow: inset 0 0 0 1.5px var(--line)">Zrušit</button>
+<button class="btn" style="background: var(--accent); color: #fff">Přidat</button>
+</div>
+</section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+renderVals() {
+const seg = (filled, cap) => Array.from({ length: cap }, (_, i) => ({ c: i < filled ? 'seg full' : 'seg' }));
+return { s10: seg(10, 10) };
+}
+}
+</script>
+</body>
+</html>

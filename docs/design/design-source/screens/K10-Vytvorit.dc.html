@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<title>Vytvořit — trenér</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@500;600;700&amp;family=Manrope:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0;background:#F3F5F9;font-family:Manrope,"Segoe UI",system-ui,sans-serif;color:#0E1726}
+.s{--bg:#F3F5F9;--ink:#0E1726;--muted:#55607A;--line:#DFE4EE;--n50:#ECEFF5;--accent:#2B55E0;--accentsoft:#E5EBFD;--disp:"Barlow Semi Condensed","Arial Narrow",sans-serif}
+.disp{font-family:var(--disp)}
+.opt{display:flex;align-items:center;gap:14px;min-height:72px;padding:12px 14px;border-radius:14px;background:#fff;box-shadow:inset 0 0 0 1.5px var(--line);text-decoration:none;color:inherit}
+.ic{width:44px;height:44px;border-radius:12px;background:var(--accentsoft);color:var(--accent);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.t{display:flex;flex-direction:column;flex-grow:1}
+.t b{font-size:17px;line-height:24px;font-weight:700}
+.t span{font-size:14px;line-height:20px;color:var(--muted)}
+</style>
+</helmet>
+<div class="s" style="width: 390px; height: 844px; background: var(--bg); position: relative; overflow: hidden">
+
+<div aria-hidden="true" style="padding: 60px 16px 16px; display: flex; flex-direction: column; gap: 10px">
+<div class="disp" style="font-size: 40px; line-height: 44px; font-weight: 700">Tréninky</div>
+<div style="height: 90px; border-radius: 16px; background: #fff"></div>
+<div style="height: 90px; border-radius: 16px; background: #fff"></div>
+<div style="height: 90px; border-radius: 16px; background: #fff"></div>
+</div>
+
+<div style="position: absolute; inset: 0; background: rgba(14, 23, 38, 0.45)"></div>
+
+<section role="dialog" aria-modal="true" aria-labelledby="t" style="position: absolute; left: 0; right: 0; bottom: 0; background: #fff; border-radius: 24px 24px 0 0; padding: 10px 20px 32px; display: flex; flex-direction: column; gap: 14px; box-shadow: 0 -12px 32px rgba(14,23,38,.16)">
+<div style="width: 40px; height: 4px; border-radius: 2px; background: var(--line); align-self: center"></div>
+<div style="display: flex; align-items: center; justify-content: space-between">
+<h2 id="t" class="disp" style="margin: 0; font-size: 28px; line-height: 32px; font-weight: 700">Vytvořit</h2>
+<button aria-label="Zavřít" style="width: 44px; height: 44px; border: 0; border-radius: 22px; background: var(--n50); color: var(--ink); display: flex; align-items: center; justify-content: center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"></path></svg></button>
+</div>
+<a class="opt" href="#"><span class="ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15" rx="2.5"></rect><path d="M3.5 10h17M8 3v4M16 3v4M12 13v4M10 15h4"></path></svg></span><span class="t"><b>Trénink</b><span>Jeden termín</span></span><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8791A6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9.5 6 6 6-6 6"></path></svg></a>
+<a class="opt" href="K11-Serie.dc.html"><span class="ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15" rx="2.5"></rect><path d="M3.5 10h17M8 3v4M16 3v4"></path><circle cx="8" cy="14.5" r="1"></circle><circle cx="12" cy="14.5" r="1"></circle><circle cx="16" cy="14.5" r="1"></circle></svg></span><span class="t"><b>Série tréninků</b><span>Opakovaně, např. každou neděli</span></span><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8791A6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9.5 6 6 6-6 6"></path></svg></a>
+</section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

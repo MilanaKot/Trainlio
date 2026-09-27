@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<title>Koho chcete přihlásit — rodič</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@500;600;700&amp;family=Manrope:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0;background:#F3F5F9;font-family:Manrope,"Segoe UI",system-ui,sans-serif;color:#0E1726}
+.s{--bg:#F3F5F9;--surface:#FFFFFF;--ink:#0E1726;--muted:#55607A;--line:#DFE4EE;--segoff:#DCE2EC;--n50:#ECEFF5;--accent:#2B55E0;--accentsoft:#E5EBFD;--warn:#8F5200;--warnseg:#E3A034;--disp:"Barlow Semi Condensed","Arial Narrow",sans-serif}
+.disp{font-family:var(--disp)}
+.card{background:var(--surface);border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:6px}
+.time{font-family:var(--disp);font-weight:700;font-size:28px;line-height:32px;font-variant-numeric:tabular-nums}
+.meta{font-size:14px;line-height:20px;color:var(--muted)}
+.num{font-family:var(--disp);font-weight:600;font-size:18px;font-variant-numeric:tabular-nums}
+.btn{height:52px;width:100%;border-radius:12px;border:0;font:700 16px/1 Manrope,system-ui,sans-serif;background:var(--accent);color:#fff}
+.pick{display:flex;align-items:center;gap:12px;min-height:64px;padding:10px 14px;border-radius:12px;background:#fff;box-shadow:inset 0 0 0 1.5px var(--line);box-sizing:border-box;cursor:pointer}
+.pick.on{box-shadow:inset 0 0 0 2px var(--accent);background:#F7F9FF}
+.pick.off{background:var(--n50);box-shadow:none;color:var(--muted);cursor:not-allowed}
+.pick input{position:absolute;width:1px;height:1px;opacity:0;margin:0}
+.box{width:24px;height:24px;border-radius:7px;flex-shrink:0;box-sizing:border-box;display:flex;align-items:center;justify-content:center;background:#fff;box-shadow:inset 0 0 0 2px #B4BCCC;color:#fff}
+.pick.on .box{background:var(--accent);box-shadow:none}
+.pick.off .box{background:#DFE4EE;box-shadow:none}
+.av{width:40px;height:40px;border-radius:50%;background:var(--accentsoft);color:var(--accent);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;flex-shrink:0}
+.who{display:flex;flex-direction:column}
+.who b{font-size:16px;line-height:22px;font-weight:600}
+</style>
+</helmet>
+<div class="s" style="width: 390px; height: 844px; background: var(--bg); position: relative; overflow: hidden">
+
+<div aria-hidden="true" style="padding: 60px 16px 16px; display: flex; flex-direction: column; gap: 12px">
+<div style="padding: 0 4px 8px"><div class="disp" style="font-size: 40px; line-height: 44px; font-weight: 700">Tréninky</div><div class="meta">Lední hokej · Příbram</div></div>
+<div style="padding: 0 4px; font-size: 17px; font-weight: 700">Neděle 4. října</div>
+<div class="card"><div class="time">09:00–10:00</div><div class="meta">Příbram · MH · Šatna 4</div><div class="meta">Ročníky 2017–2018</div></div>
+</div>
+
+<div style="position: absolute; inset: 0; background: rgba(14, 23, 38, 0.45)"></div>
+
+<section role="dialog" aria-modal="true" aria-labelledby="sheet-title" style="position: absolute; left: 0; right: 0; bottom: 0; background: #fff; border-radius: 24px 24px 0 0; padding: 10px 20px 28px; display: flex; flex-direction: column; gap: 16px; box-shadow: 0 -12px 32px rgba(14,23,38,.16)">
+<div style="width: 40px; height: 4px; border-radius: 2px; background: var(--line); align-self: center"></div>
+
+<div style="display: flex; align-items: center; justify-content: space-between; gap: 12px">
+<h2 id="sheet-title" class="disp" style="margin: 0; font-size: 28px; line-height: 32px; font-weight: 700">Koho chcete přihlásit?</h2>
+<button aria-label="Zavřít" style="width: 44px; height: 44px; border: 0; border-radius: 22px; background: var(--n50); color: var(--ink); display: flex; align-items: center; justify-content: center; flex-shrink: 0"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"></path></svg></button>
+</div>
+
+<div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 14px; border-radius: 12px; background: var(--bg)">
+<div style="display: flex; flex-direction: column">
+<span style="font-size: 15px; line-height: 22px; font-weight: 700; font-variant-numeric: tabular-nums">Neděle 4. října · 09:00–10:00</span>
+<span class="meta">Příbram · MH · Šatna 4</span>
+</div>
+<div style="display: flex; flex-direction: column; align-items: flex-end"><span class="num">7 / 10</span><span class="meta" style="font-size: 12px; line-height: 16px">3 volná místa</span></div>
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 8px">
+<label class="pick on" style="position: relative"><input type="checkbox" checked=""><span class="box" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"></path></svg></span><span class="av">IK</span><span class="who"><b>Ivan Kotov</b><span class="meta">2017</span></span></label>
+<label class="pick on" style="position: relative"><input type="checkbox" checked=""><span class="box" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"></path></svg></span><span class="av">AK</span><span class="who"><b>Anna Kotova</b><span class="meta">2018</span></span></label>
+<label class="pick off" style="position: relative"><input type="checkbox" disabled=""><span class="box" aria-hidden="true"></span><span class="av" style="background: #DFE4EE; color: #55607A">TK</span><span class="who"><b>Tomáš Kotov</b><span class="meta">2020 · mimo ročníky 2017–2018</span></span></label>
+</div>
+
+<div class="meta" style="display: flex; align-items: center; gap: 8px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"></circle><path d="M12 7.5V12l3 2"></path></svg>Odhlásit lze do soboty 3. října 21:00</div>
+
+<button class="btn">Přihlásit 2 sportovce</button>
+</section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>
