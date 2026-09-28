@@ -125,11 +125,11 @@ export function AthleteSheet({
                 term: t.parent,
                 value:
                   guardians === null ? (
-                    <span className="text-subtle">{t.loadingValue}</span>
+                    <span className="text-muted">{t.loadingValue}</span>
                   ) : guardians.length > 0 ? (
                     guardians.map((g) => g.displayName ?? t.none).join(', ')
                   ) : (
-                    <span className="text-subtle">{t.none}</span>
+                    <span className="text-muted">{t.none}</span>
                   ),
               },
               {
@@ -137,11 +137,11 @@ export function AthleteSheet({
                 // AC-254: coaches of this workspace, and nobody else, read it.
                 value:
                   guardians === null ? (
-                    <span className="text-subtle">{t.loadingValue}</span>
+                    <span className="text-muted">{t.loadingValue}</span>
                   ) : phone ? (
                     formatPhone(phone)
                   ) : (
-                    <span className="text-subtle">{t.none}</span>
+                    <span className="text-muted">{t.none}</span>
                   ),
               },
               {

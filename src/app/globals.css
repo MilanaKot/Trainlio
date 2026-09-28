@@ -7,13 +7,11 @@
  * There is no dark theme, and inventing one would mean inventing colours the
  * design never chose.
  *
- * So the dark variant is bound to a class nothing sets, which makes the dark:
- * utilities still present in the pre-design screens inert rather than
- * half-applied. They come out screen by screen as each one is rebuilt. This
- * replaces the operating-system dark mode the interface had before the design
- * arrived; it was coherent then and would be a broken mixture now.
+ * The `dark:` variant that used to be bound to a class nothing set is gone
+ * with the last screen that carried those utilities. If a dark palette is ever
+ * designed, it arrives as tokens redefined under a media query rather than as
+ * a second set of classes on every element.
  */
-@custom-variant dark (&:where(.dark, .dark *));
 
 @layer base {
   html {
