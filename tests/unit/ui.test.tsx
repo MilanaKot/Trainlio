@@ -1,7 +1,10 @@
 import { useState } from 'react'
+
 import { describe, expect, it, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { usePathname } from 'next/navigation'
+import { BottomNav } from '@/components/ui/bottom-nav'
 import { Button } from '@/components/ui/button'
 import { CapacityMeter } from '@/components/ui/capacity-meter'
 import { PickerRow } from '@/components/ui/picker-row'
@@ -10,6 +13,8 @@ import { Stepper } from '@/components/ui/stepper'
 import { DetailList } from '@/components/ui/detail-list'
 import { TextareaWithCounter } from '@/components/ui/field'
 import { Field } from '@/components/ui/field'
+
+vi.mock('next/navigation', () => ({ usePathname: vi.fn(() => '/') }))
 
 describe('Button', () => {
   it('announces the wait and refuses a second press', async () => {
@@ -207,5 +212,35 @@ describe('TextareaWithCounter', () => {
 
     expect(screen.getByText('200 / 200')).toBeInTheDocument()
     expect(screen.getByRole('textbox')).toHaveValue(`${'a'.repeat(198)}bc`)
+  })
+})
+
+describe('BottomNav', () => {
+  const items = [
+    { href: '/trener' as const, label: 'Tréninky', icon: null },
+    { href: '/trener/sportovci' as const, label: 'Sportovci', icon: null },
+    { href: '/trener/vice' as const, label: 'Více', icon: null },
+  ]
+
+  it('lights the tab whose route is the longest match, not every prefix', () => {
+    vi.mocked(usePathname).mockReturnValue('/trener/vice')
+    render(<BottomNav items={items} />)
+
+    expect(screen.getByRole('link', { name: 'Více' })).toHaveAttribute('aria-current', 'page')
+    expect(screen.getByRole('link', { name: 'Tréninky' })).not.toHaveAttribute('aria-current')
+  })
+
+  it('keeps the tab lit on a screen pushed from it', () => {
+    vi.mocked(usePathname).mockReturnValue('/trener/abc/upravit')
+    render(<BottomNav items={items} />)
+    expect(screen.getByRole('link', { name: 'Tréninky' })).toHaveAttribute('aria-current', 'page')
+  })
+
+  // A form is a task, not a tab: two fixed bars would also leave its button
+  // under the navigation.
+  it('stands aside on the screens that replace it', () => {
+    vi.mocked(usePathname).mockReturnValue('/trener/novy')
+    const { container } = render(<BottomNav items={items} hideWhen="^/trener/novy$" />)
+    expect(container).toBeEmptyDOMElement()
   })
 })

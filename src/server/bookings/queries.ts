@@ -204,7 +204,46 @@ export async function listPickerAthletes(sessionId: string): Promise<PickerAthle
     p_training_session_id: sessionId,
   })
 
-  return rows('guardian_session_athletes', result).map((row) => ({
+  return rows('guardian_session_athletes', result).map(toPickerAthlete)
+}
+
+/**
+ * The same, for a whole list of trainings in one call (migration 32).
+ *
+ * The training list renders a picker per card. One call per card is one round
+ * trip per card, which a club with forty trainings on the board turns into
+ * forty — enough to exhaust the connections before the page renders. The
+ * database answers all of them at once, with the same function behind it.
+ */
+export async function listPickerAthletesFor(
+  sessionIds: string[],
+): Promise<Map<string, PickerAthlete[]>> {
+  const bySession = new Map<string, PickerAthlete[]>(sessionIds.map((id) => [id, []]))
+  if (sessionIds.length === 0) return bySession
+
+  const supabase = await createClient()
+  const result = await supabase.rpc('guardian_session_athletes_many', {
+    p_training_session_ids: sessionIds,
+  })
+
+  for (const row of rows('guardian_session_athletes_many', result)) {
+    bySession.get(row.training_session_id)?.push(toPickerAthlete(row))
+  }
+
+  return bySession
+}
+
+function toPickerAthlete(row: {
+  athlete_id: string
+  first_name: string
+  last_name: string
+  date_of_birth: string
+  eligibility: string
+  booking_status: PickerAthlete['bookingStatus']
+  removed_by_coach: boolean
+  can_book: boolean
+}): PickerAthlete {
+  return {
     athleteId: row.athlete_id,
     firstName: row.first_name,
     lastName: row.last_name,
@@ -213,7 +252,7 @@ export async function listPickerAthletes(sessionId: string): Promise<PickerAthle
     bookingStatus: row.booking_status,
     removedByCoach: row.removed_by_coach,
     canBook: row.can_book,
-  }))
+  }
 }
 
 /**

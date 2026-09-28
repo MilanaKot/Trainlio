@@ -57,6 +57,26 @@ export const cs = {
     newSession: 'Vytvořit trénink',
     series: 'Série tréninků',
     athletes: 'Sportovci',
+    more: 'Více',
+  },
+
+  /* A0 (admin/SPEC.md §A0): the coach's own screen — who they are, what they
+     administer, and the way out of the application. */
+  more: {
+    title: 'Více',
+    roleCoach: 'Trenér',
+    roleAdmin: 'Trenér · Administrátor',
+    manageCaption: 'SPRÁVA',
+    accountCaption: 'ÚČET',
+    organization: 'Organizace',
+    organizationValue: 'Logo a název',
+    coaches: 'Trenéři',
+    personalDetails: 'Osobní údaje a e-mail',
+    /* The full sentence is required: `Odhlásit` on its own means cancelling a
+       training, which is the last thing a coach should read here. */
+    signOut: 'Odhlásit se z aplikace',
+    signOutTitle: 'Odhlásit se z aplikace?',
+    signOutConfirm: 'Odhlásit se',
   },
 
   /**

@@ -1302,6 +1302,20 @@ export type Database = {
           removed_by_coach: boolean
         }[]
       }
+      guardian_session_athletes_many: {
+        Args: { p_training_session_ids: string[] }
+        Returns: {
+          athlete_id: string
+          booking_status: Database["public"]["Enums"]["booking_status"]
+          can_book: boolean
+          date_of_birth: string
+          eligibility: string
+          first_name: string
+          last_name: string
+          removed_by_coach: boolean
+          training_session_id: string
+        }[]
+      }
       has_athlete_access: { Args: { p_athlete_id: string }; Returns: boolean }
       has_athlete_manage_access: {
         Args: { p_athlete_id: string }

@@ -69,8 +69,15 @@ test.describe('a workspace administrator manages the coaching staff', () => {
     // the write would give (AC-241).
     const coach = uniqueEmail('trener.stab')
     // Signed in as the administrator, /prihlaseni sends you where you already
-    // belong, so the sign-in form is only reachable after signing out.
-    await page.getByRole('button', { name: 'Odhlásit se' }).click()
+    // belong, so the sign-in form is only reachable after signing out — which
+    // lives on `Více` (§A0) and asks first, because `Odhlásit` on its own
+    // means cancelling a training in this product.
+    await page.goto('/trener/vice')
+    await page.getByRole('button', { name: 'Odhlásit se z aplikace' }).click()
+    await page
+      .getByRole('alertdialog')
+      .getByRole('button', { name: 'Odhlásit se', exact: true })
+      .click()
     await page.waitForURL(/\/prihlaseni/)
     await signIn(page, coach)
     await grantCoach(coach)

@@ -188,3 +188,21 @@ test('the create and edit form (§K3)', async ({ page }) => {
   await expect(page.getByRole('heading', { name: 'Asistenti' })).toBeVisible()
   await shoot(page, 'K3b-asistenti')
 })
+
+test('the coach tabs (§K1, §A0)', async ({ page }) => {
+  const admin = uniqueEmail('spravce')
+  await signIn(page, admin)
+  await grantWorkspaceRole(admin, 'WORKSPACE_ADMIN')
+
+  await page.goto('/trener')
+  await expect(page.getByRole('heading', { name: 'Tréninky' })).toBeVisible()
+  await shoot(page, 'K1-treninky-trener')
+
+  await page.goto('/trener/sportovci')
+  await expect(page.getByRole('heading', { name: 'Sportovci' })).toBeVisible()
+  await shoot(page, 'K-sportovci')
+
+  await page.goto('/trener/vice')
+  await expect(page.getByRole('heading', { name: 'Více' })).toBeVisible()
+  await shoot(page, 'A0-vice')
+})

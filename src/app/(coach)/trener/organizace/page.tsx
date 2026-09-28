@@ -22,8 +22,9 @@ export default async function OrganizationPage() {
   return (
     <main className="flex flex-col gap-5">
       <div className="flex flex-col gap-2">
-        <Link href="/trener" className="flex min-h-11 items-center text-row text-muted">
-          ‹ {t.back}
+        {/* Back to the screen this one hangs from (§A4). */}
+        <Link href="/trener/vice" className="flex min-h-11 items-center text-row text-muted">
+          ‹ {messages.more.title}
         </Link>
         <h1 className="font-display text-form-title font-bold text-ink">{t.title}</h1>
       </div>

@@ -73,7 +73,7 @@ export function CreateSheet() {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="fixed bottom-6 right-4 z-20 flex h-14 items-center gap-2 rounded-full bg-primary px-5 text-body font-bold text-white shadow-[0_8px_24px_rgb(43_85_224/.35)] active:bg-primary-600"
+        className="fixed right-4 z-20 flex h-14 [bottom:calc(var(--spacing-nav)+1rem+env(safe-area-inset-bottom))] items-center gap-2 rounded-full bg-primary px-5 text-body font-bold text-white shadow-[0_8px_24px_rgb(43_85_224/.35)] active:bg-primary-600"
       >
         <span aria-hidden="true">+</span> {t.create}
       </button>

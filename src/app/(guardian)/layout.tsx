@@ -1,7 +1,14 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import { BottomNav } from '@/components/layout/bottom-nav'
+import { BottomNav } from '@/components/ui/bottom-nav'
 import { ToastProvider } from '@/components/ui/toast'
+import {
+  CalendarIcon,
+  CheckCalendarIcon,
+  PeopleIcon,
+  PersonIcon,
+} from '@/components/ui/nav-icons'
+import { messages } from '@/lib/i18n'
 
 /**
  * Everything in this group requires a signed-in guardian.
@@ -24,8 +31,15 @@ export default async function GuardianLayout({ children }: { children: React.Rea
     // unmount with it before the message was read.
     <ToastProvider>
       {/* Bottom padding clears the fixed navigation. */}
-      <div className="mx-auto min-h-dvh max-w-md px-4 pb-24 pt-6">{children}</div>
-      <BottomNav />
+      <div className="mx-auto min-h-dvh max-w-md px-4 pb-28 pt-6">{children}</div>
+      <BottomNav
+        items={[
+          { href: '/treninky', label: messages.nav.sessions, icon: <CalendarIcon /> },
+          { href: '/moje-treninky', label: messages.nav.myBookings, icon: <CheckCalendarIcon /> },
+          { href: '/moji-sportovci', label: messages.nav.myAthletes, icon: <PeopleIcon /> },
+          { href: '/ucet', label: messages.nav.account, icon: <PersonIcon /> },
+        ]}
+      />
     </ToastProvider>
   )
 }

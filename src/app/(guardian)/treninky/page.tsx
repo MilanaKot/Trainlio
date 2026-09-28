@@ -2,7 +2,7 @@ import Link from 'next/link'
 import {
   getCancellationDeadlineHours,
   listBookableSessions,
-  listPickerAthletes,
+  listPickerAthletesFor,
 } from '@/server/bookings/queries'
 import { listGuardianAthletes, listJoinableWorkspaces } from '@/server/athletes/queries'
 import { TrainingCard } from '@/components/booking/training-card'
@@ -41,13 +41,10 @@ export default async function SessionsPage() {
   const timezone = workspace?.timezone ?? DEFAULT_TIMEZONE
   const now = new Date()
 
-  // One picker query per session. Each returns only this guardian's athletes
-  // with the server's own eligibility verdict.
-  const athletesBySession = new Map(
-    await Promise.all(
-      sessions.map(async (session) => [session.id, await listPickerAthletes(session.id)] as const),
-    ),
-  )
+  // One query for the whole list, not one per card (migration 32). It returns
+  // only this guardian's athletes, each with the server's own eligibility
+  // verdict.
+  const athletesBySession = await listPickerAthletesFor(sessions.map((session) => session.id))
 
   const sports = messages.sports as Record<string, string>
   // The venue comes from the club, not from whichever training is first: a
@@ -72,9 +69,7 @@ export default async function SessionsPage() {
           <div className="flex items-center gap-2.5">
             <OrgLogo org={workspace.organization} size={36} />
             <div className="flex min-w-0 flex-col">
-              <p className="truncate text-row font-bold text-ink">
-                {workspace.organization.name}
-              </p>
+              <p className="truncate text-row font-bold text-ink">{workspace.organization.name}</p>
               {meta.length > 0 ? (
                 <p className="truncate text-hint font-normal text-muted">{meta.join(' · ')}</p>
               ) : null}

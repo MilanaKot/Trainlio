@@ -23,8 +23,29 @@ export type NavItem = {
   icon: React.ReactNode
 }
 
-export function BottomNav({ items }: { items: NavItem[] }) {
+export function BottomNav({
+  items,
+  /**
+   * Screens that replace the tab bar rather than sit above it: a form is a
+   * task, not a tab, and it ends with `Zrušit` at the top and one button at
+   * the bottom. Two fixed bars stacked on a phone would also leave the
+   * button under the navigation.
+   */
+  hideWhen,
+}: {
+  items: NavItem[]
+  /** A regular expression source. A RegExp itself cannot cross the server
+   *  boundary, and this component is rendered from a server layout. */
+  hideWhen?: string
+}) {
   const pathname = usePathname()
+
+  if (hideWhen && new RegExp(hideWhen).test(pathname)) return null
+
+  const best = items
+    .map((item) => item.href)
+    .filter((href) => pathname === href || pathname.startsWith(`${href}/`))
+    .sort((a, b) => b.length - a.length)[0]
 
   return (
     <nav
@@ -34,7 +55,12 @@ export function BottomNav({ items }: { items: NavItem[] }) {
       {items.map((item) => {
         // A pushed screen keeps its tab lit: /moji-sportovci/novy is still
         // "Moji sportovci" as far as a person is concerned.
-        const active = pathname === item.href || pathname.startsWith(`${item.href}/`)
+        //
+        // The longest match wins, and that is not a detail: the coach's tabs
+        // all live under /trener, so a plain prefix test lit `Tréninky` on
+        // every screen in the group — including the one whose own tab was
+        // already lit beside it.
+        const active = item.href === best
 
         return (
           <Link

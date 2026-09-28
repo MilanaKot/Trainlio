@@ -123,3 +123,50 @@ export async function getBookingGuardians(bookingId: string): Promise<BookingGua
     phone: row.phone,
   }))
 }
+
+export type WorkspaceAthlete = {
+  id: string
+  firstName: string
+  lastName: string
+  birthYear: number
+  isActive: boolean
+  positionCode: string | null
+}
+
+/**
+ * Everyone the coach's club trains (coach/SPEC.md: the `Sportovci` tab, whose
+ * content this round of the design does not specify).
+ *
+ * Read from the table rather than through a function, because the row policy
+ * already answers exactly this question: `coach_can_see_athlete` is active
+ * membership of a workspace this person coaches. A guardian running the same
+ * query gets their own children and nobody else's.
+ */
+export async function listWorkspaceAthletes(): Promise<WorkspaceAthlete[]> {
+  const supabase = await createClient()
+
+  const result = await supabase
+    .from('athletes')
+    .select(
+      'id, first_name, last_name, date_of_birth, is_active, athlete_sport_profiles ( attributes )',
+    )
+    .order('last_name')
+    .order('first_name')
+
+  return rows('listWorkspaceAthletes', result).map((row) => {
+    const profile = (row.athlete_sport_profiles ?? [])[0] as { attributes?: unknown } | undefined
+    const attributes =
+      typeof profile?.attributes === 'object' && profile.attributes !== null
+        ? (profile.attributes as Record<string, unknown>)
+        : {}
+
+    return {
+      id: row.id,
+      firstName: row.first_name,
+      lastName: row.last_name,
+      birthYear: Number(row.date_of_birth.slice(0, 4)),
+      isActive: row.is_active,
+      positionCode: typeof attributes.position === 'string' ? attributes.position : null,
+    }
+  })
+}

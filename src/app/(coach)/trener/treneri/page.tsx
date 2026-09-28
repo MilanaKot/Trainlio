@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { getCoachWorkspace } from '@/server/sessions/queries'
 import { getWorkspaceStaff } from '@/server/staff/queries'
@@ -20,10 +21,12 @@ export default async function StaffPage() {
 
   return (
     <main className="flex flex-col gap-4">
-      <h1 className="text-2xl font-semibold">{messages.staff.title}</h1>
+      <Link href="/trener/vice" className="flex min-h-11 items-center text-row text-muted">
+        ‹ {messages.more.title}
+      </Link>
+      <h1 className="font-display text-form-title font-bold text-ink">{messages.staff.title}</h1>
       <p className="text-sm opacity-70">{messages.staff.intro}</p>
       <StaffList workspaceId={workspace.id} staff={staff} canAdd={canAdd} />
-
     </main>
   )
 }

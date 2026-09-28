@@ -363,5 +363,35 @@ select pg_temp.check(
       and grantee in ('authenticated', 'anon')),
   '0', 'no client role holds one on any column of the table (AC-259)');
 
+\echo ''
+\echo '── The picker, for a whole list at once (m32) ───────────────────────'
+
+-- The batched call is the same question asked once. Anything else would mean
+-- the list and the card could disagree about who may book.
+select pg_temp.check(
+  pg_temp.as_user(:A, format($$select count(*)::text
+    from public.guardian_session_athletes_many(array[%L::uuid])$$, pg_temp.s())),
+  pg_temp.as_user(:A, format($$select count(*)::text
+    from public.guardian_session_athletes(%L::uuid)$$, pg_temp.s())),
+  'one session through the batch matches the single call (m32)');
+
+select pg_temp.check(
+  pg_temp.as_user(:A, format($$select string_agg(distinct training_session_id::text, ',')
+    from public.guardian_session_athletes_many(array[%L::uuid])$$, pg_temp.s())),
+  pg_temp.s()::text, 'and every row says which training it is about (m32)');
+
+select pg_temp.check(
+  pg_temp.as_user(:A, $$select count(*)::text
+    from public.guardian_session_athletes_many(array[]::uuid[])$$),
+  '0', 'an empty list asks nothing (m32)');
+
+-- Somebody else's family is still somebody else's: the batch reads the caller,
+-- not the argument.
+select pg_temp.check(
+  pg_temp.as_user(:COACH, format($$select count(*)::text
+    from public.guardian_session_athletes_many(array[%L::uuid])$$, pg_temp.s())),
+  '0', 'and a coach is not a guardian of anybody (D-01, m32)');
+
+
 drop function pg_temp.as_user(text,text);
 drop function pg_temp.check(text,text,text);
