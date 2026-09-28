@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<title>Přihlášení — s logem</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@500;600;700&amp;family=Manrope:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0;background:#F3F5F9;font-family:Manrope,"Segoe UI",system-ui,sans-serif;color:#0E1726}
+.s{--bg:#F3F5F9;--ink:#0E1726;--muted:#55607A;--line:#DFE4EE;--accent:#2B55E0;--accentsoft:#E5EBFD;--disp:"Barlow Semi Condensed","Arial Narrow",sans-serif}
+.disp{font-family:var(--disp)}
+.lbl{font-size:14px;line-height:20px;font-weight:600}
+.inp{height:52px;border-radius:10px;border:0;background:#fff;padding:0 14px;font:500 16px Manrope,sans-serif;color:var(--ink);box-sizing:border-box;width:100%;box-shadow:inset 0 0 0 2px var(--accent),0 0 0 4px var(--accentsoft)}
+.inp::placeholder{color:#8791A6}
+.btn{height:52px;width:100%;border-radius:12px;border:0;font:700 16px/1 Manrope,system-ui,sans-serif;background:var(--accent);color:#fff}
+</style>
+</helmet>
+<div class="s" style="width: 390px; height: 844px; background: var(--bg); box-sizing: border-box; padding: 96px 20px 32px; display: flex; flex-direction: column; gap: 40px">
+<div style="display: flex; align-items: center; gap: 14px">
+<span style="width: 72px; height: 72px; border-radius: 20px; background: #fff; box-shadow: inset 0 0 0 1px var(--line); display: flex; align-items: center; justify-content: center; flex-shrink: 0"><svg width="56" height="56" viewBox="0 0 64 64" role="img" aria-label="Hokejová škola Příbram"><path d="M32 3 57 11v19c0 15.5-10.5 27-25 31C17.5 57 7 45.5 7 30V11z" fill="#0E3A7A"></path><path d="M32 9 51 15v15c0 11.5-7.6 20.5-19 24-11.4-3.5-19-12.5-19-24V15z" fill="#FFFFFF"></path><path d="M17 24h30M17 31h30" stroke="#C8102E" stroke-width="4"></path><text x="32" y="46" text-anchor="middle" font-family="Barlow Semi Condensed, Arial Narrow, sans-serif" font-weight="700" font-size="11" fill="#0E3A7A">HŠP</text></svg></span>
+<div style="display: flex; flex-direction: column"><b style="font-size: 20px; line-height: 26px">Hokejová škola Příbram</b><span style="font-size: 14px; color: var(--muted)">Rezervace tréninků</span></div>
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 8px">
+<h1 class="disp" style="margin: 0; font-size: 40px; line-height: 44px; font-weight: 700">Přihlášení</h1>
+<p style="margin: 0; font-size: 16px; line-height: 24px; color: var(--muted)">Zadejte svůj e-mail. Pošleme vám jednorázový kód, heslo nepotřebujete.</p>
+</div>
+
+<form style="display: flex; flex-direction: column; gap: 16px">
+<div style="display: flex; flex-direction: column; gap: 6px"><label class="lbl" for="em">E-mail</label><input id="em" class="inp" type="email" placeholder="jmeno@email.cz" autocomplete="email"></div>
+<button class="btn" type="submit">Poslat kód</button>
+</form>
+<div style="margin-top: auto; display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 13px; color: var(--muted)">Běží na <span class="disp" style="font-size: 16px; font-weight: 700; color: var(--ink); display: inline-flex; align-items: flex-end; gap: 2px">trainlio<span style="width: 4px; height: 8px; border-radius: 1px; background: var(--accent); margin-bottom: 3px"></span></span></div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

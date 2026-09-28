@@ -9,13 +9,13 @@ trainlio-handoff/
 │   ├── tokens.css           ← Tailwind 4 @theme tokens (import from app/globals.css)
 │   └── DESIGN_SYSTEM.md     ← principles, type scale, components, formatting, plurals, a11y, error copy
 ├── guardian/
-│   ├── prototype.html       ← clickable prototype G1–G16 (open in a browser)
+│   ├── prototype.html       ← clickable prototype G1–G16 + G1b/G1c, G11b/G11c (org logo states)
 │   └── SPEC.md              ← routes, data, per-screen behaviour, copy, tests, open questions
 ├── coach/
 │   ├── prototype.html       ← K1–K11 (+ A0)
 │   └── SPEC.md
 ├── admin/
-│   ├── prototype.html       ← A0–A3
+│   ├── prototype.html       ← A0–A5 (coaches + organization logo)
 │   └── SPEC.md
 ├── brief/DESIGN_BRIEF.md    ← original product brief
 └── design-source/screens/   ← source of every canvas screen (.dc.html, reference only)
@@ -54,4 +54,11 @@ The prototypes are visual references with sample data (names like Jan Novák, El
 18. Coaches see the guardian's phone (optional field) and can call/SMS from the roster.
 19. Coach can remove a child from a session (optional message to the parent). Parent sees an orange `Odhlášeno trenérem` badge (no strike-through), gets an e-mail, and may re-book if a place is free.
 
+20. Admin can upload an organization (club / training-centre) logo and set its name + optional short name (`Více › Organizace`, A4/A5). Logo is cropped to a square, stored as 512 px PNG; SVG is rasterized.
+21. Logo appears in the login screen (72), the guardian `Tréninky` header (36) and e-mail headers. No logo → cobalt monogram from the first two words of the name (`HŠ`), same size and shape. One `OrgLogo` component (DS §6.23).
+22. No "how parents will see it" preview on the admin screen.
+
 Open questions are listed at the end of each SPEC.md.
+
+## Changelog
+- **v2 — organization logo.** New: DS §6.23 OrgLogo; admin A4/A4b/A5 + A0 row `Organizace`; guardian G11 header (G11b/G11c) and G1 header (G1b/G1c); decisions 20–22. See `CLAUDE_CODE_TASK_logo.md` for the implementation prompt.

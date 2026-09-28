@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<title>Upravit logo — admin</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@500;600;700&amp;family=Manrope:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0;background:#F3F5F9;font-family:Manrope,"Segoe UI",system-ui,sans-serif;color:#0E1726}
+.s{--bg:#F3F5F9;--ink:#0E1726;--muted:#55607A;--line:#DFE4EE;--n50:#ECEFF5;--accent:#2B55E0;--accentsoft:#E5EBFD;--disp:"Barlow Semi Condensed","Arial Narrow",sans-serif}
+.disp{font-family:var(--disp)}
+.help{font-size:13px;line-height:18px;color:var(--muted)}
+.btn{height:52px;width:100%;border-radius:12px;border:0;font:700 16px/1 Manrope,system-ui,sans-serif}
+.checker{background-color:#fff;background-image:linear-gradient(45deg,#ECEFF5 25%,transparent 25%),linear-gradient(-45deg,#ECEFF5 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#ECEFF5 75%),linear-gradient(-45deg,transparent 75%,#ECEFF5 75%);background-size:16px 16px;background-position:0 0,0 8px,8px -8px,-8px 0}
+.segc{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px;padding:4px;border-radius:12px;background:var(--n50)}
+.segc span{height:40px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:600;color:var(--muted)}
+.segc span.on{background:#fff;color:var(--ink);box-shadow:0 1px 2px rgba(14,23,38,.08)}
+</style>
+</helmet>
+<div class="s" style="width: 390px; height: 844px; background: var(--bg); position: relative; overflow: hidden">
+<div style="position: absolute; inset: 0; background: rgba(14, 23, 38, 0.45)"></div>
+
+<section role="dialog" aria-modal="true" aria-labelledby="t" style="position: absolute; left: 0; right: 0; bottom: 0; top: 48px; background: #fff; border-radius: 24px 24px 0 0; padding: 10px 20px 28px; display: flex; flex-direction: column; gap: 16px; box-shadow: 0 -12px 32px rgba(14,23,38,.16)">
+<div style="width: 40px; height: 4px; border-radius: 2px; background: var(--line); align-self: center"></div>
+<div style="display: flex; align-items: center; justify-content: space-between">
+<h2 id="t" class="disp" style="margin: 0; font-size: 28px; line-height: 32px; font-weight: 700">Upravit logo</h2>
+<button aria-label="Zavřít" style="width: 44px; height: 44px; border: 0; border-radius: 22px; background: var(--n50); color: var(--ink); display: flex; align-items: center; justify-content: center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"></path></svg></button>
+</div>
+
+<div class="checker" style="position: relative; height: 260px; border-radius: 16px; display: flex; align-items: center; justify-content: center; box-shadow: inset 0 0 0 1px var(--line)">
+<div style="position: absolute; width: 200px; height: 200px; border-radius: 24px; box-shadow: 0 0 0 999px rgba(14,23,38,.35), inset 0 0 0 2px #fff"></div>
+<svg width="170" height="170" viewBox="0 0 64 64" role="img" aria-label="Náhled loga (ukázka)"><path d="M32 3 57 11v19c0 15.5-10.5 27-25 31C17.5 57 7 45.5 7 30V11z" fill="#0E3A7A"></path><path d="M32 9 51 15v15c0 11.5-7.6 20.5-19 24-11.4-3.5-19-12.5-19-24V15z" fill="#FFFFFF"></path><path d="M17 24h30M17 31h30" stroke="#C8102E" stroke-width="4"></path><text x="32" y="46" text-anchor="middle" font-family="Barlow Semi Condensed, Arial Narrow, sans-serif" font-weight="700" font-size="11" fill="#0E3A7A">HŠP</text></svg>
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 6px">
+<label for="z" style="display: flex; justify-content: space-between; font-size: 14px; font-weight: 600">Velikost<span class="help">Posunutím obrázek vycentrujete</span></label>
+<input id="z" type="range" min="50" max="150" value="100" style="width: 100%; accent-color: #2B55E0; height: 44px">
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 6px">
+<span style="font-size: 14px; font-weight: 600">Pozadí loga</span>
+<div class="segc" role="radiogroup" aria-label="Pozadí loga"><span class="on" role="radio" aria-checked="true">Bílé</span><span role="radio" aria-checked="false">Průhledné</span></div>
+</div>
+
+<div style="display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 12px; background: var(--bg)">
+<span class="help" style="flex-grow: 1">Náhled v aplikaci</span>
+<span style="width: 36px; height: 36px; border-radius: 10px; background: #fff; box-shadow: inset 0 0 0 1px var(--line); display: flex; align-items: center; justify-content: center"><svg width="28" height="28" viewBox="0 0 64 64" aria-hidden="true"><path d="M32 3 57 11v19c0 15.5-10.5 27-25 31C17.5 57 7 45.5 7 30V11z" fill="#0E3A7A"></path><path d="M32 9 51 15v15c0 11.5-7.6 20.5-19 24-11.4-3.5-19-12.5-19-24V15z" fill="#FFFFFF"></path><path d="M17 24h30M17 31h30" stroke="#C8102E" stroke-width="4"></path></svg></span>
+<span style="width: 56px; height: 56px; border-radius: 16px; background: #fff; box-shadow: inset 0 0 0 1px var(--line); display: flex; align-items: center; justify-content: center"><svg width="44" height="44" viewBox="0 0 64 64" aria-hidden="true"><path d="M32 3 57 11v19c0 15.5-10.5 27-25 31C17.5 57 7 45.5 7 30V11z" fill="#0E3A7A"></path><path d="M32 9 51 15v15c0 11.5-7.6 20.5-19 24-11.4-3.5-19-12.5-19-24V15z" fill="#FFFFFF"></path><path d="M17 24h30M17 31h30" stroke="#C8102E" stroke-width="4"></path></svg></span>
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 8px; margin-top: auto">
+<button class="btn" style="background: var(--accent); color: #fff">Použít logo</button>
+<button class="btn" style="background: transparent; color: var(--ink); box-shadow: inset 0 0 0 1.5px var(--line)">Vybrat jiný soubor</button>
+</div>
+</section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

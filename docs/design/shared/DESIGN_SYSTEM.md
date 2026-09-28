@@ -167,7 +167,7 @@ Guardian: 4 items — Tréninky, Moje tréninky, Moji sportovci, Účet. Coach/a
 Extended pill 56 px high, radius 28, primary, `+ Vytvořit`, `shadow` `0 8px 24px rgb(43 85 224 / .35)`; right 16, above nav. Opens "Vytvořit" sheet.
 
 ### 6.19 Avatar
-Circle 28 / 36 / 40 / 56 / 72; initials 11–24 px/700; active: primary-100 + primary; inactive/ineligible: neutral-200 + muted. Photo replaces initials when present (object-fit cover).
+Circle 28 / 36 / 40 / 56 / 72 (people only — organizations use the square OrgLogo, §6.23); initials 11–24 px/700; active: primary-100 + primary; inactive/ineligible: neutral-200 + muted. Photo replaces initials when present (object-fit cover).
 
 ### 6.20 DetailList (dl)
 White panel radius 16, padding 4/16; rows grid `112px 1fr`, padding 12/0, divider `line`. `dt` 14 muted, `dd` 15/600. Empty optional value: `—` in muted/400 (row stays visible).
@@ -183,6 +183,23 @@ Compact (no big illustrations): 48 px icon tile, one sentence 16/600, optional p
 Card-shaped skeletons (neutral-50 blocks, 1.2 s shimmer), max 3 per list. Buttons show loading state instead of full-screen spinners.
 
 ---
+
+### 6.23 OrgLogo (organization logo / monogram)
+One component for every place the club / training-centre identity appears: `<OrgLogo org size />`.
+
+| Size | Plate radius | Image box | Monogram font | Used in |
+|---|---|---|---|---|
+| 28 | 8 | 22 | 12 | A0 row icon |
+| 36 | 10 | 28 | 16 | G1 list header |
+| 56 | 16 | 44 | 24 | A5 preview |
+| 72 | 20 | 56 | 32 | Login (G11) |
+| 96 | 20 | 72 | 40 | A4 admin preview |
+
+- **With logo, `logoBackground = "white"` (default):** white square plate, `box-shadow: inset 0 0 0 1px var(--color-line)`, image centred with `object-fit: contain` inside the image box (≈78 % of the plate).
+- **With logo, `logoBackground = "transparent"`:** no plate, no border; image fills the full size (`contain`). For logos that are already a badge/shield shape.
+- **No logo → monogram:** same size and radius, `primary-100` background, `primary` text, Barlow Semi Condensed 700. Initials = first letter of the first two words of `name` (`Hokejová škola Příbram` → `HŠ`); one-word name → first two letters; uppercase with `toLocaleUpperCase("cs")`, keep diacritics. Never generate a random colour.
+- a11y: logo `<img alt={org.name}>` when it is the only name on screen, otherwise `alt=""` (name is printed next to it). Monogram is `aria-hidden` when the name is next to it.
+- Loading / broken image → fall back to the monogram (no broken-image icon).
 
 ## 7. Formatting helpers (implement once in `lib/format.ts`)
 

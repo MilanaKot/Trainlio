@@ -1,6 +1,6 @@
 # Trainlio — Guardian (parent / athlete) UI spec
 
-Audience: Claude Code implementing the guardian app. Read `../shared/DESIGN_SYSTEM.md` first; component names below refer to it. Visual reference: `prototype.html` in this folder (screen IDs G1–G16 match this document). UI copy is Czech and must be used verbatim (quoted strings).
+Audience: Claude Code implementing the guardian app. Read `../shared/DESIGN_SYSTEM.md` first; component names below refer to it. Visual reference: `prototype.html` in this folder (screen IDs G1–G16 match this document; G1b/G1c and G11b/G11c show the organization logo states). UI copy is Czech and must be used verbatim (quoted strings).
 
 ## 0. Scope & principles
 
@@ -99,8 +99,9 @@ Derived values:
 ## 4. Screens
 
 ### G11 · Login — e-mail (`/login`)
-Layout: wordmark "trainlio" (Barlow 36/700 + 8 × 17 cobalt bar), H1 `Přihlášení`, text `Zadejte svůj e-mail. Pošleme vám jednorázový kód, heslo nepotřebujete.`, field `E-mail` (type email, `autocomplete="email"`, placeholder `jmeno@email.cz`), primary lg `Poslat kód`.
+Layout (**updated — see G11b/G11c**): organization block at the top instead of the trainlio wordmark: OrgLogo 72 (logo or monogram, DS §6.23) + name 20/700 + `Rezervace tréninků` 14 muted. Then H1 `Přihlášení`, text `Zadejte svůj e-mail. Pošleme vám jednorázový kód, heslo nepotřebujete.`, field `E-mail` (type email, `autocomplete="email"`, placeholder `jmeno@email.cz`), primary lg `Poslat kód`.
 Behaviour: Zod email validation; invalid → field error `Zadejte platný e-mail.`; submit → Supabase `signInWithOtp({ email })` → navigate to G12. Loading label `Posílám…`.
+Footer pinned to bottom: `Běží na` + small trainlio wordmark (Barlow 16/700 + 4 × 8 cobalt bar), 13 muted, centred.
 Acceptance: Enter submits; error tied to field; button disabled while sending.
 
 ### G12 · Login — OTP code (`/login/verify`)
@@ -109,7 +110,7 @@ Behaviour: single hidden `<input inputmode="numeric" autocomplete="one-time-code
 Open: code length (6 assumed) and resend interval (60 s assumed).
 
 ### G1 · Trainings (`/trainings`)
-Header: H1 `Tréninky`, meta `Lední hokej · Příbram`.
+Header (**updated — see G1b/G1c**): row with OrgLogo 36 + column (org `name` 15/700, single line with ellipsis; meta `Lední hokej · Příbram` 13 muted), gap 10; below it H1 `Tréninky` (Barlow 40/44). No logo → monogram of the same size. Only G1 gets the org header; other tabs keep plain H1.
 List: upcoming sessions (status open/closed) grouped by day, ascending. Group heading `text-date` in **primary** (`Neděle 27. září`); today adds TodayChip `Dnes` (green). Cancelled sessions are hidden here unless the guardian has a booking (then they appear in My trainings instead).
 Card: TrainingCard (see DS §6.5). Footer button (always 124 × 44) — decide by first matching rule:
 
@@ -240,6 +241,7 @@ E-mail (not designed here): booking confirmation (optional), significant session
 7b. Coach removes a child → e-mail sent; G4 card shows orange `Odhlášeno trenérem`, no strike-through; `Přihlásit` re-opens G2 with that child preselected; after re-booking the card returns to the normal state.
 8. All card buttons measure 124 × 44.
 9. Axe: no serious violations on G1, G2, G4, G6, G9.
+10. Org with logo → logo on G11 and G1 header; org without logo → monogram `HŠ` in the same size/position, no broken image.
 
 ## 7. Assumptions & open questions (confirm before build)
 - OTP length 6, resend after 60 s.
