@@ -171,13 +171,25 @@ function shortWeekday(at: Date, timeZone: Timezone): string {
   return WEEKDAY_SHORT[index] ?? ''
 }
 
-/** `Neděle 27. září` — the date heading a list groups by. */
+/**
+ * `Neděle 27. září` — the date heading a list groups by.
+ *
+ * The day and the month are formatted in one call on purpose. Czech puts the
+ * month in the genitive after a day number: `11. října`, not `11. říjen`.
+ * Asking Intl for the month on its own returns the standalone nominative, so
+ * composing the two from separate calls produces a heading no Czech reader
+ * would write. Asking for both fields together gives it the date pattern, and
+ * the right case with it.
+ */
 export function formatDateGroup(at: Date, timeZone: Timezone): string {
   const weekday = part(at, timeZone, { weekday: 'long' }, 'weekday')
-  const day = part(at, timeZone, { day: 'numeric' }, 'day')
-  const month = part(at, timeZone, { month: 'long' }, 'month')
+  const dayMonth = new Intl.DateTimeFormat(CZECH_LOCALE, {
+    timeZone,
+    day: 'numeric',
+    month: 'long',
+  }).format(at)
   const capitalised = weekday.charAt(0).toLocaleUpperCase(CZECH_LOCALE) + weekday.slice(1)
-  return `${capitalised} ${day}. ${month}`
+  return `${capitalised} ${dayMonth}`
 }
 
 /** `Ne 27. 9.` — the compact form used inside sheets and summaries. */

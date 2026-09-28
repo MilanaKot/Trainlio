@@ -98,6 +98,9 @@ select pg_temp.check(
 select pg_temp.check(
   (select (significant_changed_at is null)::text from public.training_sessions where id=pg_temp.s1()),
   'true', 'so no marker is set (AC-191, AC-204)');
+select pg_temp.check(
+  (select (significant_change is null)::text from public.training_sessions where id=pg_temp.s1()),
+  'true', 'and nothing is recorded for a parent to read (AC-269)');
 select pg_temp.check((select count(*)::text from public.notification_events where training_session_id=pg_temp.s1()), '0', 'and no email is queued (AC-062, AC-204)');
 
 select pg_temp.check(
@@ -118,12 +121,35 @@ select pg_temp.check(
 select pg_temp.check(
   (select (significant_changed_at is not null)::text from public.training_sessions where id=pg_temp.s1()),
   'true', 'and sets the marker (AC-190)');
+select pg_temp.check(
+  (select significant_change -> 'fields' ->> 0 from public.training_sessions where id=pg_temp.s1()),
+  'TIME', 'the record names the time, not the date, when only the clock moved (AC-269)');
+select pg_temp.check(
+  (select to_char((significant_change -> 'previous' ->> 'start_at')::timestamptz
+                    at time zone 'Europe/Prague', 'YYYY-MM-DD HH24:MI')
+     from public.training_sessions where id=pg_temp.s1()),
+  '2026-10-04 09:00', 'and carries the wall clock it used to be (AC-269)');
+select pg_temp.check(
+  (select ((significant_change ->> 'changed_at')::timestamptz = significant_changed_at)::text
+     from public.training_sessions where id=pg_temp.s1()),
+  'true', 'stamped with the change it describes (AC-269)');
 
 select pg_temp.check(
   pg_temp.as_user(:COACH, format($$select (public.update_training_session(
     %L::uuid, date '2026-10-04', time '08:00', time '09:00', %L::uuid, 16, 'BIRTH_YEAR_RANGE', 2016, 2018)
     -> 'data' -> 'events' ->> 0)$$, pg_temp.s1(), pg_temp.fac('VH'))),
   'SESSION_FACILITY_CHANGED', 'MH to VH is significant (AC-190)');
+-- Replaced, not accumulated: only the latest change is drawn, and the earlier
+-- one reached the parent by e-mail when it happened.
+select pg_temp.check(
+  (select significant_change ->> 'fields' from public.training_sessions where id=pg_temp.s1()),
+  '["FACILITY"]', 'a later change replaces the record rather than adding to it (AC-269)');
+select pg_temp.check(
+  (select significant_change -> 'previous' ->> 'facility_code' from public.training_sessions where id=pg_temp.s1()),
+  'MH', 'naming the hall it used to be (AC-269)');
+select pg_temp.check(
+  (select (significant_change -> 'previous' ? 'start_at')::boolean::text from public.training_sessions where id=pg_temp.s1()),
+  'false', 'and nothing from the change before it (AC-269)');
 
 select pg_temp.check(
   pg_temp.as_user(:COACH, format($$select (public.update_training_session(
@@ -137,6 +163,15 @@ select pg_temp.check(
 select pg_temp.check(
   (select count(*)::text from public.audit_log where action='SESSION_MAIN_COACH_CHANGED' and entity_id=pg_temp.s1()),
   '1', 'with its own audit entry (AC-194)');
+-- The mirror column moves in a *second* statement, after the row update that
+-- stamped the marker. Detection inside the function would compare a mirror
+-- that has not moved yet and miss every coach change.
+select pg_temp.check(
+  (select significant_change ->> 'fields' from public.training_sessions where id=pg_temp.s1()),
+  '["MAIN_COACH"]', 'a coach change is recorded although the mirror moves later (AC-269)');
+select pg_temp.check(
+  (select significant_change -> 'previous' ->> 'main_coach_name' from public.training_sessions where id=pg_temp.s1()),
+  'Trenér Novák', 'naming the coach it used to be (AC-269)');
 
 \echo ''
 \echo '── Capacity below occupancy (BR-051, AC-051, AC-052) ───────────────'
@@ -403,6 +438,72 @@ select pg_temp.check(
      from public.audit_log
     where action = 'SESSION_ASSISTANTS_CHANGED' and entity_id = pg_temp.sa()),
   '1', 'and writes no second entry, because nothing moved (AC-262)');
+
+\echo ''
+\echo '── One change that moves several things (AC-269) ───────────────────'
+insert into t_ids (k, v)
+select 'sc', (pg_temp.as_user(:COACH, format($$select (public.create_training_session(
+  %L::uuid, date '2027-03-07', time '09:00', time '10:00', %L::uuid, 10, 'ALL')
+  -> 'data' ->> 'training_session_id')$$, pg_temp.ws(), pg_temp.fac('MH'))))::uuid;
+
+create or replace function pg_temp.sc() returns uuid language sql stable as
+  $$ select v from t_ids where k = 'sc' $$;
+
+select pg_temp.check(
+  (select (significant_change is null)::text from public.training_sessions where id=pg_temp.sc()),
+  'true', 'a session nobody has changed carries no record (AC-269)');
+
+-- Date, time and hall in one call, and the coach with them: four differences,
+-- two statements, one change.
+select pg_temp.check(
+  pg_temp.as_user(:COACH, format($$select (public.update_training_session(
+    %L::uuid, date '2027-03-14', time '17:30', time '18:30', %L::uuid, 10, 'ALL',
+    null, null, null, null, null, %L::uuid) ->> 'ok')$$,
+    pg_temp.sc(), pg_temp.fac('VH'), '00000000-0000-0000-0000-00000000c0ad')),
+  'true', 'a coach moves the date, the time, the hall and themselves at once');
+select pg_temp.check(
+  (select significant_change ->> 'fields' from public.training_sessions where id=pg_temp.sc()),
+  '["DATE", "FACILITY", "MAIN_COACH", "TIME"]',
+  'every field that moved is named once, in one record (AC-269)');
+select pg_temp.check(
+  (select to_char((significant_change -> 'previous' ->> 'start_at')::timestamptz
+                    at time zone 'Europe/Prague', 'YYYY-MM-DD HH24:MI')
+     from public.training_sessions where id=pg_temp.sc()),
+  '2027-03-07 09:00', 'with the wall clock it used to be (AC-269)');
+select pg_temp.check(
+  (select to_char((significant_change -> 'previous' ->> 'end_at')::timestamptz
+                    at time zone 'Europe/Prague', 'HH24:MI')
+     from public.training_sessions where id=pg_temp.sc()),
+  '10:00', 'both ends of it (AC-269)');
+select pg_temp.check(
+  (select significant_change -> 'previous' ->> 'facility_code' from public.training_sessions where id=pg_temp.sc()),
+  'MH', 'the hall it used to be (AC-269)');
+select pg_temp.check(
+  (select significant_change -> 'previous' ->> 'main_coach_name' from public.training_sessions where id=pg_temp.sc()),
+  'Trenér Novák', 'and the coach it used to be (AC-269)');
+select pg_temp.check(
+  (select ((significant_change ->> 'changed_at')::timestamptz = significant_changed_at)::text
+     from public.training_sessions where id=pg_temp.sc()),
+  'true', 'all under one timestamp, because it was one change (AC-269)');
+
+-- The record is guardian-visible data, so it must never carry anything a
+-- parent may not read (D-13).
+select pg_temp.check(
+  (select (significant_change::text like '%nterní%')::text from public.training_sessions where id=pg_temp.sc()),
+  'false', 'and nothing a parent may not read (AC-269, D-13)');
+
+-- A change that is not significant leaves the record where it was, rather than
+-- clearing what the parent has not seen yet.
+select pg_temp.check(
+  pg_temp.as_user(:COACH, format($$select (public.update_training_session(
+    %L::uuid, date '2027-03-14', time '17:30', time '18:30', %L::uuid, 20, 'ALL',
+    null, null, 'Šatna 9', null, null, %L::uuid) -> 'data' ->> 'significant')$$,
+    pg_temp.sc(), pg_temp.fac('VH'), '00000000-0000-0000-0000-00000000c0ad')),
+  'false', 'a capacity and changing-room change is not significant');
+select pg_temp.check(
+  (select significant_change ->> 'fields' from public.training_sessions where id=pg_temp.sc()),
+  '["DATE", "FACILITY", "MAIN_COACH", "TIME"]',
+  'and leaves the record a parent has not read yet alone (AC-269)');
 
 drop function pg_temp.as_user(text,text);
 drop function pg_temp.check(text,text,text);

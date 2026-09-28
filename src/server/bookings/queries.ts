@@ -5,6 +5,25 @@ import { maybeRow, rows } from '@/server/query-result'
 import { splitByTime } from '@/lib/domain/booking'
 import type { EligibilityMode, SessionStatus, BookingStatus } from '@/types/database'
 
+/**
+ * The most recent significant change, as migration 28 records it.
+ *
+ * Snapshotted values, not references: a hall that was renamed or a coach who
+ * left must not rewrite what a parent was told the training used to be.
+ */
+export type SignificantChange = {
+  changed_at: string
+  fields: ('DATE' | 'TIME' | 'LOCATION' | 'FACILITY' | 'MAIN_COACH')[]
+  previous: {
+    start_at?: string
+    end_at?: string
+    location_name?: string
+    facility_code?: string
+    facility_name?: string
+    main_coach_name?: string
+  }
+}
+
 export type GuardianSession = {
   id: string
   startAt: string
@@ -21,6 +40,8 @@ export type GuardianSession = {
   birthYearTo: number | null
   mainCoachName: string | null
   significantChangedAt: string | null
+  /** What moved and what it was before (§G4, §G6). */
+  significantChange: SignificantChange | null
   /** How many of this guardian's athletes hold a confirmed booking. */
   myBookedCount: number
 }
@@ -41,6 +62,9 @@ export type MyBooking = {
   bookingId: string
   athleteId: string
   athleteName: string
+  /** Kept apart as well, because an avatar wants two initials, not a split. */
+  athleteFirstName: string
+  athleteLastName: string
   bookingCreatedAt: string
   status: BookingStatus
   eligibilityNarrowedAt: string | null
@@ -72,7 +96,8 @@ export type MyBooking = {
 
 const SESSION_COLUMNS = `
   id, start_at, end_at, status, capacity, changing_room, public_notes,
-  eligibility_mode, birth_year_from, birth_year_to, significant_changed_at,
+  eligibility_mode, birth_year_from, birth_year_to,
+  significant_changed_at, significant_change,
   facilities ( code ),
   locations ( name ),
   app_profiles!training_sessions_main_coach_profile_id_fkey ( display_name ),
@@ -95,6 +120,7 @@ type Row = {
   birth_year_from: number | null
   birth_year_to: number | null
   significant_changed_at: string | null
+  significant_change: SignificantChange | null
   facilities: { code: string } | null
   locations: { name: string } | null
   app_profiles: { display_name: string | null } | null
@@ -133,6 +159,7 @@ function toSession(row: Row): GuardianSession {
     birthYearTo: row.birth_year_to,
     mainCoachName: row.app_profiles?.display_name ?? null,
     significantChangedAt: row.significant_changed_at,
+    significantChange: row.significant_change,
     myBookedCount: (row.bookings ?? []).filter((b) => b.status === 'CONFIRMED').length,
   }
 }
@@ -213,6 +240,8 @@ export async function listMyBookings(): Promise<{ upcoming: MyBooking[]; past: M
         bookingId: booking.id,
         athleteId: booking.athlete_id,
         athleteName: athlete ? `${athlete.first_name} ${athlete.last_name}` : '',
+        athleteFirstName: athlete?.first_name ?? '',
+        athleteLastName: athlete?.last_name ?? '',
         bookingCreatedAt: booking.created_at,
         status: booking.status,
         eligibilityNarrowedAt: booking.eligibility_narrowed_at,
@@ -226,6 +255,20 @@ export async function listMyBookings(): Promise<{ upcoming: MyBooking[]; past: M
   }
 
   return splitByTime(all, now)
+}
+
+/**
+ * One booking, by id.
+ *
+ * Built on the same read as the list rather than a filter on an embedded
+ * resource. A guardian's bookings are a handful of rows, the row policy
+ * already limits the read to their own family, and an `!inner` filter on an
+ * embedded table is the kind of PostgREST query that fails quietly and renders
+ * as "not found".
+ */
+export async function getMyBooking(bookingId: string): Promise<MyBooking | null> {
+  const { upcoming, past } = await listMyBookings()
+  return [...upcoming, ...past].find((b) => b.bookingId === bookingId) ?? null
 }
 
 /**

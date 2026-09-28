@@ -46,6 +46,7 @@ const session = (over: Partial<GuardianSession> = {}): GuardianSession => ({
   birthYearTo: null,
   mainCoachName: 'Milan Filipi',
   significantChangedAt: null,
+  significantChange: null,
   myBookedCount: 0,
   ...over,
 })

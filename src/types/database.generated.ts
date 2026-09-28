@@ -811,6 +811,7 @@ export type Database = {
           main_coach_profile_id: string
           public_notes: string | null
           series_id: string | null
+          significant_change: Json | null
           significant_changed_at: string | null
           sport_id: string
           start_at: string
@@ -835,6 +836,7 @@ export type Database = {
           main_coach_profile_id: string
           public_notes?: string | null
           series_id?: string | null
+          significant_change?: Json | null
           significant_changed_at?: string | null
           sport_id: string
           start_at: string
@@ -859,6 +861,7 @@ export type Database = {
           main_coach_profile_id?: string
           public_notes?: string | null
           series_id?: string | null
+          significant_change?: Json | null
           significant_changed_at?: string | null
           sport_id?: string
           start_at?: string

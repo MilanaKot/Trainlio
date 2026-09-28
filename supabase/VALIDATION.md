@@ -8,9 +8,9 @@ intent. Supabase-provided objects (`auth.users`, `auth.uid()`, `storage.objects`
 `storage.foldername`, the `supabase_realtime` publication, and the `anon`,
 `authenticated` and `service_role` roles) were stubbed locally.
 
-All twenty-seven files applied in order with no errors.
+All twenty-eight files applied in order with no errors.
 
-**678 of 678 cases pass**, and the database lint reports no error-level finding:
+**698 of 698 cases pass**, and the database lint reports no error-level finding:
 
 | Suite                                                                      | Cases                      |
 | -------------------------------------------------------------------------- | -------------------------- |
@@ -19,7 +19,7 @@ All twenty-seven files applied in order with no errors.
 | [`tests/validation_rls.sql`](tests/validation_rls.sql)                     | 28                         |
 | [`tests/validation_auth.sql`](tests/validation_auth.sql)                   | 18                         |
 | [`tests/validation_athletes.sql`](tests/validation_athletes.sql)           | 35                         |
-| [`tests/validation_sessions.sql`](tests/validation_sessions.sql)           | 74                         |
+| [`tests/validation_sessions.sql`](tests/validation_sessions.sql)           | 94                         |
 | [`tests/validation_series.sql`](tests/validation_series.sql)               | 70                         |
 | [`tests/validation_bookings.sql`](tests/validation_bookings.sql)           | 54                         |
 | [`tests/validation_roster.sql`](tests/validation_roster.sql)               | 73                         |
@@ -225,6 +225,21 @@ Generation is now exercised end to end rather than demonstrated:
 | A pattern matching no date, an inverted range, a bad weekday   | refused                                                                  |
 | A creation that fails partway                                  | leaves no series row and no occurrence (AC-080b)                         |
 | A guardian reading `session_series`                            | no rows                                                                  |
+
+### What changed, not only that something did (AC-269)
+
+`significant_changed_at` records _that_ a training moved. The parent's screens
+have to say what moved and what it was before, so migration 28 stores it beside
+the row it describes.
+
+| Check                                                             | Result                                                     |
+| ----------------------------------------------------------------- | ---------------------------------------------------------- |
+| A change that is not significant                                  | records nothing, and leaves an earlier record alone        |
+| A time change on an unchanged date                                | `TIME` alone, with the wall clock it used to be            |
+| A later change                                                    | replaces the record; nothing of the one before it survives |
+| A coach change, whose mirror column moves in a _second_ statement | recorded, under the same timestamp                         |
+| Date, time, hall and coach in one call                            | one record, four fields, one timestamp                     |
+| The record's contents                                             | nothing a guardian may not read (D-13)                     |
 
 ### Several weekdays, and dates the coach unchecked (AC-263, AC-264, AC-265)
 

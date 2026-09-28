@@ -3,6 +3,7 @@ import {
   DEFAULT_TIMEZONE,
   birthYear,
   formatLocalDateKey,
+  formatDateGroup,
   formatSessionDay,
   formatTime,
   formatTimeRange,
@@ -128,6 +129,40 @@ describe('weekly occurrence dates', () => {
   // same pattern is asserted in supabase/tests/validation_series.sql.
   it('matches the nine Sundays the generator produces, minus one unchecked', () => {
     expect(weeklyOccurrenceDates('2026-10-04', '2026-11-29', [7], ['2026-10-25'])).toHaveLength(8)
+  })
+})
+
+describe('formatDateGroup', () => {
+  it('puts the month in the genitive, as Czech does after a day number', () => {
+    // Asking Intl for the month on its own returns `říjen`; a date heading
+    // needs `října`. This is the case that was wrong on screen.
+    expect(formatDateGroup(new Date('2026-10-11T10:00:00Z'), PRAGUE)).toBe('Neděle 11. října')
+  })
+
+  it('does it for every month, not only the ones that look inflected', () => {
+    const headings = Array.from({ length: 12 }, (_, month) =>
+      formatDateGroup(new Date(Date.UTC(2026, month, 11, 10)), PRAGUE),
+    )
+    expect(headings.map((h) => h.split(' ').slice(2).join(' '))).toEqual([
+      'ledna',
+      'února',
+      'března',
+      'dubna',
+      'května',
+      'června',
+      'července',
+      'srpna',
+      'září',
+      'října',
+      'listopadu',
+      'prosince',
+    ])
+  })
+
+  it('formats in the workspace timezone and capitalises the weekday', () => {
+    // 23:30 UTC is already the next day in Prague.
+    expect(formatDateGroup(new Date('2026-10-10T23:30:00Z'), PRAGUE)).toBe('Neděle 11. října')
+    expect(formatDateGroup(new Date('2026-10-10T23:30:00Z'), 'UTC')).toBe('Sobota 10. října')
   })
 })
 

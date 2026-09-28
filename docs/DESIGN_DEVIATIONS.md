@@ -89,6 +89,12 @@ The difference is one hour on a card that already carries an orange
 value is that it has exactly one. Worth revisiting if a parent is ever confused
 by it; not worth the branch now.
 
+The same holds for a parent's own withdrawal, where §G4 says the booking
+"moves to Minulé" the moment they confirm. It stays in `Nadcházející` with the
+neutral `Odhlášeno` badge until the training ends. One rule, applied to all
+three cases: `end_at` decides which list a booking is in, and its status
+decides how the card looks.
+
 ## The reason under a disabled `Přihlásit` is the reason that applies
 
 `guardian/SPEC.md` §G1 gives one sentence for the "no eligible child" row of

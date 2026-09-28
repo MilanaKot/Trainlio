@@ -182,7 +182,7 @@ Four defects were found by the new tests and fixed:
 Exit: the deployment is reproducible from the documents, and nothing in
 `OPEN_DECISIONS.md` is open. ✅
 `validation_retention.sql` (61 cases) covers AC-224 to AC-231; AC-232 is in
-`validation_qa.sql`. **154 of 154** acceptance criteria map to a named test.
+`validation_qa.sql`. **157 of 157** acceptance criteria map to a named test.
 
 Two defects were found by writing this phase:
 
@@ -214,10 +214,12 @@ rebuilt against it one at a time rather than all at once.
   the guardian's telephone number, `change_seen_at`, the removal notification,
   assistants, and series over several weekdays
 - G1 `Tréninky` with its booking sheet G2/G3 (AC-266 to AC-268)
+- G4/G5 `Moje tréninky` and G6, the booking detail, with the schema the design
+  asked for and the MVP did not have: what a significant change moved and what
+  it used to be (migration 28, AC-269 to AC-271)
 
-Still to come, in the order a parent meets them: `Moje tréninky` and the
-booking detail, the coach's screens, `Trenéři`, then dark mode as a single
-token pass.
+Still to come, in the order a parent meets them: the coach's screens,
+`Trenéři`, then dark mode as a single token pass.
 
 ## Review checkpoints
 

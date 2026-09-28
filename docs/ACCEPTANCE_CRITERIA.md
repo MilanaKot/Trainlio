@@ -623,3 +623,17 @@ The occupancy on a card is live, and one count drives the meter, the `Zbývá {n
 
 AC-268  
 Tapping `Přihlásit` opens the sheet with every athlete of the family listed — the bookable ones first, each other one disabled with its own reason and birth year. A family with exactly one eligible child finds them already selected. Selecting more children than there are places is a state of the sheet, not an error: it explains itself in warning, holds the selection and disables the confirm button, and the same explanation appears when the server refuses. A successful booking closes the sheet, confirms with `Přihlášeno`, and the card behind it updates.
+
+## What changed, not only that something did (guardian/SPEC.md §G4, §G6)
+
+AC-269  
+A significant change records what moved and what it used to be, beside the training it describes. It names the local date and the local time separately, the venue, the hall and the main coach, and carries the previous values snapshotted rather than referenced. A change that is not significant records nothing and leaves an earlier record alone; a later significant change replaces the record rather than adding to it. One change that moves several things is one record under one timestamp, including the main coach, whose mirror column moves in a second statement. The record holds nothing a guardian may not read.
+
+AC-270  
+Given a coach moves a training a guardian has booked  
+Then the card shows `Změněno`, the value that moved is highlighted, and the meta line begins with what it used to be. Opening the booking spells out the field, both values and when it happened, and silences the badge for that booking alone; the training still shows its new time afterwards. The detail screen names the venue, the changing room, the birth years, the main coach, the assistants — the row is there even when there are none — and the occupancy, and carries the coach's own message when the athlete was removed.
+
+## Moje tréninky (guardian/SPEC.md §G4, §G4b, §G5)
+
+AC-271  
+One card per booking, not per training, split into `Nadcházející` and `Minulé` by the tab in the URL. A booking's own fate outranks the training's: an athlete the coach removed reads `Odhlášeno trenérem` even if the training was later called off, and a parent's own withdrawal stays theirs. A confirmed upcoming booking offers `Odhlásit` with the deadline beside it, and past the deadline the button is disabled and says to contact the coach. Withdrawing asks first, naming the child and the training, and confirms with `Odhlášeno`. Nothing is deleted: a cancelled or withdrawn booking keeps its place until the training ends.

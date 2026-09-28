@@ -79,7 +79,24 @@ export async function signIn(page: Page, email: string): Promise<void> {
  * no subject, so calling them with it returns NOT_AUTHENTICATED — correctly:
  * the service role is for the drain job, not for acting as a person.
  */
-export async function tokenFor(email: string): Promise<string> {
+// One token per address for the life of the worker. GoTrue holds a cooldown
+// between one-time-code e-mails to the same address, so a test that asks twice
+// — opening a session and then changing it, say — gets a 429 of its own
+// making. A JWT is valid for an hour, which outlives any run.
+const tokens = new Map<string, Promise<string>>()
+
+export function tokenFor(email: string): Promise<string> {
+  const cached = tokens.get(email)
+  if (cached) return cached
+
+  const issued = issueToken(email)
+  tokens.set(email, issued)
+  // A failed request must not be remembered, or every later call inherits it.
+  void issued.catch(() => tokens.delete(email))
+  return issued
+}
+
+async function issueToken(email: string): Promise<string> {
   const requested = await fetch(`${STACK}/auth/v1/otp`, {
     method: 'POST',
     headers: { apikey: ANON, 'content-type': 'application/json' },
@@ -137,10 +154,15 @@ export async function grantWorkspaceRole(
 
   const response = await fetch(`${STACK}/rest/v1/workspace_members`, {
     method: 'POST',
-    headers: admin,
+    // Idempotent: a test that acts as the same coach twice — opening a session
+    // and then changing it — asks for the role it already holds, and the
+    // unique constraint answers 409. That is the desired state, not a failure.
+    headers: { ...admin, prefer: 'resolution=ignore-duplicates' },
     body: JSON.stringify({ workspace_id: workspaceId, profile_id: profileId, role }),
   })
-  if (!response.ok) throw new Error(`Could not grant ${role}: ${response.status}`)
+  if (!response.ok && response.status !== 409) {
+    throw new Error(`Could not grant ${role}: ${response.status}`)
+  }
 
   return { workspaceId, profileId }
 }

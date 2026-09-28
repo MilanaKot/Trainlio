@@ -100,6 +100,50 @@ export const cs = {
     athlete: 'Sportovec',
   },
 
+  /** "Moje tréninky" (guardian/SPEC.md §G4, §G4b, §G5, §G6). */
+  myTrainings: {
+    title: 'Moje tréninky',
+    tabs: 'Nadcházející nebo minulé tréninky',
+    upcoming: 'Nadcházející',
+    past: 'Minulé',
+    noneUpcoming: 'Zatím nemáte žádný nadcházející trénink.',
+    nonePast: 'Zatím nemáte žádný absolvovaný trénink.',
+    findTraining: 'Najít trénink',
+    /* Badges. Each says who acted, because "Zrušeno" alone reads as the
+       parent's own doing when it was the coach's, and the reverse. */
+    badgeChanged: 'Změněno',
+    badgeRemoved: 'Odhlášeno trenérem',
+    badgeSessionCancelled: 'Zrušeno trenérem',
+    badgeSelfCancelled: 'Odhlášeno',
+    /* Masculine participle for everyone: the product does not collect gender
+       and will not guess it from a name (DESIGN_SYSTEM §8). */
+    cancelledBy: 'Odhlásil {name} · {when}',
+    sessionDidNotHappen: 'Trénink se nekonal · {place}',
+    rebookContactCoach: 'Pro opětovné přihlášení kontaktujte trenéra.',
+    previously: 'Původně {value}',
+    changedOn: 'Změněno {when}',
+    /* §G6: the notice above the detail list. */
+    coachChanged: {
+      DATE: 'Trenér změnil datum tréninku',
+      TIME: 'Trenér změnil čas tréninku',
+      LOCATION: 'Trenér změnil místo tréninku',
+      FACILITY: 'Trenér změnil halu',
+      MAIN_COACH: 'Trenér změnil hlavního trenéra',
+      SEVERAL: 'Trenér změnil trénink',
+    },
+    changeLine: 'Původně {previous}, nově {current}.',
+    back: 'Moje tréninky',
+    place: 'Místo',
+    changingRoom: 'Šatna',
+    years: 'Ročníky',
+    mainCoach: 'Hlavní trenér',
+    assistants: 'Asistenti',
+    occupancy: 'Obsazenost',
+    athleteInfo: 'INFORMACE PRO SPORTOVCE',
+    coachMessage: 'Zpráva od trenéra',
+    none: '—',
+  },
+
   booking: {
     pickAthletes: 'Koho chcete přihlásit?',
     /* guardian/SPEC.md §G2 summary box. */
@@ -163,6 +207,12 @@ export const cs = {
   cancellation: {
     cancel: 'Odhlásit',
     tooLate: 'Odhlášení již není možné. Kontaktujte trenéra.',
+    until: 'Odhlásit lze do {deadline}',
+    /* §G4: the confirmation names the child and the training, because a
+       parent with several bookings is one tap from withdrawing the wrong one. */
+    confirmTitle: 'Odhlásit {name}?',
+    keep: 'Ponechat',
+    done: 'Odhlášeno',
   },
 
   myBookings: {
