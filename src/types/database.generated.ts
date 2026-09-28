@@ -1347,6 +1347,14 @@ export type Database = {
         Returns: Json
       }
       scrub_notification_emails: { Args: never; Returns: Json }
+      session_coaches: {
+        Args: { p_training_session_id: string }
+        Returns: {
+          display_name: string
+          profile_id: string
+          role: Database["public"]["Enums"]["coach_session_role"]
+        }[]
+      }
       session_confirmed_count: {
         Args: { p_training_session_id: string }
         Returns: number
@@ -1389,6 +1397,10 @@ export type Database = {
           p_profile_id: string
           p_workspace_id: string
         }
+        Returns: Json
+      }
+      set_session_assistants: {
+        Args: { p_profile_ids?: string[]; p_training_session_id: string }
         Returns: Json
       }
       set_session_booking_state: {

@@ -880,3 +880,50 @@ pro rodiče" and the e-mail quotes it as one.
 D-06 is untouched. The e-mail tells the parent to contact the coach, because
 `book_athletes_as_guardian` still refuses with `REMOVED_BY_COACH` and the coach
 is the one who can put the athlete back (AC-042b).
+
+### `set_session_assistants(p_training_session_id uuid, p_profile_ids uuid[]) → jsonb`
+
+The assistants of one training, as a set (coach/SPEC.md §K3b).
+
+The schema has held assistants since the first migration — `coach_session_role`
+is `MAIN` or `ASSISTANT` — and until migration 26 nothing could write one, so
+every `Asistenti` row a parent or a coach would read had been empty from the
+beginning.
+
+Replace, not add-and-remove: the sheet shows tick boxes and `Hotovo` means
+"this is the list". A difference would make the outcome depend on what the
+client believed was there when it opened. Duplicates and nulls are dropped,
+because something that is not the sheet can send them.
+
+| Code                        | Meaning                                                          |
+| --------------------------- | ---------------------------------------------------------------- |
+| `NOT_AUTHORIZED`            | the caller is not a coach of this workspace                      |
+| `SESSION_NOT_FOUND`         | no such session                                                  |
+| `SESSION_CANCELLED`         | D-07: a cancelled training is terminal                           |
+| `MAIN_COACH_AS_ASSISTANT`   | §K3b disables the main coach in the picker; one person, one role |
+| `COACH_NOT_WORKSPACE_STAFF` | not active staff of this workspace                               |
+
+Notifies nobody, by design (§4): the training is at the same time, in the same
+hall, with the same main coach. Appends `SESSION_ASSISTANTS_CHANGED` when the
+set actually moved, and nothing when it did not, so the log stays readable.
+
+### `session_coaches(p_training_session_id uuid) → setof`
+
+Everyone running one training, main coach first and then assistants by name —
+the order both detail screens render. Guardians read it for a published session
+and not for a draft, which is the same rule the row policy applies and belongs
+with the data rather than in two screens.
+
+### Promoting an assistant
+
+§K3c lets a coach who is currently an assistant be chosen as main coach.
+`update_training_session` moves the main coach by rewriting the `MAIN` row's
+`profile_id`, and `training_session_coaches` is keyed on (session, profile), so
+that write collided with the assistant row the same person already held. The
+exception block catches a check violation and a foreign key violation; a unique
+violation is neither, so the call would have failed with an unhandled error
+instead of a code the interface could explain.
+
+A trigger now removes the assistant row as part of the same write. Nothing could
+reach the collision before migration 26, because nothing could create an
+assistant.

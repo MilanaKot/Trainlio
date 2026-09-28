@@ -2,7 +2,7 @@ import 'server-only'
 
 import { createClient } from '@/lib/supabase/server'
 import { maybeRow, rows } from '@/server/query-result'
-import type { SessionStatus, EligibilityMode } from '@/types/database'
+import type { SessionStatus, EligibilityMode, CoachSessionRole } from '@/types/database'
 
 export type CoachWorkspace = {
   id: string
@@ -260,4 +260,35 @@ export async function listCoachSeries(): Promise<CoachSeries[]> {
       cancelledCount: occurrences.filter((s) => s.status === 'CANCELLED').length,
     }
   })
+}
+
+export type SessionCoach = {
+  profileId: string
+  displayName: string | null
+  role: CoachSessionRole
+}
+
+/**
+ * Everyone running one training: the main coach and the assistants
+ * (coach/SPEC.md §K2, guardian/SPEC.md §G6).
+ *
+ * A function rather than a query on both sides, so the coach's detail screen
+ * and the parent's read the same order — main coach first, then assistants by
+ * name — instead of each deciding for itself. The database also answers the
+ * harder half: a guardian may read this for a published session and not for a
+ * draft, and the predicate for that lives with the data.
+ */
+export async function getSessionCoaches(sessionId: string): Promise<SessionCoach[]> {
+  const supabase = await createClient()
+
+  const coaches = rows(
+    'getSessionCoaches',
+    await supabase.rpc('session_coaches', { p_training_session_id: sessionId }),
+  )
+
+  return coaches.map((coach) => ({
+    profileId: coach.profile_id,
+    displayName: coach.display_name,
+    role: coach.role,
+  }))
 }

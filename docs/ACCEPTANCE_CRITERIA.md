@@ -592,3 +592,11 @@ Only this family may mark their own booking seen, and only through the domain fu
 AC-260  
 Given a coach removes an athlete from a training that still takes place  
 Then the place is released at once, that athlete's guardians — and only they — receive an e-mail naming the athlete and carrying the coach's message if one was written, the guardian can read that message on their own booking and another family can read neither, a message longer than the form allows is refused and removes nobody, and the athlete's siblings keep their places. D-06 is unchanged: the guardian still cannot re-book (AC-042a).
+
+## Assistant coaches (coach/SPEC.md §K3b, §K3c, guardian/SPEC.md §G6)
+
+AC-261  
+A coach sets the assistants of a session as a whole list: a different list replaces the previous one, an empty list clears it, a repeated id counts once and a null is dropped. The main coach cannot also assist, someone who is not active staff of the workspace cannot, and a guardian can neither be one nor set them.
+
+AC-262  
+A coach who is currently an assistant can be made main coach of the same session, and stops being an assistant by doing so. A guardian reads the main coach and the assistants of a published session in that order; someone with no relationship to the club reads nobody. Changing the assistants notifies no guardian and appends one audit entry when something moved, none when nothing did.

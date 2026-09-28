@@ -272,3 +272,37 @@ export async function createSeries(
   revalidatePath('/trener/serie')
   return { ok: true, generatedCount: Number(result.data?.generated_count ?? 0) }
 }
+
+/**
+ * Who assists on one training (coach/SPEC.md §K3b).
+ *
+ * The whole list, not an add and a remove: the sheet shows a set of tick boxes
+ * and `Hotovo` means "this is the list". Sending a difference would make the
+ * result depend on what the client believed was there when it opened.
+ *
+ * No guardian is notified, by design (§4): the training is at the same time,
+ * in the same hall, with the same main coach.
+ */
+export async function setSessionAssistants(
+  sessionId: string,
+  profileIds: string[],
+): Promise<SessionActionResult> {
+  const supabase = await createClient()
+
+  const { data, error } = await supabase.rpc('set_session_assistants', {
+    p_training_session_id: sessionId,
+    p_profile_ids: profileIds,
+  })
+
+  if (error) return { ok: false, code: 'generic' }
+
+  const result = readRpc(data)
+  if (!result.ok) return { ok: false, code: result.code ?? 'generic' }
+
+  revalidatePath(`/trener/${sessionId}`)
+  revalidatePath('/trener')
+  revalidatePath('/treninky')
+  revalidatePath('/moje-treninky')
+
+  return { ok: true }
+}

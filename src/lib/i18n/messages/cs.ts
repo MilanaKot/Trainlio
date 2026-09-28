@@ -327,6 +327,8 @@ export const cs = {
       BOOKING_NOT_FOUND: 'Přihláška nebyla nalezena.',
       BOOKING_NOT_CONFIRMED: 'Přihláška už není aktivní.',
       WOULD_EXCEED_CAPACITY: 'Trénink je plný. Potvrďte překročení kapacity.',
+      /* coach/SPEC.md §K3b. One person, one role on one training. */
+      MAIN_COACH_AS_ASSISTANT: 'Hlavní trenér nemůže být zároveň asistent.',
       generic: 'Uložení se nezdařilo. Zkuste to prosím znovu.',
     },
   },

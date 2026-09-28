@@ -267,5 +267,142 @@ select pg_temp.check(
   pg_temp.as_user(:COACH, format($$select (public.duplicate_training_session(%L::uuid, date '2026-11-08') ->> 'ok')$$, pg_temp.s1())),
   'true', 'but it can be duplicated, which is the recovery path (AC-164)');
 
+\echo ''
+\echo '── Assistant coaches (AC-261, AC-262) ───────────────────────────────'
+-- The schema has held assistants since the first migration and nothing could
+-- write one, so every "Asistenti" row has been empty from the beginning.
+-- Its own session: by this point in the suite s1 has been cancelled, and D-07
+-- makes that terminal, so every call below would refuse for the wrong reason.
+insert into t_ids (k, v)
+select 'sa', (pg_temp.as_user(:COACH, format($$select (public.create_training_session(
+    %L::uuid, date '2026-11-08', time '09:00', time '10:00', %L::uuid, 10, 'ALL')
+    -> 'data' ->> 'training_session_id')$$, pg_temp.ws(), pg_temp.fac('MH'))))::uuid;
+create or replace function pg_temp.sa() returns uuid language sql stable as
+  $$ select v from t_ids where k = 'sa' $$;
+
+create or replace function pg_temp.assistants(p_session uuid) returns text language sql stable as
+  $$ select coalesce(string_agg(p.display_name, ', ' order by p.display_name), '(none)')
+       from public.training_session_coaches c
+       join public.app_profiles p on p.id = c.profile_id
+      where c.training_session_id = p_session and c.role = 'ASSISTANT' $$;
+
+select pg_temp.check(pg_temp.assistants(pg_temp.sa()), '(none)',
+  'a new session starts with no assistants (AC-261)');
+
+select pg_temp.check(
+  pg_temp.as_user(:COACH, format($$select (public.set_session_assistants(%L::uuid,
+    array[%L::uuid]) ->> 'ok')$$, pg_temp.sa(), :COACH2)),
+  'true', 'a coach adds an assistant (AC-261)');
+select pg_temp.check(pg_temp.assistants(pg_temp.sa()), 'Trenér Dvořák',
+  'who is on the session (AC-261)');
+
+-- Replace, not add: the sheet shows a list and Hotovo means "this is the list".
+select pg_temp.check(
+  pg_temp.as_user(:COACH, format($$select (public.set_session_assistants(%L::uuid,
+    array[%L::uuid]) ->> 'ok')$$, pg_temp.sa(), :WSADMIN)),
+  'true', 'setting a different list replaces it rather than adding to it (AC-261)');
+select pg_temp.check(pg_temp.assistants(pg_temp.sa()), 'Workspace Admin',
+  'so the previous assistant is gone (AC-261)');
+select pg_temp.check(
+  pg_temp.as_user(:COACH, format($$select (public.set_session_assistants(%L::uuid,
+    array[]::uuid[]) ->> 'ok')$$, pg_temp.sa())),
+  'true', 'and an empty list clears them (AC-261)');
+select pg_temp.check(pg_temp.assistants(pg_temp.sa()), '(none)',
+  'leaving nobody (AC-261)');
+
+-- §K3b shows the main coach disabled: one person, one role on one training.
+select pg_temp.check(
+  pg_temp.as_user(:COACH, format($$select (public.set_session_assistants(%L::uuid,
+    array[%L::uuid]) ->> 'code')$$, pg_temp.sa(), :COACH)),
+  'MAIN_COACH_AS_ASSISTANT', 'the main coach cannot also assist (AC-261)');
+select pg_temp.check(
+  pg_temp.as_user(:COACH, format($$select (public.set_session_assistants(%L::uuid,
+    array[%L::uuid]) ->> 'code')$$, pg_temp.sa(), :A)),
+  'COACH_NOT_WORKSPACE_STAFF', 'and a guardian is not an assistant (AC-261)');
+select pg_temp.check(
+  pg_temp.as_user(:A, format($$select (public.set_session_assistants(%L::uuid,
+    array[%L::uuid]) ->> 'code')$$, pg_temp.sa(), :COACH2)),
+  'NOT_AUTHORIZED', 'nor may a guardian set them (AC-261)');
+
+-- Duplicates and nulls: the sheet cannot send them, something else can.
+select pg_temp.check(
+  pg_temp.as_user(:COACH, format($$select (public.set_session_assistants(%L::uuid,
+    array[%L::uuid, %L::uuid, null]) -> 'data' ->> 'assistant_count')$$,
+    pg_temp.sa(), :COACH2, :COACH2)),
+  '1', 'a repeated id counts once and a null is dropped (AC-261)');
+
+\echo ''
+\echo '── Promoting an assistant to main coach (AC-262) ────────────────────'
+-- §K3c: a coach who is currently an assistant may be made main coach. Before
+-- this migration the main-coach write collided with the assistant row the same
+-- person held, and the whole call failed with an unhandled error — unreachable
+-- only because nothing could create an assistant in the first place.
+select pg_temp.check(pg_temp.assistants(pg_temp.sa()), 'Trenér Dvořák',
+  'the assistant is in place before the promotion (AC-262)');
+select pg_temp.check(
+  pg_temp.as_user(:COACH, format($$select (public.update_training_session(
+    %L::uuid, date '2026-11-08', time '09:00', time '10:00', %L::uuid,
+    10, 'ALL', null, null, null, null, null, %L::uuid) ->> 'ok')$$,
+    pg_temp.sa(), pg_temp.fac('MH'), :COACH2)),
+  'true', 'promoting them to main coach succeeds (AC-262)');
+select pg_temp.check(
+  (select display_name from public.app_profiles p
+     join public.training_sessions s on s.main_coach_profile_id = p.id
+    where s.id = pg_temp.sa()),
+  'Trenér Dvořák', 'they lead the session (AC-262)');
+select pg_temp.check(pg_temp.assistants(pg_temp.sa()), '(none)',
+  'and they are no longer listed among the assistants (AC-262)');
+
+\echo ''
+\echo '── Who a parent sees on the session (AC-262) ────────────────────────'
+select pg_temp.check(
+  pg_temp.as_user(:COACH, format($$select (public.set_session_assistants(%L::uuid,
+    array[%L::uuid]) ->> 'ok')$$, pg_temp.sa(), :WSADMIN)),
+  'true', 'an assistant is set again for the guardian cases (AC-262)');
+select pg_temp.check(
+  pg_temp.as_user(:A, format($$select string_agg(display_name || ':' || role, ' ' order by role)
+    from public.session_coaches(%L::uuid)$$, pg_temp.sa())),
+  'Trenér Dvořák:MAIN Workspace Admin:ASSISTANT',
+  'a guardian reads the main coach and the assistants, in that order (AC-262, D-11)');
+select pg_temp.check(
+  pg_temp.as_user('00000000-0000-0000-0000-0000005f4a46',
+    format($$select count(*)::text from public.session_coaches(%L::uuid)$$, pg_temp.sa())),
+  '0', 'someone with no relationship to the club reads nobody (AC-262)');
+
+-- Not an e-mail: the training is at the same time, in the same hall, with the
+-- same main coach (coach/SPEC.md §4). Measured as a difference, so the
+-- assertion is about this call and not about everything the suite did before.
+create temp table t_counts (k text primary key, n bigint);
+insert into t_counts values
+  ('events', (select count(*) from public.notification_events where training_session_id = pg_temp.sa())),
+  ('audit', (select count(*) from public.audit_log
+              where action = 'SESSION_ASSISTANTS_CHANGED' and entity_id = pg_temp.sa()));
+
+-- A change that moves something: one audit entry, no e-mail.
+select pg_temp.check(
+  pg_temp.as_user(:COACH, format($$select (public.set_session_assistants(%L::uuid,
+    array[]::uuid[]) ->> 'ok')$$, pg_temp.sa())),
+  'true', 'the assistants are cleared (AC-262)');
+select pg_temp.check(
+  (select (count(*) - (select n from t_counts where k = 'events'))::text
+     from public.notification_events where training_session_id = pg_temp.sa()),
+  '0', 'changing the assistants notifies nobody (AC-262)');
+select pg_temp.check(
+  (select (count(*) - (select n from t_counts where k = 'audit'))::text
+     from public.audit_log
+    where action = 'SESSION_ASSISTANTS_CHANGED' and entity_id = pg_temp.sa()),
+  '1', 'but it is on the record (AC-262)');
+
+-- And one that moves nothing: silence, so the log stays readable.
+select pg_temp.check(
+  pg_temp.as_user(:COACH, format($$select (public.set_session_assistants(%L::uuid,
+    array[]::uuid[]) ->> 'ok')$$, pg_temp.sa())),
+  'true', 'setting the same list again succeeds (AC-262)');
+select pg_temp.check(
+  (select (count(*) - (select n from t_counts where k = 'audit'))::text
+     from public.audit_log
+    where action = 'SESSION_ASSISTANTS_CHANGED' and entity_id = pg_temp.sa()),
+  '1', 'and writes no second entry, because nothing moved (AC-262)');
+
 drop function pg_temp.as_user(text,text);
 drop function pg_temp.check(text,text,text);
