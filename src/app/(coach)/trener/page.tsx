@@ -1,29 +1,32 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { getCoachWorkspace, listCoachSessions } from '@/server/sessions/queries'
-import { Occupancy, SessionSummary, StatusBadge } from '@/components/session/session-summary'
+import { CoachTrainingRow } from '@/components/session/coach-training-row'
+import { CreateSheet } from '@/components/session/create-sheet'
+import { TodayChip } from '@/components/ui/badge'
+import { buttonVariants } from '@/components/ui/button'
+import { EmptyState } from '@/components/ui/empty-state'
+import { groupByLocalDay } from '@/lib/domain/session-list'
+import { formatDateGroup, localDateKey, relativeDayLabel } from '@/lib/time/workspace-time'
 import { messages } from '@/lib/i18n'
-import type { CoachSession } from '@/server/sessions/queries'
 
-function SessionRow({ session, timezone }: { session: CoachSession; timezone: string }) {
-  return (
-    <li>
-      <Link
-        href={`/trener/${session.id}`}
-        className="flex items-start justify-between gap-4 rounded-xl border border-black/10 p-4 dark:border-white/15"
-      >
-        <SessionSummary session={session} timezone={timezone} />
-        <span className="flex shrink-0 flex-col items-end gap-2">
-          <StatusBadge status={session.status} />
-          <Occupancy session={session} />
-        </span>
-      </Link>
-    </li>
-  )
-}
+const t = messages.coach
 
-export default async function CoachSessionsPage() {
-  const workspace = await getCoachWorkspace()
+/**
+ * The coach's training list (coach/SPEC.md §K1).
+ *
+ * Chronological, not a calendar, and not a dashboard: a coach opens this to
+ * see what is on and how full it is. The past is a link at the bottom rather
+ * than a second section, because it is looked at rarely and pushes the next
+ * training off the screen when it is not.
+ */
+export default async function CoachSessionsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ tab?: string }>
+}) {
+  const [{ tab }, workspace] = await Promise.all([searchParams, getCoachWorkspace()])
+
   // The layout redirects a non-coach before this runs, so this is the second
   // line rather than the first. notFound() all the same, as every other coach
   // route does: `return null` renders a blank 200, which is the wrong answer if
@@ -31,51 +34,75 @@ export default async function CoachSessionsPage() {
   if (!workspace) notFound()
 
   const { upcoming, past } = await listCoachSessions()
-  const t = messages.coach
+  const showingPast = tab === 'minule'
+  const sessions = showingPast ? past : upcoming
+  const now = new Date()
+
+  const sports = messages.sports as Record<string, string>
+  const meta = [sports[workspace.sportCode], sessions[0]?.locationName].filter(Boolean)
+
+  const days = groupByLocalDay(sessions, (session) =>
+    localDateKey(new Date(session.startAt), workspace.timezone),
+  )
 
   return (
-    <main className="flex flex-col gap-6">
-      <div className="flex items-center justify-between gap-4">
-        <h1 className="text-2xl font-semibold">{t.sessionsTitle}</h1>
-        <Link
-          href="/trener/novy"
-          className="flex min-h-11 items-center rounded-lg bg-black px-4 text-sm font-medium text-white dark:bg-white dark:text-black"
+    <main className="flex flex-col gap-5 pb-24">
+      <header className="flex flex-col gap-1">
+        <h1 className="font-display text-page font-bold text-ink">
+          {showingPast ? t.pastSessions : t.sessionsTitle}
+        </h1>
+        {meta.length > 0 ? <p className="text-meta text-muted">{meta.join(' · ')}</p> : null}
+      </header>
+
+      {sessions.length === 0 ? (
+        <EmptyState
+          {...(showingPast
+            ? {}
+            : {
+                action: (
+                  <Link href="/trener/novy" className={buttonVariants({ size: 'md' })}>
+                    {t.noSessionsAction}
+                  </Link>
+                ),
+              })}
         >
-          {t.newSession}
-        </Link>
-      </div>
+          {showingPast ? t.noPastSessions : t.noSessions}
+        </EmptyState>
+      ) : (
+        days.map((day) => {
+          const at = new Date(day.items[0]!.startAt)
 
-      {upcoming.length === 0 && past.length === 0 ? (
-        <p className="rounded-xl border border-dashed border-black/15 p-6 text-center text-sm opacity-70 dark:border-white/20">
-          {t.noSessions}
-        </p>
-      ) : null}
+          return (
+            <section key={day.key} className="flex flex-col gap-3">
+              <h2 className="flex items-center gap-2 text-date font-bold text-primary">
+                {formatDateGroup(at, workspace.timezone)}
+                {relativeDayLabel(at, now, workspace.timezone) === 'TODAY' ? (
+                  <TodayChip>{messages.session.today}</TodayChip>
+                ) : null}
+              </h2>
 
-      {upcoming.length > 0 ? (
-        <section className="flex flex-col gap-3">
-          <h2 className="text-sm font-semibold uppercase tracking-wide opacity-60">
-            {messages.myBookings.upcoming}
-          </h2>
-          <ul className="flex flex-col gap-3">
-            {upcoming.map((session) => (
-              <SessionRow key={session.id} session={session} timezone={workspace.timezone} />
-            ))}
-          </ul>
-        </section>
-      ) : null}
+              <ul className="flex flex-col gap-3">
+                {day.items.map((session) => (
+                  <CoachTrainingRow
+                    key={session.id}
+                    session={session}
+                    timezone={workspace.timezone}
+                  />
+                ))}
+              </ul>
+            </section>
+          )
+        })
+      )}
 
-      {past.length > 0 ? (
-        <section className="flex flex-col gap-3">
-          <h2 className="text-sm font-semibold uppercase tracking-wide opacity-60">
-            {messages.myBookings.past}
-          </h2>
-          <ul className="flex flex-col gap-3">
-            {past.map((session) => (
-              <SessionRow key={session.id} session={session} timezone={workspace.timezone} />
-            ))}
-          </ul>
-        </section>
-      ) : null}
+      <Link
+        href={showingPast ? '/trener' : '/trener?tab=minule'}
+        className="flex min-h-11 items-center justify-center text-row font-semibold text-primary"
+      >
+        {showingPast ? t.upcomingSessions : t.pastSessions}
+      </Link>
+
+      <CreateSheet />
     </main>
   )
 }

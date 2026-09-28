@@ -637,3 +637,11 @@ Then the card shows `Změněno`, the value that moved is highlighted, and the me
 
 AC-271  
 One card per booking, not per training, split into `Nadcházející` and `Minulé` by the tab in the URL. A booking's own fate outranks the training's: an athlete the coach removed reads `Odhlášeno trenérem` even if the training was later called off, and a parent's own withdrawal stays theirs. A confirmed upcoming booking offers `Odhlásit` with the deadline beside it, and past the deadline the button is disabled and says to contact the coach. Withdrawing asks first, naming the child and the training, and confirms with `Odhlášeno`. Nothing is deleted: a cancelled or withdrawn booking keeps its place until the training ends.
+
+## The coach's training list (coach/SPEC.md §K1, §K10)
+
+AC-272  
+The list is chronological and grouped by the workspace's own calendar day, with a `Dnes` chip on today's heading. A row reads as time, place and count: the hall, the changing room and the birth years on one line, the meter and the figure on the other. At most one status line, and only when there is something to say — a draft, a training the coach filled past its capacity, or closed registration. A cancelled training keeps its place with its time struck through and says `Zrušeno` where the count would be, because there is nothing left to count. The past is a link at the bottom, not a second section.
+
+AC-273  
+Creating asks which kind first: one training or a series. A coach with no trainings at all is offered the same thing from the empty state.

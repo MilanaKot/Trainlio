@@ -7,6 +7,8 @@ import type { SessionStatus, EligibilityMode, CoachSessionRole } from '@/types/d
 export type CoachWorkspace = {
   id: string
   name: string
+  /** `sports.code`, so the header names the sport from data (§K1). */
+  sportCode: string
   timezone: string
   facilities: { id: string; code: string; name: string; locationName: string }[]
   coaches: { id: string; displayName: string | null }[]
@@ -46,7 +48,7 @@ export async function getCoachWorkspace(): Promise<CoachWorkspace | null> {
     'getCoachWorkspace memberships',
     await supabase
       .from('workspace_members')
-      .select('workspace_id, workspaces ( id, name, timezone )')
+      .select('workspace_id, workspaces ( id, name, timezone, sports ( code ) )')
       .eq('is_active', true),
   )
 
@@ -79,6 +81,7 @@ export async function getCoachWorkspace(): Promise<CoachWorkspace | null> {
   return {
     id: workspace.id,
     name: workspace.name,
+    sportCode: workspace.sports?.code ?? '',
     timezone: workspace.timezone,
     facilities: facilities.map((f) => ({
       id: f.id,

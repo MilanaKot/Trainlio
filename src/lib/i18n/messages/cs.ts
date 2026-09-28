@@ -287,6 +287,22 @@ export const cs = {
 
   coach: {
     sessionsTitle: 'Tréninky',
+    /* K1: the list is chronological, and the past is a link at the bottom
+       rather than a second section nobody scrolls past. */
+    pastSessions: 'Minulé tréninky',
+    upcomingSessions: 'Nadcházející tréninky',
+    noPastSessions: 'Zatím žádné minulé tréninky.',
+    noSessionsAction: 'Vytvořit trénink',
+    /* K10, the sheet behind the FAB. */
+    create: 'Vytvořit',
+    createSingle: 'Trénink',
+    createSingleHint: 'Jeden termín',
+    /* Named for the sheet row, not for the submit button below, which already
+       says `Vytvořit sérii`. */
+    createSeriesOption: 'Série tréninků',
+    createSeriesHint: 'Opakovaně, např. každou neděli',
+    draft: 'Koncept',
+    cancelledBadge: 'Zrušeno',
     newSession: '+ Trénink',
     newSessionTitle: 'Nový trénink',
     editSessionTitle: 'Upravit trénink',
@@ -313,6 +329,9 @@ export const cs = {
     mainCoach: 'Hlavní trenér',
     eligibility: 'Kdo se může přihlásit',
     eligibilityAll: 'Všichni sportovci',
+    /* §K1: the coach row already carries the hall and the changing room, so
+       the third field is `Všichni` rather than the whole sentence. */
+    eligibilityAllShort: 'Všichni',
     eligibilityRange: 'Ročníky',
     birthYearFrom: 'Od ročníku',
     birthYearTo: 'Do ročníku',

@@ -72,7 +72,10 @@ test.describe('a coach publishes a training and runs its roster', () => {
     await page.goto('/trener')
     await expect(page.getByRole('heading', { name: 'Tréninky' })).toBeVisible()
 
-    await page.getByRole('link', { name: '+ Trénink' }).click()
+    // §K1/§K10 (AC-273): the FAB asks which kind of training before the form,
+    // because a single session and a season of Sundays are different jobs.
+    await page.getByRole('button', { name: 'Vytvořit', exact: true }).click()
+    await page.getByRole('dialog').getByRole('link', { name: 'Trénink Jeden termín' }).click()
     await page.getByLabel('Datum').fill(dateInput(14))
     await page.getByLabel('Začátek').fill('17:00')
     await page.getByLabel('Konec').fill('18:00')
