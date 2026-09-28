@@ -14,8 +14,15 @@ export const cs = {
 
   auth: {
     signInTitle: 'Přihlášení',
-    signInIntro: 'Zadejte e-mail. Pošleme vám přihlašovací kód.',
+    signInIntro: 'Zadejte svůj e-mail. Pošleme vám jednorázový kód, heslo nepotřebujete.',
+    /* Under the club's name on G11: what this application is, for a parent who
+       followed a link and has never seen it before. */
+    signInPurpose: 'Rezervace tréninků',
+    /* The footer of G11. The club is the name at the top; this says whose
+       software it is, quietly, at the bottom. */
+    poweredBy: 'Běží na',
     email: 'E-mail',
+    emailPlaceholder: 'jmeno@email.cz',
     sendCode: 'Poslat kód',
     sending: 'Odesílám…',
     codeTitle: 'Zadejte kód',
@@ -623,23 +630,56 @@ export const cs = {
   /* The coaching staff (D-11, DESIGN_BRIEF §34): an administrator adds coaches
      and fills in the names guardians read on the session page. */
   /** The club's own mark. Not in the design handoff; see DESIGN_DEVIATIONS. */
-  clubMark: {
-    title: 'Znak klubu',
-    intro: 'Zobrazí se rodičům v aplikaci i v e-mailech o trénincích.',
-    choose: 'Nahrát znak',
-    replace: 'Nahradit',
-    remove: 'Odebrat',
-    none: 'Klub zatím nemá znak.',
-    hint: 'PNG, JPEG nebo WebP, nejvýše 1 MB.',
-    saved: 'Znak uložen',
-    removed: 'Znak odebrán',
+  /* The club or training centre, as the administrator edits it and every
+     screen shows it (admin/SPEC.md §A4/A4b/A5). The wording is the design
+     handoff's, verbatim. */
+  organization: {
+    title: 'Organizace',
+    back: 'Zpět',
+    rowLabel: 'Organizace',
+    rowValue: 'Logo a název',
+    logoCaption: 'LOGO',
+    nameCaption: 'NÁZEV',
+    name: 'Název organizace',
+    shortName: 'Krátký název',
+    shortNameHint: 'Použije se tam, kde se celý název nevejde.',
+    upload: 'Nahrát logo',
+    uploadHint: 'PNG, SVG nebo JPG · čtvercové, min. 256 × 256 px · max. 2 MB',
+    change: 'Změnit logo',
+    changeHint:
+      'PNG, SVG nebo JPG · nejlépe čtvercové, alespoň 256 × 256 px · max. 2 MB. Nejlépe vypadá logo s průhledným pozadím.',
+    remove: 'Odebrat logo',
+    removeTitle: 'Odebrat logo?',
+    removeQuestion: 'Místo loga se zobrazí iniciály názvu.',
+    removeConfirm: 'Odebrat',
+    monogramNote: 'Dokud logo nenahrajete, zobrazí se v aplikaci iniciály názvu.',
+    save: 'Uložit',
+    saving: 'Ukládám…',
+    saved: 'Uloženo',
+    /* A5, the adjust sheet. */
+    adjustTitle: 'Upravit logo',
+    zoom: 'Velikost',
+    zoomHint: 'Posunutím obrázek vycentrujete',
+    background: 'Pozadí loga',
+    backgroundWhite: 'Bílé',
+    backgroundTransparent: 'Průhledné',
+    preview: 'Náhled v aplikaci',
+    apply: 'Použít logo',
+    chooseAnother: 'Vybrat jiný soubor',
     errors: {
-      LOGO_TOO_LARGE: 'Soubor je větší než 1 MB.',
-      LOGO_TYPE_NOT_ALLOWED: 'Nahrajte PNG, JPEG nebo WebP.',
+      NAME_REQUIRED: 'Vyplňte název organizace.',
+      NAME_TOO_LONG: 'Název je příliš dlouhý.',
+      SHORT_NAME_TOO_LONG: 'Krátký název je příliš dlouhý.',
+      LOGO_TOO_LARGE: 'Soubor je větší než 2 MB.',
+      LOGO_TYPE_NOT_ALLOWED: 'Tento formát nepodporujeme. Nahrajte PNG, SVG nebo JPG.',
+      LOGO_TOO_SMALL: 'Logo je příliš malé. Nahrajte alespoň 256 × 256 px.',
       LOGO_EMPTY: 'Vyberte soubor.',
+      LOGO_UNREADABLE: 'Soubor se nepodařilo načíst.',
       LOGO_UPLOAD_FAILED: 'Nahrání se nezdařilo. Zkuste to prosím znovu.',
       INVALID_LOGO_PATH: 'Neplatná cesta k souboru.',
-      NOT_AUTHORIZED: 'Znak klubu může měnit jen správce.',
+      INVALID_LOGO_BACKGROUND: 'Neplatné pozadí loga.',
+      NOT_AUTHENTICATED: 'Přihlaste se prosím znovu.',
+      NOT_AUTHORIZED: 'Tyto údaje může měnit jen správce.',
       WORKSPACE_NOT_FOUND: 'Klub nebyl nalezen.',
       generic: 'Uložení se nezdařilo. Zkuste to prosím znovu.',
     },

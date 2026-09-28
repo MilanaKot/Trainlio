@@ -7,7 +7,7 @@ import {
 import { listGuardianAthletes, listJoinableWorkspaces } from '@/server/athletes/queries'
 import { TrainingCard } from '@/components/booking/training-card'
 import { TodayChip } from '@/components/ui/badge'
-import { ClubMark } from '@/components/ui/club-mark'
+import { OrgLogo } from '@/components/ui/org-logo'
 import { buttonVariants } from '@/components/ui/button'
 import { EmptyState } from '@/components/ui/empty-state'
 import { groupByLocalDay } from '@/lib/domain/session-list'
@@ -61,12 +61,24 @@ export default async function SessionsPage() {
 
   return (
     <main className="flex flex-col gap-5">
-      <header className="flex items-center gap-3">
-        <ClubMark url={workspace?.logoUrl ?? null} name={workspace?.name ?? ''} />
-        <div className="flex min-w-0 flex-col gap-1">
-          <h1 className="font-display text-page font-bold text-ink">{t.listTitle}</h1>
-          {meta.length > 0 ? <p className="text-meta text-muted">{meta.join(' · ')}</p> : null}
-        </div>
+      {/* The club above the page title, not beside it (guardian/SPEC.md §G1,
+          updated). Only this tab carries it: it says whose trainings these are,
+          which the other tabs do not need to repeat. */}
+      <header className="flex flex-col gap-3">
+        {workspace ? (
+          <div className="flex items-center gap-2.5">
+            <OrgLogo org={workspace.organization} size={36} />
+            <div className="flex min-w-0 flex-col">
+              <p className="truncate text-row font-bold text-ink">
+                {workspace.organization.name}
+              </p>
+              {meta.length > 0 ? (
+                <p className="truncate text-hint font-normal text-muted">{meta.join(' · ')}</p>
+              ) : null}
+            </div>
+          </div>
+        ) : null}
+        <h1 className="font-display text-page font-bold text-ink">{t.listTitle}</h1>
       </header>
 
       {/* D-01 means these two are never both relevant: a family with no athlete

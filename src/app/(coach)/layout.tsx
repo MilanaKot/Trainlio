@@ -44,6 +44,14 @@ export default async function CoachLayout({ children }: { children: React.ReactN
             >
               {messages.staff.link}
             </Link>
+            {/* A0 in the design is a `Více` tab this group does not have yet;
+                until it does, the club's own screen is reached from here. */}
+            <Link
+              href="/trener/organizace"
+              className="flex min-h-11 items-center px-2 text-sm opacity-70"
+            >
+              {messages.organization.rowLabel}
+            </Link>
           </div>
           <form
             action={async () => {

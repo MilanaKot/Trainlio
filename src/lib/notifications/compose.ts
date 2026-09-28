@@ -139,12 +139,16 @@ export function composeNotificationEmail(
   // images until the reader asks, so it is an <img> with the club's name as
   // its alt text and nothing of the message inside the picture: a parent who
   // never loads it reads exactly the same thing.
-  const header =
-    delivery.workspaceLogoUrl && delivery.workspaceName
+  const header = delivery.workspaceName
+    ? delivery.workspaceLogoUrl
       ? `<p style="margin:0 0 16px"><img src="${escapeHtml(delivery.workspaceLogoUrl)}" ` +
         `alt="${escapeHtml(delivery.workspaceName)}" width="40" height="40" ` +
         'style="width:40px;height:40px;object-fit:contain;border-radius:8px"></p>'
-      : ''
+      : // No mark: the club's name, written out. Not a monogram — two cobalt
+        // letters mean something in an interface that explains them and
+        // nothing at the top of an e-mail (admin/SPEC.md, open questions).
+        `<p style="margin:0 0 16px;font-size:15px;font-weight:700">${escapeHtml(delivery.workspaceName)}</p>`
+    : ''
 
   const html = [
     '<!doctype html><html lang="cs"><body style="margin:0;padding:24px;background:#f5f5f5;',

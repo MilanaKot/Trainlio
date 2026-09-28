@@ -4,7 +4,7 @@ import { getCoachWorkspace, listCoachSessions } from '@/server/sessions/queries'
 import { CoachTrainingRow } from '@/components/session/coach-training-row'
 import { CreateSheet } from '@/components/session/create-sheet'
 import { TodayChip } from '@/components/ui/badge'
-import { ClubMark } from '@/components/ui/club-mark'
+import { OrgLogo } from '@/components/ui/org-logo'
 import { buttonVariants } from '@/components/ui/button'
 import { EmptyState } from '@/components/ui/empty-state'
 import { groupByLocalDay } from '@/lib/domain/session-list'
@@ -49,7 +49,7 @@ export default async function CoachSessionsPage({
   return (
     <main className="flex flex-col gap-5 pb-24">
       <header className="flex items-center gap-3">
-        <ClubMark url={workspace.logoUrl} name={workspace.name} />
+        <OrgLogo org={workspace.organization} size={36} />
         <div className="flex min-w-0 flex-col gap-1">
           <h1 className="font-display text-page font-bold text-ink">
             {showingPast ? t.pastSessions : t.sessionsTitle}

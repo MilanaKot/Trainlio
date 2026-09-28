@@ -281,9 +281,14 @@ describe('the club mark in the message (AC-277)', () => {
     expect(withMark?.subject).toBe(without?.subject)
   })
 
-  it('adds nothing at all for a club with no mark', () => {
-    const html = composeNotificationEmail(delivery(), APP)?.html ?? ''
+  // No monogram in an e-mail: two cobalt letters mean something in an
+  // interface that explains them and nothing at the top of a message.
+  it('writes the club’s name out for a club with no mark', () => {
+    const html =
+      composeNotificationEmail(delivery({ workspaceName: 'Hokejová škola Příbram' }), APP)?.html ??
+      ''
     expect(html).not.toContain('<img')
+    expect(html).toContain('Hokejová škola Příbram')
   })
 
   it('adds nothing when the club has a mark but no name to caption it', () => {

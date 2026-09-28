@@ -4,13 +4,15 @@ import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { requestCode, verifyCode } from '@/server/auth/actions'
 import { messages } from '@/lib/i18n'
+import { Button } from '@/components/ui/button'
+import { Field } from '@/components/ui/field'
 
 const RESEND_SECONDS = 60
 
 type Stage = { name: 'email' } | { name: 'code'; email: string }
 
 /**
- * Two-step OTP sign-in (PRD §7, USER_FLOWS §1).
+ * Two-step OTP sign-in (PRD §7, USER_FLOWS §1, guardian/SPEC.md §G11/§G12).
  *
  * Mobile-first: one field per step, a large tap target, and the numeric keypad
  * on the code step. A parent opening the coach's link on a phone should reach
@@ -83,98 +85,98 @@ export function SignInForm() {
   return (
     <div className="flex flex-col gap-6">
       <header className="flex flex-col gap-2">
-        <h1 className="text-2xl font-semibold">{t.signInTitle}</h1>
-        <p className="text-sm opacity-70">
+        <h1 className="font-display text-page font-bold text-ink">
+          {stage.name === 'email' ? t.signInTitle : t.codeTitle}
+        </h1>
+        <p className="text-body text-muted">
           {stage.name === 'email' ? t.signInIntro : t.codeSentTo.replace('{email}', stage.email)}
         </p>
       </header>
 
       {stage.name === 'email' ? (
         <form onSubmit={onRequest} className="flex flex-col gap-4">
-          <label className="flex flex-col gap-2 text-sm font-medium">
-            {t.email}
-            <input
-              type="email"
-              name="email"
-              inputMode="email"
-              autoComplete="email"
-              autoFocus
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="rounded-lg border border-black/15 px-3 py-3 text-base dark:border-white/20"
-            />
-          </label>
+          {/* The error belongs to the field, not to the form: it is about what
+              was typed in it (§6.10). */}
+          <Field label={t.email} {...(error ? { error } : {})}>
+            {(props) => (
+              <input
+                {...props}
+                type="email"
+                name="email"
+                inputMode="email"
+                autoComplete="email"
+                placeholder={t.emailPlaceholder}
+                autoFocus
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
+            )}
+          </Field>
 
-          {error ? (
-            <p role="alert" className="text-sm text-red-600">
-              {error}
-            </p>
-          ) : null}
-
-          <button
+          <Button
             type="submit"
+            size="lg"
             disabled={pending}
-            className="rounded-lg bg-black px-4 py-3 text-base font-medium text-white disabled:opacity-60 dark:bg-white dark:text-black"
+            {...(pending ? { loadingLabel: t.sending } : {})}
           >
-            {pending ? t.sending : t.sendCode}
-          </button>
+            {t.sendCode}
+          </Button>
         </form>
       ) : (
         <form onSubmit={onVerify} className="flex flex-col gap-4">
-          <label className="flex flex-col gap-2 text-sm font-medium">
-            {t.code}
-            <input
-              type="text"
-              name="code"
-              // A numeric keypad and no autocorrect: the code is six digits and
-              // is usually typed with one thumb from another app.
-              inputMode="numeric"
-              pattern="\d{6}"
-              maxLength={6}
-              autoComplete="one-time-code"
-              autoFocus
-              required
-              value={code}
-              onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))}
-              className="rounded-lg border border-black/15 px-3 py-3 text-center text-2xl tracking-[0.4em] dark:border-white/20"
-            />
-          </label>
+          <Field label={t.code} {...(error ? { error } : {})}>
+            {(props) => (
+              <input
+                {...props}
+                type="text"
+                name="code"
+                // A numeric keypad and no autocorrect: the code is six digits
+                // and is usually typed with one thumb from another app.
+                inputMode="numeric"
+                pattern="\d{6}"
+                maxLength={6}
+                autoComplete="one-time-code"
+                autoFocus
+                required
+                value={code}
+                onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))}
+                className={`${props.className} text-center font-display text-sheet-title tracking-[0.4em] nums`}
+              />
+            )}
+          </Field>
 
-          {error ? (
-            <p role="alert" className="text-sm text-red-600">
-              {error}
-            </p>
-          ) : null}
-
-          <button
+          <Button
             type="submit"
+            size="lg"
             disabled={pending || code.length !== 6}
-            className="rounded-lg bg-black px-4 py-3 text-base font-medium text-white disabled:opacity-60 dark:bg-white dark:text-black"
+            {...(pending ? { loadingLabel: t.verifying } : {})}
           >
-            {pending ? t.verifying : t.verify}
-          </button>
+            {t.verify}
+          </Button>
 
-          <button
-            type="button"
-            onClick={onResend}
-            disabled={pending || cooldown > 0}
-            className="text-sm underline disabled:no-underline disabled:opacity-60"
-          >
-            {cooldown > 0 ? t.resendIn.replace('{seconds}', String(cooldown)) : t.resend}
-          </button>
+          <div className="flex items-center justify-between gap-3">
+            <button
+              type="button"
+              onClick={onResend}
+              disabled={pending || cooldown > 0}
+              className="flex min-h-11 items-center text-hint font-semibold text-primary disabled:text-muted"
+            >
+              {cooldown > 0 ? t.resendIn.replace('{seconds}', String(cooldown)) : t.resend}
+            </button>
 
-          <button
-            type="button"
-            onClick={() => {
-              setStage({ name: 'email' })
-              setCode('')
-              setError(null)
-            }}
-            className="text-sm underline"
-          >
-            {t.useAnotherEmail}
-          </button>
+            <button
+              type="button"
+              onClick={() => {
+                setStage({ name: 'email' })
+                setCode('')
+                setError(null)
+              }}
+              className="flex min-h-11 items-center text-hint font-semibold text-primary"
+            >
+              {t.useAnotherEmail}
+            </button>
+          </div>
         </form>
       )}
     </div>

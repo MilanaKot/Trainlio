@@ -2,8 +2,8 @@ import 'server-only'
 
 import { createClient } from '@/lib/supabase/server'
 import { maybeRow, rows } from '@/server/query-result'
-import { logoUrl } from '@/lib/domain/logo'
-import { publicEnv } from '@/lib/env'
+import { toOrganization } from '@/server/organization/queries'
+import type { Organization } from '@/lib/domain/org'
 import { PHOTO_BUCKET, PHOTO_SIGNED_URL_SECONDS } from '@/lib/domain/photo'
 import type { HockeyPosition, StickSide } from '@/lib/enums/hockey'
 
@@ -33,8 +33,8 @@ export type JoinableWorkspace = {
   name: string
   sportCode: string
   timezone: string
-  /** Public URL of the club's mark, or null when it has none. */
-  logoUrl: string | null
+  /** The club's public face: its name, its mark and how the mark is drawn. */
+  organization: Organization
 }
 
 type ProfileRow = {
@@ -159,7 +159,7 @@ export async function listJoinableWorkspaces(): Promise<JoinableWorkspace[]> {
     name: w.name,
     sportCode: w.sport_code,
     timezone: w.timezone,
-    logoUrl: logoUrl(publicEnv.NEXT_PUBLIC_SUPABASE_URL, w.logo_path),
+    organization: toOrganization(w),
   }))
 }
 

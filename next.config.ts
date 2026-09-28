@@ -39,8 +39,29 @@ const securityHeaders = [
   { key: 'Strict-Transport-Security', value: 'max-age=63072000; includeSubDomains; preload' },
 ]
 
+/**
+ * Where a remote image may come from.
+ *
+ * Exactly one place: the public bucket that holds the club's mark, on this
+ * deployment's own Supabase project. The optimiser fetches whatever URL it is
+ * given, so an open pattern would make it a proxy for the rest of the internet.
+ * Built from the environment rather than hardcoded, because the host differs
+ * between a laptop, a preview deployment and production.
+ */
+const supabase = new URL(process.env.NEXT_PUBLIC_SUPABASE_URL ?? 'http://127.0.0.1:54321')
+
 const nextConfig: NextConfig = {
   reactStrictMode: true,
+  images: {
+    remotePatterns: [
+      {
+        protocol: supabase.protocol === 'https:' ? 'https' : 'http',
+        hostname: supabase.hostname,
+        ...(supabase.port ? { port: supabase.port } : {}),
+        pathname: '/storage/v1/object/public/workspace-logos/**',
+      },
+    ],
+  },
   typedRoutes: true,
   // The application is not a public catalogue: every page needs a session, and
   // the sign-in page has nothing to rank for.

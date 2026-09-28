@@ -2,8 +2,8 @@ import 'server-only'
 
 import { createClient } from '@/lib/supabase/server'
 import { maybeRow, rows } from '@/server/query-result'
-import { logoUrl } from '@/lib/domain/logo'
-import { publicEnv } from '@/lib/env'
+import { toOrganization } from '@/server/organization/queries'
+import type { Organization } from '@/lib/domain/org'
 import type { SessionStatus, EligibilityMode, CoachSessionRole } from '@/types/database'
 
 export type CoachWorkspace = {
@@ -11,8 +11,8 @@ export type CoachWorkspace = {
   name: string
   /** `sports.code`, so the header names the sport from data (§K1). */
   sportCode: string
-  /** Public URL of the club's mark, or null when it has none. */
-  logoUrl: string | null
+  /** The club's public face: its name, its mark and how the mark is drawn. */
+  organization: Organization
   timezone: string
   facilities: { id: string; code: string; name: string; locationName: string }[]
   coaches: { id: string; displayName: string | null }[]
@@ -52,7 +52,9 @@ export async function getCoachWorkspace(): Promise<CoachWorkspace | null> {
     'getCoachWorkspace memberships',
     await supabase
       .from('workspace_members')
-      .select('workspace_id, workspaces ( id, name, timezone, logo_path, sports ( code ) )')
+      .select(
+        'workspace_id, workspaces ( id, name, short_name, timezone, logo_path, logo_background, logo_updated_at, sports ( code ) )',
+      )
       .eq('is_active', true),
   )
 
@@ -86,7 +88,7 @@ export async function getCoachWorkspace(): Promise<CoachWorkspace | null> {
     id: workspace.id,
     name: workspace.name,
     sportCode: workspace.sports?.code ?? '',
-    logoUrl: logoUrl(publicEnv.NEXT_PUBLIC_SUPABASE_URL, workspace.logo_path),
+    organization: toOrganization(workspace),
     timezone: workspace.timezone,
     facilities: facilities.map((f) => ({
       id: f.id,
