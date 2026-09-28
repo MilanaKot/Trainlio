@@ -182,7 +182,7 @@ Four defects were found by the new tests and fixed:
 Exit: the deployment is reproducible from the documents, and nothing in
 `OPEN_DECISIONS.md` is open. ✅
 `validation_retention.sql` (61 cases) covers AC-224 to AC-231; AC-232 is in
-`validation_qa.sql`. **159 of 159** acceptance criteria map to a named test.
+`validation_qa.sql`. **162 of 162** acceptance criteria map to a named test.
 
 Two defects were found by writing this phase:
 
@@ -219,12 +219,15 @@ rebuilt against it one at a time rather than all at once.
   it used to be (migration 28, AC-269 to AC-271)
 
 - K1 `Tréninky` and the K10 create sheet (AC-272, AC-273)
+- K2 the session detail and its roster, with the athlete sheet (K7), the
+  capacity override (K7b), closing registration (K5) and cancelling (K6)
+  (AC-274 to AC-276)
 
-Still to come: the coach's session detail and roster (K2), the editing
-screens (K3), `Trenéři`, then dark mode as a single token pass. The coach
-group still carries its pre-design header; the spec replaces it with a
-three-item bottom navigation, which waits for `Sportovci` and `Více` to
-exist.
+Still to come: the editing screens (K3, K4), the sign-in screens (G11, G12),
+`Trenéři`, then dark mode as a single token pass. The coach group still
+carries its pre-design header; the spec replaces it with a three-item bottom
+navigation, which waits for `Sportovci` and `Více` to exist. §K4 gives
+duplicating a screen of its own; until then the action keeps its dialog.
 
 ## Review checkpoints
 

@@ -645,3 +645,14 @@ The list is chronological and grouped by the workspace's own calendar day, with 
 
 AC-273  
 Creating asks which kind first: one training or a series. A coach with no trainings at all is offered the same thing from the empty state.
+
+## The coach's session detail and roster (coach/SPEC.md §K2, §K5, §K6, §K7)
+
+AC-274  
+The detail reads in the order of a coach's attention: when and where, how full, who is running it, what the parents were told, what only the staff know, who is coming, and only then what can be done about it. The internal note panel says whose eyes it is for, so nobody writes a parent's message into it. A roster row names the athlete, their details, and who booked them and when — in the masculine participle for everyone. Opening a row reaches the family: every active guardian of that athlete with their telephone number, which no other role may read, and a call and an SMS link when there is a number. Adding an athlete searches by name, ignoring diacritics, over the list the server decided.
+
+AC-275  
+Removing an athlete says what follows before it happens — the place is freed, the parent is e-mailed — and carries the coach's own message if they write one. Closing registration is reversible and its sheet lists what it does, what it does not, and that it can be reopened. Cancelling is terminal and its dialog says so, counts the families who will be e-mailed, and defaults to not doing it. Adding past capacity is asked rather than refused (BR-033), states the total the training will have, and quotes the server's own numbers rather than the client's.
+
+AC-276  
+Adding several athletes at once is deliberately not atomic, unlike a guardian's booking (D-05): a coach adding three to a session with two places gets two added and one question asked, and the ones that succeeded stay.

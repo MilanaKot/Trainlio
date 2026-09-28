@@ -87,7 +87,7 @@ test.describe('a coach publishes a training and runs its roster', () => {
     await page.getByRole('button', { name: 'Uložit' }).click()
 
     await expect(page.getByText(room)).toBeVisible()
-    await expect(page.getByRole('heading', { name: 'Přihlášení sportovci (0 / 2)' })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Sportovci 0' })).toBeVisible()
 
     const sessionUrl = page.url()
     const sessionId = sessionUrl.split('/trener/')[1]?.split('/')[0] ?? ''
@@ -100,34 +100,57 @@ test.describe('a coach publishes a training and runs its roster', () => {
     await family('Cyril')
 
     await page.reload()
-    await expect(page.getByRole('heading', { name: 'Přihlášení sportovci (2 / 2)' })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Sportovci 2' })).toBeVisible()
     await expect(page.getByText('Adam Hráč', { exact: true })).toBeVisible()
     await expect(page.getByText('Bohdan Hráč', { exact: true })).toBeVisible()
-    // BR-092: who booked each child, which no row policy would let a coach read.
-    await expect(page.getByText(/Přihlásil\(a\)/).first()).toBeVisible()
+    // BR-092: who booked each child, which no row policy would let a coach
+    // read. Masculine participle for everyone (DESIGN_SYSTEM §8).
+    await expect(page.getByText(/Přihlásil /).first()).toBeVisible()
 
-    // AC-050: the session is full, so adding by hand must be refused until the
-    // coach confirms, and the dialog quotes the server's own numbers.
-    await page.getByLabel('Přidat sportovce').selectOption({ label: 'Cyril Hráč (2017)' })
-    await page.getByRole('button', { name: 'Přidat', exact: true }).click()
-    await expect(page.getByText('Trénink je již plný (2 / 2).')).toBeVisible()
-    await expect(page.getByText('Chcete sportovce přidat nad stanovenou kapacitu?')).toBeVisible()
+    // §K2 (AC-274): the athlete sheet is where a coach reaches the family.
+    // AC-254 — the number is readable here and nowhere else.
+    await page.getByRole('button', { name: /Adam Hráč/ }).click()
+    const athlete = page.getByRole('dialog')
+    await expect(athlete).toContainText('Rodič')
+    await expect(athlete).toContainText('Telefon')
+    await athlete.getByRole('button', { name: 'Zavřít' }).click()
 
-    await page.getByRole('button', { name: 'Přidat', exact: true }).last().click()
-    await expect(page.getByRole('heading', { name: 'Přihlášení sportovci (3 / 2)' })).toBeVisible()
+    // AC-050: the session is full, so adding by hand is refused until the coach
+    // confirms, and the dialog quotes the server's own numbers.
+    await page.getByRole('button', { name: '+ Přidat sportovce' }).click()
+    const adding = page.getByRole('dialog')
+    // The row, not the input: the control is visually hidden inside its label,
+    // which is what a thumb hits. Both projects run against one database, so
+    // another run's "Cyril Hráč" is in the workspace too; the roster below is
+    // per session and unambiguous.
+    await adding.locator('label', { hasText: 'Cyril' }).first().click()
+    await adding.getByRole('button', { name: /Přidat 1 sportovce/ }).click()
+
+    const override = page.getByRole('alertdialog')
+    await expect(override).toContainText('Trénink je již plný')
+    await expect(override).toContainText('Chcete sportovce přidat nad stanovenou kapacitu?')
+    await override.getByRole('button', { name: 'Přidat', exact: true }).click()
+
+    await expect(page.getByRole('heading', { name: 'Sportovci 3' })).toBeVisible()
     await expect(page.getByText('Cyril Hráč', { exact: true })).toBeVisible()
-    await expect(page.getByText('Nad kapacitu')).toBeVisible()
 
-    // D-06: the removal warning says plainly that the parent cannot undo it.
-    await page.getByRole('button', { name: 'Odebrat' }).first().click()
-    await expect(page.getByText(/Rodič ho na tento trénink nemůže přihlásit zpět/)).toBeVisible()
-    await page.getByLabel('Důvod (nepovinné)').fill('Zranění')
-    await page.getByRole('button', { name: 'Odebrat', exact: true }).last().click()
+    // D-06 (AC-275): removing sends the parent an e-mail and frees the place;
+    // the coach's own message can go with it (§G6d).
+    await page.getByRole('button', { name: /Cyril Hráč/ }).click()
+    await page.getByRole('dialog').getByRole('button', { name: 'Odhlásit z tréninku' }).click()
 
-    await expect(page.getByRole('heading', { name: 'Přihlášení sportovci (2 / 2)' })).toBeVisible()
-    // BR-044: nothing is deleted, so the removal stays readable.
+    const removal = page.getByRole('alertdialog')
+    await expect(removal).toContainText('Odhlásit sportovce z tréninku?')
+    await expect(removal).toContainText('Rodič dostane e-mail.')
+    await removal.getByLabel('Zpráva pro rodiče').fill('Zranění')
+    await removal.getByRole('button', { name: 'Odhlásit', exact: true }).click()
+
+    // By its words: a Notice on the page is a status region too.
+    await expect(page.getByText('Sportovec odhlášen')).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Sportovci 2' })).toBeVisible()
+    // BR-044: nothing is deleted, so the removal stays on the record.
     await page.getByText(/Odebraní a odhlášení/).click()
-    await expect(page.getByText('Zranění')).toBeVisible()
+    await expect(page.getByText('Odebral trenér').first()).toBeVisible()
   })
 
   test('a guardian cannot reach the coach area by URL', async ({ page }) => {
@@ -142,8 +165,8 @@ test.describe('a coach publishes a training and runs its roster', () => {
     }
 
     // And nothing of the coach area came with them.
-    await expect(page.getByRole('link', { name: '+ Trénink' })).toHaveCount(0)
-    await expect(page.getByText('Přihlášení sportovci')).toHaveCount(0)
+    await expect(page.getByRole('button', { name: 'Vytvořit', exact: true })).toHaveCount(0)
+    await expect(page.getByText(/Sportovci \d/)).toHaveCount(0)
   })
 
   test('closing booking holds guardians off but not the coach (BR-030)', async ({ page }) => {
@@ -161,11 +184,19 @@ test.describe('a coach publishes a training and runs its roster', () => {
     await page.getByRole('button', { name: 'Uložit' }).click()
     await expect(page.getByText(room)).toBeVisible()
 
+    // §K5 (AC-275): reversible, so the sheet says what it does and does not do
+    // before it happens — including that it can be reopened.
     await page.getByRole('button', { name: 'Zavřít přihlašování' }).click()
+    const sheet = page.getByRole('dialog')
+    await expect(sheet).toContainText('Noví sportovci se už nebudou moci přihlásit.')
+    await expect(sheet).toContainText('Přihlašování můžete kdykoli znovu otevřít')
+    await sheet.getByRole('button', { name: 'Zavřít přihlašování' }).click()
+
+    await expect(page.getByText('Přihlašování uzavřeno').first()).toBeVisible()
     await expect(page.getByRole('button', { name: 'Otevřít přihlašování' })).toBeVisible()
 
     // The roster controls stay: a closed session is what a coach closes in
-    // order to finish the list themselves.
-    await expect(page.getByLabel('Přidat sportovce')).toBeVisible()
+    // order to finish the list themselves (BR-030).
+    await expect(page.getByRole('button', { name: '+ Přidat sportovce' })).toBeVisible()
   })
 })

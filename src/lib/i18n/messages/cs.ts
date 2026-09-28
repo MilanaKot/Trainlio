@@ -336,32 +336,109 @@ export const cs = {
     birthYearFrom: 'Od ročníku',
     birthYearTo: 'Do ročníku',
     occupancy: '{confirmed} / {capacity}',
+    /* K2, the session detail. */
+    backToList: 'Tréninky',
+    occupancyCaption: 'OBSAZENOST',
+    assistants: 'Asistenti',
+    publicNoteCaption: 'INFORMACE PRO SPORTOVCE · VIDÍ RODIČE',
+    internalNoteCaption: 'INTERNÍ POZNÁMKA · JEN TRENÉŘI',
+    actionsCaption: 'AKCE',
+    none: '—',
+    /* K7, the add-athlete sheet. */
+    addAthleteTitle: 'Přidat sportovce',
+    searchPlaceholder: 'Hledat jméno',
+    addAthleteHint: 'Sportovci, kteří ještě nejsou přihlášení',
+    addAthleteHintYears: 'Sportovci z ročníků {years}, kteří ještě nejsou přihlášení',
+    addAthleteEmpty: 'Nikdo další se na tento trénink přihlásit nemůže.',
+    addAthleteNoMatch: 'Tomuto hledání nikdo neodpovídá.',
+    addCount: {
+      one: 'Přidat {count} sportovce',
+      few: 'Přidat {count} sportovce',
+      many: 'Přidat {count} sportovců',
+    } satisfies PluralForms,
+    added: 'Přidáno',
+    guardianLabel: 'Rodič: {name}',
+    /* K7b, the capacity override. It is allowed (BR-033), so it asks rather
+       than refuses — but it says what the consequence is. */
+    overCapacityTitle: 'Trénink je již plný',
+    overCapacityQuestion: 'Chcete sportovce přidat nad stanovenou kapacitu?',
+    overCapacityHelp:
+      'Kapacita se nezmění. Trénink bude mít {total} sportovců a rodiče se dál přihlásit nemohou.',
+    overCapacityConfirm: 'Přidat',
+    /* K7 athlete sheet, and the removal that follows from it. */
+    parent: 'Rodič',
+    phone: 'Telefon',
+    /* While the contact is being fetched. A dash here would read as "this
+       child has no parent on record", which is a different fact. */
+    loadingValue: 'Načítám…',
+    bookedAtLabel: 'Přihlášeno',
+    call: 'Zavolat {phone}',
+    sendSms: 'Poslat SMS',
+    removeFromSession: 'Odhlásit z tréninku',
+    removeTitle: 'Odhlásit sportovce z tréninku?',
+    removeMessage: 'Zpráva pro rodiče',
+    removeMessageHint: 'Nepovinné',
+    removeInfo:
+      'Rodič dostane e-mail. Sportovce bude moci znovu přihlásit, pokud bude volné místo.',
+    removeConfirm: 'Odhlásit',
+    keep: 'Ponechat',
+    removed: 'Sportovec odhlášen',
+    /* K5, closing registration. Reversible, and the sheet says so. */
+    closeTitle: 'Zavřít přihlašování?',
+    closeConsequenceNoNew: 'Noví sportovci se už nebudou moci přihlásit.',
+    closeConsequenceKeep: {
+      one: '{count} přihlášený sportovec zůstane.',
+      few: '{count} přihlášení sportovci zůstanou.',
+      many: '{count} přihlášených sportovců zůstane.',
+    } satisfies PluralForms,
+    closeConsequenceManual: 'Vy můžete sportovce dál přidávat ručně.',
+    closeConsequenceReopen: 'Přihlašování můžete kdykoli znovu otevřít v detailu tréninku.',
+    closeConfirm: 'Zavřít přihlašování',
+    closeKeepOpen: 'Nechat otevřené',
+    closed: 'Přihlašování uzavřeno',
+    reopened: 'Přihlašování znovu otevřeno',
+    /* K6, cancelling. Terminal (D-07), and the dialog says that too. */
+    cancelTitle: 'Zrušit trénink?',
+    cancelBody: 'Trénink zůstane v historii a všichni rodiče přihlášených sportovců obdrží e-mail.',
+    cancelEmailCount: {
+      one: 'E-mail dostane rodič {count} sportovce',
+      few: 'E-mail dostanou rodiče {count} sportovců',
+      many: 'E-mail dostanou rodiče {count} sportovců',
+    } satisfies PluralForms,
+    cancelTerminal: 'Zrušený trénink už nelze znovu otevřít',
+    cancelKeep: 'Nezrušovat',
+    cancelConfirmButton: 'Zrušit trénink',
+    cancelled: 'Trénink zrušen',
+    /* K6b, the cancelled state. */
+    cancelledCaption: 'ZRUŠENO TRENÉREM',
+    cancelledBy: 'Zrušil {name} · {when}.',
+    cancelledEmailed: {
+      one: 'Rodič {count} sportovce dostal e-mail.',
+      few: 'Rodiče {count} sportovců dostali e-mail.',
+      many: 'Rodiče {count} sportovců dostali e-mail.',
+    } satisfies PluralForms,
+    wereBooked: {
+      one: 'Byl přihlášen {count}',
+      few: 'Byli přihlášeni {count}',
+      many: 'Bylo přihlášeno {count}',
+    } satisfies PluralForms,
+    duplicateAsNew: 'Duplikovat jako nový trénink',
     /* The roster (UI_SPEC, BR-092, AC-090). */
+    rosterTitle: 'Sportovci {count}',
     roster: 'Přihlášení sportovci',
     rosterEmpty: 'Zatím není přihlášen nikdo.',
     rosterRemoved: 'Odebraní a odhlášení',
-    bookedBy: 'Přihlásil(a) {name}',
-    bookedByCoach: 'Přidal(a) trenér {name}',
+    /* Masculine participle for everyone (DESIGN_SYSTEM §8, decision 17): the
+       product does not collect gender and will not guess it from a name, and
+       `Přihlásil(a)` reads as a form rather than as a sentence. */
+    bookedBy: 'Přihlásil {name}',
+    bookedByCoach: 'Přidal trenér {name}',
     bookedAt: '{date} v {time}',
     overCapacityBadge: 'Nad kapacitu',
     removedByCoachBadge: 'Odebral trenér',
     cancelledByUserBadge: 'Odhlášeno rodičem',
-    /* AC-050 / UI_SPEC, whose wording this is. The counts come from the
-       server's refusal, so the dialog never states a number the client
-       guessed. */
-    overCapacityTitle: 'Trénink je již plný ({confirmed} / {capacity}).',
-    overCapacityWarning: 'Chcete sportovce přidat nad stanovenou kapacitu?',
-    addAnyway: 'Přidat',
-    /* BR-042: no deadline applies to the coach. */
-    removeTitle: 'Odebrat sportovce',
-    removeWarning:
-      'Sportovec bude odebrán z tréninku. Rodič ho na tento trénink nemůže přihlásit zpět — to může udělat jen trenér.',
-    removeConfirm: 'Odebrat',
     adding: 'Přidávám…',
     removing: 'Odebírám…',
-    noCandidates: 'Do tohoto tréninku není koho přidat.',
-    ineligibleTitle: 'Nelze přidat',
-    pickCandidate: 'Vyberte sportovce',
     ineligibleReason: {
       ALREADY_BOOKED: 'Už je přihlášen',
       BIRTH_YEAR_OUT_OF_RANGE: 'Neodpovídá ročník',

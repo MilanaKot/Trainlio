@@ -94,3 +94,32 @@ export async function listCandidates(sessionId: string): Promise<CandidateAthlet
     canAdd: row.can_add,
   }))
 }
+
+export type BookingGuardian = {
+  profileId: string
+  displayName: string | null
+  phone: string | null
+}
+
+/**
+ * Who to call about one booking (AC-254, coach/SPEC.md §K2).
+ *
+ * Every active guardian of the athlete, not whoever happened to book: two
+ * parents share a child, and the one who tapped the button is not necessarily
+ * the one at the rink.
+ *
+ * Through a domain function because a guardian's profile is deliberately not
+ * coach-readable. The function returns the name and the number for this one
+ * booking, to a coach of this one workspace, instead of the policy being
+ * widened to every family in it.
+ */
+export async function getBookingGuardians(bookingId: string): Promise<BookingGuardian[]> {
+  const supabase = await createClient()
+  const result = await supabase.rpc('booking_guardians', { p_booking_id: bookingId })
+
+  return rows('booking_guardians', result).map((row) => ({
+    profileId: row.profile_id,
+    displayName: row.display_name,
+    phone: row.phone,
+  }))
+}

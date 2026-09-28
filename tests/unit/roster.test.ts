@@ -2,7 +2,9 @@ import { describe, expect, it } from 'vitest'
 import {
   attribution,
   blockedReason,
+  matchesName,
   rosterOccupancy,
+  sequenceAdditions,
   splitCandidates,
   splitRoster,
 } from '@/lib/domain/roster'
@@ -130,5 +132,80 @@ describe('splitting the candidates', () => {
     const { available, blocked } = splitCandidates(candidates)
     expect(available).toEqual([])
     expect(blocked).toEqual(candidates)
+  })
+})
+
+describe('searching the add-athlete list (AC-274)', () => {
+  it('finds a name typed without its diacritics', () => {
+    expect(matchesName('Tomáš Řezníček', 'reznicek')).toBe(true)
+    expect(matchesName('Tomáš Řezníček', 'tomas')).toBe(true)
+  })
+
+  it('finds it typed with them, too', () => {
+    expect(matchesName('Tomáš Řezníček', 'Řezn')).toBe(true)
+  })
+
+  it('ignores case and surrounding space', () => {
+    expect(matchesName('Ivan Kotov', '  KOTOV ')).toBe(true)
+  })
+
+  it('matches everything on an empty query', () => {
+    expect(matchesName('Ivan Kotov', '')).toBe(true)
+    expect(matchesName('Ivan Kotov', '   ')).toBe(true)
+  })
+
+  it('does not match a different name', () => {
+    expect(matchesName('Ivan Kotov', 'novak')).toBe(false)
+  })
+})
+
+describe('adding several athletes at once (AC-276)', () => {
+  const ok = async () => ({ ok: true })
+
+  it('adds them all when nothing refuses', async () => {
+    const seen: string[] = []
+    const result = await sequenceAdditions(['a', 'b', 'c'], async (id) => {
+      seen.push(id)
+      return { ok: true }
+    })
+    expect(result).toEqual({ ok: true, added: 3 })
+    expect(seen).toEqual(['a', 'b', 'c'])
+  })
+
+  // D-05: a coach's additions are separate decisions, unlike a guardian's
+  // booking. Two in and one question is the useful outcome; three refused
+  // because of the third is not.
+  it('keeps what went in and reports what is left', async () => {
+    const result = await sequenceAdditions(['a', 'b', 'c'], async (id) =>
+      id === 'b'
+        ? { ok: false, code: 'WOULD_EXCEED_CAPACITY', capacity: 10, confirmedCount: 10 }
+        : ok(),
+    )
+    expect(result).toEqual({
+      ok: false,
+      added: 1,
+      remaining: ['b', 'c'],
+      code: 'WOULD_EXCEED_CAPACITY',
+      capacity: 10,
+      confirmedCount: 10,
+    })
+  })
+
+  it('stops at the first refusal rather than trying the rest', async () => {
+    const tried: string[] = []
+    await sequenceAdditions(['a', 'b', 'c'], async (id) => {
+      tried.push(id)
+      return id === 'a' ? { ok: false, code: 'NOT_ELIGIBLE' } : { ok: true }
+    })
+    expect(tried).toEqual(['a'])
+  })
+
+  it('names the failure even when the server gave no code', async () => {
+    const result = await sequenceAdditions(['a'], async () => ({ ok: false }))
+    expect(result).toMatchObject({ ok: false, added: 0, code: 'generic', remaining: ['a'] })
+  })
+
+  it('does nothing for an empty selection', async () => {
+    expect(await sequenceAdditions([], ok)).toEqual({ ok: true, added: 0 })
   })
 })

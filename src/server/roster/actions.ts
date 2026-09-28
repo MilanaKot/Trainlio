@@ -2,6 +2,8 @@
 
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
+import { getBookingGuardians, type BookingGuardian } from '@/server/roster/queries'
+import { sequenceAdditions, type SequencedAdditions } from '@/lib/domain/roster'
 
 /**
  * Coach roster operations.
@@ -105,4 +107,33 @@ export async function removeAthleteFromSession(
 
   refresh(sessionId)
   return { ok: true }
+}
+
+/**
+ * Several athletes, one after another (coach/SPEC.md §K7).
+ *
+ * The sequencing itself is `sequenceAdditions`, which explains why it is not
+ * atomic (D-05). This binds it to the domain function.
+ */
+export async function addAthletesToSession(
+  sessionId: string,
+  athleteIds: string[],
+  confirmOverCapacity = false,
+): Promise<SequencedAdditions> {
+  return sequenceAdditions(athleteIds, (athleteId) =>
+    addAthleteToSession(sessionId, athleteId, confirmOverCapacity),
+  )
+}
+
+/**
+ * The guardians of one booking, fetched when the coach opens that athlete
+ * (coach/SPEC.md §K2).
+ *
+ * On demand rather than with the roster: a training of twenty would otherwise
+ * cost twenty extra round trips on every page load, to show a telephone number
+ * the coach looks at once. Reading through an action because the query is
+ * `server-only` and the sheet is a Client Component.
+ */
+export async function loadBookingGuardians(bookingId: string): Promise<BookingGuardian[]> {
+  return getBookingGuardians(bookingId)
 }
