@@ -167,3 +167,43 @@ still refused, because `Přihlásil Nováková` is a form, not a person.
 
 Worth revisiting if a coach ever cannot tell two Janas apart; cheap to change,
 since it is one validation rule in `updateOwnProfile`.
+
+## The organization logo, after handoff v2
+
+The handoff's second delivery designed the club mark properly (README decisions
+20–22, DESIGN_SYSTEM §6.23, admin A4/A4b/A5, guardian G11/G1), which replaced
+the three choices recorded above. `ClubMark` is gone; `OrgLogo` is the one
+component, the monogram now exists, and the mark is on the sign-in screen.
+
+Four places where the implementation still differs from what is drawn, all of
+them deliberate:
+
+**`organization` is the `workspaces` row.** The spec gives the organization its
+own table. This schema has had one since migration 2 under another name, and
+every session, athlete and membership already hangs from it. The three new
+fields were added there (migration 30). The bucket keeps the name migration 29
+gave it, `workspace-logos`, for the same reason: renaming storage to match a
+word costs a migration and a re-upload and buys nothing.
+
+**The route is `/trener/organizace`**, not `/coach/more/organization`. This
+repository's routes are Czech, and the `Více` tab the design hangs A0 under does
+not exist yet — the coach group still has its pre-design header, and the screen
+is reached from there until the coach navigation is rebuilt. A0 itself is not
+built.
+
+**The mark is also in the coach's own header.** The task lists that as out of
+scope, and `admin/SPEC.md` leaves it as an open question answered "assume no".
+It was asked for directly before this handoff arrived, and it is one line; it
+stays until the designer says otherwise.
+
+**The save is one action, not an upload followed by a commit.** §A5 recommends
+uploading to a temporary key and committing on `Uložit`, and explicitly allows
+either. The cropped PNG is held in the browser instead and uploaded by the same
+action that saves the name, so a sheet closed without saving leaves nothing
+behind in a public bucket.
+
+**The server takes PNG alone.** The file rules list PNG, JPEG and SVG, and that
+is what the picker offers and what the browser validates. What may be _stored_
+is narrower, because the sheet rasterises every choice to a 512px PNG and an
+SVG served back from our own origin is a script: the server checks the bytes
+rather than the declared type, and the bucket takes `image/png` only.

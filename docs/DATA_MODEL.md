@@ -196,16 +196,31 @@ Application validation must enforce allowed values.
 ## workspaces
 
 - id
-- name
+- name — the club as a parent reads it, 2–80 characters
+- short_name — optional, ≤ 24 characters, for places the full name does not fit
 - primary_sport_id
 - timezone — IANA zone, `Europe/Prague` for the MVP workspace
 - cancellation_deadline_hours — guardian self-cancellation deadline, 12 in MVP
+- logo_path — object in the public `workspace-logos` bucket, or null
+- logo_background — `white` (a plate behind the mark) or `transparent`
+- logo_updated_at — when the mark last changed; travels in the URL as `?v=`
 - is_active
 - created_at
 - updated_at
 
 Current:
-Příbram hockey coach workspace.
+Příbram hockey coach workspace, seeded as `Hokejová škola Příbram`.
+
+The design handoff calls this row an **organization**, and the guardian-facing
+screens use that word. It is the same row: a workspace is the club, and a
+second table holding a name and a logo beside it would be a synonym rather than
+a boundary (migration 30).
+
+The name, the short name, the mark and its background are written only through
+`set_workspace_identity` and `set_workspace_logo`, by an administrator of that
+workspace, and both are audited. There is no UPDATE grant on this table for any
+client role: the timezone and the cancellation deadline sit in the same row, and
+the person who may rename the club has no business writing next to those.
 
 `timezone` governs all wall-clock reasoning, most importantly recurring series
 generation. `cancellation_deadline_hours` keeps the 12-hour rule out of the code
