@@ -75,9 +75,13 @@ AC-194 (significant changes), AC-200 to AC-204 (notes and changing room).
 - Local wall-clock generation, per-occurrence conversion
 - Date preview before save
 - Single-transaction bulk creation
+- Several weekdays in one pattern, a per-date opt-out and a 52-occurrence
+  ceiling (migration 27, `coach/SPEC.md` §K4b and §K11). The client submits the
+  pattern and the dates to **skip**, never the dates to create, so the
+  checklist can decline an occurrence but cannot conjure one.
 
-Exit: AC-080 to AC-080c. The daylight-saving case (AC-080a) is a required test,
-not a manual check.
+Exit: AC-080 to AC-080c, AC-263 to AC-265. The daylight-saving case (AC-080a) is
+a required test, not a manual check.
 
 ## Phase 5 — booking engine ✅
 
@@ -178,7 +182,7 @@ Four defects were found by the new tests and fixed:
 Exit: the deployment is reproducible from the documents, and nothing in
 `OPEN_DECISIONS.md` is open. ✅
 `validation_retention.sql` (61 cases) covers AC-224 to AC-231; AC-232 is in
-`validation_qa.sql`. **148 of 148** acceptance criteria map to a named test.
+`validation_qa.sql`. **151 of 151** acceptance criteria map to a named test.
 
 Two defects were found by writing this phase:
 

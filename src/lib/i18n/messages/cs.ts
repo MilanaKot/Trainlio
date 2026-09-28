@@ -264,6 +264,8 @@ export const cs = {
     newSeriesTitle: 'Nová série tréninků',
     noSeries: 'Zatím žádné série.',
     weekday: 'Den v týdnu',
+    /* coach/SPEC.md §K4b: the panel repeats on several weekdays, not one. */
+    repeatEvery: 'Opakovat každý',
     dateFrom: 'Od data',
     dateTo: 'Do data',
     preview: 'Náhled termínů',
@@ -272,6 +274,18 @@ export const cs = {
       one: 'Vytvoří se {count} trénink',
       few: 'Vytvoří se {count} tréninky',
       many: 'Vytvoří se {count} tréninků',
+    },
+    previewUncheck: 'Zrušte zaškrtnutí u dnů, kdy se netrénuje',
+    seriesLimit: 'Série může mít nejvýše 52 tréninků.',
+    seriesSkipped: {
+      one: '{count} termín vynechán',
+      few: '{count} termíny vynechány',
+      many: '{count} termínů vynecháno',
+    },
+    createSeriesCount: {
+      one: 'Vytvořit {count} trénink',
+      few: 'Vytvořit {count} tréninky',
+      many: 'Vytvořit {count} tréninků',
     },
     createSeries: 'Vytvořit sérii',
     seriesGenerated: {
@@ -290,6 +304,16 @@ export const cs = {
       '5': 'Pátek',
       '6': 'Sobota',
       '7': 'Neděle',
+    },
+    /* The 44 px toggles and the series list have room for two letters. */
+    weekdaysShort: {
+      '1': 'Po',
+      '2': 'Út',
+      '3': 'St',
+      '4': 'Čt',
+      '5': 'Pá',
+      '6': 'So',
+      '7': 'Ne',
     },
     /* AC-051 / UI_SPEC: the server refuses this without confirmation. */
     capacityWarningTitle: 'Snížení kapacity',
@@ -319,7 +343,9 @@ export const cs = {
       COACH_NOT_WORKSPACE_STAFF: 'Vybraný trenér nepatří do tohoto klubu.',
       INVALID_BIRTH_YEAR_RANGE: 'Zkontrolujte rozsah ročníků.',
       SERIES_EMPTY: 'Zadanému nastavení neodpovídá žádný termín.',
-      INVALID_WEEKDAY: 'Vyberte den v týdnu.',
+      SERIES_TOO_LONG:
+        'Série může mít nejvýše 52 tréninků. Zkraťte období nebo zrušte zaškrtnutí u některých termínů.',
+      INVALID_WEEKDAY: 'Vyberte alespoň jeden den v týdnu.',
       INVALID_DATE_RANGE: 'Datum do musí být po datu od.',
       ALREADY_BOOKED: 'Sportovec už je na tento trénink přihlášen.',
       NOT_ELIGIBLE: 'Sportovec nesplňuje podmínky tohoto tréninku.',

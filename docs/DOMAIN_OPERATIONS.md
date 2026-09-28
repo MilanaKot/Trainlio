@@ -432,28 +432,56 @@ generated series is worse than none, because the coach cannot tell what exists
 
 ```
 1. is_workspace_coach                         -> NOT_AUTHORIZED
-2. read workspaces.timezone
-3. generate LOCAL DATES:
-     d := first date >= local_date_from whose ISO weekday = by_weekday
-     while d <= local_date_to:
-         emit d
-         d := d + 7          -- date arithmetic, no time component, DST-free
-4. if no dates emitted                        -> SERIES_EMPTY
-5. insert session_series
+2. normalise by_weekdays (sort, de-duplicate)
+     empty, null element, or a value outside 1..7  -> INVALID_WEEKDAY
+3. if local_date_to - local_date_from > 366   -> SERIES_TOO_LONG
+4. read workspaces.timezone
+5. generate LOCAL DATES:
+     for each date d from local_date_from to local_date_to:
+         if isodow(d) in by_weekdays and d not in excluded_dates:
+             emit d           -- date arithmetic, no time component, DST-free
+6. if no dates emitted                        -> SERIES_EMPTY
+   if more than 52 dates emitted              -> SERIES_TOO_LONG
+7. insert session_series
+     by_weekdays    = the normalised set
+     excluded_dates = the exclusions that actually suppressed a date
      generated_in_timezone = workspaces.timezone
      generated_count, generated_at
-6. for each local date d, convert INDEPENDENTLY:
+8. for each local date d, convert INDEPENDENTLY:
      start_at := (d + local_start_time) AT TIME ZONE ws.timezone
      end_at   := (d + local_end_time)   AT TIME ZONE ws.timezone
-7. insert all training_sessions with series_id
-8. append audit SESSION_SERIES_CREATED
+9. insert all training_sessions with series_id
+10. append audit SESSION_SERIES_CREATED
 ```
 
-Step 6 is the correctness point. Adding a fixed 7×24h interval to a `timestamptz`
+Step 8 is the correctness point. Adding a fixed 7×24h interval to a `timestamptz`
 is prohibited: for the PRD's own example series (Sundays 09:00, 4 Oct → 29 Nov
 2026, Europe/Prague) it yields 09:00 for the first three occurrences and 08:00 for
 the remaining six, because Czech DST ends on 25 October 2026 — itself an
 occurrence date.
+
+**The client sends the pattern and the dates to skip, never the dates to
+create** (principle 5, `coach/SPEC.md` §K4b). The coach's panel is a weekday
+multi-select over a checklist that can be unchecked date by date, so the
+obvious contract would be to post the checked dates — but then a stale or
+edited client would decide which occurrences exist. A list of exclusions
+cannot: whatever the client sends, nothing outside the pattern is generated.
+It can decline an occurrence; it cannot conjure one.
+
+Exclusions naming a date the pattern never produced are dropped rather than
+refused — they change nothing either way — and `excluded_dates` records only
+those that actually suppressed a date, so the row explains the gaps in the
+generated sessions without a reader re-deriving them.
+
+A series holds **at most 52 occurrences** (`coach/SPEC.md` §K4b). The ceiling
+counts what gets created, which is what the coach's footer counts, so
+unchecking dates can bring an over-long range inside it. It is enforced in the
+function (`SERIES_TOO_LONG`), by a check constraint on
+`session_series.generated_count`, and mirrored on the client as
+`MAX_SERIES_OCCURRENCES` for the preview only. The 366-day span guard at step 3
+exists so an absurd range is refused before it is expanded; 52 weekly
+occurrences of one weekday span 357 days, so no series the ceiling allows can
+reach it.
 
 Generated sessions are fully independent from creation onward (`BR-081`,
 `AC-081`, `AC-082`). There is no "this and all following" editing in MVP; the

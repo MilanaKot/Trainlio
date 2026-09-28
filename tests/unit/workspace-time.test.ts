@@ -49,7 +49,7 @@ describe('weekly occurrence dates', () => {
   // 25 October 2026 — itself an occurrence date. Generating local dates and
   // converting each one individually is what keeps every session at 09:00.
   it('generates the nine Sundays of the PRD example', () => {
-    const dates = weeklyOccurrenceDates('2026-10-04', '2026-11-29', 7)
+    const dates = weeklyOccurrenceDates('2026-10-04', '2026-11-29', [7])
     expect(dates).toEqual([
       '2026-10-04',
       '2026-10-11',
@@ -64,29 +64,70 @@ describe('weekly occurrence dates', () => {
   })
 
   it('steps whole calendar days, so the DST boundary changes nothing', () => {
-    const dates = weeklyOccurrenceDates('2026-10-18', '2026-11-01', 7)
+    const dates = weeklyOccurrenceDates('2026-10-18', '2026-11-01', [7])
     expect(dates).toEqual(['2026-10-18', '2026-10-25', '2026-11-01'])
   })
 
   it('advances to the first matching weekday', () => {
     // 2026-10-01 is a Thursday; the first Sunday on or after it is the 4th.
-    expect(weeklyOccurrenceDates('2026-10-01', '2026-10-11', 7)).toEqual([
+    expect(weeklyOccurrenceDates('2026-10-01', '2026-10-11', [7])).toEqual([
       '2026-10-04',
       '2026-10-11',
     ])
   })
 
   it('returns nothing when the range contains no matching weekday', () => {
-    expect(weeklyOccurrenceDates('2026-10-05', '2026-10-09', 7)).toEqual([])
+    expect(weeklyOccurrenceDates('2026-10-05', '2026-10-09', [7])).toEqual([])
   })
 
   it('returns nothing for an inverted range', () => {
-    expect(weeklyOccurrenceDates('2026-11-29', '2026-10-04', 7)).toEqual([])
+    expect(weeklyOccurrenceDates('2026-11-29', '2026-10-04', [7])).toEqual([])
   })
 
   it('rejects an out-of-range weekday', () => {
-    expect(() => weeklyOccurrenceDates('2026-10-04', '2026-10-11', 0)).toThrow()
-    expect(() => weeklyOccurrenceDates('2026-10-04', '2026-10-11', 8)).toThrow()
+    expect(() => weeklyOccurrenceDates('2026-10-04', '2026-10-11', [0])).toThrow()
+    expect(() => weeklyOccurrenceDates('2026-10-04', '2026-10-11', [8])).toThrow()
+    expect(() => weeklyOccurrenceDates('2026-10-04', '2026-10-11', [7, 8])).toThrow()
+  })
+
+  // coach/SPEC.md §K4b: the panel repeats on several weekdays at once.
+  it('interleaves several weekdays in date order', () => {
+    // 2026-10-05 is a Monday.
+    expect(weeklyOccurrenceDates('2026-10-05', '2026-10-18', [1, 3])).toEqual([
+      '2026-10-05',
+      '2026-10-07',
+      '2026-10-12',
+      '2026-10-14',
+    ])
+  })
+
+  it('does not care about the order or the duplicates it is given', () => {
+    expect(weeklyOccurrenceDates('2026-10-05', '2026-10-18', [3, 1, 1])).toEqual(
+      weeklyOccurrenceDates('2026-10-05', '2026-10-18', [1, 3]),
+    )
+  })
+
+  it('returns nothing for an empty weekday set', () => {
+    expect(weeklyOccurrenceDates('2026-10-05', '2026-10-18', [])).toEqual([])
+  })
+
+  it('subtracts the dates the coach unchecked', () => {
+    expect(
+      weeklyOccurrenceDates('2026-10-05', '2026-10-18', [1, 3], ['2026-10-07', '2026-10-12']),
+    ).toEqual(['2026-10-05', '2026-10-14'])
+  })
+
+  it('ignores an exclusion the pattern never produced', () => {
+    expect(
+      weeklyOccurrenceDates('2026-10-05', '2026-10-18', [1, 3], ['2026-10-06', '2026-12-25']),
+    ).toEqual(['2026-10-05', '2026-10-07', '2026-10-12', '2026-10-14'])
+  })
+
+  // The preview and public.weekly_occurrence_dates must agree, because the
+  // dates a coach approves are the dates that get created. The SQL side of the
+  // same pattern is asserted in supabase/tests/validation_series.sql.
+  it('matches the nine Sundays the generator produces, minus one unchecked', () => {
+    expect(weeklyOccurrenceDates('2026-10-04', '2026-11-29', [7], ['2026-10-25'])).toHaveLength(8)
   })
 })
 
@@ -106,7 +147,7 @@ describe('formatLocalDateKey', () => {
   })
 
   it('renders every occurrence of the PRD series on the same weekday', () => {
-    const labels = weeklyOccurrenceDates('2026-10-04', '2026-11-29', 7).map(formatLocalDateKey)
+    const labels = weeklyOccurrenceDates('2026-10-04', '2026-11-29', [7]).map(formatLocalDateKey)
     expect(labels).toHaveLength(9)
     expect(labels.every((label) => label.startsWith('Neděle'))).toBe(true)
   })

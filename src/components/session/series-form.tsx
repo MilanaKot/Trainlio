@@ -4,6 +4,7 @@ import { useMemo, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { messages, plural } from '@/lib/i18n'
 import { weeklyOccurrenceDates, formatLocalDateKey } from '@/lib/time/workspace-time'
+import { ISO_WEEKDAYS, MAX_SERIES_OCCURRENCES } from '@/lib/domain/series'
 import { createSeries } from '@/server/sessions/actions'
 import type { CoachWorkspace } from '@/server/sessions/queries'
 
@@ -15,30 +16,55 @@ function errorText(code: string | undefined): string {
 }
 
 /**
- * Series creation with a live date preview (UI_SPEC, PRD §16).
+ * Series creation with a live date preview (UI_SPEC, PRD §16, coach/SPEC.md
+ * §K4b and §K11).
  *
  * The preview runs the same rule the server does — whole calendar days in the
  * workspace timezone — so what a coach approves is what gets created. It is
- * still only a preview: the dates are not submitted, because a stale or edited
- * one must not be able to decide what exists.
+ * still only a preview: the generated dates are not submitted. What is
+ * submitted is the pattern plus the dates the coach UNCHECKED, so a stale or
+ * edited client can decline an occurrence but never conjure one.
  */
 export function SeriesForm({ workspace, today }: { workspace: CoachWorkspace; today: string }) {
   const router = useRouter()
-  const [byWeekday, setByWeekday] = useState('7')
+  const [byWeekdays, setByWeekdays] = useState<number[]>([7])
   const [dateFrom, setDateFrom] = useState(today)
   const [dateTo, setDateTo] = useState(today)
   const [startTime, setStartTime] = useState('09:00')
   const [mode, setMode] = useState('ALL')
+  // Dates the coach unchecked. Kept by date rather than by index, so changing
+  // the range does not silently move an exclusion onto a different day.
+  const [excluded, setExcluded] = useState<ReadonlySet<string>>(new Set())
   const [error, setError] = useState<string | null>(null)
   const [pending, startTransition] = useTransition()
 
   const preview = useMemo(() => {
     try {
-      return weeklyOccurrenceDates(dateFrom, dateTo, Number(byWeekday))
+      return weeklyOccurrenceDates(dateFrom, dateTo, byWeekdays)
     } catch {
       return []
     }
-  }, [dateFrom, dateTo, byWeekday])
+  }, [dateFrom, dateTo, byWeekdays])
+
+  const selected = useMemo(() => preview.filter((d) => !excluded.has(d)), [preview, excluded])
+  const overLimit = selected.length > MAX_SERIES_OCCURRENCES
+
+  function toggleWeekday(day: number) {
+    setByWeekdays((current) =>
+      current.includes(day)
+        ? current.filter((d) => d !== day)
+        : [...current, day].sort((a, b) => a - b),
+    )
+  }
+
+  function toggleDate(date: string) {
+    setExcluded((current) => {
+      const next = new Set(current)
+      if (next.has(date)) next.delete(date)
+      else next.add(date)
+      return next
+    })
+  }
 
   function onSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -65,22 +91,45 @@ export function SeriesForm({ workspace, today }: { workspace: CoachWorkspace; to
 
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-5">
-      <div className="grid gap-4 sm:grid-cols-3">
-        <label className={label}>
-          {t.weekday}
-          <select
-            name="byWeekday"
-            value={byWeekday}
-            onChange={(e) => setByWeekday(e.target.value)}
-            className={input}
-          >
-            {(['1', '2', '3', '4', '5', '6', '7'] as const).map((day) => (
-              <option key={day} value={day}>
-                {t.weekdays[day]}
-              </option>
-            ))}
-          </select>
-        </label>
+      {/* Multi-select, 44 px (coach/SPEC.md §K4b). The checked days are posted
+          as the pattern; the server normalises and re-derives the dates. */}
+      <fieldset className="flex flex-col gap-2">
+        <legend className="mb-2 text-sm font-medium">{t.repeatEvery}</legend>
+        <div className="flex flex-wrap gap-2">
+          {ISO_WEEKDAYS.map((day) => {
+            const on = byWeekdays.includes(day)
+            return (
+              <label
+                key={day}
+                className={`flex min-h-11 min-w-11 cursor-pointer items-center justify-center rounded-lg border px-3 text-sm font-medium ${
+                  on
+                    ? 'border-black bg-black text-white dark:border-white dark:bg-white dark:text-black'
+                    : 'border-black/15 dark:border-white/20'
+                }`}
+              >
+                <input
+                  type="checkbox"
+                  name="byWeekday"
+                  value={day}
+                  checked={on}
+                  onChange={() => toggleWeekday(day)}
+                  className="sr-only"
+                />
+                {/* Two letters for the eye, the whole weekday for a screen
+                    reader — "Po Pondělí" would be read out otherwise. */}
+                <span aria-hidden="true">
+                  {t.weekdaysShort[String(day) as keyof typeof t.weekdaysShort]}
+                </span>
+                <span className="sr-only">
+                  {t.weekdays[String(day) as keyof typeof t.weekdays]}
+                </span>
+              </label>
+            )
+          })}
+        </div>
+      </fieldset>
+
+      <div className="grid gap-4 sm:grid-cols-2">
         <label className={label}>
           {t.dateFrom}
           <input
@@ -205,17 +254,38 @@ export function SeriesForm({ workspace, today }: { workspace: CoachWorkspace; to
           <p className="text-sm opacity-70">{t.previewEmpty}</p>
         ) : (
           <>
-            <p className="text-sm">{plural(preview.length, t.previewCount)}</p>
-            <ul className="flex flex-col gap-1 text-sm tabular-nums opacity-80">
-              {preview.map((date) => (
-                <li key={date}>
-                  {/* A calendar date and the chosen local time. The same time
-                      on every line, including across a daylight-saving change —
-                      which is exactly what the coach should see before saving. */}
-                  {formatLocalDateKey(date)} · {startTime}
-                </li>
-              ))}
+            <p className="text-sm">{plural(selected.length, t.previewCount)}</p>
+            <p className="text-xs opacity-60">{t.previewUncheck}</p>
+            <ul className="flex flex-col gap-1 text-sm tabular-nums">
+              {preview.map((date) => {
+                const on = !excluded.has(date)
+                return (
+                  <li key={date}>
+                    <label className="flex min-h-11 items-center gap-3">
+                      <input type="checkbox" checked={on} onChange={() => toggleDate(date)} />
+                      <span className={on ? '' : 'line-through opacity-50'}>
+                        {/* A calendar date and the chosen local time. The same
+                            time on every line, including across a daylight-saving
+                            change — which is what the coach should see before
+                            saving. */}
+                        {formatLocalDateKey(date)} · {startTime}
+                      </span>
+                    </label>
+                    {/* Only the unchecked dates travel. The server re-derives
+                        the pattern and subtracts these, so this list can shrink
+                        a series but never extend one. */}
+                    {on ? null : <input type="hidden" name="excludedDate" value={date} />}
+                  </li>
+                )
+              })}
             </ul>
+            {overLimit ? (
+              <p role="alert" className="text-sm text-red-600">
+                {t.errors.SERIES_TOO_LONG}
+              </p>
+            ) : (
+              <p className="text-xs opacity-60">{t.seriesLimit}</p>
+            )}
           </>
         )}
         <p className="text-xs opacity-60">{t.seriesIndependent}</p>
@@ -229,10 +299,17 @@ export function SeriesForm({ workspace, today }: { workspace: CoachWorkspace; to
 
       <button
         type="submit"
-        disabled={pending || preview.length === 0}
+        disabled={pending || selected.length === 0 || overLimit}
         className="min-h-12 rounded-lg bg-black px-4 text-base font-medium text-white disabled:opacity-60 dark:bg-white dark:text-black"
       >
-        {pending ? messages.athlete.saving : t.createSeries}
+        {/* The footer counts what will be created, which is what is checked
+            (coach/SPEC.md §K4b). Disabling is a courtesy — the server refuses
+            an empty or over-long series on its own (principle 5). */}
+        {pending
+          ? messages.athlete.saving
+          : selected.length === 0
+            ? t.createSeries
+            : plural(selected.length, t.createSeriesCount)}
       </button>
     </form>
   )

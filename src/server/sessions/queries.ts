@@ -195,7 +195,9 @@ export async function getCoachSession(sessionId: string): Promise<CoachSession |
 
 export type CoachSeries = {
   id: string
-  byWeekday: number
+  byWeekdays: number[]
+  /** Pattern dates the coach unchecked before creating. */
+  excludedDates: string[]
   localDateFrom: string
   localDateTo: string
   localStartTime: string
@@ -212,7 +214,8 @@ export type CoachSeries = {
 
 type SeriesRow = {
   id: string
-  by_weekday: number
+  by_weekdays: number[]
+  excluded_dates: string[]
   local_date_from: string
   local_date_to: string
   local_start_time: string
@@ -232,7 +235,7 @@ export async function listCoachSeries(): Promise<CoachSeries[]> {
   const result = await supabase
     .from('session_series')
     .select(
-      `id, by_weekday, local_date_from, local_date_to, local_start_time, local_end_time,
+      `id, by_weekdays, excluded_dates, local_date_from, local_date_to, local_start_time, local_end_time,
        generated_count, generated_at, generated_in_timezone, capacity,
        facilities ( code ),
        training_sessions ( status )`,
@@ -243,7 +246,8 @@ export async function listCoachSeries(): Promise<CoachSeries[]> {
     const occurrences = row.training_sessions ?? []
     return {
       id: row.id,
-      byWeekday: row.by_weekday,
+      byWeekdays: row.by_weekdays ?? [],
+      excludedDates: row.excluded_dates ?? [],
       localDateFrom: row.local_date_from,
       localDateTo: row.local_date_to,
       // `time` comes back as HH:MM:SS; the form and the list want HH:MM.

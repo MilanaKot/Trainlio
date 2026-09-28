@@ -31,8 +31,10 @@ export default async function SeriesListPage() {
               className="flex flex-col gap-1 rounded-xl border border-black/10 p-4 dark:border-white/15"
             >
               <span className="font-medium">
-                {t.weekdays[String(s.byWeekday) as keyof typeof t.weekdays]} · {s.localStartTime}–
-                {s.localEndTime} · {s.facilityCode}
+                {s.byWeekdays
+                  .map((d) => t.weekdaysShort[String(d) as keyof typeof t.weekdaysShort])
+                  .join(' ')}{' '}
+                · {s.localStartTime}–{s.localEndTime} · {s.facilityCode}
               </span>
               <span className="text-sm opacity-70">
                 {formatLocalDateKey(s.localDateFrom)} — {formatLocalDateKey(s.localDateTo)}
@@ -41,6 +43,11 @@ export default async function SeriesListPage() {
                 {plural(s.generatedCount, t.seriesGenerated)}
                 {s.cancelledCount > 0
                   ? ` · ${s.cancelledCount} ${messages.session.cancelled.toLowerCase()}`
+                  : ''}
+                {/* The gaps the coach chose, so the list explains why the
+                    pattern produced fewer sessions than the range suggests. */}
+                {s.excludedDates.length > 0
+                  ? ` · ${plural(s.excludedDates.length, t.seriesSkipped)}`
                   : ''}
               </span>
               {/* Provenance, not a live template: this is the zone the existing

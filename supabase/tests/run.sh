@@ -66,6 +66,18 @@ run_suite() {
     echo "$suite: $failed case(s) failed" >&2
     return 1
   fi
+
+  # A case whose own SQL is malformed raises rather than returning a row, and
+  # ON_ERROR_STOP is off so the suite carries on. Without this it would be
+  # counted as neither PASS nor FAIL and would simply vanish — which has
+  # happened, and cost a case that was never actually asserting anything.
+  local errored
+  errored="$(echo "$out" | grep -c '^psql:.*ERROR' || true)"
+  if [ "$errored" -ne 0 ]; then
+    echo "$out" | grep '^psql:.*ERROR' >&2
+    echo "$suite: $errored statement(s) raised instead of asserting" >&2
+    return 1
+  fi
   echo "$suite: $(echo "$out" | grep -c '^PASS') passed"
 }
 

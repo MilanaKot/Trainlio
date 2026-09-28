@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { validateSession, type SessionInput } from '@/lib/domain/session'
+import { canonicalWeekdays } from '@/lib/domain/series'
 
 /**
  * Coach session management.
@@ -230,11 +231,15 @@ export async function createSeries(
   if (!validated.ok) return { ok: false, code: 'VALIDATION', fieldErrors: validated.errors }
 
   const v = validated.value
-  const byWeekday = Number(String(form.get('byWeekday') ?? ''))
+  // The pattern and the dates to SKIP, never the dates to create: a stale or
+  // edited client must not be able to decide which occurrences exist
+  // (principle 5). It can decline one, it cannot conjure one.
+  const byWeekdays = canonicalWeekdays(form.getAll('byWeekday').map((d) => Number(String(d))))
+  const excludedDates = form.getAll('excludedDate').map((d) => String(d))
   const dateFrom = String(form.get('localDateFrom') ?? '')
   const dateTo = String(form.get('localDateTo') ?? '')
 
-  if (!Number.isInteger(byWeekday) || byWeekday < 1 || byWeekday > 7) {
+  if (byWeekdays.length === 0) {
     return { ok: false, code: 'INVALID_WEEKDAY' }
   }
   if (!dateFrom || !dateTo || dateTo < dateFrom) {
@@ -245,7 +250,8 @@ export async function createSeries(
 
   const { data, error } = await supabase.rpc('create_session_series', {
     p_workspace_id: workspaceId,
-    p_by_weekday: byWeekday,
+    p_by_weekdays: byWeekdays,
+    p_excluded_dates: excludedDates,
     p_local_date_from: dateFrom,
     p_local_date_to: dateTo,
     p_local_start_time: v.localStartTime,

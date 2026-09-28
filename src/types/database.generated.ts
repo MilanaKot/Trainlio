@@ -548,12 +548,13 @@ export type Database = {
         Row: {
           birth_year_from: number | null
           birth_year_to: number | null
-          by_weekday: number
+          by_weekdays: number[]
           capacity: number
           changing_room: string | null
           created_at: string
           created_by: string
           eligibility_mode: Database["public"]["Enums"]["eligibility_mode"]
+          excluded_dates: string[]
           facility_id: string
           frequency: Database["public"]["Enums"]["recurrence_frequency"]
           generated_at: string | null
@@ -575,12 +576,13 @@ export type Database = {
         Insert: {
           birth_year_from?: number | null
           birth_year_to?: number | null
-          by_weekday: number
+          by_weekdays: number[]
           capacity?: number
           changing_room?: string | null
           created_at?: string
           created_by: string
           eligibility_mode?: Database["public"]["Enums"]["eligibility_mode"]
+          excluded_dates?: string[]
           facility_id: string
           frequency?: Database["public"]["Enums"]["recurrence_frequency"]
           generated_at?: string | null
@@ -602,12 +604,13 @@ export type Database = {
         Update: {
           birth_year_from?: number | null
           birth_year_to?: number | null
-          by_weekday?: number
+          by_weekdays?: number[]
           capacity?: number
           changing_room?: string | null
           created_at?: string
           created_by?: string
           eligibility_mode?: Database["public"]["Enums"]["eligibility_mode"]
+          excluded_dates?: string[]
           facility_id?: string
           frequency?: Database["public"]["Enums"]["recurrence_frequency"]
           generated_at?: string | null
@@ -1135,6 +1138,7 @@ export type Database = {
         Args: { p_reason?: string; p_training_session_id: string }
         Returns: Json
       }
+      canonical_weekdays: { Args: { p_weekdays: number[] }; Returns: number[] }
       claim_notification_deliveries: {
         Args: {
           p_limit?: number
@@ -1188,10 +1192,11 @@ export type Database = {
         Args: {
           p_birth_year_from?: number
           p_birth_year_to?: number
-          p_by_weekday: number
+          p_by_weekdays: number[]
           p_capacity?: number
           p_changing_room?: string
           p_eligibility_mode?: Database["public"]["Enums"]["eligibility_mode"]
+          p_excluded_dates?: string[]
           p_facility_id: string
           p_internal_notes?: string
           p_local_date_from: string
@@ -1441,7 +1446,8 @@ export type Database = {
       }
       weekly_occurrence_dates: {
         Args: {
-          p_by_weekday: number
+          p_by_weekdays: number[]
+          p_excluded_dates?: string[]
           p_local_date_from: string
           p_local_date_to: string
         }

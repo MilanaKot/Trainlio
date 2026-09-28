@@ -600,3 +600,15 @@ A coach sets the assistants of a session as a whole list: a different list repla
 
 AC-262  
 A coach who is currently an assistant can be made main coach of the same session, and stops being an assistant by doing so. A guardian reads the main coach and the assistants of a published session in that order; someone with no relationship to the club reads nobody. Changing the assistants notifies no guardian and appends one audit entry when something moved, none when nothing did.
+
+## A series over several weekdays (coach/SPEC.md §K4b, §K11)
+
+AC-263  
+Given a coach chooses more than one weekday  
+Then the series creates one training per matching date, interleaved in date order, and the stored pattern is canonical: sorted, de-duplicated, at most seven days. An empty set, a set containing a value outside 1..7, and a set containing a null are refused whole rather than silently narrowed. The dates the coach unchecked are subtracted before anything is created; an exclusion naming a date the pattern never produced changes nothing and is not recorded; unchecking every date is refused rather than creating an empty series. The series records the exclusions that actually suppressed a date, `generated_count` counts what was created rather than what the pattern produced, and the audit entry carries both the weekday set and the suppressed dates. The pattern and the exclusions survive the round trip over PostgREST as JSON arrays.
+
+AC-264  
+A series holds at most 52 trainings. A range producing 53 is refused with `SERIES_TOO_LONG` and creates nothing; unchecking one date brings the same range inside the limit and it is created. Seven weekdays over three months are refused the same way, and a range longer than a year is refused before it is expanded. The ceiling is the server's: the client's copy of it only labels the preview.
+
+AC-265  
+The client sends the pattern and the dates to skip, never the dates to create. A submitted exclusion can only remove an occurrence the pattern already produced, so a stale or edited client can decline a training but never conjure one.

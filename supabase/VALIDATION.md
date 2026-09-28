@@ -8,9 +8,9 @@ intent. Supabase-provided objects (`auth.users`, `auth.uid()`, `storage.objects`
 `storage.foldername`, the `supabase_realtime` publication, and the `anon`,
 `authenticated` and `service_role` roles) were stubbed locally.
 
-All twenty-six files applied in order with no errors.
+All twenty-seven files applied in order with no errors.
 
-**641 of 641 cases pass**, and the database lint reports no error-level finding:
+**678 of 678 cases pass**, and the database lint reports no error-level finding:
 
 | Suite                                                                      | Cases                      |
 | -------------------------------------------------------------------------- | -------------------------- |
@@ -20,7 +20,7 @@ All twenty-six files applied in order with no errors.
 | [`tests/validation_auth.sql`](tests/validation_auth.sql)                   | 18                         |
 | [`tests/validation_athletes.sql`](tests/validation_athletes.sql)           | 35                         |
 | [`tests/validation_sessions.sql`](tests/validation_sessions.sql)           | 74                         |
-| [`tests/validation_series.sql`](tests/validation_series.sql)               | 34                         |
+| [`tests/validation_series.sql`](tests/validation_series.sql)               | 70                         |
 | [`tests/validation_bookings.sql`](tests/validation_bookings.sql)           | 54                         |
 | [`tests/validation_roster.sql`](tests/validation_roster.sql)               | 73                         |
 | [`tests/validation_notifications.sql`](tests/validation_notifications.sql) | 79                         |
@@ -34,7 +34,7 @@ connections and are run separately.
 
 Run everything with `pnpm db:validate`.
 
-Four defects were found and fixed across these rounds. They are recorded at the
+Seven defects were found and fixed across these rounds. They are recorded at the
 end, because each is a mistake worth not repeating.
 
 ## Database invariants
@@ -226,9 +226,26 @@ Generation is now exercised end to end rather than demonstrated:
 | A creation that fails partway                                  | leaves no series row and no occurrence (AC-080b)                         |
 | A guardian reading `session_series`                            | no rows                                                                  |
 
+### Several weekdays, and dates the coach unchecked (AC-263, AC-264, AC-265)
+
+| Check                                                    | Result                                                       |
+| -------------------------------------------------------- | ------------------------------------------------------------ |
+| A two-weekday pattern                                    | interleaved in date order, one session per date              |
+| A duplicated, unsorted weekday set                       | stored canonical — `{1,3}` from `{3,1,1}`                    |
+| An empty set, a value outside 1..7, a null element       | refused whole, never silently narrowed                       |
+| Unchecked dates                                          | subtracted before anything is created                        |
+| An exclusion naming a date the pattern never produced    | changes nothing and is not recorded                          |
+| Unchecking every date                                    | `SERIES_EMPTY`, rather than an empty series                  |
+| `excluded_dates` and `generated_count` on the series row | the dates actually suppressed, and what was created          |
+| A range producing 53 occurrences                         | `SERIES_TOO_LONG`, and nothing created                       |
+| The same range with one date unchecked                   | created, 52 occurrences                                      |
+| A range longer than a year                               | refused before it is expanded                                |
+| `create_session_series`' parameter list                  | a pattern and exclusions; nothing that names dates to create |
+
 The preview a coach approves and the rows the server creates run the same rule,
-but only the server's is authoritative: the dates are never submitted, so a
-stale preview cannot decide what exists.
+but only the server's is authoritative. What the client submits is the pattern
+plus the dates it wants **skipped**, never the dates to create: a stale or
+edited client can decline an occurrence, but it cannot conjure one.
 
 ---
 
@@ -283,6 +300,18 @@ An empty birth-year field passed the integer check and was reported as an
 out-of-range year instead of a missing one, sending a coach to look for a
 problem with the value they had not entered. Found by a unit test; both the
 birth-year and capacity fields now check for an empty string before converting.
+
+**7. Two validation cases raised instead of asserting, and were counted as
+neither.**
+The suites run with `ON_ERROR_STOP` off so one bad case cannot hide the rest,
+and the runner counted `FAIL` lines. A case whose own SQL is malformed produces
+neither a `PASS` nor a `FAIL` — it raises, prints an `ERROR` the runner was not
+reading, and disappears. Two in `validation_series.sql` had been doing this:
+`min(d)` over a set-returning function with no alias, and an aggregate wrapping
+a window function. Both looked like passing cases in every previous run because
+they produced no output at all. The runner now fails a suite that raises, which
+is how these were found; the two cases were repaired and now assert what their
+labels claim.
 
 ## Database lint
 

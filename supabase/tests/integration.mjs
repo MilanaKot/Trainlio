@@ -348,7 +348,7 @@ if (!SERVICE) {
   // an occurrence date.
   res = await rpc('create_session_series', {
     p_workspace_id: ws.id,
-    p_by_weekday: 7,
+    p_by_weekdays: [7],
     p_local_date_from: '2026-10-04',
     p_local_date_to: '2026-11-29',
     p_local_start_time: '09:00',
@@ -386,6 +386,49 @@ if (!SERVICE) {
       new Date(o.start_at).getTime() - new Date(occurrences[i].start_at).getTime()),
   )
   ok('so the absolute gap between them is not uniform', gaps.size === 2, `${gaps.size} distinct gaps`)
+
+  // Worth exercising over HTTP rather than only in SQL: the pattern and the
+  // opt-outs cross PostgREST as JSON arrays, and integer[]/date[] marshalling
+  // is exactly the kind of thing that works in psql and not in the browser.
+  res = await rpc('create_session_series', {
+    p_workspace_id: ws.id,
+    p_by_weekdays: [3, 1, 1],
+    p_excluded_dates: ['2026-10-07', '2026-12-25'],
+    p_local_date_from: '2026-10-05',
+    p_local_date_to: '2026-10-18',
+    p_local_start_time: '17:00',
+    p_local_end_time: '18:00',
+    p_facility_id: mh.id,
+  })
+  ok('a two-weekday pattern survives the round trip', res.ok === true, res.code ?? '')
+  ok('and the unchecked date is the only one dropped (AC-263)',
+     res.data?.generated_count === 3, `${res.data?.generated_count}`)
+  ok('an exclusion the pattern never produced changes nothing (AC-263)',
+     res.data?.excluded_count === 1, `${res.data?.excluded_count}`)
+
+  const multi = await (
+    await fetch(
+      `${API}/rest/v1/session_series?id=eq.${res.data?.session_series_id}&select=by_weekdays,excluded_dates`,
+      { headers: coachAuth },
+    )
+  ).json()
+  ok('the stored pattern comes back canonical (AC-263)',
+     JSON.stringify(multi[0]?.by_weekdays) === '[1,3]', JSON.stringify(multi[0]?.by_weekdays))
+  ok('alongside the dates it actually suppressed (AC-263)',
+     JSON.stringify(multi[0]?.excluded_dates) === '["2026-10-07"]',
+     JSON.stringify(multi[0]?.excluded_dates))
+
+  res = await rpc('create_session_series', {
+    p_workspace_id: ws.id,
+    p_by_weekdays: [1],
+    p_local_date_from: '2026-10-05',
+    p_local_date_to: '2027-10-04',
+    p_local_start_time: '06:00',
+    p_local_end_time: '07:00',
+    p_facility_id: mh.id,
+  })
+  ok('53 occurrences are refused (AC-264)', res.ok === false && res.code === 'SERIES_TOO_LONG',
+     res.code ?? 'ok')
 
   // BR-081: independent from creation onward.
   const firstId = (

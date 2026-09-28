@@ -19,13 +19,13 @@ domain model is intentionally designed for:
 The database and its authorization model, email one-time-code sign-in, athlete
 management, coach session management, recurring series, the booking engine, the
 coach roster, transactional notifications and the account-anonymisation
-workflow are in place. Twenty migrations apply clean, the database lint reports
-no error-level finding, and 641 validation cases pass — plus a concurrency
-proof, a live-stack integration suite, 121 unit tests and 57 browser flows
-including a mobile viewport review.
+workflow are in place. Twenty-seven migrations apply clean, the database lint
+reports no error-level finding, and 678 validation cases pass — plus a
+concurrency proof, a live-stack integration suite, 188 unit tests and 61 browser
+flows including a mobile viewport review.
 See [`supabase/VALIDATION.md`](supabase/VALIDATION.md).
 
-**All 148 acceptance criteria map to a named test**, checked mechanically by
+**All 151 acceptance criteria map to a named test**, checked mechanically by
 `pnpm qa:coverage` on every push. Nothing in
 [`docs/OPEN_DECISIONS.md`](docs/OPEN_DECISIONS.md) is open.
 

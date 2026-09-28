@@ -99,24 +99,27 @@ export function birthYear(dateOfBirth: string): number {
 }
 
 /**
- * Local weekday dates for a weekly recurrence, as `YYYY-MM-DD` strings.
+ * Local calendar dates matching a weekly multi-weekday pattern, minus the
+ * dates the coach unchecked (coach/SPEC.md §K4b, §K11).
  *
- * Pure date arithmetic with no time component, which is what makes a series
- * spanning a daylight-saving boundary keep its local start time. Each date is
- * converted to an absolute instant individually, on the server, by
- * `create_session_series`. Adding fixed 7×24h intervals to a timestamp instead
- * shifts six of the nine occurrences in the PRD's own example by an hour.
- *
- * @param isoWeekday 1 = Monday … 7 = Sunday
+ * Mirrors public.weekly_occurrence_dates so the coach's preview and the
+ * generator cannot drift: the dates a coach approves are the dates that get
+ * created. It stays a preview all the same — the client submits the pattern
+ * and the exclusions, never the list, so it cannot decide what exists.
  */
 export function weeklyOccurrenceDates(
   localDateFrom: string,
   localDateTo: string,
-  isoWeekday: number,
+  isoWeekdays: readonly number[],
+  excludedDates: readonly string[] = [],
 ): string[] {
-  if (!Number.isInteger(isoWeekday) || isoWeekday < 1 || isoWeekday > 7) {
-    throw new Error(`ISO weekday must be 1..7, received ${isoWeekday}`)
+  for (const day of isoWeekdays) {
+    if (!Number.isInteger(day) || day < 1 || day > 7) {
+      throw new Error(`ISO weekday must be 1..7, received ${day}`)
+    }
   }
+  const wanted = new Set(isoWeekdays)
+  if (wanted.size === 0) return []
 
   const from = Date.parse(`${localDateFrom}T00:00:00Z`)
   const to = Date.parse(`${localDateTo}T00:00:00Z`)
@@ -126,17 +129,19 @@ export function weeklyOccurrenceDates(
   if (to < from) return []
 
   const DAY = 86_400_000
+  const excluded = new Set(excludedDates)
+  const dates: string[] = []
   // UTC is used purely as a calendar here, never as a timezone: these are
   // wall-clock dates, and no time-of-day is attached until the server converts.
-  const cursor = new Date(from)
-  const currentIso = cursor.getUTCDay() === 0 ? 7 : cursor.getUTCDay()
-  const offset = (isoWeekday - currentIso + 7) % 7
-  let time = from + offset * DAY
-
-  const dates: string[] = []
-  while (time <= to) {
-    dates.push(new Date(time).toISOString().slice(0, 10))
-    time += 7 * DAY
+  // A day-by-day walk rather than a seven-day step, because with several
+  // weekdays the gaps between occurrences are uneven.
+  for (let time = from; time <= to; time += DAY) {
+    const day = new Date(time)
+    const iso = day.getUTCDay() === 0 ? 7 : day.getUTCDay()
+    if (!wanted.has(iso)) continue
+    const key = day.toISOString().slice(0, 10)
+    if (excluded.has(key)) continue
+    dates.push(key)
   }
   return dates
 }
