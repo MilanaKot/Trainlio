@@ -728,6 +728,21 @@ export const cs = {
 
   account: {
     title: 'Účet',
+    /* G13 and G16 (guardian/SPEC.md). */
+    role: 'Rodič',
+    edit: 'Upravit',
+    editTitle: 'Upravit údaje',
+    emailRow: 'E-mail',
+    phoneRow: 'Telefon',
+    phoneEmpty: 'Přidat',
+    /* The full sentence is required: `Odhlásit` alone means cancelling a
+       training. */
+    signOut: 'Odhlásit se z aplikace',
+    signOutTitle: 'Odhlásit se z aplikace?',
+    signOutConfirm: 'Odhlásit se',
+    saved: 'Uloženo',
+    save: 'Uložit',
+    saving: 'Ukládám…',
     /* Asked once, in the form where a parent registers their first child.
        guardian/SPEC.md §G16 is the source of these words; the coach's roster
        is the reason they are asked at all. */

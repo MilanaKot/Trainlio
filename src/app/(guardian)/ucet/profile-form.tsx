@@ -5,6 +5,9 @@ import { useRouter } from 'next/navigation'
 import { messages } from '@/lib/i18n'
 import { formatPhone } from '@/lib/domain/phone'
 import { updateOwnProfile } from '@/server/auth/actions'
+import { Button } from '@/components/ui/button'
+import { Field } from '@/components/ui/field'
+import { useToast } from '@/components/ui/toast'
 
 /**
  * Your own details, in the parts the schema stores.
@@ -24,19 +27,18 @@ export function ProfileForm({
   phone: string
 }) {
   const router = useRouter()
+  const toast = useToast()
   const [first, setFirst] = useState(firstName)
   const [last, setLast] = useState(lastName)
   // Shown grouped, stored in E.164: a run of twelve digits is unreadable, and
   // what the parent sees should be what they would write down.
   const [tel, setTel] = useState(phone === '' ? '' : formatPhone(phone))
-  const [saved, setSaved] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [pending, startTransition] = useTransition()
 
   function onSubmit(event: React.FormEvent) {
     event.preventDefault()
     setError(null)
-    setSaved(false)
 
     startTransition(async () => {
       const result = await updateOwnProfile(first, last, tel)
@@ -44,69 +46,79 @@ export function ProfileForm({
         setError(result.message)
         return
       }
-      setSaved(true)
+      toast(messages.account.saved)
+      router.push('/ucet')
       router.refresh()
     })
   }
 
-  const field = 'rounded-lg border border-black/15 px-3 py-3 text-base dark:border-white/20'
-
   return (
-    <form onSubmit={onSubmit} className="flex flex-col gap-3">
-      <label className="flex flex-col gap-2 text-sm font-medium">
-        {messages.account.firstName}
-        <input
-          name="firstName"
-          value={first}
-          onChange={(e) => setFirst(e.target.value)}
-          maxLength={100}
-          className={field}
-        />
-      </label>
+    <form onSubmit={onSubmit} className="flex flex-col gap-5">
+      <div className="flex flex-col gap-4 rounded-card bg-surface p-4 shadow-card">
+        <Field label={messages.account.firstName} required>
+          {(props) => (
+            <input
+              {...props}
+              type="text"
+              name="firstName"
+              autoComplete="given-name"
+              maxLength={100}
+              value={first}
+              onChange={(event) => setFirst(event.target.value)}
+            />
+          )}
+        </Field>
 
-      <label className="flex flex-col gap-2 text-sm font-medium">
-        {messages.account.lastName}
-        <input
-          name="lastName"
-          value={last}
-          onChange={(e) => setLast(e.target.value)}
-          maxLength={100}
-          className={field}
-        />
-      </label>
+        {/* Optional, deliberately: a parent may be "Jana" on a roster if that
+            is how they want to be known. A surname alone is refused, because
+            `Přihlásil Nováková` is a form rather than a person. */}
+        <Field label={messages.account.lastName} optional hint={messages.account.nameHint}>
+          {(props) => (
+            <input
+              {...props}
+              type="text"
+              name="lastName"
+              autoComplete="family-name"
+              maxLength={100}
+              value={last}
+              onChange={(event) => setLast(event.target.value)}
+            />
+          )}
+        </Field>
 
-      <span className="text-xs opacity-60">{messages.account.nameHint}</span>
-
-      <label className="flex flex-col gap-2 text-sm font-medium">
-        {messages.account.phone}
-        <input
-          name="phone"
-          type="tel"
-          inputMode="tel"
-          autoComplete="tel"
-          value={tel}
-          onChange={(e) => setTel(e.target.value)}
-          placeholder={messages.account.phonePlaceholder}
-          maxLength={24}
-          className={field}
-        />
-        <span className="text-xs font-normal opacity-60">{messages.account.phoneHint}</span>
-      </label>
+        {/* The hint says who reads it and why, because that is the only basis
+            on which somebody can decide to give it (decision 18). */}
+        <Field label={messages.account.phone} optional hint={messages.account.phoneHint}>
+          {(props) => (
+            <input
+              {...props}
+              type="tel"
+              name="phone"
+              inputMode="tel"
+              autoComplete="tel"
+              placeholder={messages.account.phonePlaceholder}
+              value={tel}
+              onChange={(event) => setTel(event.target.value)}
+            />
+          )}
+        </Field>
+      </div>
 
       {error ? (
-        <p role="alert" className="text-sm text-red-600">
+        <p role="alert" className="text-hint font-semibold text-danger">
           {error}
         </p>
       ) : null}
-      {saved ? <p className="text-sm opacity-70">{messages.athlete.saved}</p> : null}
 
-      <button
-        type="submit"
-        disabled={pending}
-        className="min-h-11 self-start rounded-lg border border-black/15 px-4 text-sm font-medium disabled:opacity-60 dark:border-white/20"
-      >
-        {pending ? messages.athlete.saving : messages.athlete.save}
-      </button>
+      <div className="fixed inset-x-0 bottom-0 z-30 mx-auto flex max-w-md flex-col gap-3 bg-bg/95 px-4 pb-5 pt-3 shadow-[0_-1px_0_var(--color-line)] backdrop-blur">
+        <Button
+          type="submit"
+          size="lg"
+          {...(pending ? { loadingLabel: messages.account.saving } : {})}
+        >
+          {messages.account.save}
+        </Button>
+      </div>
     </form>
   )
 }

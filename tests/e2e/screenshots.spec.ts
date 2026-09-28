@@ -255,3 +255,18 @@ test('the parent’s children (§G7, §G8, §G9)', async ({ page }) => {
   await expect(page.getByRole('heading', { name: 'Upravit sportovce' })).toBeVisible()
   await shoot(page, 'G9-upravit-sportovce')
 })
+
+test('the parent’s account (§G13, §G16)', async ({ page }) => {
+  const parent = uniqueEmail('rodic')
+  await signIn(page, parent)
+
+  await page.goto('/ucet/udaje')
+  await page.getByLabel('Jméno').fill('Milana')
+  await page.getByLabel('Příjmení').fill('Kotova')
+  await page.getByLabel('Telefon').fill('777 123 456')
+  await shoot(page, 'G16-upravit-udaje')
+
+  await page.getByRole('button', { name: 'Uložit' }).click()
+  await expect(page.getByRole('heading', { name: 'Účet' })).toBeVisible()
+  await shoot(page, 'G13-ucet')
+})

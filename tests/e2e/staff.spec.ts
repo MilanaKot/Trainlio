@@ -70,16 +70,24 @@ test.describe('a workspace administrator manages the coaching staff', () => {
     await page.locator('label', { hasText: 'Aktivní trenér' }).click()
     await page.getByRole('button', { name: 'Uložit změny' }).click()
 
+    // Scoped to this run's own row: the list is shared, and other runs leave
+    // their own deactivated coaches in the same section.
     const inactive = page.locator('section', { hasText: 'NEAKTIVNÍ' })
-    await expect(inactive.getByText(`Petr ${surname}`)).toBeVisible()
-    await expect(inactive.getByText('Nezobrazuje se při výběru trenérů')).toBeVisible()
+    const inactiveRow = inactive.locator('li', { hasText: `Petr ${surname}` })
+    await expect(inactiveRow).toBeVisible()
+    await expect(inactiveRow).toContainText('Nezobrazuje se při výběru trenérů')
+    await expect(inactiveRow).toContainText('Neaktivní')
 
-    await inactive.getByRole('link', { name: new RegExp(`Petr ${surname}`) }).click()
+    await inactiveRow.getByRole('link', { name: new RegExp(`Petr ${surname}`) }).click()
     // The switch itself is visually hidden; the label is the target, which is
     // also what a thumb hits.
     await page.locator('label', { hasText: 'Aktivní trenér' }).click()
     await page.getByRole('button', { name: 'Uložit změny' }).click()
-    await expect(page.locator('section', { hasText: 'NEAKTIVNÍ' })).toHaveCount(0)
+    await expect(
+      page.locator('section', { hasText: 'AKTIVNÍ' }).locator('li', {
+        hasText: `Petr ${surname}`,
+      }),
+    ).toBeVisible()
 
     // The same list, read by a coach who is not an administrator: visible, and
     // not editable. The screen asks the database, so this is the same answer

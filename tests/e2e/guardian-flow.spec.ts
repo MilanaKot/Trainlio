@@ -229,6 +229,8 @@ test.describe('a guardian, from first sign-in to a withdrawn booking', () => {
     // returns two rows — and the failure renders as an empty form inviting the
     // parent to save their own name away.
     await page.goto('/ucet')
+    await expect(page.getByText('Milana Kotova')).toBeVisible()
+    await page.goto('/ucet/udaje')
     await expect(page.getByLabel('Jméno')).toHaveValue('Milana')
     await expect(page.getByLabel('Telefon')).toHaveValue('777 123 456')
 
@@ -370,7 +372,13 @@ test.describe('a guardian, from first sign-in to a withdrawn booking', () => {
   test('signing out ends the session (AC-002)', async ({ page }) => {
     await signIn(page, uniqueEmail('odhlaseni'))
     await page.goto('/ucet')
-    await page.getByRole('button', { name: 'Odhlásit se' }).click()
+    // The full sentence, and a confirmation: `Odhlásit` on its own means
+    // cancelling a training in this product (§G13).
+    await page.getByRole('button', { name: 'Odhlásit se z aplikace' }).click()
+    await page
+      .getByRole('alertdialog')
+      .getByRole('button', { name: 'Odhlásit se', exact: true })
+      .click()
     await page.waitForURL(/\/prihlaseni$/)
 
     // Not merely redirected: the protected page is gone too.
