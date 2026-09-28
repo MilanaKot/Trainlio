@@ -35,45 +35,47 @@ async function expectNoHorizontalScroll(page: Page, where: string) {
  *
  * Checked on what rendered rather than on the class names, so a Tailwind class
  * that was overridden, or a control someone added without one, is caught.
+ *
+ * Measured inside the page in one pass. It used to walk the controls from the
+ * test process, one round trip per element, which was fine on a screen with
+ * twelve of them and timed out on a training list with two hundred — the sort
+ * of list a club actually has by March.
  */
 async function expectTappableControls(page: Page, where: string) {
-  const controls = page.locator(
-    'button:visible, a[href]:visible, select:visible, input:not([type="hidden"]):visible',
-  )
-  const count = await controls.count()
-  expect(count, `${where} has no controls to check`).toBeGreaterThan(0)
+  const measured = await page.evaluate((minTap) => {
+    const controls = [
+      ...document.querySelectorAll<HTMLElement>(
+        'button, a[href], select, input:not([type="hidden"])',
+      ),
+    ].filter((el) => el.getClientRects().length > 0)
 
-  const tooSmall: string[] = []
-  for (let i = 0; i < count; i += 1) {
-    const control = controls.nth(i)
+    const tooSmall = controls
+      .map((el) => {
+        // A checkbox or radio is drawn small on purpose and is hit through the
+        // label wrapping it — so the label is what gets measured. Skipping them
+        // instead would excuse the one control most likely to be too small.
+        const type = el.getAttribute('type')
+        const target = (type === 'checkbox' || type === 'radio' ? el.closest('label') : null) ?? el
+        const height = target.getBoundingClientRect().height
+        if (height >= minTap) return null
 
-    // A checkbox or radio is drawn small on purpose and is hit through the
-    // label wrapping it — so the label is what gets measured. Skipping them
-    // instead would excuse the one control most likely to be too small.
-    const type = await control.getAttribute('type')
-    const target =
-      type === 'checkbox' || type === 'radio'
-        ? control.locator('xpath=ancestor::label[1]')
-        : control
+        const label =
+          (el.innerText || '').trim() ||
+          el.getAttribute('aria-label') ||
+          el.getAttribute('name') ||
+          type ||
+          el.tagName.toLowerCase()
+        return `${label.slice(0, 50)}: ${Math.round(height)}px`
+      })
+      .filter((entry): entry is string => entry !== null)
 
-    const box = await ((await target.count()) > 0 ? target : control).boundingBox()
-    if (!box) continue
-    if (box.height < MIN_TAP) {
-      const label =
-        (await control.innerText()).trim() ||
-        (await control.getAttribute('aria-label')) ||
-        (await control.getAttribute('name')) ||
-        (await control.getAttribute('type')) ||
-        (await control.evaluate(
-          (el) =>
-            el.tagName.toLowerCase() +
-            (el.className ? '.' + String(el.className).split(' ')[0] : ''),
-        ))
-      tooSmall.push(`${label.slice(0, 50)}: ${Math.round(box.height)}px`)
-    }
-  }
+    // Each kind of control once: a list of forty identical rows should report
+    // one fault, not forty.
+    return { count: controls.length, tooSmall: [...new Set(tooSmall)] }
+  }, MIN_TAP)
 
-  expect(tooSmall, `${where} has controls under ${MIN_TAP}px tall`).toEqual([])
+  expect(measured.count, `${where} has no controls to check`).toBeGreaterThan(0)
+  expect(measured.tooSmall, `${where} has controls under ${MIN_TAP}px tall`).toEqual([])
 }
 
 /**
