@@ -1,5 +1,51 @@
 import { test, expect, type Page } from '@playwright/test'
-import { grantWorkspaceRole, resetOrganization, signIn, uniqueEmail } from './helpers'
+import {
+  asUser,
+  dateInput,
+  grantCoach,
+  grantWorkspaceRole,
+  resetOrganization,
+  signIn,
+  tokenFor,
+  uniqueEmail,
+  STACK,
+} from './helpers'
+
+/** A child booked into a training, so the edit screen has somebody to warn about. */
+async function bookedAthlete(firstName: string, birthYear: number, sessionId: string) {
+  const token = await tokenFor(uniqueEmail(`rodina.${firstName.toLowerCase()}`))
+  const workspaces = (await (
+    await fetch(`${STACK}/rest/v1/rpc/joinable_workspaces`, {
+      method: 'POST',
+      headers: asUser(token),
+      body: '{}',
+    })
+  ).json()) as { id: string }[]
+
+  const created = (await (
+    await fetch(`${STACK}/rest/v1/rpc/create_athlete_with_guardian`, {
+      method: 'POST',
+      headers: asUser(token),
+      body: JSON.stringify({
+        p_first_name: firstName,
+        p_last_name: 'Hráč',
+        p_date_of_birth: `${birthYear}-04-02`,
+        p_workspace_id: workspaces[0]?.id,
+        p_sport_code: 'HOCKEY',
+        p_attributes: { position: 'CENTER', stick_side: 'LEFT' },
+      }),
+    })
+  ).json()) as { data?: { athlete_id?: string } }
+
+  await fetch(`${STACK}/rest/v1/rpc/book_athletes_as_guardian`, {
+    method: 'POST',
+    headers: asUser(token),
+    body: JSON.stringify({
+      p_training_session_id: sessionId,
+      p_athlete_ids: [created.data?.athlete_id],
+    }),
+  })
+}
 
 /**
  * The design-review screenshots (admin/SPEC.md "Done when").
@@ -114,4 +160,31 @@ test('the organization screens, with a mark and without', async ({ page, browser
   await after.close()
 
   await resetOrganization()
+})
+
+test('the create and edit form (§K3)', async ({ page }) => {
+  const coach = uniqueEmail('trener')
+  await signIn(page, coach)
+  await grantCoach(coach)
+
+  await page.goto('/trener/novy')
+  await expect(page.getByRole('heading', { name: 'Nový trénink' })).toBeVisible()
+  await shoot(page, 'K3-novy-trenink')
+
+  await page.getByLabel('Datum').fill(dateInput(21))
+  await page.getByLabel('Šatna').fill('Šatna 4')
+  await page.getByRole('button', { name: 'Vytvořit trénink' }).click()
+  await expect(page.getByText('Šatna 4')).toBeVisible()
+
+  const sessionId = page.url().split('/trener/')[1]?.split('/')[0] ?? ''
+  await bookedAthlete('Petr', 2017, sessionId)
+
+  await page.goto(`/trener/${sessionId}/upravit`)
+  await page.getByLabel('Začátek').fill('18:30')
+  await expect(page.getByText('Změnil se čas.')).toBeVisible()
+  await shoot(page, 'K3-upravit-trenink')
+
+  await page.getByRole('button', { name: '+ Přidat asistenta' }).click()
+  await expect(page.getByRole('heading', { name: 'Asistenti' })).toBeVisible()
+  await shoot(page, 'K3b-asistenti')
 })

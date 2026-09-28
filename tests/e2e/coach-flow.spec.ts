@@ -79,12 +79,12 @@ test.describe('a coach publishes a training and runs its roster', () => {
     await page.getByLabel('Datum').fill(dateInput(14))
     await page.getByLabel('Začátek').fill('17:00')
     await page.getByLabel('Konec').fill('18:00')
-    await page.getByLabel('Kapacita').fill('2')
+    await page.getByLabel('Kapacita', { exact: true }).fill('2')
     // Unique per run: the projects run in parallel against one database, so a
     // fixed room name finds the other run's training.
     const room = `Šatna ${Date.now()}`
     await page.getByLabel('Šatna').fill(room)
-    await page.getByRole('button', { name: 'Uložit' }).click()
+    await page.getByRole('button', { name: 'Vytvořit trénink' }).click()
 
     await expect(page.getByText(room)).toBeVisible()
     await expect(page.getByRole('heading', { name: 'Sportovci 0' })).toBeVisible()
@@ -178,10 +178,10 @@ test.describe('a coach publishes a training and runs its roster', () => {
     await page.getByLabel('Datum').fill(dateInput(15))
     await page.getByLabel('Začátek').fill('18:00')
     await page.getByLabel('Konec').fill('19:00')
-    await page.getByLabel('Kapacita').fill('10')
+    await page.getByLabel('Kapacita', { exact: true }).fill('10')
     const room = `Šatna ${Date.now()}`
     await page.getByLabel('Šatna').fill(room)
-    await page.getByRole('button', { name: 'Uložit' }).click()
+    await page.getByRole('button', { name: 'Vytvořit trénink' }).click()
     await expect(page.getByText(room)).toBeVisible()
 
     // §K5 (AC-275): reversible, so the sheet says what it does and does not do

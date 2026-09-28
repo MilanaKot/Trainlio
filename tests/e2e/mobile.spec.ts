@@ -273,10 +273,10 @@ test.describe('on a phone', () => {
     await page.getByLabel('Datum').fill(dateInput(12))
     await page.getByLabel('Začátek').fill('17:00')
     await page.getByLabel('Konec').fill('18:00')
-    await page.getByLabel('Kapacita').fill('10')
+    await page.getByLabel('Kapacita', { exact: true }).fill('10')
     const coachRoom = `Šatna ${Date.now()}`
     await page.getByLabel('Šatna').fill(coachRoom)
-    await page.getByRole('button', { name: 'Uložit' }).click()
+    await page.getByRole('button', { name: 'Vytvořit trénink' }).click()
     await expect(page.getByText(coachRoom)).toBeVisible()
 
     await expectNoHorizontalScroll(page, 'session detail with roster')

@@ -123,12 +123,40 @@ describe('Stepper', () => {
     const onChange = vi.fn()
     const { rerender } = render(<Stepper value={1} onChange={onChange} label="Kapacita" />)
 
-    expect(screen.getByRole('button', { name: 'Ubrat' })).toBeDisabled()
-    await userEvent.click(screen.getByRole('button', { name: 'Přidat' }))
+    expect(screen.getByRole('button', { name: 'Kapacita: ubrat' })).toBeDisabled()
+    await userEvent.click(screen.getByRole('button', { name: 'Kapacita: přidat' }))
     expect(onChange).toHaveBeenCalledWith(2)
 
     rerender(<Stepper value={99} onChange={onChange} label="Kapacita" />)
-    expect(screen.getByRole('button', { name: 'Přidat' })).toBeDisabled()
+    expect(screen.getByRole('button', { name: 'Kapacita: přidat' })).toBeDisabled()
+  })
+
+  // A club that trains twenty at a time would otherwise tap `+` ten times.
+  it('can be typed into, and clamps what is typed', async () => {
+    function Wrapper() {
+      const [value, setValue] = useState(10)
+      return <Stepper value={value} onChange={setValue} label="Kapacita" max={99} />
+    }
+    render(<Wrapper />)
+
+    const field = screen.getByLabelText('Kapacita')
+    await userEvent.clear(field)
+    await userEvent.type(field, '24')
+    expect(field).toHaveValue(24)
+
+    // Out of range waits for the field to be left, so `4` on the way to `40`
+    // is not snapped to the maximum as it is typed.
+    await userEvent.clear(field)
+    await userEvent.type(field, '400')
+    await userEvent.tab()
+    expect(field).toHaveValue(99)
+  })
+
+  // One label, not two: a group answering to the same name as the field it
+  // contains is one thing too many for a screen reader.
+  it('is named once', () => {
+    render(<Stepper value={10} onChange={vi.fn()} label="Kapacita" />)
+    expect(screen.getAllByLabelText('Kapacita')).toHaveLength(1)
   })
 })
 

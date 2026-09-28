@@ -69,6 +69,8 @@ function refresh(sessionId?: string) {
 export async function createSession(
   workspaceId: string,
   form: FormData,
+  /** §K3b. Written in a second call, because assistants are a set of their own. */
+  assistantIds: string[] = [],
 ): Promise<SessionActionResult> {
   const validated = validateSession(readForm(form))
   if (!validated.ok) return { ok: false, code: 'VALIDATION', fieldErrors: validated.errors }
@@ -102,6 +104,15 @@ export async function createSession(
   if (!result.ok) return { ok: false, code: result.code ?? 'generic' }
 
   const sessionId = result.data?.training_session_id as string | undefined
+
+  // Deliberately after the session exists, and deliberately not fatal: a
+  // training without its assistants is a training, and the coach is looking at
+  // the screen that shows them. Losing the whole creation instead would be
+  // worse.
+  if (sessionId && assistantIds.length > 0) {
+    await setSessionAssistants(sessionId, assistantIds)
+  }
+
   refresh(sessionId)
   return { ok: true, sessionId }
 }
@@ -117,6 +128,8 @@ export async function updateSession(
   sessionId: string,
   form: FormData,
   confirm: { overCapacity?: boolean; ineligibleBookings?: boolean } = {},
+  /** §K3b, when the form carries them. Undefined means "leave them alone". */
+  assistantIds?: string[],
 ): Promise<SessionActionResult> {
   const validated = validateSession(readForm(form))
   if (!validated.ok) return { ok: false, code: 'VALIDATION', fieldErrors: validated.errors }
@@ -154,6 +167,8 @@ export async function updateSession(
       ...(result.details ? { details: result.details } : {}),
     }
   }
+
+  if (assistantIds) await setSessionAssistants(sessionId, assistantIds)
 
   refresh(sessionId)
   return { ok: true, sessionId }
