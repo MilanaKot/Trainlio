@@ -25,6 +25,7 @@ type FieldProps = {
     id: string
     'aria-describedby': string | undefined
     'aria-invalid': true | undefined
+    'aria-required': true | undefined
     className: string
   }) => React.ReactNode
   className?: string
@@ -50,7 +51,15 @@ export function Field({
       <div className="flex items-baseline justify-between gap-2">
         <label htmlFor={id} className="text-meta font-semibold text-ink">
           {label}
-          {required ? <span className="text-danger"> *</span> : null}
+          {/* The asterisk is for the eye. A screen reader is told the field is
+              required by `aria-required` on the control itself, and would
+              otherwise read the label as "Od hvězdička". */}
+          {required ? (
+            <span aria-hidden="true" className="text-danger">
+              {' '}
+              *
+            </span>
+          ) : null}
         </label>
         {optional ? <span className="text-hint font-normal text-muted">Nepovinné</span> : null}
       </div>
@@ -59,6 +68,7 @@ export function Field({
         id,
         'aria-describedby': describedBy === '' ? undefined : describedBy,
         'aria-invalid': error === undefined ? undefined : true,
+        'aria-required': required ? true : undefined,
         className: controlClass({ error: error !== undefined, changed: previously !== undefined }),
       })}
 

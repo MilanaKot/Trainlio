@@ -141,8 +141,8 @@ test.describe('a coach edits a training people are coming to', () => {
 
     await page.goto(`/trener/${sessionId}/upravit`)
     await page.getByRole('radio', { name: 'Ročníky' }).click()
-    await page.getByLabel('Od', { exact: true }).selectOption('2017')
-    await page.getByLabel('Do', { exact: true }).selectOption('2017')
+    await page.getByLabel('Od ročníku').selectOption('2017')
+    await page.getByLabel('Do ročníku').selectOption('2017')
     await page.getByRole('button', { name: 'Uložit změny' }).click()
 
     const dialog = page.getByRole('alertdialog')
@@ -188,5 +188,40 @@ test.describe('a coach edits a training people are coming to', () => {
     await page.getByRole('alertdialog').getByRole('button', { name: 'Zahodit' }).click()
     await expect(page).toHaveURL(new RegExp(`/trener/${sessionId}$`))
     await expect(page.getByText('Šatna 12')).toHaveCount(0)
+  })
+})
+
+test.describe('a coach copies a training', () => {
+  test('never duplicates on one tap (§K4, test 7)', async ({ page }) => {
+    const coach = uniqueEmail('trener')
+    await signIn(page, coach)
+    await grantCoach(coach)
+
+    const room = `Šatna ${Date.now()}`
+    const sessionId = await createTraining(page, room, 8)
+
+    await page.getByRole('link', { name: 'Duplikovat' }).click()
+    await expect(page).toHaveURL(new RegExp(`from=${sessionId}`))
+
+    // Everything about the training came with it — except the date, which is
+    // the one thing a copy cannot supply.
+    await expect(page.getByLabel('Šatna')).toHaveValue(room)
+    await expect(page.getByLabel('Kapacita', { exact: true })).toHaveValue('8')
+    await expect(page.getByLabel('Datum')).toHaveValue('')
+    await expect(page.getByLabel('Datum')).toBeFocused()
+    await expect(page.getByText(/Kopie tréninku/)).toBeVisible()
+    await expect(page.getByText('Přihlášení sportovci se nekopírují.')).toBeVisible()
+
+    const create = page.getByRole('button', { name: 'Vytvořit trénink' })
+    await expect(create).toBeDisabled()
+    await expect(page.getByText('Nejdřív vyberte datum')).toBeVisible()
+
+    await page.getByLabel('Datum').fill(dateInput(25))
+    await expect(create).toBeEnabled()
+    await create.click()
+
+    // A second training, not a changed one: the copy has its own roster.
+    await expect(page.getByRole('heading', { name: 'Sportovci 0' })).toBeVisible()
+    expect(page.url()).not.toContain(sessionId)
   })
 })

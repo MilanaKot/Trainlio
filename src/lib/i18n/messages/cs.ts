@@ -491,6 +491,17 @@ export const cs = {
       few: 'Rodiče {count} přihlášených sportovců dostanou e-mail a u přihlášky uvidí „Změněno“.',
       many: 'Rodiče {count} přihlášených sportovců dostanou e-mail a u přihlášky uvidí „Změněno“.',
     } satisfies PluralForms,
+    /* K11 and K4b, a season of trainings. */
+    repeatCaption: 'OPAKOVÁNÍ',
+    copiedCaption: 'ZKOPÍRUJE SE',
+    editCopied: 'Upravit',
+    previewCaption: 'NÁHLED',
+    /* K4, duplicating one training. */
+    duplicateNotice: 'Kopie tréninku {source}.',
+    duplicateNoticeAction: 'Vyberte nové datum. Přihlášení sportovci se nekopírují.',
+    duplicateOne: 'Jeden termín',
+    duplicatePeriod: 'Na období',
+    pickDateFirst: 'Nejdřív vyberte datum',
     /* K3b and K3c, the two coach pickers. */
     assistantsTitle: 'Asistenti',
     assistantsIntro: 'Vyberte jednoho nebo více trenérů. Nikoho vybírat nemusíte.',

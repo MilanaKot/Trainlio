@@ -4,9 +4,8 @@ import Link, { type LinkProps } from 'next/link'
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { messages, plural } from '@/lib/i18n'
-import { cancelSession, duplicateSession, setBookingState } from '@/server/sessions/actions'
+import { cancelSession, setBookingState } from '@/server/sessions/actions'
 import { BottomSheet } from '@/components/ui/bottom-sheet'
-import { Field } from '@/components/ui/field'
 import { Button } from '@/components/ui/button'
 import { ConfirmDialog } from '@/components/ui/dialog'
 import { useToast } from '@/components/ui/toast'
@@ -128,19 +127,14 @@ const MailIcon = (
 export function SessionControls({
   session,
   confirmedCount,
-  todayLocal,
 }: {
   session: CoachSession
   confirmedCount: number
-  /** Today in the workspace timezone, the sensible default for a copy. */
-  todayLocal: string
 }) {
   const router = useRouter()
   const toast = useToast()
   const [closing, setClosing] = useState(false)
   const [cancelling, setCancelling] = useState(false)
-  const [duplicating, setDuplicating] = useState(false)
-  const [duplicateDate, setDuplicateDate] = useState(todayLocal)
   const [error, setError] = useState<string | null>(null)
   const [pending, startTransition] = useTransition()
 
@@ -170,7 +164,10 @@ export function SessionControls({
         <Row href={`/trener/${session.id}/upravit`} icon={PencilIcon}>
           {t.editSession}
         </Row>
-        <Row onClick={() => setDuplicating(true)} icon={CopyIcon}>
+        {/* §K4: a copy is a screen, not a dialog. Everything about the
+            training comes with it except the date, which is the one thing a
+            copy cannot supply. */}
+        <Row href={{ pathname: '/trener/novy', query: { from: session.id } }} icon={CopyIcon}>
           {t.duplicate}
         </Row>
         {open ? (
@@ -253,36 +250,6 @@ export function SessionControls({
           </li>
         </ul>
       </BottomSheet>
-
-      {/* §K4 gives duplicating a screen of its own, with the whole form and a
-          period option. Until that screen exists this keeps the action
-          working: the one thing a copy needs that the source cannot supply is
-          its date. */}
-      <ConfirmDialog
-        open={duplicating}
-        onOpenChange={setDuplicating}
-        title={t.duplicateTitle}
-        cancelLabel={messages.common.cancel}
-        confirmLabel={t.duplicate}
-        pending={pending}
-        onConfirm={() =>
-          run(
-            () => duplicateSession(session.id, duplicateDate),
-            () => setDuplicating(false),
-          )
-        }
-      >
-        <Field label={t.date}>
-          {(field) => (
-            <input
-              {...field}
-              type="date"
-              value={duplicateDate}
-              onChange={(event) => setDuplicateDate(event.target.value)}
-            />
-          )}
-        </Field>
-      </ConfirmDialog>
 
       <ConfirmDialog
         open={cancelling}

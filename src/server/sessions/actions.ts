@@ -242,7 +242,10 @@ export async function createSeries(
   workspaceId: string,
   form: FormData,
 ): Promise<SessionActionResult & { generatedCount?: number }> {
-  const validated = validateSession(readForm(form))
+  // A series has no single date: `create_session_series` derives every
+  // occurrence from the pattern and the range below. Requiring one here is
+  // what made this form unable to submit at all.
+  const validated = validateSession(readForm(form), { requireDate: false })
   if (!validated.ok) return { ok: false, code: 'VALIDATION', fieldErrors: validated.errors }
 
   const v = validated.value

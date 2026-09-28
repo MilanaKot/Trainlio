@@ -62,10 +62,21 @@ function blankToNull(value: string | undefined): string | null {
   return trimmed.length > 0 ? trimmed : null
 }
 
-export function validateSession(input: SessionInput): SessionValidation {
+/**
+ * `requireDate: false` is for a series, which has no single date: the
+ * occurrences come from a pattern and a range, and the server derives them.
+ * Everything else about a series is a training and is checked identically, so
+ * the two cannot drift into accepting different halls or capacities.
+ */
+export function validateSession(
+  input: SessionInput,
+  options: { requireDate?: boolean } = {},
+): SessionValidation {
   const errors: Partial<Record<keyof SessionInput, SessionFieldError>> = {}
 
-  if (!ISO_DATE.test(input.localDate)) errors.localDate = 'DATE_REQUIRED'
+  if (options.requireDate !== false && !ISO_DATE.test(input.localDate)) {
+    errors.localDate = 'DATE_REQUIRED'
+  }
   if (!TIME.test(input.localStartTime)) errors.localStartTime = 'TIME_REQUIRED'
   if (!TIME.test(input.localEndTime)) errors.localEndTime = 'TIME_REQUIRED'
 

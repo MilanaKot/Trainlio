@@ -16,7 +16,6 @@ import {
   formatDateShort,
   formatTime,
   formatTimeRange,
-  localDateKey,
   relativeDayLabel,
 } from '@/lib/time/workspace-time'
 import { messages } from '@/lib/i18n'
@@ -193,11 +192,7 @@ export default async function SessionDetailPage({
           {t.duplicateAsNew}
         </Button>
       ) : (
-        <SessionControls
-          session={session}
-          confirmedCount={confirmed.length}
-          todayLocal={localDateKey(now, workspace.timezone)}
-        />
+        <SessionControls session={session} confirmedCount={confirmed.length} />
       )}
     </main>
   )

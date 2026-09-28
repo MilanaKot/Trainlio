@@ -2,10 +2,16 @@
 
 import { useMemo, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { messages, plural } from '@/lib/i18n'
 import { weeklyOccurrenceDates, formatLocalDateKey } from '@/lib/time/workspace-time'
 import { ISO_WEEKDAYS, MAX_SERIES_OCCURRENCES } from '@/lib/domain/series'
 import { createSeries } from '@/server/sessions/actions'
+import { Button } from '@/components/ui/button'
+import { Field } from '@/components/ui/field'
+import { Notice } from '@/components/ui/notice'
+import { Panel, TrainingFields } from '@/components/session/training-fields'
+import type { SessionFormValues } from '@/components/session/training-fields'
 import type { CoachWorkspace } from '@/server/sessions/queries'
 
 const t = messages.coach
@@ -16,25 +22,43 @@ function errorText(code: string | undefined): string {
 }
 
 /**
- * Series creation with a live date preview (UI_SPEC, PRD §16, coach/SPEC.md
- * §K4b and §K11).
+ * A season of trainings (coach/SPEC.md §K11), and the same screen as a copy of
+ * one training over a period (§K4b).
  *
  * The preview runs the same rule the server does — whole calendar days in the
  * workspace timezone — so what a coach approves is what gets created. It is
  * still only a preview: the generated dates are not submitted. What is
  * submitted is the pattern plus the dates the coach UNCHECKED, so a stale or
  * edited client can decline an occurrence but never conjure one.
+ *
+ * Everything a training is, apart from when it happens, is the same panels the
+ * single form uses. A season that offered different halls or a different note
+ * limit would be a second product.
  */
-export function SeriesForm({ workspace, today }: { workspace: CoachWorkspace; today: string }) {
+export function SeriesForm({
+  workspace,
+  today,
+  initial,
+  /** §K4b: the training this period was copied from, for the notice. */
+  source,
+}: {
+  workspace: CoachWorkspace
+  today: string
+  initial: SessionFormValues
+  source?: { id: string; label: string } | undefined
+}) {
   const router = useRouter()
-  const [byWeekdays, setByWeekdays] = useState<number[]>([7])
-  const [dateFrom, setDateFrom] = useState(today)
-  const [dateTo, setDateTo] = useState(today)
-  const [startTime, setStartTime] = useState('09:00')
-  const [mode, setMode] = useState('ALL')
+  const [values, setValues] = useState<SessionFormValues>(initial)
+  const [byWeekdays, setByWeekdays] = useState<number[]>(
+    initial.date ? [isoWeekday(initial.date)] : [7],
+  )
+  const [dateFrom, setDateFrom] = useState(initial.date || today)
+  const [dateTo, setDateTo] = useState(initial.date || today)
   // Dates the coach unchecked. Kept by date rather than by index, so changing
   // the range does not silently move an exclusion onto a different day.
   const [excluded, setExcluded] = useState<ReadonlySet<string>>(new Set())
+  const [expanded, setExpanded] = useState(source === undefined)
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
   const [error, setError] = useState<string | null>(null)
   const [pending, startTransition] = useTransition()
 
@@ -69,11 +93,35 @@ export function SeriesForm({ workspace, today }: { workspace: CoachWorkspace; to
   function onSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
     setError(null)
-    const form = new FormData(event.currentTarget)
+    setFieldErrors({})
+
+    const form = new FormData()
+    form.set('localDate', '')
+    form.set('localStartTime', values.start)
+    form.set('localEndTime', values.end)
+    form.set('localDateFrom', dateFrom)
+    form.set('localDateTo', dateTo)
+    form.set('facilityId', values.facilityId)
+    form.set('capacity', String(values.capacity))
+    form.set('eligibilityMode', values.eligibilityMode)
+    form.set('birthYearFrom', values.eligibilityMode === 'ALL' ? '' : values.birthYearFrom)
+    form.set('birthYearTo', values.eligibilityMode === 'ALL' ? '' : values.birthYearTo)
+    form.set('changingRoom', values.changingRoom)
+    form.set('publicNotes', values.publicNotes)
+    form.set('internalNotes', values.internalNotes)
+    form.set('mainCoachProfileId', values.mainCoachId)
+    for (const day of byWeekdays) form.append('byWeekday', String(day))
+    // Only the unchecked dates travel. The server re-derives the pattern and
+    // subtracts these, so this list can shrink a series but never extend one.
+    for (const date of preview) if (excluded.has(date)) form.append('excludedDate', date)
 
     startTransition(async () => {
       const result = await createSeries(workspace.id, form)
       if (!result.ok) {
+        if (result.code === 'VALIDATION' && result.fieldErrors) {
+          setFieldErrors(result.fieldErrors)
+          return
+        }
         setError(errorText(result.code))
         return
       }
@@ -82,235 +130,259 @@ export function SeriesForm({ workspace, today }: { workspace: CoachWorkspace; to
     })
   }
 
-  // min-h-11 as well as the padding: a date input renders a shorter line box
-  // than a text input in Chromium, which left it two pixels under the 44px a
-  // thumb needs. Caught by the mobile viewport review, not by reading.
-  const input =
-    'min-h-11 rounded-lg border border-black/15 px-3 py-3 text-base dark:border-white/20'
-  const label = 'flex flex-col gap-2 text-sm font-medium'
+  const fieldError = (name: string) => {
+    const code = fieldErrors[name]
+    return code ? errorText(code) : undefined
+  }
+
+  const hall = workspace.facilities.find((f) => f.id === values.facilityId)
+  const summary = [
+    hall?.code,
+    values.changingRoom,
+    `${t.capacity} ${values.capacity}`,
+    values.eligibilityMode === 'ALL'
+      ? t.eligibilityAllShort
+      : `${values.birthYearFrom}–${values.birthYearTo}`,
+  ]
+    .filter(Boolean)
+    .join(' · ')
 
   return (
-    <form onSubmit={onSubmit} className="flex flex-col gap-5">
-      {/* Multi-select, 44 px (coach/SPEC.md §K4b). The checked days are posted
-          as the pattern; the server normalises and re-derives the dates. */}
-      <fieldset className="flex flex-col gap-2">
-        <legend className="mb-2 text-sm font-medium">{t.repeatEvery}</legend>
-        <div className="flex flex-wrap gap-2">
-          {ISO_WEEKDAYS.map((day) => {
-            const on = byWeekdays.includes(day)
-            return (
-              <label
-                key={day}
-                className={`flex min-h-11 min-w-11 cursor-pointer items-center justify-center rounded-lg border px-3 text-sm font-medium ${
-                  on
-                    ? 'border-black bg-black text-white dark:border-white dark:bg-white dark:text-black'
-                    : 'border-black/15 dark:border-white/20'
-                }`}
-              >
-                <input
-                  type="checkbox"
-                  name="byWeekday"
-                  value={day}
-                  checked={on}
-                  onChange={() => toggleWeekday(day)}
-                  className="sr-only"
-                />
-                {/* Two letters for the eye, the whole weekday for a screen
-                    reader — "Po Pondělí" would be read out otherwise. */}
-                <span aria-hidden="true">
-                  {t.weekdaysShort[String(day) as keyof typeof t.weekdaysShort]}
-                </span>
-                <span className="sr-only">
-                  {t.weekdays[String(day) as keyof typeof t.weekdays]}
-                </span>
-              </label>
-            )
-          })}
-        </div>
-      </fieldset>
-
-      <div className="grid gap-4 sm:grid-cols-2">
-        <label className={label}>
-          {t.dateFrom}
-          <input
-            name="localDateFrom"
-            type="date"
-            required
-            value={dateFrom}
-            onChange={(e) => setDateFrom(e.target.value)}
-            className={input}
-          />
-        </label>
-        <label className={label}>
-          {t.dateTo}
-          <input
-            name="localDateTo"
-            type="date"
-            required
-            value={dateTo}
-            onChange={(e) => setDateTo(e.target.value)}
-            className={input}
-          />
-        </label>
+    <form onSubmit={onSubmit} className="flex flex-col gap-5 pb-36">
+      <div className="flex items-center justify-between gap-3">
+        <Link
+          href="/trener"
+          className="flex min-h-11 items-center text-row font-semibold text-muted"
+        >
+          {messages.common.cancel}
+        </Link>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-3">
-        <label className={label}>
-          {t.startTime}
-          <input
-            name="localStartTime"
-            type="time"
-            required
-            value={startTime}
-            onChange={(e) => setStartTime(e.target.value)}
-            className={input}
-          />
-        </label>
-        <label className={label}>
-          {t.endTime}
-          <input name="localEndTime" type="time" required defaultValue="10:00" className={input} />
-        </label>
-        <label className={label}>
-          {t.capacity}
-          <input
-            name="capacity"
-            type="number"
-            inputMode="numeric"
-            min={1}
-            max={200}
-            required
-            defaultValue={10}
-            className={input}
-          />
-        </label>
-      </div>
+      <h1 className="font-display text-form-title font-bold text-ink">
+        {source ? t.newSessionTitle : t.series}
+      </h1>
 
-      <div className="grid gap-4 sm:grid-cols-2">
-        <label className={label}>
-          {t.facility}
-          <select name="facilityId" required className={input}>
-            {workspace.facilities.map((facility) => (
-              <option key={facility.id} value={facility.id}>
-                {facility.code} — {facility.name}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className={label}>
-          {t.changingRoom}
-          <input name="changingRoom" className={input} />
-        </label>
-      </div>
+      {source ? (
+        <div className="flex flex-col gap-3">
+          <Notice variant="info" title={t.duplicateNotice.replace('{source}', source.label)}>
+            {t.duplicateNoticeAction}
+          </Notice>
 
-      <fieldset className="flex flex-col gap-3">
-        <legend className="mb-1 text-sm font-medium">{t.eligibility}</legend>
-        <label className="flex items-center gap-2 text-sm">
-          <input
-            type="radio"
-            name="eligibilityMode"
-            value="ALL"
-            checked={mode === 'ALL'}
-            onChange={() => setMode('ALL')}
-          />
-          {t.eligibilityAll}
-        </label>
-        <label className="flex items-center gap-2 text-sm">
-          <input
-            type="radio"
-            name="eligibilityMode"
-            value="BIRTH_YEAR_RANGE"
-            checked={mode === 'BIRTH_YEAR_RANGE'}
-            onChange={() => setMode('BIRTH_YEAR_RANGE')}
-          />
-          {t.eligibilityRange}
-        </label>
-        {mode === 'BIRTH_YEAR_RANGE' ? (
-          <div className="grid gap-4 sm:grid-cols-2">
-            <label className={label}>
-              {t.birthYearFrom}
-              <input name="birthYearFrom" type="number" min={1900} max={2100} className={input} />
-            </label>
-            <label className={label}>
-              {t.birthYearTo}
-              <input name="birthYearTo" type="number" min={1900} max={2100} className={input} />
-            </label>
+          <div
+            role="tablist"
+            aria-label={t.duplicateTitle}
+            className="flex gap-1 rounded-control-lg bg-neutral-50 p-1"
+          >
+            <Link
+              role="tab"
+              aria-selected="false"
+              href={{ pathname: '/trener/novy', query: { from: source.id } }}
+              className="flex min-h-11 flex-1 items-center justify-center rounded-[9px] text-row text-muted"
+            >
+              {t.duplicateOne}
+            </Link>
+            <span
+              role="tab"
+              aria-selected="true"
+              className="flex min-h-11 flex-1 items-center justify-center rounded-[9px] bg-surface text-row text-ink shadow-card"
+            >
+              {t.duplicatePeriod}
+            </span>
           </div>
-        ) : null}
-      </fieldset>
+        </div>
+      ) : null}
 
-      <label className={label}>
-        {t.publicNotes} <span className="font-normal opacity-60">— {t.publicNotesHint}</span>
-        <textarea name="publicNotes" rows={2} className={input} />
-      </label>
+      <Panel caption={t.repeatCaption}>
+        {/* Multi-select, 44px (coach/SPEC.md §K4b). The checked days are posted
+            as the pattern; the server normalises and re-derives the dates. */}
+        <fieldset className="flex flex-col gap-2">
+          <legend className="mb-2 text-meta font-semibold text-ink">{t.repeatEvery}</legend>
+          <div className="flex flex-wrap gap-2">
+            {ISO_WEEKDAYS.map((day) => {
+              const on = byWeekdays.includes(day)
+              return (
+                <label
+                  key={day}
+                  className={`flex min-h-11 min-w-11 cursor-pointer items-center justify-center rounded-control px-3 text-row font-semibold ${
+                    on
+                      ? 'bg-primary text-white'
+                      : 'bg-surface text-ink shadow-[inset_0_0_0_1.5px_var(--color-line)]'
+                  }`}
+                >
+                  <input
+                    type="checkbox"
+                    checked={on}
+                    onChange={() => toggleWeekday(day)}
+                    className="sr-only"
+                  />
+                  {/* Two letters for the eye, the whole weekday for a screen
+                      reader — "Po Pondělí" would be read out otherwise. */}
+                  <span aria-hidden="true">
+                    {t.weekdaysShort[String(day) as keyof typeof t.weekdaysShort]}
+                  </span>
+                  <span className="sr-only">
+                    {t.weekdays[String(day) as keyof typeof t.weekdays]}
+                  </span>
+                </label>
+              )
+            })}
+          </div>
+        </fieldset>
 
-      <label className={label}>
-        {t.internalNotes} <span className="font-normal opacity-60">— {t.internalNotesHint}</span>
-        <textarea name="internalNotes" rows={2} className={input} />
-      </label>
+        <div className="grid grid-cols-2 gap-3">
+          <Field label={t.yearFrom} required>
+            {(props) => (
+              <input
+                {...props}
+                type="date"
+                value={dateFrom}
+                onChange={(event) => setDateFrom(event.target.value)}
+              />
+            )}
+          </Field>
+          <Field label={t.yearTo} required>
+            {(props) => (
+              <input
+                {...props}
+                type="date"
+                value={dateTo}
+                onChange={(event) => setDateTo(event.target.value)}
+              />
+            )}
+          </Field>
+        </div>
 
-      <section className="flex flex-col gap-2 rounded-lg border border-black/10 p-4 dark:border-white/15">
-        <h2 className="text-sm font-semibold">{t.preview}</h2>
+        <div className="grid grid-cols-2 gap-3">
+          <Field
+            label={t.startTime}
+            required
+            {...(fieldError('localStartTime') ? { error: fieldError('localStartTime') } : {})}
+          >
+            {(props) => (
+              <input
+                {...props}
+                type="time"
+                value={values.start}
+                onChange={(event) => setValues((v) => ({ ...v, start: event.target.value }))}
+              />
+            )}
+          </Field>
+          <Field
+            label={t.endTime}
+            required
+            {...(fieldError('localEndTime') ? { error: fieldError('localEndTime') } : {})}
+          >
+            {(props) => (
+              <input
+                {...props}
+                type="time"
+                value={values.end}
+                onChange={(event) => setValues((v) => ({ ...v, end: event.target.value }))}
+              />
+            )}
+          </Field>
+        </div>
+      </Panel>
+
+      {/* §K4b: a copy shows what comes with it as one line, and opens the whole
+          form only if the coach wants to change something. */}
+      {expanded ? (
+        <TrainingFields
+          workspace={workspace}
+          values={values}
+          setValues={setValues}
+          fieldError={fieldError}
+          notesAreDefault={source === undefined}
+        />
+      ) : (
+        <Panel caption={t.copiedCaption}>
+          <p className="text-meta text-ink">{summary}</p>
+          <button
+            type="button"
+            onClick={() => setExpanded(true)}
+            className="flex min-h-11 items-center self-start text-row font-semibold text-primary"
+          >
+            {t.editCopied}
+          </button>
+        </Panel>
+      )}
+
+      <Panel caption={t.previewCaption}>
         {preview.length === 0 ? (
-          <p className="text-sm opacity-70">{t.previewEmpty}</p>
+          <p className="text-meta text-muted">{t.previewEmpty}</p>
         ) : (
           <>
-            <p className="text-sm">{plural(selected.length, t.previewCount)}</p>
-            <p className="text-xs opacity-60">{t.previewUncheck}</p>
-            <ul className="flex flex-col gap-1 text-sm tabular-nums">
+            <p className="text-date font-bold text-ink">
+              {plural(selected.length, t.previewCount)}
+            </p>
+            <p className="text-hint text-muted">{t.previewUncheck}</p>
+            <ul className="flex flex-col">
               {preview.map((date) => {
                 const on = !excluded.has(date)
                 return (
                   <li key={date}>
-                    <label className="flex min-h-11 items-center gap-3">
-                      <input type="checkbox" checked={on} onChange={() => toggleDate(date)} />
-                      <span className={on ? '' : 'line-through opacity-50'}>
-                        {/* A calendar date and the chosen local time. The same
-                            time on every line, including across a daylight-saving
-                            change — which is what the coach should see before
-                            saving. */}
-                        {formatLocalDateKey(date)} · {startTime}
+                    <label className="flex min-h-11 items-center justify-between gap-3 border-b border-line py-1 last:border-0">
+                      <span className="flex items-center gap-3">
+                        <input
+                          type="checkbox"
+                          checked={on}
+                          onChange={() => toggleDate(date)}
+                          className="size-5 accent-primary"
+                        />
+                        <span
+                          className={on ? 'text-row text-ink' : 'text-row text-muted line-through'}
+                        >
+                          {formatLocalDateKey(date)}
+                        </span>
+                      </span>
+                      {/* The same time on every line, including across a
+                          daylight-saving change — which is what the coach
+                          should see before saving. */}
+                      <span className="nums text-meta text-muted">
+                        {values.start}–{values.end}
                       </span>
                     </label>
-                    {/* Only the unchecked dates travel. The server re-derives
-                        the pattern and subtracts these, so this list can shrink
-                        a series but never extend one. */}
-                    {on ? null : <input type="hidden" name="excludedDate" value={date} />}
                   </li>
                 )
               })}
             </ul>
             {overLimit ? (
-              <p role="alert" className="text-sm text-red-600">
+              <p role="alert" className="text-hint font-semibold text-danger">
                 {t.errors.SERIES_TOO_LONG}
               </p>
             ) : (
-              <p className="text-xs opacity-60">{t.seriesLimit}</p>
+              <p className="text-hint text-muted">{t.seriesLimit}</p>
             )}
           </>
         )}
-        <p className="text-xs opacity-60">{t.seriesIndependent}</p>
-      </section>
+        <p className="text-hint text-muted">{t.seriesIndependent}</p>
+      </Panel>
 
       {error ? (
-        <p role="alert" className="text-sm text-red-600">
+        <p role="alert" className="text-hint font-semibold text-danger">
           {error}
         </p>
       ) : null}
 
-      <button
-        type="submit"
-        disabled={pending || selected.length === 0 || overLimit}
-        className="min-h-12 rounded-lg bg-black px-4 text-base font-medium text-white disabled:opacity-60 dark:bg-white dark:text-black"
-      >
+      <div className="fixed inset-x-0 bottom-0 z-30 mx-auto flex max-w-3xl flex-col gap-3 bg-bg/95 px-4 pb-5 pt-3 shadow-[0_-1px_0_var(--color-line)] backdrop-blur">
         {/* The footer counts what will be created, which is what is checked
             (coach/SPEC.md §K4b). Disabling is a courtesy — the server refuses
             an empty or over-long series on its own (principle 5). */}
-        {pending
-          ? messages.athlete.saving
-          : selected.length === 0
-            ? t.createSeries
-            : plural(selected.length, t.createSeriesCount)}
-      </button>
+        <Button
+          type="submit"
+          size="lg"
+          disabled={pending || selected.length === 0 || overLimit}
+          {...(pending ? { loadingLabel: t.saving } : {})}
+        >
+          {selected.length === 0 ? t.createSeries : plural(selected.length, t.createSeriesCount)}
+        </Button>
+      </div>
     </form>
   )
+}
+
+/** The ISO weekday (Mon = 1 … Sun = 7) of a `YYYY-MM-DD` key. */
+function isoWeekday(date: string): number {
+  const day = new Date(`${date}T12:00:00Z`).getUTCDay()
+  return day === 0 ? 7 : day
 }
