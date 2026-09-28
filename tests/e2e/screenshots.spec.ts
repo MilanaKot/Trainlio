@@ -63,13 +63,16 @@ const OUT = 'screenshots'
 
 test.skip(!process.env.SCREENSHOTS, 'Run with SCREENSHOTS=1 to regenerate the design review set.')
 
-async function shoot(page: Page, name: string) {
+async function shoot(page: Page, name: string, { full = true }: { full?: boolean } = {}) {
   // A screenshot does not wait for images. Without this the mark is caught
   // half-fetched and the review is done against an empty plate.
   await page.waitForFunction(() =>
     [...document.images].every((image) => image.complete && image.naturalWidth > 0),
   )
-  await page.screenshot({ path: `${OUT}/${name}.png`, fullPage: true })
+  // A list screen is shot at the viewport: full-page on a database with two
+  // hundred trainings in it produces a ten-megabyte image of test residue,
+  // which is not what anybody reviews.
+  await page.screenshot({ path: `${OUT}/${name}.png`, fullPage: full })
 }
 
 test('the organization screens, with a mark and without', async ({ page, browser }) => {
@@ -196,11 +199,11 @@ test('the coach tabs (§K1, §A0)', async ({ page }) => {
 
   await page.goto('/trener')
   await expect(page.getByRole('heading', { name: 'Tréninky' })).toBeVisible()
-  await shoot(page, 'K1-treninky-trener')
+  await shoot(page, 'K1-treninky-trener', { full: false })
 
   await page.goto('/trener/sportovci')
   await expect(page.getByRole('heading', { name: 'Sportovci' })).toBeVisible()
-  await shoot(page, 'K-sportovci')
+  await shoot(page, 'K-sportovci', { full: false })
 
   await page.goto('/trener/vice')
   await expect(page.getByRole('heading', { name: 'Více' })).toBeVisible()
