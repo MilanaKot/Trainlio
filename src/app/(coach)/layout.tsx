@@ -26,7 +26,7 @@ export default async function CoachLayout({ children }: { children: React.ReactN
       <div className="mx-auto min-h-dvh max-w-3xl px-4 pb-28 pt-6">{children}</div>
       <BottomNav
         // The forms are tasks, not tabs (§K3, §K11, §A4).
-        hideWhen="^/trener/(novy|serie/nova|organizace)$|/upravit$"
+        hideWhen="^/trener/(novy|serie/nova)$|^/trener/vice/(organizace|treneri/[^/]+)$|/upravit$"
         items={[
           { href: '/trener', label: messages.coachNav.sessions, icon: <CalendarIcon /> },
           { href: '/trener/sportovci', label: messages.coachNav.athletes, icon: <PeopleIcon /> },

@@ -32,7 +32,7 @@ function readRpc(value: unknown): RpcResult {
 
 function refresh() {
   // The name a guardian reads is on the session pages, not only here.
-  revalidatePath('/trener/treneri')
+  revalidatePath('/trener/vice/treneri')
   revalidatePath('/trener')
   revalidatePath('/treninky')
   revalidatePath('/moje-treninky')

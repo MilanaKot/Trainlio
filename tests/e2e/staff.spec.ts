@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { grantCoach, grantWorkspaceRole, signIn, uniqueEmail } from './helpers'
+import { grantCoach, grantWorkspaceRole, profileFor, signIn, uniqueEmail } from './helpers'
 
 /**
  * The Trenéři screen: who may add a coach and fill in their name, and who only
@@ -19,50 +19,67 @@ test.describe('a workspace administrator manages the coaching staff', () => {
     await signIn(page, admin)
     await grantWorkspaceRole(admin, 'WORKSPACE_ADMIN')
 
-    await page.goto('/trener/treneri')
+    await page.goto('/trener/vice/treneri')
     await expect(page.getByRole('heading', { name: 'Trenéři' })).toBeVisible()
 
-    // A fresh profile has no name at all, and the screen says so rather than
-    // rendering an empty line nobody notices (AC-240).
-    const own = page.locator('li', { hasText: 'Bez jména' }).first()
-    await expect(own).toBeVisible()
+    // Straight to this run's own row. The list is shared by every run against
+    // this database, so `the first one called Bez jména` is somebody else's.
+    const ownRow = page.getByRole('link', { name: /Bez jména/ })
+    await expect(ownRow.first()).toBeVisible()
+    await page.goto(`/trener/vice/treneri/${await profileFor(admin)}`)
+    await expect(page.getByRole('heading', { name: 'Upravit trenéra' })).toBeVisible()
 
-    await own.getByRole('button', { name: 'Upravit jméno' }).click()
-
-    // AC-243: a coach without a surname is not how a parent asks for them, and
-    // the refusal comes from the domain function, not from this form.
-    await own.getByLabel('Jméno').fill('Pavel')
-    await own.getByLabel('Příjmení').fill('')
-    await own.getByRole('button', { name: 'Uložit' }).click()
-    // Scoped to the row: Next's route announcer is also role=alert, so an
-    // unscoped query matches two elements and resolves the empty one.
-    await expect(own.getByRole('alert')).toHaveText('Zadejte jméno i příjmení.')
+    // AC-243: a coach without a surname is not how a parent asks for them.
+    await page.getByLabel('Jméno').fill('Pavel')
+    await page.getByLabel('Příjmení').fill('')
+    await page.getByRole('button', { name: 'Uložit změny' }).click()
+    await expect(page.getByText('Vyplňte příjmení.')).toBeVisible()
 
     // Unique per run: the projects run in parallel against one database, and a
     // fixed surname matches the row a previous run left behind — which passes
     // this assertion before this run's own save has landed.
     const run = Date.now()
-    await own.getByLabel('Příjmení').fill(`Zeman${run}`)
-    await own.getByRole('button', { name: 'Uložit' }).click()
+    await page.getByLabel('Příjmení').fill(`Zeman${run}`)
+    await page.getByRole('button', { name: 'Uložit změny' }).click()
     await expect(page.getByText(`Pavel Zeman${run}`)).toBeVisible()
+
+    // An administrator cannot switch themselves off (§A3), and the database
+    // refuses the case that matters — the last active administrator — whatever
+    // the form offers.
+    await page.goto(`/trener/vice/treneri/${await profileFor(admin)}`)
+    await expect(page.getByRole('switch', { name: 'Aktivní trenér' })).toBeDisabled()
+    await expect(page.getByText('Nemůžete deaktivovat sám sebe.')).toBeVisible()
+    await page.getByRole('button', { name: 'Zrušit' }).click()
 
     // AC-248: a coach the club employs but who has never signed in.
     const surname = `Málek${run}`
-    await page.getByRole('button', { name: '+ Přidat trenéra' }).click()
-    const addForm = page.locator('form', { hasText: 'Nový trenér' })
-    await addForm.getByLabel('Jméno').fill('Petr')
-    await addForm.getByLabel('Příjmení').fill(surname)
-    await addForm.getByRole('button', { name: 'Přidat', exact: true }).click()
+    await page.getByRole('link', { name: '+ Přidat trenéra' }).click()
+    await page.getByLabel('Jméno').fill('Petr')
+    await page.getByLabel('Příjmení').fill(surname)
+    await page.getByRole('button', { name: 'Přidat trenéra' }).click()
 
-    const added = page.locator('li', { hasText: `Petr ${surname}` })
+    await expect(page.getByText('Trenér přidán')).toBeVisible()
+    const added = page.getByRole('link', { name: new RegExp(`Petr ${surname}`) })
     await expect(added).toBeVisible()
-    await expect(added.getByText('Bez přihlášení')).toBeVisible()
+    await expect(added).toContainText('Bez přihlášení')
 
     // AC-249: leaving is a deactivation, never a delete, and it is reversible.
-    await added.getByRole('button', { name: 'Deaktivovat' }).click()
-    await expect(added.getByText('Neaktivní')).toBeVisible()
-    await added.getByRole('button', { name: 'Znovu aktivovat' }).click()
-    await expect(added.getByText('Neaktivní')).toHaveCount(0)
+    await added.click()
+    // The switch itself is visually hidden; the label is the target, which is
+    // also what a thumb hits.
+    await page.locator('label', { hasText: 'Aktivní trenér' }).click()
+    await page.getByRole('button', { name: 'Uložit změny' }).click()
+
+    const inactive = page.locator('section', { hasText: 'NEAKTIVNÍ' })
+    await expect(inactive.getByText(`Petr ${surname}`)).toBeVisible()
+    await expect(inactive.getByText('Nezobrazuje se při výběru trenérů')).toBeVisible()
+
+    await inactive.getByRole('link', { name: new RegExp(`Petr ${surname}`) }).click()
+    // The switch itself is visually hidden; the label is the target, which is
+    // also what a thumb hits.
+    await page.locator('label', { hasText: 'Aktivní trenér' }).click()
+    await page.getByRole('button', { name: 'Uložit změny' }).click()
+    await expect(page.locator('section', { hasText: 'NEAKTIVNÍ' })).toHaveCount(0)
 
     // The same list, read by a coach who is not an administrator: visible, and
     // not editable. The screen asks the database, so this is the same answer
@@ -82,16 +99,19 @@ test.describe('a workspace administrator manages the coaching staff', () => {
     await signIn(page, coach)
     await grantCoach(coach)
 
-    await page.goto('/trener/treneri')
+    await page.goto('/trener/vice/treneri')
     await expect(page.getByText(`Pavel Zeman${run}`)).toBeVisible()
-    await expect(page.getByRole('button', { name: 'Upravit jméno' })).toHaveCount(0)
+    // Visible, and not editable: the rows are not even links for a coach who
+    // cannot open what is behind them (§A1).
+    await expect(page.getByRole('link', { name: '+ Přidat trenéra' })).toHaveCount(0)
+    await expect(page.getByRole('link', { name: new RegExp(`Pavel Zeman${run}`) })).toHaveCount(0)
     await expect(page.getByRole('button', { name: '+ Přidat trenéra' })).toHaveCount(0)
   })
 
   test('a guardian never reaches the staff screen (AC-241)', async ({ page }) => {
     await signIn(page, uniqueEmail('rodic.stab'))
 
-    await page.goto('/trener/treneri')
+    await page.goto('/trener/vice/treneri')
     await expect(page).toHaveURL(/\/moji-sportovci/)
   })
 })

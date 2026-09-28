@@ -30,7 +30,7 @@ function readRpc(value: unknown): RpcResult {
 }
 
 function refresh() {
-  revalidatePath('/trener/organizace')
+  revalidatePath('/trener/vice/organizace')
   // The club's name and mark are in the coach's header, the parent's list
   // header, and above the e-mail field on the sign-in screen.
   revalidatePath('/trener')

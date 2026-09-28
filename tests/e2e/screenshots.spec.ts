@@ -83,7 +83,7 @@ test('the organization screens, with a mark and without', async ({ page, browser
   await grantWorkspaceRole(admin, 'WORKSPACE_ADMIN')
 
   // Without a mark first: this is the state a club starts in.
-  await page.goto('/trener/organizace')
+  await page.goto('/trener/vice/organizace')
   await expect(page.getByRole('heading', { name: 'Organizace' })).toBeVisible()
   await shoot(page, 'A4b-organizace-bez-loga')
 
@@ -143,7 +143,7 @@ test('the organization screens, with a mark and without', async ({ page, browser
   await page.getByRole('button', { name: 'Uložit' }).click()
   await expect(page.getByText('Uloženo')).toBeVisible()
 
-  await page.goto('/trener/organizace')
+  await page.goto('/trener/vice/organizace')
   await expect(page.locator('main img')).toBeVisible()
   await shoot(page, 'A4-organizace-s-logem')
 
@@ -208,4 +208,18 @@ test('the coach tabs (§K1, §A0)', async ({ page }) => {
   await page.goto('/trener/vice')
   await expect(page.getByRole('heading', { name: 'Více' })).toBeVisible()
   await shoot(page, 'A0-vice')
+})
+
+test('the coaching staff (§A1, §A3)', async ({ page }) => {
+  const admin = uniqueEmail('spravce')
+  await signIn(page, admin)
+  await grantWorkspaceRole(admin, 'WORKSPACE_ADMIN')
+
+  await page.goto('/trener/vice/treneri')
+  await expect(page.getByRole('heading', { name: 'Trenéři' })).toBeVisible()
+  await shoot(page, 'A1-treneri', { full: false })
+
+  await page.goto('/trener/vice/treneri/novy')
+  await expect(page.getByRole('heading', { name: 'Nový trenér' })).toBeVisible()
+  await shoot(page, 'A2-novy-trener')
 })

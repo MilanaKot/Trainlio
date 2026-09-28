@@ -50,7 +50,7 @@ function pngSize(bytes: Buffer): { width: number; height: number } {
 }
 
 async function openOrganization(page: Page) {
-  await page.goto('/trener/organizace')
+  await page.goto('/trener/vice/organizace')
   await expect(page.getByRole('heading', { name: 'Organizace' })).toBeVisible()
 }
 
@@ -70,7 +70,7 @@ test('a coach who is not an administrator is sent away (admin test 5)', async ({
   await signIn(page, email)
   await grantCoach(email)
 
-  await page.goto('/trener/organizace')
+  await page.goto('/trener/vice/organizace')
 
   // Not a screen with the controls hidden: the redirect uses the same
   // predicate that would refuse the write.

@@ -804,6 +804,33 @@ export const cs = {
     editName: 'Upravit jméno',
     addCoach: '+ Přidat trenéra',
     addCoachTitle: 'Nový trenér',
+    /* A1, A2, A3 (admin/SPEC.md). */
+    activeCaption: 'AKTIVNÍ · {count}',
+    inactiveCaption: 'NEAKTIVNÍ · {count}',
+    inactiveMeta: 'Nezobrazuje se při výběru trenérů',
+    firstName: 'Jméno',
+    lastName: 'Příjmení',
+    addSubmit: 'Přidat trenéra',
+    addHelper:
+      'Trenér bude hned k dispozici při výběru hlavního trenéra a asistentů. Pozvánku do aplikace e-mailem lze poslat později.',
+    duplicateName: 'Trenér se stejným jménem už existuje.',
+    added: 'Trenér přidán',
+    editTitle: 'Upravit trenéra',
+    stateCaption: 'STAV',
+    activeSwitch: 'Aktivní trenér',
+    activeSwitchHint: 'Lze ho vybrat pro nové tréninky',
+    /* The count is the coach's whole history, past and planned: what the
+       administrator is deciding about is a name that stays on all of it. */
+    deactivateInfo:
+      'Po deaktivaci zůstane {name} u všech minulých i naplánovaných tréninků (nyní {count}). Trenéra nelze smazat, jen deaktivovat.',
+    leadsFutureNotice: {
+      one: '{name} je hlavním trenérem {count} naplánovaného tréninku. Zůstane u něj uveden.',
+      few: '{name} je hlavním trenérem {count} naplánovaných tréninků. Zůstane u nich uveden.',
+      many: '{name} je hlavním trenérem {count} naplánovaných tréninků. Zůstane u nich uveden.',
+    } satisfies PluralForms,
+    cannotDeactivateSelf: 'Nemůžete deaktivovat sám sebe.',
+    saved: 'Uloženo',
+    empty: 'Zatím není přidaný žádný trenér.',
     deactivate: 'Deaktivovat',
     activate: 'Znovu aktivovat',
     /* AC-251. The count comes from the server's refusal, so the warning never
@@ -818,6 +845,8 @@ export const cs = {
       NOT_AUTHORIZED: 'Na tuto změnu nemáte právo.',
       MEMBER_NOT_FOUND: 'Tato osoba už není členem klubu.',
       NAME_REQUIRED: 'Zadejte jméno i příjmení.',
+      FIRST_NAME_REQUIRED: 'Vyplňte jméno.',
+      LAST_NAME_REQUIRED: 'Vyplňte příjmení.',
       LAST_ADMIN: 'Klub musí mít aspoň jednoho aktivního správce.',
       generic: 'Uložení se nezdařilo. Zkuste to prosím znovu.',
     },

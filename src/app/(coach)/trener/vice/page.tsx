@@ -65,7 +65,7 @@ export default async function MorePage() {
           <ul className="flex flex-col rounded-card bg-surface px-4 shadow-card">
             <li className="border-b border-line last:border-0">
               <Link
-                href="/trener/organizace"
+                href="/trener/vice/organizace"
                 className="flex min-h-14 items-center gap-3 py-2 text-row font-semibold text-ink"
               >
                 <OrgLogo org={organization} size={28} />
@@ -76,7 +76,7 @@ export default async function MorePage() {
             </li>
             <li>
               <Link
-                href="/trener/treneri"
+                href="/trener/vice/treneri"
                 className="flex min-h-14 items-center gap-3 py-2 text-row font-semibold text-ink"
               >
                 <span className="flex size-7 items-center justify-center rounded-chip bg-primary-100 text-hint font-bold text-primary">
