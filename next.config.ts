@@ -50,9 +50,20 @@ const securityHeaders = [
  */
 const supabase = new URL(process.env.NEXT_PUBLIC_SUPABASE_URL ?? 'http://127.0.0.1:54321')
 
+/**
+ * Next refuses to let the image optimiser fetch from a private address, which
+ * is right: an optimiser that will fetch any URL is a way into whatever the
+ * server can reach. The Supabase stack on a developer's own machine is such an
+ * address, so the refusal is lifted only when the *configured* Supabase host is
+ * itself loopback — a deployment pointing at a real project never takes this
+ * branch.
+ */
+const supabaseIsLocal = ['127.0.0.1', '::1', 'localhost'].includes(supabase.hostname)
+
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   images: {
+    dangerouslyAllowLocalIP: supabaseIsLocal,
     remotePatterns: [
       {
         protocol: supabase.protocol === 'https:' ? 'https' : 'http',

@@ -130,7 +130,24 @@ export function LogoSheet({
   const previewOrg = { name: orgName, logoUrl: preview, logoBackground: background }
 
   return (
-    <BottomSheet open onOpenChange={(open) => (open ? undefined : onClose())} title={t.adjustTitle}>
+    <BottomSheet
+      open
+      onOpenChange={(open) => (open ? undefined : onClose())}
+      title={t.adjustTitle}
+      // The two buttons live in the sheet's footer rather than at the end of
+      // its body: the body scrolls, and a primary action that scrolls out of
+      // reach on a short screen is one a thumb cannot find.
+      footer={
+        <div className="flex flex-col gap-2">
+          <Button size="lg" onClick={apply} disabled={!image}>
+            {t.apply}
+          </Button>
+          <Button size="lg" variant="outline" onClick={onChooseAnother}>
+            {t.chooseAnother}
+          </Button>
+        </div>
+      }
+    >
       <div className="flex flex-col gap-4">
         {error ? (
           <p role="alert" className="text-hint font-semibold text-danger">
@@ -247,15 +264,6 @@ export function LogoSheet({
             <OrgLogo org={previewOrg} size={36} />
             <OrgLogo org={previewOrg} size={56} />
           </span>
-        </div>
-
-        <div className="flex flex-col gap-2">
-          <Button size="lg" onClick={apply} disabled={!image}>
-            {t.apply}
-          </Button>
-          <Button size="lg" variant="outline" onClick={onChooseAnother}>
-            {t.chooseAnother}
-          </Button>
         </div>
       </div>
     </BottomSheet>

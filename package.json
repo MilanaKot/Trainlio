@@ -42,6 +42,7 @@
     "zod": "^4.6.5"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.13.0",
     "@playwright/test": "^1.57.0",
     "@supabase/postgres-meta": "^0.99.0",
     "@supabase/postgrest-typegen": "^0.2.2",
@@ -53,6 +54,7 @@
     "@types/react": "^19.2.2",
     "@types/react-dom": "^19.2.2",
     "@vitejs/plugin-react": "^5.1.0",
+    "axe-core": "^4.13.0",
     "eslint": "^9.39.0",
     "eslint-config-next": "^16.3.5",
     "eslint-config-prettier": "^10.1.8",

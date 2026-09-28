@@ -192,3 +192,56 @@ export function dateInput(offsetDays: number): string {
   const at = new Date(Date.now() + offsetDays * 86_400_000)
   return at.toISOString().slice(0, 10)
 }
+
+/** The one workspace, as the organization screens edit it (migration 30). */
+export async function organizationRow(): Promise<{
+  id: string
+  name: string
+  short_name: string | null
+  logo_path: string | null
+  logo_background: string
+}> {
+  const rows = (await (
+    await fetch(
+      `${STACK}/rest/v1/workspaces?select=id,name,short_name,logo_path,logo_background&limit=1`,
+      { headers: admin },
+    )
+  ).json()) as {
+    id: string
+    name: string
+    short_name: string | null
+    logo_path: string | null
+    logo_background: string
+  }[]
+
+  const row = rows[0]
+  if (!row) throw new Error('No workspace in the database')
+  return row
+}
+
+/**
+ * Puts the club's identity back the way the seed left it.
+ *
+ * The organization is one row shared by every test in the run, so a spec that
+ * renames it or gives it a mark has to put it back, or the next spec asserts
+ * against somebody else's leftovers.
+ */
+export async function resetOrganization(): Promise<void> {
+  const { id } = await organizationRow()
+  await fetch(`${STACK}/rest/v1/workspaces?id=eq.${id}`, {
+    method: 'PATCH',
+    headers: admin,
+    body: JSON.stringify({
+      name: 'Hokejová škola Příbram',
+      short_name: null,
+      logo_path: null,
+      logo_background: 'white',
+      logo_updated_at: null,
+    }),
+  })
+}
+
+/** The public URL of a stored mark, for a test that wants the bytes. */
+export function storedLogoUrl(path: string): string {
+  return `${STACK}/storage/v1/object/public/workspace-logos/${path}`
+}

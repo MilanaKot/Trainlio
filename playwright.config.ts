@@ -29,7 +29,12 @@ export default defineConfig({
       // The mobile review asserts things that are only true on a phone —
       // no sideways scroll, thumb-sized controls, bottom navigation above the
       // fold. Running it at 1280px would assert nothing and pass anyway.
-      testIgnore: /mobile\.spec\.ts/,
+      //
+      // The organization spec is excluded for a different reason: the club is
+      // one row shared by the whole run, and it renames it and takes its mark
+      // away. Serial within a project is not enough when a second project is
+      // running the same file at the same time.
+      testIgnore: /(mobile|organization)\.spec\.ts/,
     },
   ],
   webServer: {

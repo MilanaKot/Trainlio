@@ -16,3 +16,6 @@ playwright-report
 # Supabase CLI scratch
 supabase/.temp
 supabase/.branches
+
+# Design review screenshots (scripts/screenshots), regenerated on demand
+screenshots

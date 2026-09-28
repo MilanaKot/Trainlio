@@ -1322,6 +1322,7 @@ export type Database = {
         Args: never
         Returns: {
           id: string
+          location_name: string
           logo_background: string
           logo_path: string
           logo_updated_at: string

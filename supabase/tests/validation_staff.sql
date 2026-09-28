@@ -614,3 +614,15 @@ select pg_temp.check(
 select pg_temp.check(
   (select allowed_mime_types::text from storage.buckets where id = 'workspace-logos'),
   '{image/png}', 'the bucket takes only the PNG the browser cropped (m30)');
+
+-- The venue under the club's name on G1 (migration 31). It comes from the
+-- workspace, so a parent with no trainings yet is still told where this is.
+select pg_temp.check(
+  pg_temp.as_user(:A, $$select coalesce(location_name, '(null)') from public.joinable_workspaces()$$),
+  'Příbram', 'the club names its venue (m31)');
+
+insert into public.locations (workspace_id, name) select pg_temp.ws(), 'Beroun';
+select pg_temp.check(
+  pg_temp.as_user(:A, $$select coalesce(location_name, '(null)') from public.joinable_workspaces()$$),
+  '(null)', 'and says nothing rather than pick one of two (m31)');
+delete from public.locations where name = 'Beroun';

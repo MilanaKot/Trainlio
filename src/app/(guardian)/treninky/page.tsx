@@ -50,9 +50,12 @@ export default async function SessionsPage() {
   )
 
   const sports = messages.sports as Record<string, string>
+  // The venue comes from the club, not from whichever training is first: a
+  // parent who has just signed up has no trainings yet and should still be
+  // told where this is (migration 31).
   const meta = [
     workspace ? sports[workspace.sportCode] : undefined,
-    sessions[0]?.locationName,
+    workspace?.locationName ?? sessions[0]?.locationName,
   ].filter(Boolean)
 
   const days = groupByLocalDay(sessions, (session) =>

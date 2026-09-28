@@ -33,6 +33,8 @@ export type JoinableWorkspace = {
   name: string
   sportCode: string
   timezone: string
+  /** The venue, when the club trains in exactly one place (migration 31). */
+  locationName: string | null
   /** The club's public face: its name, its mark and how the mark is drawn. */
   organization: Organization
 }
@@ -159,6 +161,7 @@ export async function listJoinableWorkspaces(): Promise<JoinableWorkspace[]> {
     name: w.name,
     sportCode: w.sport_code,
     timezone: w.timezone,
+    locationName: w.location_name,
     organization: toOrganization(w),
   }))
 }
