@@ -77,7 +77,7 @@ insert into public.workspace_athlete_memberships (workspace_id, athlete_id, athl
 select w.id, p.athlete_id, p.id, p.sport_id
 from public.workspaces w, public.athlete_sport_profiles p
 join public.athletes a on a.id = p.athlete_id
-where a.last_name = 'Testovací' and w.name like 'Příbram%';
+where a.last_name = 'Testovací' and w.name like '%Příbram%';
 
 -- CONTROL only: count, pause, insert. What a straightforward implementation
 -- does, and what the occupancy lock exists to prevent.
@@ -102,12 +102,12 @@ new_session() {
     set role authenticated;
     set request.jwt.claim.sub = '00000000-0000-0000-0000-00000000c0ac';
     select public.create_training_session(
-      (select id from public.workspaces where name like 'Příbram%'),
+      (select id from public.workspaces where name like '%Příbram%'),
       (current_date + 40)::date, time '09:00', time '10:00',
       (select f.id from public.facilities f
          join public.locations l on l.id = f.location_id
          join public.workspaces w on w.id = l.workspace_id
-        where f.code = 'MH' and w.name like 'Příbram%'),
+        where f.code = 'MH' and w.name like '%Příbram%'),
       1, 'ALL') -> 'data' ->> 'training_session_id';" | grep -Eo '[0-9a-f-]{36}' | head -1
 }
 

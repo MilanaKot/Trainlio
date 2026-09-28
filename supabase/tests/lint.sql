@@ -217,7 +217,23 @@ where n.nspname = 'public'
 
 -- A SECURITY DEFINER function granted to anon. It would run with the owner's
 -- rights for an unauthenticated caller.
+--
+-- One exception, named here rather than waived by a pattern so that the next
+-- one has to be argued for as well. The sign-in screen shows the club's name
+-- and mark above the e-mail field, and nobody is signed in yet: no row policy
+-- can answer a question asked before there is a session. organization_identity()
+-- takes no arguments, reads two reference tables, returns the club's public
+-- face and refuses to guess when more than one club is active (migration 30).
 select 'ERROR definer_function_granted_to_anon: ' || p.proname
+from pg_proc p
+join pg_namespace n on n.oid = p.pronamespace
+where n.nspname = 'public' and p.prosecdef
+  and has_function_privilege('anon', p.oid, 'execute')
+  and p.proname <> 'organization_identity';
+
+-- INFO. The exception above, printed every run so it cannot quietly become
+-- two.
+select 'INFO  definer_function_granted_to_anon_allowed: ' || p.proname
 from pg_proc p
 join pg_namespace n on n.oid = p.pronamespace
 where n.nspname = 'public' and p.prosecdef

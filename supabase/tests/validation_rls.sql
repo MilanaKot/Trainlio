@@ -12,7 +12,7 @@ insert into public.training_sessions(id,workspace_id,sport_id,location_id,facili
  select '00000000-0000-0000-0000-0000000e0002',w.id,w.primary_sport_id,l.id,f.id,'00000000-0000-0000-0000-00000000c0ac',
  now()+interval '30 days',now()+interval '30 days 1 hour',3,'OPEN','00000000-0000-0000-0000-00000000c0ac','ALL','Šatna 4','Vezměte si chrániče.'
  from public.workspaces w join public.locations l on l.workspace_id=w.id
-  join public.facilities f on f.location_id=l.id and f.code='MH' where w.name like 'Příbram%';
+  join public.facilities f on f.location_id=l.id and f.code='MH' where w.name like '%Příbram%';
 insert into public.training_session_coaches values ('00000000-0000-0000-0000-0000000e0002','00000000-0000-0000-0000-00000000c0ac','MAIN');
 insert into public.training_session_internal_notes(training_session_id,notes)
  values ('00000000-0000-0000-0000-0000000e0002','Interní: rodič dluží platbu.');
@@ -22,7 +22,7 @@ insert into public.training_sessions(id,workspace_id,sport_id,location_id,facili
  select '00000000-0000-0000-0000-0000000e0003',w.id,w.primary_sport_id,l.id,f.id,'00000000-0000-0000-0000-00000000c0ac',
  now()+interval '40 days',now()+interval '40 days 1 hour',3,'DRAFT','00000000-0000-0000-0000-00000000c0ac','ALL'
  from public.workspaces w join public.locations l on l.workspace_id=w.id
-  join public.facilities f on f.location_id=l.id and f.code='VH' where w.name like 'Příbram%';
+  join public.facilities f on f.location_id=l.id and f.code='VH' where w.name like '%Příbram%';
 insert into public.training_session_coaches values ('00000000-0000-0000-0000-0000000e0003','00000000-0000-0000-0000-00000000c0ac','MAIN');
 
 create or replace function pg_temp.as_user(p_sub text, p_sql text)
@@ -93,7 +93,7 @@ select pg_temp.check(pg_temp.as_user(:A, $$select p.display_name from public.tra
 
 \echo ''
 \echo '── D-17 role isolation ─────────────────────────────────────────────'
-select pg_temp.check(pg_temp.as_user(:WSADMIN, $$select public.is_workspace_admin((select id from public.workspaces where name like 'Příbram%'))::text$$),
+select pg_temp.check(pg_temp.as_user(:WSADMIN, $$select public.is_workspace_admin((select id from public.workspaces where name like '%Příbram%'))::text$$),
   'true', 'workspace admin is a workspace admin');
 select pg_temp.check(pg_temp.as_user(:WSADMIN, $$select public.is_platform_admin()::text$$),
   'false', 'workspace admin is NOT a platform admin');
@@ -101,13 +101,13 @@ select pg_temp.check(pg_temp.as_user(:WSADMIN, $$select count(*)::text from publ
   'DENIED', 'workspace admin cannot read platform_admins (AC-211)');
 select pg_temp.check(pg_temp.as_user(:PLATFORM, $$select public.is_platform_admin()::text$$),
   'true', 'platform admin is a platform admin');
-select pg_temp.check(pg_temp.as_user(:PLATFORM, $$select public.is_workspace_coach((select id from public.workspaces where name like 'Příbram%'))::text$$),
+select pg_temp.check(pg_temp.as_user(:PLATFORM, $$select public.is_workspace_coach((select id from public.workspaces where name like '%Příbram%'))::text$$),
   'false', 'platform admin gains no workspace coach rights (AC-212)');
 select pg_temp.check(pg_temp.as_user(:PLATFORM, $$select count(*)::text from public.athletes$$),
   '0', 'platform admin reads no athlete data through RLS (AC-212)');
-select pg_temp.check(pg_temp.as_user(:A, $$select public.is_workspace_member((select id from public.workspaces where name like 'Příbram%'))::text$$),
+select pg_temp.check(pg_temp.as_user(:A, $$select public.is_workspace_member((select id from public.workspaces where name like '%Příbram%'))::text$$),
   'false', 'a guardian is never workspace staff (AC-213)');
-select pg_temp.check(pg_temp.as_user(:A, $$select public.guardian_can_see_workspace((select id from public.workspaces where name like 'Příbram%'))::text$$),
+select pg_temp.check(pg_temp.as_user(:A, $$select public.guardian_can_see_workspace((select id from public.workspaces where name like '%Příbram%'))::text$$),
   'true', 'guardian authorization runs through athlete membership instead (AC-213)');
 
 \echo ''

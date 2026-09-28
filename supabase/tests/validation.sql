@@ -33,7 +33,7 @@ insert into public.workspace_members(workspace_id,profile_id,role)
   select id,'00000000-0000-0000-0000-00000000c0ac','COACH' from public.workspaces where name='WS2';
 insert into public.audit_log(workspace_id,actor_profile_id,action,entity_type,entity_id)
   select id,'00000000-0000-0000-0000-00000000c0ac','SESSION_CREATED','TRAINING_SESSION','00000000-0000-0000-0000-0000000e0001'
-  from public.workspaces where name like 'Příbram%';
+  from public.workspaces where name like '%Příbram%';
 
 \echo '── Database invariants ─────────────────────────────────────────────'
 select pg_temp.expect_error($$insert into public.training_sessions(workspace_id,sport_id,location_id,facility_id,main_coach_profile_id,start_at,end_at,created_by)
@@ -45,7 +45,7 @@ select pg_temp.expect_error($$insert into public.training_sessions(workspace_id,
    from public.workspaces w cross join public.locations l join public.facilities f on f.location_id=l.id where w.name='WS2' and l.name='Příbram' and f.code='MH'$$,
   'location must belong to the stated workspace (AC-131)');
 select pg_temp.expect_error($$insert into public.workspace_athlete_memberships(workspace_id,athlete_id,athlete_sport_profile_id,sport_id)
-   select w.id,'00000000-0000-0000-0000-0000000a0002','00000000-0000-0000-0000-0000000b0001',w.primary_sport_id from public.workspaces w where w.name like 'Příbram%'$$,
+   select w.id,'00000000-0000-0000-0000-0000000a0002','00000000-0000-0000-0000-0000000b0001',w.primary_sport_id from public.workspaces w where w.name like '%Příbram%'$$,
   'sport profile must belong to the stated athlete (AC-132)');
 select pg_temp.expect_error($$insert into public.workspace_athlete_memberships(workspace_id,athlete_id,athlete_sport_profile_id,sport_id)
    select w.id,'00000000-0000-0000-0000-0000000a0001','00000000-0000-0000-0000-0000000b0001',w.primary_sport_id from public.workspaces w where w.name='WS2'$$,
@@ -59,7 +59,7 @@ select pg_temp.expect_error($$insert into public.athlete_sport_profiles(athlete_
 select pg_temp.expect_error($$insert into public.athlete_sport_profiles(athlete_id,sport_id,attributes)
    select '00000000-0000-0000-0000-0000000a0002',id,'{"position":"CENTER","stick_side":"LEFT","salary":"1"}'::jsonb from public.sports where code='HOCKEY'$$,
   'unknown sport attribute keys rejected');
-select pg_temp.expect_error($$update public.workspaces set timezone='Europe/Praha' where name like 'Příbram%'$$,
+select pg_temp.expect_error($$update public.workspaces set timezone='Europe/Praha' where name like '%Příbram%'$$,
   'workspace timezone must be a real IANA zone');
 select pg_temp.expect_error($$insert into public.bookings(training_session_id,athlete_id,created_by,created_by_role)
    values ('00000000-0000-0000-0000-0000000e0001','00000000-0000-0000-0000-0000000a0001','00000000-0000-0000-0000-0000000fa000','USER')$$,

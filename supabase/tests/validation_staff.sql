@@ -501,3 +501,116 @@ select pg_temp.check(
 select pg_temp.check(
   (select public::text from storage.buckets where id = 'athlete-photos'),
   'false', 'and the athlete bucket is still not (AC-277, AC-092)');
+
+\echo ''
+\echo '── The organization the parent sees: name, short name, mark (m30) ───'
+
+-- The background is part of the mark, not a display preference the client
+-- keeps: whether a logo needs a white plate is a fact about the file, and the
+-- administrator who uploaded it is the only person who can see which it is.
+select pg_temp.check(
+  pg_temp.as_user(:ADMIN, format($$select (public.set_workspace_logo(%L::uuid,
+    'logos/%s/mark.png', 'transparent') ->> 'ok')$$, pg_temp.ws(), pg_temp.ws())),
+  'true', 'an administrator sets the mark and how it is drawn (m30)');
+select pg_temp.check(
+  (select logo_background from public.workspaces where id = pg_temp.ws()),
+  'transparent', 'and the background is stored beside the path (m30)');
+select pg_temp.check(
+  (select (logo_updated_at is not null)::text from public.workspaces where id = pg_temp.ws()),
+  'true', 'with the stamp the public URL carries as ?v= (m30)');
+select pg_temp.check(
+  pg_temp.as_user(:ADMIN, format($$select (public.set_workspace_logo(%L::uuid,
+    'logos/%s/mark.png', 'chequered') ->> 'code')$$, pg_temp.ws(), pg_temp.ws())),
+  'INVALID_LOGO_BACKGROUND', 'and only the two the component can draw (m30)');
+
+-- Clearing the mark clears the stamp too: ?v= on nothing is a URL for an
+-- object that is not there.
+select pg_temp.check(
+  pg_temp.as_user(:ADMIN, format($$select (public.set_workspace_logo(%L::uuid) ->> 'ok')$$,
+    pg_temp.ws())),
+  'true', 'clearing it still works with the new signature (m30)');
+select pg_temp.check(
+  (select (logo_updated_at is null)::text from public.workspaces where id = pg_temp.ws()),
+  'true', 'and takes the stamp with it (m30)');
+
+-- The name is what a parent reads on every screen, so its bounds are here and
+-- not in the form.
+select pg_temp.check(
+  pg_temp.as_user(:COACH, format($$select (public.set_workspace_identity(%L::uuid,
+    'Klub trenéra') ->> 'code')$$, pg_temp.ws())),
+  'NOT_AUTHORIZED', 'a coach cannot rename the club (D-17, m30)');
+select pg_temp.check(
+  pg_temp.as_user(:A, format($$select (public.set_workspace_identity(%L::uuid,
+    'Klub rodiče') ->> 'code')$$, pg_temp.ws())),
+  'NOT_AUTHORIZED', 'nor can a parent (D-17, m30)');
+select pg_temp.check(
+  pg_temp.as_user(:ADMIN, format($$select (public.set_workspace_identity(%L::uuid, ' ')
+    ->> 'code')$$, pg_temp.ws())),
+  'NAME_REQUIRED', 'a name of spaces is no name (m30)');
+select pg_temp.check(
+  pg_temp.as_user(:ADMIN, format($$select (public.set_workspace_identity(%L::uuid,
+    repeat('x', 81)) ->> 'code')$$, pg_temp.ws())),
+  'NAME_TOO_LONG', 'and 80 characters is the ceiling (m30)');
+select pg_temp.check(
+  pg_temp.as_user(:ADMIN, format($$select (public.set_workspace_identity(%L::uuid,
+    'Sportovní klub Dobříš', repeat('x', 25)) ->> 'code')$$, pg_temp.ws())),
+  'SHORT_NAME_TOO_LONG', 'the short name has its own, smaller one (m30)');
+select pg_temp.check(
+  (select name from public.workspaces where id = pg_temp.ws()),
+  'Hokejová škola Příbram', 'and a refused call changes nothing (m30)');
+
+select pg_temp.check(
+  pg_temp.as_user(:ADMIN, format($$select (public.set_workspace_identity(%L::uuid,
+    '  Sportovní klub Dobříš  ', '  SK Dobříš  ') ->> 'ok')$$, pg_temp.ws())),
+  'true', 'an administrator renames the club (m30)');
+select pg_temp.check(
+  (select name || '/' || short_name from public.workspaces where id = pg_temp.ws()),
+  'Sportovní klub Dobříš/SK Dobříš', 'both trimmed on the way in (m30)');
+select pg_temp.check(
+  (select count(*)::text from public.audit_log
+   where action = 'WORKSPACE_IDENTITY_CHANGED' and entity_id = pg_temp.ws()),
+  '1', 'and the rename is on the record (m30)');
+select pg_temp.check(
+  pg_temp.as_user(:ADMIN, format($$select (public.set_workspace_identity(%L::uuid,
+    'Sportovní klub Dobříš', 'SK Dobříš') -> 'data' ->> 'unchanged')$$, pg_temp.ws())),
+  'true', 'saving the same name again is not a change (m30)');
+select pg_temp.check(
+  pg_temp.as_user(:ADMIN, format($$select (public.set_workspace_identity(%L::uuid,
+    'Sportovní klub Dobříš', '   ') ->> 'ok')$$, pg_temp.ws())),
+  'true', 'an empty short name clears it (m30)');
+select pg_temp.check(
+  (select (short_name is null)::text from public.workspaces where id = pg_temp.ws()),
+  'true', 'rather than storing a blank one (m30)');
+
+-- The sign-in screen has no session at all, so the club above the e-mail field
+-- cannot come from a row policy.
+select pg_temp.check(
+  (select name from public.organization_identity()),
+  'Sportovní klub Dobříš', 'the sign-in screen reads the club without a session (m30)');
+select pg_temp.check(
+  (select sport_code from public.organization_identity()),
+  'HOCKEY', 'with the sport, for the line under the name (m30)');
+
+-- Two active clubs and an anonymous visitor: nothing identifies which one they
+-- came for, so the screen shows none rather than the wrong crest.
+insert into public.workspaces (name, primary_sport_id)
+select 'Druhý klub', id from public.sports where code = 'HOCKEY';
+select pg_temp.check(
+  (select count(*)::text from public.organization_identity()),
+  '0', 'a second active club makes the anonymous answer empty, not a guess (m30)');
+update public.workspaces set is_active = false where name = 'Druhý klub';
+select pg_temp.check(
+  (select count(*)::text from public.organization_identity()),
+  '1', 'and deactivating it gives the one answer back (m30)');
+delete from public.workspaces where name = 'Druhý klub';
+
+-- The parent's own header reads the same three fields through the function
+-- migration 12 already gave them.
+select pg_temp.check(
+  pg_temp.as_user(:A, $$select name || '/' || coalesce(logo_background,'(null)')
+    from public.joinable_workspaces()$$),
+  'Sportovní klub Dobříš/white', 'and the parent reads the same club (m30)');
+
+select pg_temp.check(
+  (select allowed_mime_types::text from storage.buckets where id = 'workspace-logos'),
+  '{image/png}', 'the bucket takes only the PNG the browser cropped (m30)');

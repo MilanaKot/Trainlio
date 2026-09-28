@@ -1042,9 +1042,12 @@ export type Database = {
           delivery_email_retention_days: number
           id: string
           is_active: boolean
+          logo_background: string
           logo_path: string | null
+          logo_updated_at: string | null
           name: string
           primary_sport_id: string
+          short_name: string | null
           timezone: string
           updated_at: string
         }
@@ -1054,9 +1057,12 @@ export type Database = {
           delivery_email_retention_days?: number
           id?: string
           is_active?: boolean
+          logo_background?: string
           logo_path?: string | null
+          logo_updated_at?: string | null
           name: string
           primary_sport_id: string
+          short_name?: string | null
           timezone?: string
           updated_at?: string
         }
@@ -1066,9 +1072,12 @@ export type Database = {
           delivery_email_retention_days?: number
           id?: string
           is_active?: boolean
+          logo_background?: string
           logo_path?: string | null
+          logo_updated_at?: string | null
           name?: string
           primary_sport_id?: string
+          short_name?: string | null
           timezone?: string
           updated_at?: string
         }
@@ -1313,9 +1322,12 @@ export type Database = {
         Args: never
         Returns: {
           id: string
+          logo_background: string
           logo_path: string
+          logo_updated_at: string
           name: string
           primary_sport_id: string
+          short_name: string
           sport_code: string
           timezone: string
         }[]
@@ -1340,6 +1352,18 @@ export type Database = {
           drift: number
           projected: number
           training_session_id: string
+        }[]
+      }
+      organization_identity: {
+        Args: never
+        Returns: {
+          id: string
+          logo_background: string
+          logo_path: string
+          logo_updated_at: string
+          name: string
+          short_name: string
+          sport_code: string
         }[]
       }
       pending_notification_events: {
@@ -1420,8 +1444,16 @@ export type Database = {
         Args: { p_open: boolean; p_training_session_id: string }
         Returns: Json
       }
+      set_workspace_identity: {
+        Args: { p_name: string; p_short_name?: string; p_workspace_id: string }
+        Returns: Json
+      }
       set_workspace_logo: {
-        Args: { p_logo_path?: string; p_workspace_id: string }
+        Args: {
+          p_logo_background?: string
+          p_logo_path?: string
+          p_workspace_id: string
+        }
         Returns: Json
       }
       update_training_session: {

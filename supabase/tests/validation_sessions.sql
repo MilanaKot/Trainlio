@@ -33,10 +33,10 @@ end $$;
 \set A '''00000000-0000-0000-0000-0000000fa000'''
 
 create or replace function pg_temp.ws() returns uuid language sql stable as
-  $$ select id from public.workspaces where name like 'Příbram%' $$;
+  $$ select id from public.workspaces where name like '%Příbram%' $$;
 create or replace function pg_temp.fac(p_code text) returns uuid language sql stable as
   $$ select f.id from public.facilities f join public.locations l on l.id=f.location_id
-     join public.workspaces w on w.id=l.workspace_id where f.code=p_code and w.name like 'Příbram%' $$;
+     join public.workspaces w on w.id=l.workspace_id where f.code=p_code and w.name like '%Příbram%' $$;
 create or replace function pg_temp.sid() returns uuid language sql stable as
   $$ select id from public.training_sessions order by created_at desc limit 1 $$;
 

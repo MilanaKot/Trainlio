@@ -38,10 +38,10 @@ end $$;
 create or replace function pg_temp.ath(p_name text) returns uuid language sql stable as
   $$ select id from public.athletes where first_name = p_name $$;
 create or replace function pg_temp.ws() returns uuid language sql stable as
-  $$ select id from public.workspaces where name like 'Příbram%' $$;
+  $$ select id from public.workspaces where name like '%Příbram%' $$;
 create or replace function pg_temp.fac(p_code text) returns uuid language sql stable as
   $$ select f.id from public.facilities f join public.locations l on l.id=f.location_id
-     join public.workspaces w on w.id=l.workspace_id where f.code=p_code and w.name like 'Příbram%' $$;
+     join public.workspaces w on w.id=l.workspace_id where f.code=p_code and w.name like '%Příbram%' $$;
 
 create temp table t_ids (k text primary key, v uuid);
 

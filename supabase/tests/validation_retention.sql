@@ -97,7 +97,7 @@ select pg_temp.check(
 -- A delivery carrying this family's address, so the scrub has something to do.
 insert into public.notification_events(workspace_id, training_session_id, event_type, payload)
 select w.id, '00000000-0000-0000-0000-0000000e0001', 'SESSION_CANCELLED', '{}'::jsonb
-from public.workspaces w where w.name like 'Příbram%';
+from public.workspaces w where w.name like '%Příbram%';
 select public.expand_notification_event(
   (select id from public.notification_events order by created_at desc limit 1));
 
@@ -247,7 +247,7 @@ select pg_temp.check(
 -- A fresh delivery for the coach, who has not been erased.
 insert into public.notification_events(workspace_id, training_session_id, event_type, payload)
 select w.id, '00000000-0000-0000-0000-0000000e0001', 'SESSION_SCHEDULE_CHANGED', '{}'::jsonb
-from public.workspaces w where w.name like 'Příbram%';
+from public.workspaces w where w.name like '%Příbram%';
 insert into public.notification_deliveries(event_id, recipient_profile_id, recipient_email, status, sent_at)
 select (select id from public.notification_events order by created_at desc limit 1),
        '00000000-0000-0000-0000-00000000c0ac', 'coach@example.test', 'SENT', now();
@@ -256,7 +256,7 @@ select pg_temp.check(
   (public.scrub_notification_emails() -> 'data' ->> 'scrubbed'),
   '0', 'a message sent today keeps its address (AC-230)');
 select pg_temp.check(
-  (select delivery_email_retention_days::text from public.workspaces where name like 'Příbram%'),
+  (select delivery_email_retention_days::text from public.workspaces where name like '%Příbram%'),
   '90', 'the retention window is a workspace setting, not a constant (D-03, AC-230)');
 
 update public.notification_deliveries set sent_at = now() - interval '91 days'
@@ -277,7 +277,7 @@ select (select id from public.notification_events order by created_at desc limit
 select pg_temp.check(
   (public.scrub_notification_emails() -> 'data' ->> 'scrubbed'),
   '0', 'ten days is inside a ninety-day window');
-update public.workspaces set delivery_email_retention_days = 7 where name like 'Příbram%';
+update public.workspaces set delivery_email_retention_days = 7 where name like '%Příbram%';
 select pg_temp.check(
   (public.scrub_notification_emails() -> 'data' ->> 'scrubbed'),
   '1', 'and outside a seven-day one (AC-230)');
