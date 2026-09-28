@@ -612,3 +612,14 @@ A series holds at most 52 trainings. A range producing 53 is refused with `SERIE
 
 AC-265  
 The client sends the pattern and the dates to skip, never the dates to create. A submitted exclusion can only remove an occurrence the pattern already produced, so a stale or edited client can decline a training but never conjure one.
+
+## The training list and its booking sheet (guardian/SPEC.md §G1, §G2, §G3)
+
+AC-266  
+The list groups trainings by the workspace's own calendar day, ascending, with one heading per day and a `Dnes` chip on today's. The footer of a card is decided by one ordered table: a closed or started training says `Přihlašování uzavřeno` and offers no button; a full one offers a disabled `Obsazeno`; a family with one child booked and another who could be gets a secondary `Přihlásit`; with nobody else to book, a disabled one; and otherwise a primary `Přihlásit`. The reason written beside a disabled button is the reason that applies — a coach's removal is not reported as a birth-year mismatch, and a family with no athletes reads the empty state above the list rather than the same sentence on every card. The names of booked children appear as chips; the count never does anything but count.
+
+AC-267  
+The occupancy on a card is live, and one count drives the meter, the `Zbývá {n} míst` hint and the footer together, so they cannot disagree about whether a training is full.
+
+AC-268  
+Tapping `Přihlásit` opens the sheet with every athlete of the family listed — the bookable ones first, each other one disabled with its own reason and birth year. A family with exactly one eligible child finds them already selected. Selecting more children than there are places is a state of the sheet, not an error: it explains itself in warning, holds the selection and disables the confirm button, and the same explanation appears when the server refuses. A successful booking closes the sheet, confirms with `Přihlášeno`, and the card behind it updates.

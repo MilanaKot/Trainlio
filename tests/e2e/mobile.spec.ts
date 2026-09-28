@@ -200,8 +200,13 @@ test.describe('on a phone', () => {
     await expectTappableControls(page, 'sessions')
 
     const card = page.locator('li', { hasText: room }).first()
-    await card.getByRole('checkbox').check()
     await card.getByRole('button', { name: 'Přihlásit' }).click()
+
+    // The sheet is a phone-sized surface of its own, so it gets the same review.
+    await expectNoHorizontalScroll(page, 'booking sheet')
+    await expectTappableControls(page, 'booking sheet')
+
+    await page.getByRole('dialog').getByRole('button', { name: 'Přihlásit' }).click()
     await expect(page.locator('li', { hasText: room }).first()).toContainText('1 / 10')
 
     await page.goto('/moje-treninky')

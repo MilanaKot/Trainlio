@@ -2,10 +2,9 @@
 
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/browser'
-import { messages } from '@/lib/i18n'
 
 /**
- * Live occupancy.
+ * The confirmed count for one session, kept current over Realtime.
  *
  * Subscribes to `training_session_occupancy`, never to `bookings`. That is the
  * whole design in one line: the projection carries a count and nothing else, so
@@ -16,15 +15,7 @@ import { messages } from '@/lib/i18n'
  * security filters realtime per subscriber, so a guardian would only ever see
  * their own rows change and the number would appear stuck.
  */
-export function OccupancyLive({
-  sessionId,
-  capacity,
-  initialCount,
-}: {
-  sessionId: string
-  capacity: number
-  initialCount: number
-}) {
+export function useLiveOccupancy(sessionId: string, initialCount: number): number {
   const [count, setCount] = useState(initialCount)
   const [lastFromServer, setLastFromServer] = useState(initialCount)
 
@@ -65,16 +56,5 @@ export function OccupancyLive({
     }
   }, [sessionId])
 
-  const full = count >= capacity
-
-  return (
-    <span
-      className={`tabular-nums text-sm font-medium ${full ? 'opacity-100' : ''}`}
-      aria-label={messages.coach.occupancy
-        .replace('{confirmed}', String(count))
-        .replace('{capacity}', String(capacity))}
-    >
-      {count} / {capacity}
-    </span>
-  )
+  return count
 }

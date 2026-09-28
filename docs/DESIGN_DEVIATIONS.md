@@ -88,3 +88,33 @@ The difference is one hour on a card that already carries an orange
 `Odhlášeno trenérem` badge, against a second rule inside the one function whose
 value is that it has exactly one. Worth revisiting if a parent is ever confused
 by it; not worth the branch now.
+
+## The reason under a disabled `Přihlásit` is the reason that applies
+
+`guardian/SPEC.md` §G1 gives one sentence for the "no eligible child" row of
+the footer table: `Žádný z vašich sportovců nesplňuje ročníky`.
+
+It is shown when the birth years are what blocks the family, and only then. A
+coach's removal (D-06) says `Sportovce odebral trenér…`, a missing sport
+profile or a deactivated athlete says `Žádný z vašich sportovců se na tento
+trénink nemůže přihlásit.`, and a family with no athletes at all says nothing
+on the card — the empty state above the list already tells them to add one.
+
+The design's sentence is right for the case it was written for. Told to a
+parent whose child the coach removed, it sends them to correct a date of birth
+that is perfectly correct.
+
+## The public note stays on the training card — open question
+
+The card in `DESIGN_SYSTEM.md` §6.5 has no row for the coach's public note, and
+`guardian/SPEC.md` puts `INFORMACE PRO SPORTOVCE` on G6, the booking detail.
+G6 is reachable only from a booking, and there is no detail screen for a
+training a parent has not booked yet, so as drawn a note like "bring your
+pads, meet fifteen minutes early" is invisible until after booking.
+
+The note is kept on the card for now, where the previous implementation had it.
+It is guardian-visible by D-13 and the coach wrote it for exactly these parents.
+The cost is that a card with a long note is taller than the design's.
+
+**To decide:** clamp it to two lines on the card, move it into the booking
+sheet, or leave it as it is.

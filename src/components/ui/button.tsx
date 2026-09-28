@@ -9,7 +9,12 @@ import { cn } from '@/lib/utils'
  * coach does that is merely irreversible — closing registration, removing an
  * athlete — is an outline button plus a confirmation that says what follows.
  */
-const button = cva(
+/**
+ * Exported so a link can wear the button's clothes. A navigation that looks
+ * like a button must still be an `<a>`: middle-click, "open in new tab" and
+ * the screen reader's list of links all depend on it.
+ */
+export const buttonVariants = cva(
   'inline-flex items-center justify-center gap-2 font-semibold whitespace-nowrap ' +
     'transition-colors select-none disabled:cursor-not-allowed ' +
     // Disabled is one appearance for every variant: the design gives it a flat
@@ -40,7 +45,7 @@ const button = cva(
 )
 
 type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> &
-  VariantProps<typeof button> & {
+  VariantProps<typeof buttonVariants> & {
     /** Shown in place of the label while the server is deciding. */
     loadingLabel?: string
   }
@@ -62,7 +67,7 @@ export function Button({
       {...props}
       disabled={disabled === true || loading}
       aria-busy={loading || undefined}
-      className={cn(button({ variant, size }), className)}
+      className={cn(buttonVariants({ variant, size }), className)}
     >
       {loading ? <Spinner /> : null}
       {loading ? loadingLabel : children}

@@ -52,12 +52,37 @@ export const cs = {
     athletes: 'Sportovci',
   },
 
+  /**
+   * Keyed by `sports.code`. One workspace and one sport in MVP, but the header
+   * still reads the code from data rather than assuming hockey (principle 6).
+   */
+  sports: {
+    HOCKEY: 'Lední hokej',
+  },
+
   session: {
     listTitle: 'Tréninky',
-    noSessions: 'Zatím nejsou vypsané žádné tréninky.',
+    noSessions: 'Momentálně nejsou vypsané žádné tréninky.',
     noSessionsHint: 'Jakmile trenér vypíše trénink, uvidíte ho zde.',
+    /* guardian/SPEC.md §G1: shown above the list, not instead of it. */
+    noAthletes: 'Přidejte prvního sportovce a můžete začít rezervovat tréninky.',
+    addAthlete: 'Přidat sportovce',
     allAthletes: 'Všichni sportovci',
+    /* On a guardian's card the range needs naming; in the coach's detail list
+       the row is already labelled `Ročníky`, so the label lives here. */
+    years: 'Ročníky',
+    /* The chip on a date heading. */
+    today: 'Dnes',
+    tomorrow: 'Zítra',
     bookingClosed: 'Přihlašování uzavřeno',
+    /* The footer button when every place is taken. */
+    occupied: 'Obsazeno',
+    lastPlaces: {
+      one: 'Zbývá {count} místo',
+      few: 'Zbývají {count} místa',
+      many: 'Zbývá {count} míst',
+    } satisfies PluralForms,
+    noEligibleYears: 'Žádný z vašich sportovců nesplňuje ročníky',
     cancelled: 'ZRUŠENO TRENÉREM',
     changed: 'ZMĚNĚNO',
     book: 'Přihlásit',
@@ -77,6 +102,20 @@ export const cs = {
 
   booking: {
     pickAthletes: 'Koho chcete přihlásit?',
+    /* guardian/SPEC.md §G2 summary box. */
+    freePlaces: {
+      one: '{count} volné místo',
+      few: '{count} volná místa',
+      many: '{count} volných míst',
+    } satisfies PluralForms,
+    alreadyBookedMeta: 'Už přihlášen',
+    outsideYears: 'mimo ročníky {from}–{to}',
+    removedByCoachShort: 'Odhlášen trenérem',
+    notEligibleShort: 'Nelze přihlásit',
+    cancelUntil: 'Odhlásit lze do {deadline}',
+    booked: 'Přihlášeno',
+    /* G3 — a normal state, not an error, so it is warning rather than danger. */
+    notEnoughTitle: 'Není dostatek volných míst',
     /** Atomic multi-athlete booking: all selected athletes or none (D-05). */
     submit: {
       one: 'Přihlásit {count} sportovce',

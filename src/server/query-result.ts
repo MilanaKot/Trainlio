@@ -9,7 +9,7 @@ import type { PostgrestError } from '@supabase/supabase-js'
  * `const { data } = await supabase...` is the shape the Supabase docs show, and
  * it is a trap in a read path: a failed query gives `data === null`, and every
  * caller here treats null as "nothing found". A parent whose session list
- * failed to load is then told "Zatím nejsou vypsané žádné tréninky" — the same
+ * failed to load is then told "Momentálně nejsou vypsané žádné tréninky" — the same
  * words they would see if the coach had genuinely published nothing.
  *
  * That is exactly what happened: an ambiguous PostgREST embed made every

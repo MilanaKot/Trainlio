@@ -182,7 +182,7 @@ Four defects were found by the new tests and fixed:
 Exit: the deployment is reproducible from the documents, and nothing in
 `OPEN_DECISIONS.md` is open. ✅
 `validation_retention.sql` (61 cases) covers AC-224 to AC-231; AC-232 is in
-`validation_qa.sql`. **151 of 151** acceptance criteria map to a named test.
+`validation_qa.sql`. **154 of 154** acceptance criteria map to a named test.
 
 Two defects were found by writing this phase:
 
@@ -202,6 +202,22 @@ A Content-Security-Policy is deliberately absent. Next injects inline bootstrap
 scripts, so a policy worth having needs per-request nonces threaded through the
 proxy; one with `unsafe-inline` would read like protection and not be any. It
 belongs after launch, not in the same change as everything else.
+
+## Phase 10 — the designed interface
+
+The design handoff (`docs/design/`) arrived after Phase 9, so the screens are
+rebuilt against it one at a time rather than all at once.
+
+- Tokens, fonts and the 17 components of `DESIGN_SYSTEM.md` (`src/app/tokens.css`,
+  `src/components/ui/`)
+- The schema work the design asked for that the MVP did not have: coach names,
+  the guardian's telephone number, `change_seen_at`, the removal notification,
+  assistants, and series over several weekdays
+- G1 `Tréninky` with its booking sheet G2/G3 (AC-266 to AC-268)
+
+Still to come, in the order a parent meets them: `Moje tréninky` and the
+booking detail, the coach's screens, `Trenéři`, then dark mode as a single
+token pass.
 
 ## Review checkpoints
 

@@ -149,12 +149,27 @@ test.describe('a guardian, from first sign-in to a withdrawn booking', () => {
     await expect(card).toBeVisible()
     await expect(card).toContainText('0 / 10')
 
-    await card.getByRole('checkbox').check()
+    // guardian/SPEC.md §G1/§G2 (AC-268): the card opens the sheet, and a family
+    // with one eligible child finds them already selected — one tap to confirm.
     await card.getByRole('button', { name: 'Přihlásit' }).click()
+    const sheet = page.getByRole('dialog')
+    await expect(sheet).toContainText('Koho chcete přihlásit?')
+    await expect(sheet).toContainText('Ivan Kotov')
+    await sheet.getByRole('button', { name: 'Přihlásit' }).click()
+
+    await expect(page.getByText('Přihlášeno', { exact: true })).toBeVisible()
 
     // The count comes from the projection, so it moving is the projection
     // having been maintained — not the client having decremented something.
     await expect(page.locator('li', { hasText: room }).first()).toContainText('1 / 10')
+
+    // And the card now says who is in, without offering to book them twice.
+    await expect(page.locator('li', { hasText: room }).first()).toContainText(
+      'Přihlášen: Ivan Kotov',
+    )
+    await expect(
+      page.locator('li', { hasText: room }).first().getByRole('button', { name: 'Přihlásit' }),
+    ).toBeDisabled()
 
     await page.goto('/moje-treninky')
     await expect(page.getByText('Ivan Kotov')).toBeVisible()
@@ -189,7 +204,9 @@ test.describe('a guardian, from first sign-in to a withdrawn booking', () => {
     await expect(card).toContainText('1 / 1')
 
     // Booked to capacity by another family before this parent ever looked.
-    await expect(card).toContainText('Trénink je plný.')
+    // §G1 (AC-266): the footer says the reason rather than offering a button
+    // that fails.
+    await expect(card.getByRole('button', { name: 'Obsazeno' })).toBeDisabled()
     await expect(card.getByRole('button', { name: 'Přihlásit' })).toHaveCount(0)
   })
 
@@ -201,9 +218,14 @@ test.describe('a guardian, from first sign-in to a withdrawn booking', () => {
     await expect(page.getByText('Ivan Kotov')).toHaveCount(0)
     await expect(page.getByText('Anna Kotova')).toHaveCount(0)
 
-    // D-01: and with no child anywhere, no workspace's sessions either.
+    // D-01: and with no child anywhere, no workspace's sessions either. The
+    // screen says the thing this parent can act on rather than "nothing is on".
     await page.goto('/treninky')
-    await expect(page.getByText('Zatím nejsou vypsané žádné tréninky.')).toBeVisible()
+    await expect(
+      page.getByText('Přidejte prvního sportovce a můžete začít rezervovat tréninky.'),
+    ).toBeVisible()
+    // Scoped to the page: the bottom navigation is a list of items too.
+    await expect(page.locator('main li')).toHaveCount(0)
   })
 
   test('signing out ends the session (AC-002)', async ({ page }) => {

@@ -29,6 +29,8 @@ export type PickerAthlete = {
   athleteId: string
   firstName: string
   lastName: string
+  /** The sheet shows the birth year beside every name (guardian/SPEC.md §G2). */
+  dateOfBirth: string
   eligibility: string
   bookingStatus: BookingStatus | null
   removedByCoach: boolean
@@ -179,6 +181,7 @@ export async function listPickerAthletes(sessionId: string): Promise<PickerAthle
     athleteId: row.athlete_id,
     firstName: row.first_name,
     lastName: row.last_name,
+    dateOfBirth: row.date_of_birth,
     eligibility: row.eligibility,
     bookingStatus: row.booking_status,
     removedByCoach: row.removed_by_coach,
