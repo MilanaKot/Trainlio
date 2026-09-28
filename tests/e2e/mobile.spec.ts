@@ -183,8 +183,11 @@ test.describe('on a phone', () => {
     await expectNoHorizontalScroll(page, 'new athlete')
     await expectTappableControls(page, 'new athlete')
 
-    await page.getByLabel('Jméno').fill('Ivan')
-    await page.getByLabel('Příjmení').fill('Kotov')
+    // The first registration asks who the parent is as well (AC-278).
+    await page.getByLabel('Jméno').first().fill('Milana')
+    await page.getByLabel('Příjmení').first().fill('Kotova')
+    await page.getByLabel('Jméno').last().fill('Ivan')
+    await page.getByLabel('Příjmení').last().fill('Kotov')
     await page.getByLabel('Datum narození').fill('2017-10-23')
     await page.getByLabel('Pozice').selectOption('CENTER')
     await page.getByLabel('Hůl').selectOption('LEFT')

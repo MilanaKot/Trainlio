@@ -1,7 +1,7 @@
 import 'server-only'
 
 import { createClient } from '@/lib/supabase/server'
-import { rows } from '@/server/query-result'
+import { maybeRow, rows } from '@/server/query-result'
 import { logoUrl } from '@/lib/domain/logo'
 import { publicEnv } from '@/lib/env'
 import { PHOTO_BUCKET, PHOTO_SIGNED_URL_SECONDS } from '@/lib/domain/photo'
@@ -161,4 +161,44 @@ export async function listJoinableWorkspaces(): Promise<JoinableWorkspace[]> {
     timezone: w.timezone,
     logoUrl: logoUrl(publicEnv.NEXT_PUBLIC_SUPABASE_URL, w.logo_path),
   }))
+}
+
+export type OwnProfile = {
+  id: string
+  firstName: string
+  lastName: string
+  phone: string
+}
+
+/**
+ * The signed-in person's own profile row.
+ *
+ * Filtered by `current_profile_id()`, not merely selected: since migration 23
+ * a guardian can also read the profile of any coach named on a training they
+ * can see, so an unfiltered `app_profiles` read returns several rows. A
+ * `.maybeSingle()` over that errors rather than picking one, and a failed read
+ * looks exactly like an empty profile — which is how a parent could open their
+ * account screen, see blank fields, and save their own name away.
+ */
+export async function getOwnProfile(): Promise<OwnProfile | null> {
+  const supabase = await createClient()
+
+  const { data: profileId } = await supabase.rpc('current_profile_id')
+  if (!profileId) return null
+
+  const result = await supabase
+    .from('app_profiles')
+    .select('id, first_name, last_name, phone')
+    .eq('id', profileId)
+    .maybeSingle()
+
+  const row = maybeRow('getOwnProfile', result)
+  if (!row) return null
+
+  return {
+    id: row.id,
+    firstName: row.first_name ?? '',
+    lastName: row.last_name ?? '',
+    phone: row.phone ?? '',
+  }
 }

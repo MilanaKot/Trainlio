@@ -661,3 +661,12 @@ Adding several athletes at once is deliberately not atomic, unlike a guardian's 
 
 AC-277  
 A club has an emblem or it has none, and one that has none shows nothing rather than a monogram standing in for it. Only an administrator of that club may set or clear it (D-17); a coach and a parent are refused, and the refusal changes nothing. The stored path names that club's own folder — a path naming another workspace, or no folder at all, is refused — because the storage policy reads the folder as the workspace. Setting the same mark again is not a change and writes no second audit entry; setting or clearing one is, and is recorded. The bucket is public, deliberately and unlike the athlete bucket, because the mark travels in the e-mails a parent receives and a mail client can follow neither a signed URL nor private storage. In the message it is an image whose alternative text is the club's name, and the message reads identically without it.
+
+## The parent says who they are (guardian/SPEC.md §G16)
+
+AC-278  
+Given a guardian registering their first athlete, and holding no name of their own  
+Then the form asks for it in the words of §G16 — a first name, an optional surname, and an optional telephone number under the sentence that says who reads it and why — before it asks about the child. A second athlete is registered on the same screen without the block. A telephone number that is not a number is refused on its own field, and the athlete is not created. The name reaches the coach's roster as `Přihlásil …` and the number reaches the athlete sheet, which is the reason it is asked at all.
+
+AC-279  
+A guardian's own profile is read filtered by their own profile id. Since a guardian can also read the profile of any coach named on a training they can see, an unfiltered read returns several rows, and the failure renders as an empty account form — which would invite a parent to save their own name away.

@@ -152,3 +152,18 @@ putting the mark in e-mails: a mail client can follow neither a signed URL that
 expires in an hour nor private storage. A club's emblem is its public face; a
 child's photograph is not, and that bucket keeps its 60-minute signed URLs
 (BR-093, AC-092, D-19).
+
+## A parent's surname is optional
+
+`guardian/SPEC.md` §G16 marks both `Jméno` and `Příjmení` required. The first
+name is required here; the surname is not, on both the account screen and the
+new block in the first-athlete form.
+
+The reason is the one already written into the account screen: a parent may be
+"Jana" on a roster if that is how they want to be known, and the roster reads
+`Přihlásil Jana` perfectly well. What the coach actually needs is _a_ name to
+call out and a way to reach them — not a full legal one. A surname alone is
+still refused, because `Přihlásil Nováková` is a form, not a person.
+
+Worth revisiting if a coach ever cannot tell two Janas apart; cheap to change,
+since it is one validation rule in `updateOwnProfile`.

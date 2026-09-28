@@ -25,7 +25,7 @@ concurrency proof, a live-stack integration suite, 271 unit tests and 64 browser
 flows including a mobile viewport review.
 See [`supabase/VALIDATION.md`](supabase/VALIDATION.md).
 
-**All 163 acceptance criteria map to a named test**, checked mechanically by
+**All 165 acceptance criteria map to a named test**, checked mechanically by
 `pnpm qa:coverage` on every push. Nothing in
 [`docs/OPEN_DECISIONS.md`](docs/OPEN_DECISIONS.md) is open.
 

@@ -173,14 +173,26 @@ test.describe('a guardian, from first sign-in to a withdrawn booking', () => {
     await expect(page.getByText('Zatím nemáte žádného sportovce.')).toBeVisible()
     await page.getByRole('link', { name: 'Přidat sportovce' }).first().click()
 
-    await page.getByLabel('Jméno').fill('Ivan')
-    await page.getByLabel('Příjmení').fill('Kotov')
+    // AC-278 / AC-279: the first registration asks who the parent is, because the
+    // coach's roster names whoever booked each child.
+    await expect(page.getByText('Vaše údaje')).toBeVisible()
+    await page.getByLabel('Jméno').first().fill('Milana')
+    await page.getByLabel('Příjmení').first().fill('Kotova')
+    await page.getByLabel('Telefon').fill('777 123 456')
+
+    await page.getByLabel('Jméno').last().fill('Ivan')
+    await page.getByLabel('Příjmení').last().fill('Kotov')
     await page.getByLabel('Datum narození').fill('2017-10-23')
     await page.getByLabel('Pozice').selectOption('CENTER')
     await page.getByLabel('Hůl').selectOption('LEFT')
     await page.getByRole('button', { name: 'Uložit' }).click()
 
     await expect(page.getByText('Ivan Kotov')).toBeVisible()
+
+    // Asked once. A second child meets the same screen without the block.
+    await page.goto('/moji-sportovci/novy')
+    await expect(page.getByText('Vaše údaje')).toHaveCount(0)
+    await page.goto('/moji-sportovci')
 
     // D-01: the workspace only becomes visible once a child belongs to it.
     await page.goto('/treninky')
@@ -209,6 +221,14 @@ test.describe('a guardian, from first sign-in to a withdrawn booking', () => {
     await expect(
       page.locator('li', { hasText: room }).first().getByRole('button', { name: 'Přihlásit' }),
     ).toBeDisabled()
+
+    // AC-279: read after booking on purpose. The coach of this training is now
+    // a profile this guardian may also read, so an unfiltered profile query
+    // returns two rows — and the failure renders as an empty form inviting the
+    // parent to save their own name away.
+    await page.goto('/ucet')
+    await expect(page.getByLabel('Jméno')).toHaveValue('Milana')
+    await expect(page.getByLabel('Telefon')).toHaveValue('777 123 456')
 
     await page.goto('/moje-treninky')
     await expect(page.getByText('Ivan Kotov')).toBeVisible()
@@ -246,8 +266,11 @@ test.describe('a guardian, from first sign-in to a withdrawn booking', () => {
 
     await signIn(page, parent)
     await page.goto('/moji-sportovci/novy')
-    await page.getByLabel('Jméno').fill('Anna')
-    await page.getByLabel('Příjmení').fill('Kotova')
+    // §G16 fields first: this parent has no name yet either.
+    await page.getByLabel('Jméno').first().fill('Hana')
+    await page.getByLabel('Příjmení').first().fill('Kotova')
+    await page.getByLabel('Jméno').last().fill('Anna')
+    await page.getByLabel('Příjmení').last().fill('Kotova')
     await page.getByLabel('Datum narození').fill('2018-03-04')
     await page.getByLabel('Pozice').selectOption('GOALIE')
     await page.getByLabel('Hůl').selectOption('RIGHT')
@@ -293,8 +316,10 @@ test.describe('a guardian, from first sign-in to a withdrawn booking', () => {
 
     await signIn(page, parent)
     await page.goto('/moji-sportovci/novy')
-    await page.getByLabel('Jméno').fill('Petr')
-    await page.getByLabel('Příjmení').fill('Kotov')
+    await page.getByLabel('Jméno').first().fill('Jana')
+    await page.getByLabel('Příjmení').first().fill('Kotova')
+    await page.getByLabel('Jméno').last().fill('Petr')
+    await page.getByLabel('Příjmení').last().fill('Kotov')
     await page.getByLabel('Datum narození').fill('2017-02-02')
     await page.getByLabel('Pozice').selectOption('CENTER')
     await page.getByLabel('Hůl').selectOption('LEFT')

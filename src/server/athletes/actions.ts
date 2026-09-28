@@ -3,6 +3,8 @@
 import { randomUUID } from 'node:crypto'
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
+import { updateOwnProfile } from '@/server/auth/actions'
+import { normalisePhone } from '@/lib/domain/phone'
 import { validateAthlete, type AthleteInput } from '@/lib/domain/athlete'
 import { checkPhoto, photoBelongsToAthlete, photoPath, PHOTO_BUCKET } from '@/lib/domain/photo'
 import { DEFAULT_TIMEZONE, localDateKey } from '@/lib/time/workspace-time'
@@ -80,6 +82,31 @@ export async function createAthlete(
 
   if (!validated.ok) {
     return { ok: false, code: 'VALIDATION', fieldErrors: validated.errors }
+  }
+
+  // The guardian's own details, when the form asked for them — which it does
+  // only for a parent who has none yet. Saved first and separately: the
+  // coach's roster names whoever booked, and a parent who gets through this
+  // form without a name is a dash where the coach needs a person. If the
+  // athlete then fails to save, the parent keeps their name, which is the
+  // harmless half of the two.
+  const guardianFirstName = String(form.get('guardianFirstName') ?? '').trim()
+  if (guardianFirstName !== '') {
+    const guardianPhone = String(form.get('guardianPhone') ?? '')
+
+    // Checked here so the refusal lands on the field it is about. The same
+    // check runs again inside updateOwnProfile, and the column constraint
+    // behind it is what actually decides (migration 22).
+    if (!normalisePhone(guardianPhone).ok) {
+      return { ok: false, code: 'VALIDATION', fieldErrors: { guardianPhone: 'PHONE_FORMAT' } }
+    }
+
+    const saved = await updateOwnProfile(
+      guardianFirstName,
+      String(form.get('guardianLastName') ?? ''),
+      guardianPhone,
+    )
+    if (!saved.ok) return { ok: false, code: 'generic' }
   }
 
   const supabase = await createClient()

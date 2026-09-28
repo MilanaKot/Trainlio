@@ -257,6 +257,7 @@ export const cs = {
     save: 'Uložit',
     saving: 'Ukládám…',
     errors: {
+      PHONE_FORMAT: 'Telefonní číslo není platné. Zkuste například 777 123 456.',
       FIRST_NAME_REQUIRED: 'Zadejte jméno.',
       LAST_NAME_REQUIRED: 'Zadejte příjmení.',
       NAME_TOO_LONG: 'Jméno je příliš dlouhé.',
@@ -597,6 +598,11 @@ export const cs = {
 
   account: {
     title: 'Účet',
+    /* Asked once, in the form where a parent registers their first child.
+       guardian/SPEC.md §G16 is the source of these words; the coach's roster
+       is the reason they are asked at all. */
+    yourDetails: 'Vaše údaje',
+    yourDetailsIntro: 'Trenér uvidí, kdo sportovce přihlásil.',
     firstName: 'Jméno',
     lastName: 'Příjmení',
     nameHint: 'Jak vás uvidí trenér.',

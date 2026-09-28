@@ -182,7 +182,7 @@ Four defects were found by the new tests and fixed:
 Exit: the deployment is reproducible from the documents, and nothing in
 `OPEN_DECISIONS.md` is open. ✅
 `validation_retention.sql` (61 cases) covers AC-224 to AC-231; AC-232 is in
-`validation_qa.sql`. **163 of 163** acceptance criteria map to a named test.
+`validation_qa.sql`. **165 of 165** acceptance criteria map to a named test.
 
 Two defects were found by writing this phase:
 
@@ -225,6 +225,8 @@ rebuilt against it one at a time rather than all at once.
 
 The club's own mark (migration 29, AC-277) was asked for after the handoff and
 is not in it; `docs/DESIGN_DEVIATIONS.md` records the three choices made here.
+The first-athlete form now also asks who the parent is (AC-278), in the words
+of §G16, because the coach's roster names whoever booked each child.
 
 Still to come: the editing screens (K3, K4), the sign-in screens (G11, G12),
 `Trenéři`, then dark mode as a single token pass. The coach group still

@@ -17,6 +17,12 @@ type Props = {
   workspaceName: string
   timezone: string
   athlete?: GuardianAthlete | undefined
+  /**
+   * Asked for only when the parent has no name of their own yet. The coach's
+   * roster names whoever booked each child, and a parent who registers without
+   * one is a dash where the coach needs a person to call.
+   */
+  askGuardianDetails?: boolean
 }
 
 const t = messages.athlete
@@ -35,7 +41,13 @@ function errorText(code: string | undefined): string {
  * parent can pick are the values the database accepts — the Czech labels exist
  * only in the label map.
  */
-export function AthleteForm({ workspaceId, workspaceName, timezone, athlete }: Props) {
+export function AthleteForm({
+  workspaceId,
+  workspaceName,
+  timezone,
+  athlete,
+  askGuardianDetails = false,
+}: Props) {
   const router = useRouter()
   const isEdit = Boolean(athlete)
   const hockey = athlete?.sportProfiles.find((p) => p.sportCode === 'HOCKEY')
@@ -84,6 +96,42 @@ export function AthleteForm({ workspaceId, workspaceName, timezone, athlete }: P
 
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-6">
+      {/* First, because it is about the person filling the form in, and
+          because guardian/SPEC.md §G16 is where these words come from. */}
+      {askGuardianDetails ? (
+        <fieldset className="flex flex-col gap-4">
+          <legend className="mb-2 text-sm font-semibold uppercase tracking-wide opacity-60">
+            {messages.account.yourDetails}
+          </legend>
+          <p className="text-sm opacity-70">{messages.account.yourDetailsIntro}</p>
+
+          <label className="flex flex-col gap-2 text-sm font-medium">
+            {messages.account.firstName}
+            <input name="guardianFirstName" required className={inputClass} />
+          </label>
+          {fieldError('guardianFirstName')}
+
+          <label className="flex flex-col gap-2 text-sm font-medium">
+            {messages.account.lastName}
+            <input name="guardianLastName" className={inputClass} />
+          </label>
+
+          <label className="flex flex-col gap-2 text-sm font-medium">
+            {messages.account.phone}
+            <input
+              name="guardianPhone"
+              type="tel"
+              inputMode="tel"
+              autoComplete="tel"
+              placeholder={messages.account.phonePlaceholder}
+              className={inputClass}
+            />
+            <span className="text-xs font-normal opacity-70">{messages.account.phoneHint}</span>
+          </label>
+          {fieldError('guardianPhone')}
+        </fieldset>
+      ) : null}
+
       <fieldset className="flex flex-col gap-4">
         <legend className="mb-2 text-sm font-semibold uppercase tracking-wide opacity-60">
           {t.coreSection}
