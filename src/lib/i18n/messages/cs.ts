@@ -37,6 +37,8 @@ export const cs = {
   },
 
   nav: {
+    /* The landmark's own name, not one of its items. */
+    label: 'Hlavní navigace',
     sessions: 'Tréninky',
     myBookings: 'Moje tréninky',
     myAthletes: 'Moji sportovci',

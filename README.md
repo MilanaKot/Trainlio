@@ -21,7 +21,7 @@ management, coach session management, recurring series, the booking engine, the
 coach roster, transactional notifications and the account-anonymisation
 workflow are in place. Twenty-seven migrations apply clean, the database lint
 reports no error-level finding, and 678 validation cases pass — plus a
-concurrency proof, a live-stack integration suite, 188 unit tests and 61 browser
+concurrency proof, a live-stack integration suite, 188 unit tests and 62 browser
 flows including a mobile viewport review.
 See [`supabase/VALIDATION.md`](supabase/VALIDATION.md).
 

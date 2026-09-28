@@ -76,6 +76,61 @@ async function expectTappableControls(page: Page, where: string) {
   expect(tooSmall, `${where} has controls under ${MIN_TAP}px tall`).toEqual([])
 }
 
+/**
+ * WCAG contrast between two computed colours, measured in the browser.
+ *
+ * Read rather than reasoned about: a Tailwind class can be overridden, a
+ * custom property can stop existing, and either way the arithmetic done on the
+ * intended colours says nothing about what a parent actually sees. This is how
+ * the bottom bar was found rendering transparent — `bg-[var(--background)]`
+ * survived a token rename, and `background-color` came back `rgba(0, 0, 0, 0)`.
+ */
+async function contrastInNav(page: Page, selector: string) {
+  return page.evaluate((sel) => {
+    const parse = (value: string): number[] => {
+      const parts = value.match(/[\d.]+/g)?.map(Number) ?? []
+      return [parts[0] ?? 0, parts[1] ?? 0, parts[2] ?? 0, parts[3] ?? 1]
+    }
+    const luminance = (rgb: number[]) =>
+      rgb
+        .slice(0, 3)
+        .map((c) => {
+          const v = (c ?? 0) / 255
+          return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4
+        })
+        .reduce((sum, v, i) => sum + v * [0.2126, 0.7152, 0.0722][i]!, 0)
+
+    const nav = document.querySelector('nav')
+    if (!nav) return null
+    const background = parse(getComputedStyle(nav).backgroundColor)
+
+    const results = [...nav.querySelectorAll(sel)].map((el) => {
+      const colour = parse(getComputedStyle(el as Element).color)
+
+      // `opacity` dims what is painted without touching the computed `color`,
+      // so a label at `opacity-60` reads as full-strength ink unless the
+      // element's own opacity, and every ancestor's up to the bar, is folded
+      // into the alpha. Missing this is how a 4.4:1 label measured 16:1.
+      let alpha = colour[3] ?? 1
+      for (let node: Element | null = el as Element; node; node = node.parentElement) {
+        alpha *= Number(getComputedStyle(node).opacity)
+        if (node === nav) break
+      }
+
+      const composited = [0, 1, 2].map(
+        (i) => alpha * (colour[i] ?? 0) + (1 - alpha) * (background[i] ?? 255),
+      )
+      const a = luminance(composited)
+      const c = luminance(background)
+      return {
+        label: (el as HTMLElement).innerText.trim(),
+        ratio: (Math.max(a, c) + 0.05) / (Math.min(a, c) + 0.05),
+      }
+    })
+    return { backgroundAlpha: background[3] ?? 1, results }
+  }, selector)
+}
+
 async function openSession(coachEmail: string, changingRoom: string): Promise<string> {
   const token = await tokenFor(coachEmail)
   const { workspaceId, profileId } = await grantCoach(coachEmail)
@@ -174,6 +229,28 @@ test.describe('on a phone', () => {
       )
       expect(box!.height, `${label} is not thumb-sized`).toBeGreaterThanOrEqual(MIN_TAP)
     }
+  })
+
+  // The bar is fixed over the page, so a transparent one is not merely plain:
+  // the last row of every list scrolls underneath it and stays readable enough
+  // to look like part of the bar.
+  test('the bottom navigation is opaque and its labels are legible', async ({ page }) => {
+    await signIn(page, uniqueEmail('rodic'))
+    await page.goto('/moji-sportovci')
+
+    const measured = await contrastInNav(page, 'a[href]')
+    expect(measured, 'no bottom navigation was rendered').not.toBeNull()
+
+    expect(
+      measured!.backgroundAlpha,
+      'the fixed bottom bar has no opaque background, so content scrolls through it',
+    ).toBe(1)
+
+    const illegible = measured!.results.filter((r) => r.ratio < 4.5)
+    expect(
+      illegible.map((r) => `${r.label}: ${r.ratio.toFixed(2)}:1`),
+      'bottom navigation labels below the 4.5:1 WCAG AA minimum',
+    ).toEqual([])
   })
 
   test('the coach roster fits on a phone at the rink', async ({ page }) => {

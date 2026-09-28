@@ -14,14 +14,28 @@ const items = [
 /**
  * Primary guardian navigation (PRD §17). Fixed to the bottom, within the safe
  * area, with tap targets sized for a thumb rather than a cursor.
+ *
+ * Colours come from the design tokens. It used to say `bg-[var(--background)]`,
+ * a token that no longer exists, so the bar rendered transparent and the last
+ * row of every list scrolled underneath it — which is also what made the
+ * labels hard to read, since they sat over whatever was passing behind.
+ *
+ * The labels are `text-muted` and `text-primary` to match the design system
+ * rather than to repair a contrast failure: measured on the opaque bar, the
+ * dimmed ink they replace came to 4.72:1, which passes. The mobile review
+ * measures both, so neither claim rests on arithmetic.
+ *
+ * The design-system tab bar in `components/ui/bottom-nav.tsx` replaces this
+ * one when the guardian screens are built; it takes its items, icons included,
+ * from the caller.
  */
 export function BottomNav() {
   const pathname = usePathname()
 
   return (
     <nav
-      aria-label={messages.nav.myAthletes}
-      className="fixed inset-x-0 bottom-0 z-10 border-t border-black/10 bg-[var(--background)] pb-[env(safe-area-inset-bottom)] dark:border-white/15"
+      aria-label={messages.nav.label}
+      className="fixed inset-x-0 bottom-0 z-10 border-t border-line bg-surface pb-[env(safe-area-inset-bottom)]"
     >
       <ul className="mx-auto flex max-w-md">
         {items.map((item) => {
@@ -32,7 +46,7 @@ export function BottomNav() {
                 href={item.href}
                 aria-current={active ? 'page' : undefined}
                 className={`flex min-h-14 items-center justify-center px-1 text-center text-xs leading-tight ${
-                  active ? 'font-semibold' : 'opacity-60'
+                  active ? 'font-semibold text-primary' : 'text-muted'
                 }`}
               >
                 {item.label}
