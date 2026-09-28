@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation'
 import { getCoachWorkspace } from '@/server/sessions/queries'
 import { getWorkspaceStaff } from '@/server/staff/queries'
 import { StaffList } from '@/components/staff/staff-list'
+import { ClubMarkField } from '@/components/staff/club-mark-field'
 import { messages } from '@/lib/i18n'
 
 /**
@@ -23,6 +24,16 @@ export default async function StaffPage() {
       <h1 className="text-2xl font-semibold">{messages.staff.title}</h1>
       <p className="text-sm opacity-70">{messages.staff.intro}</p>
       <StaffList workspaceId={workspace.id} staff={staff} canAdd={canAdd} />
+
+      {/* Same gate as the staff controls: `isEditable` is the database's own
+          answer to "may this person administer the club", not a role this page
+          decided to trust. */}
+      <ClubMarkField
+        workspaceId={workspace.id}
+        workspaceName={workspace.name}
+        logoUrl={workspace.logoUrl}
+        canEdit={canAdd}
+      />
     </main>
   )
 }

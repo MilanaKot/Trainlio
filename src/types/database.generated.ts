@@ -1042,6 +1042,7 @@ export type Database = {
           delivery_email_retention_days: number
           id: string
           is_active: boolean
+          logo_path: string | null
           name: string
           primary_sport_id: string
           timezone: string
@@ -1053,6 +1054,7 @@ export type Database = {
           delivery_email_retention_days?: number
           id?: string
           is_active?: boolean
+          logo_path?: string | null
           name: string
           primary_sport_id: string
           timezone?: string
@@ -1064,6 +1066,7 @@ export type Database = {
           delivery_email_retention_days?: number
           id?: string
           is_active?: boolean
+          logo_path?: string | null
           name?: string
           primary_sport_id?: string
           timezone?: string
@@ -1156,6 +1159,7 @@ export type Database = {
           event_type: string
           recipient_email: string
           session_payload: Json
+          workspace_logo_path: string
           workspace_name: string
           workspace_timezone: string
         }[]
@@ -1309,6 +1313,7 @@ export type Database = {
         Args: never
         Returns: {
           id: string
+          logo_path: string
           name: string
           primary_sport_id: string
           sport_code: string
@@ -1413,6 +1418,10 @@ export type Database = {
       }
       set_session_booking_state: {
         Args: { p_open: boolean; p_training_session_id: string }
+        Returns: Json
+      }
+      set_workspace_logo: {
+        Args: { p_logo_path?: string; p_workspace_id: string }
         Returns: Json
       }
       update_training_session: {

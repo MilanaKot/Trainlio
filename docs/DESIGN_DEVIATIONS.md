@@ -124,3 +124,31 @@ The cost is that a card with a long note is taller than the design's.
 
 **To decide:** clamp it to two lines on the card, move it into the booking
 sheet, or leave it as it is.
+
+## The club's mark is not in the design
+
+Every header in the handoff is the product's — `Tréninky` with
+`Lední hokej · Příbram` beneath it — and the only brand mark anywhere is the
+Trainlio wordmark on the sign-in screen. A club emblem was asked for after the
+design arrived, so three choices were made here rather than drawn:
+
+A rounded square with the image contained inside it, not a circle. Club
+emblems are shields and crests, and a circular crop cuts their corners off. A
+white tile behind it, because a logo drawn for white paper disappears on the
+app's grey.
+
+Nothing at all when a club has no mark, rather than a monogram: a placeholder
+standing in for information that does not exist is noise.
+
+In the e-mail it is 40px beside the club's name, with the name as its
+alternative text. Mail clients refuse remote images until the reader asks, so
+nothing the message says is inside the picture.
+
+All three are one component (`components/ui/club-mark.tsx`) and cheap for the
+designer to overrule.
+
+**The bucket is public**, unlike `athlete-photos`. That is the consequence of
+putting the mark in e-mails: a mail client can follow neither a signed URL that
+expires in an hour nor private storage. A club's emblem is its public face; a
+child's photograph is not, and that bucket keeps its 60-minute signed URLs
+(BR-093, AC-092, D-19).

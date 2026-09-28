@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
+import { LOGO_BUCKET, checkLogo, logoPath } from '@/lib/domain/logo'
 
 /**
  * Managing the coaching staff (D-11, DESIGN_BRIEF §34).
@@ -127,5 +128,63 @@ export async function setMemberActive(
   }
 
   refresh()
+  return { ok: true }
+}
+
+/**
+ * Upload or clear the club's mark (migration 29).
+ *
+ * Two steps that must agree: the object goes into public storage, then the
+ * path is recorded through the domain function. The function is what checks
+ * the administrator role and audits the change — the storage policy checks the
+ * same thing independently, so neither is the only gate.
+ *
+ * If recording the path fails the object is removed again, rather than leaving
+ * a file nobody references in a public bucket.
+ */
+export async function setWorkspaceLogo(
+  workspaceId: string,
+  file: File | null,
+): Promise<StaffResult> {
+  const supabase = await createClient()
+
+  if (file === null || file.size === 0) {
+    // No path at all: the domain function reads that as "clear it".
+    const { data, error } = await supabase.rpc('set_workspace_logo', {
+      p_workspace_id: workspaceId,
+    })
+    if (error) return { ok: false, code: 'generic' }
+    const cleared = readRpc(data)
+    if (!cleared.ok) return { ok: false, code: cleared.code ?? 'generic' }
+    revalidatePath('/trener/treneri')
+    return { ok: true }
+  }
+
+  const rejection = checkLogo(file)
+  if (rejection) return { ok: false, code: rejection }
+
+  const path = logoPath(workspaceId, file.type, crypto.randomUUID())
+
+  const uploaded = await supabase.storage.from(LOGO_BUCKET).upload(path, file, {
+    contentType: file.type,
+    // A fresh name each time, so nothing is ever overwritten and no cache can
+    // serve the previous emblem.
+    upsert: false,
+  })
+  if (uploaded.error) return { ok: false, code: 'LOGO_UPLOAD_FAILED' }
+
+  const { data, error } = await supabase.rpc('set_workspace_logo', {
+    p_workspace_id: workspaceId,
+    p_logo_path: path,
+  })
+
+  if (error || !readRpc(data).ok) {
+    await supabase.storage.from(LOGO_BUCKET).remove([path])
+    return { ok: false, code: readRpc(data).code ?? 'generic' }
+  }
+
+  revalidatePath('/trener/treneri')
+  revalidatePath('/trener')
+  revalidatePath('/treninky')
   return { ok: true }
 }

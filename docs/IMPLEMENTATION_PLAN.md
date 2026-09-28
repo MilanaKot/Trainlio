@@ -182,7 +182,7 @@ Four defects were found by the new tests and fixed:
 Exit: the deployment is reproducible from the documents, and nothing in
 `OPEN_DECISIONS.md` is open. ✅
 `validation_retention.sql` (61 cases) covers AC-224 to AC-231; AC-232 is in
-`validation_qa.sql`. **162 of 162** acceptance criteria map to a named test.
+`validation_qa.sql`. **163 of 163** acceptance criteria map to a named test.
 
 Two defects were found by writing this phase:
 
@@ -222,6 +222,9 @@ rebuilt against it one at a time rather than all at once.
 - K2 the session detail and its roster, with the athlete sheet (K7), the
   capacity override (K7b), closing registration (K5) and cancelling (K6)
   (AC-274 to AC-276)
+
+The club's own mark (migration 29, AC-277) was asked for after the handoff and
+is not in it; `docs/DESIGN_DEVIATIONS.md` records the three choices made here.
 
 Still to come: the editing screens (K3, K4), the sign-in screens (G11, G12),
 `Trenéři`, then dark mode as a single token pass. The coach group still

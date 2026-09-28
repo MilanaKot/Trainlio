@@ -656,3 +656,8 @@ Removing an athlete says what follows before it happens — the place is freed, 
 
 AC-276  
 Adding several athletes at once is deliberately not atomic, unlike a guardian's booking (D-05): a coach adding three to a session with two places gets two added and one question asked, and the ones that succeeded stay.
+
+## The club's own mark
+
+AC-277  
+A club has an emblem or it has none, and one that has none shows nothing rather than a monogram standing in for it. Only an administrator of that club may set or clear it (D-17); a coach and a parent are refused, and the refusal changes nothing. The stored path names that club's own folder — a path naming another workspace, or no folder at all, is refused — because the storage policy reads the folder as the workspace. Setting the same mark again is not a change and writes no second audit entry; setting or clearing one is, and is recorded. The bucket is public, deliberately and unlike the athlete bucket, because the mark travels in the e-mails a parent receives and a mail client can follow neither a signed URL nor private storage. In the message it is an image whose alternative text is the club's name, and the message reads identically without it.

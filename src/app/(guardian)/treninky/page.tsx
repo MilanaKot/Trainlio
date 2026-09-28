@@ -7,6 +7,7 @@ import {
 import { listGuardianAthletes, listJoinableWorkspaces } from '@/server/athletes/queries'
 import { TrainingCard } from '@/components/booking/training-card'
 import { TodayChip } from '@/components/ui/badge'
+import { ClubMark } from '@/components/ui/club-mark'
 import { buttonVariants } from '@/components/ui/button'
 import { EmptyState } from '@/components/ui/empty-state'
 import { groupByLocalDay } from '@/lib/domain/session-list'
@@ -60,9 +61,12 @@ export default async function SessionsPage() {
 
   return (
     <main className="flex flex-col gap-5">
-      <header className="flex flex-col gap-1">
-        <h1 className="font-display text-page font-bold text-ink">{t.listTitle}</h1>
-        {meta.length > 0 ? <p className="text-meta text-muted">{meta.join(' · ')}</p> : null}
+      <header className="flex items-center gap-3">
+        <ClubMark url={workspace?.logoUrl ?? null} name={workspace?.name ?? ''} />
+        <div className="flex min-w-0 flex-col gap-1">
+          <h1 className="font-display text-page font-bold text-ink">{t.listTitle}</h1>
+          {meta.length > 0 ? <p className="text-meta text-muted">{meta.join(' · ')}</p> : null}
+        </div>
       </header>
 
       {/* D-01 means these two are never both relevant: a family with no athlete

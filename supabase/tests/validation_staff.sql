@@ -424,3 +424,80 @@ select pg_temp.check(
 
 update public.workspace_members set is_active = true
  where profile_id = :COACH and workspace_id = pg_temp.ws();
+
+\echo ''
+\echo '── The club mark (AC-277) ──────────────────────────────────────────'
+-- Not in the design handoff; added on request and recorded in
+-- docs/DESIGN_DEVIATIONS.md.
+select pg_temp.check(
+  (select (logo_path is null)::text from public.workspaces where id = pg_temp.ws()),
+  'true', 'a club starts with no mark (AC-277)');
+
+select pg_temp.check(
+  pg_temp.as_user(:COACH, format($$select (public.set_workspace_logo(%L::uuid,
+    'logos/%s/a.png') ->> 'code')$$, pg_temp.ws(), pg_temp.ws())),
+  'NOT_AUTHORIZED', 'a coach cannot change it (AC-277, D-17)');
+select pg_temp.check(
+  pg_temp.as_user(:A, format($$select (public.set_workspace_logo(%L::uuid,
+    'logos/%s/a.png') ->> 'code')$$, pg_temp.ws(), pg_temp.ws())),
+  'NOT_AUTHORIZED', 'nor can a parent (AC-277)');
+select pg_temp.check(
+  (select (logo_path is null)::text from public.workspaces where id = pg_temp.ws()),
+  'true', 'and neither refusal changed anything (AC-277)');
+
+select pg_temp.check(
+  pg_temp.as_user(:ADMIN, format($$select (public.set_workspace_logo(%L::uuid,
+    'logos/%s/mark.png') ->> 'ok')$$, pg_temp.ws(), pg_temp.ws())),
+  'true', 'an administrator can (AC-277)');
+select pg_temp.check(
+  (select logo_path from public.workspaces where id = pg_temp.ws()),
+  format('logos/%s/mark.png', pg_temp.ws()), 'and the path is stored (AC-277)');
+select pg_temp.check(
+  (select count(*)::text from public.audit_log
+   where action = 'WORKSPACE_LOGO_CHANGED' and entity_id = pg_temp.ws()),
+  '1', 'the change is audited (AC-277)');
+
+-- The path names the folder the storage policy reads as the workspace, so a
+-- path naming another one would be a mark this club could write into another
+-- club's folder.
+select pg_temp.check(
+  pg_temp.as_user(:ADMIN, format($$select (public.set_workspace_logo(%L::uuid,
+    'logos/00000000-0000-0000-0000-000000000001/x.png') ->> 'code')$$, pg_temp.ws())),
+  'INVALID_LOGO_PATH', 'a path naming another workspace is refused (AC-277)');
+select pg_temp.check(
+  pg_temp.as_user(:ADMIN, format($$select (public.set_workspace_logo(%L::uuid,
+    'x.png') ->> 'code')$$, pg_temp.ws())),
+  'INVALID_LOGO_PATH', 'and so is one with no folder at all (AC-277)');
+
+-- Setting the same mark twice writes no second entry, so the log stays a log
+-- of changes.
+select pg_temp.check(
+  pg_temp.as_user(:ADMIN, format($$select (public.set_workspace_logo(%L::uuid,
+    'logos/%s/mark.png') -> 'data' ->> 'unchanged')$$, pg_temp.ws(), pg_temp.ws())),
+  'true', 'setting the same mark again changes nothing (AC-277)');
+select pg_temp.check(
+  (select count(*)::text from public.audit_log
+   where action = 'WORKSPACE_LOGO_CHANGED' and entity_id = pg_temp.ws()),
+  '1', 'and writes no second audit entry (AC-277)');
+
+select pg_temp.check(
+  pg_temp.as_user(:ADMIN, format($$select (public.set_workspace_logo(%L::uuid) ->> 'ok')$$,
+    pg_temp.ws())),
+  'true', 'calling it without a path clears the mark (AC-277)');
+select pg_temp.check(
+  (select (logo_path is null)::text from public.workspaces where id = pg_temp.ws()),
+  'true', 'and the club has none again (AC-277)');
+select pg_temp.check(
+  (select count(*)::text from public.audit_log
+   where action = 'WORKSPACE_LOGO_CHANGED' and entity_id = pg_temp.ws()),
+  '2', 'which is itself a change worth recording (AC-277)');
+
+-- The bucket is public on purpose: the mark travels in e-mails, and a mail
+-- client can follow neither a signed URL nor a private bucket. The athlete
+-- bucket is the opposite and must stay that way (BR-093, AC-092).
+select pg_temp.check(
+  (select public::text from storage.buckets where id = 'workspace-logos'),
+  'true', 'the logo bucket is public (AC-277)');
+select pg_temp.check(
+  (select public::text from storage.buckets where id = 'athlete-photos'),
+  'false', 'and the athlete bucket is still not (AC-277, AC-092)');

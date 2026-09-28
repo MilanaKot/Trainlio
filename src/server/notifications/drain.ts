@@ -2,6 +2,7 @@ import 'server-only'
 
 import { createAdminClient } from '@/lib/supabase/admin'
 import { getServerEnv, publicEnv } from '@/lib/env'
+import { logoUrl } from '@/lib/domain/logo'
 import { resendProvider } from '@/lib/email/resend'
 import { composeNotificationEmail, type ClaimedDelivery } from '@/lib/notifications/compose'
 import type { EmailProvider } from '@/lib/email/types'
@@ -46,6 +47,7 @@ type ClaimRow = {
   delivery_payload: Record<string, unknown> | null
   workspace_name: string
   workspace_timezone: string
+  workspace_logo_path: string | null
 }
 
 function toClaimedDelivery(row: ClaimRow): ClaimedDelivery {
@@ -68,6 +70,10 @@ function toClaimedDelivery(row: ClaimRow): ClaimedDelivery {
       ? names.filter((n): n is string => typeof n === 'string')
       : [],
     workspaceTimezone: row.workspace_timezone as Timezone,
+    workspaceName: row.workspace_name,
+    // Built here rather than read: the drain has no browser storage client,
+    // and the URL has to be absolute and public for a mail client to fetch it.
+    workspaceLogoUrl: logoUrl(publicEnv.NEXT_PUBLIC_SUPABASE_URL, row.workspace_logo_path),
   }
 }
 

@@ -256,3 +256,39 @@ describe('a coach removed one child (§G4b)', () => {
     expect(message.text).toContain('Trénink se koná')
   })
 })
+
+describe('the club mark in the message (AC-277)', () => {
+  const marked = () =>
+    delivery({
+      workspaceName: 'Příbram — hokejový trénink',
+      workspaceLogoUrl: 'https://x.supabase.co/storage/v1/object/public/workspace-logos/a/b.png',
+    })
+
+  it('is an image whose alternative text is the club', () => {
+    const html = composeNotificationEmail(marked(), APP)?.html ?? ''
+    expect(html).toContain(
+      'src="https://x.supabase.co/storage/v1/object/public/workspace-logos/a/b.png"',
+    )
+    expect(html).toContain('alt="Příbram — hokejový trénink"')
+  })
+
+  // Most mail clients refuse remote images until the reader asks. The message
+  // has to be whole without it, so nothing it says lives inside the picture.
+  it('carries nothing the message needs', () => {
+    const withMark = composeNotificationEmail(marked(), APP)
+    const without = composeNotificationEmail(delivery(), APP)
+    expect(withMark?.text).toBe(without?.text)
+    expect(withMark?.subject).toBe(without?.subject)
+  })
+
+  it('adds nothing at all for a club with no mark', () => {
+    const html = composeNotificationEmail(delivery(), APP)?.html ?? ''
+    expect(html).not.toContain('<img')
+  })
+
+  it('adds nothing when the club has a mark but no name to caption it', () => {
+    const html =
+      composeNotificationEmail(delivery({ workspaceLogoUrl: 'https://x/y.png' }), APP)?.html ?? ''
+    expect(html).not.toContain('<img')
+  })
+})

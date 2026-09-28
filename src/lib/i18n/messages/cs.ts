@@ -616,6 +616,29 @@ export const cs = {
 
   /* The coaching staff (D-11, DESIGN_BRIEF §34): an administrator adds coaches
      and fills in the names guardians read on the session page. */
+  /** The club's own mark. Not in the design handoff; see DESIGN_DEVIATIONS. */
+  clubMark: {
+    title: 'Znak klubu',
+    intro: 'Zobrazí se rodičům v aplikaci i v e-mailech o trénincích.',
+    choose: 'Nahrát znak',
+    replace: 'Nahradit',
+    remove: 'Odebrat',
+    none: 'Klub zatím nemá znak.',
+    hint: 'PNG, JPEG nebo WebP, nejvýše 1 MB.',
+    saved: 'Znak uložen',
+    removed: 'Znak odebrán',
+    errors: {
+      LOGO_TOO_LARGE: 'Soubor je větší než 1 MB.',
+      LOGO_TYPE_NOT_ALLOWED: 'Nahrajte PNG, JPEG nebo WebP.',
+      LOGO_EMPTY: 'Vyberte soubor.',
+      LOGO_UPLOAD_FAILED: 'Nahrání se nezdařilo. Zkuste to prosím znovu.',
+      INVALID_LOGO_PATH: 'Neplatná cesta k souboru.',
+      NOT_AUTHORIZED: 'Znak klubu může měnit jen správce.',
+      WORKSPACE_NOT_FOUND: 'Klub nebyl nalezen.',
+      generic: 'Uložení se nezdařilo. Zkuste to prosím znovu.',
+    },
+  },
+
   staff: {
     title: 'Trenéři',
     link: 'Trenéři',

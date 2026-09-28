@@ -43,6 +43,9 @@ export type ClaimedDelivery = {
   /** This guardian's own affected athletes, in display order. */
   athleteNames: string[]
   workspaceTimezone: Timezone
+  workspaceName?: string | null
+  /** Public URL of the club's mark, or null when it has none. */
+  workspaceLogoUrl?: string | null
 }
 
 const t = messages.email
@@ -132,10 +135,22 @@ export function composeNotificationEmail(
 
   const text = lines.join('\n')
 
+  // The club's mark, when it has one. Most mail clients refuse to load remote
+  // images until the reader asks, so it is an <img> with the club's name as
+  // its alt text and nothing of the message inside the picture: a parent who
+  // never loads it reads exactly the same thing.
+  const header =
+    delivery.workspaceLogoUrl && delivery.workspaceName
+      ? `<p style="margin:0 0 16px"><img src="${escapeHtml(delivery.workspaceLogoUrl)}" ` +
+        `alt="${escapeHtml(delivery.workspaceName)}" width="40" height="40" ` +
+        'style="width:40px;height:40px;object-fit:contain;border-radius:8px"></p>'
+      : ''
+
   const html = [
     '<!doctype html><html lang="cs"><body style="margin:0;padding:24px;background:#f5f5f5;',
     "font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:#111\">",
     '<div style="max-width:520px;margin:0 auto;background:#fff;border-radius:12px;padding:24px">',
+    header,
     lines
       .filter((line) => line !== '')
       .map((line) =>
