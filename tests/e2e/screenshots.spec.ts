@@ -223,3 +223,35 @@ test('the coaching staff (§A1, §A3)', async ({ page }) => {
   await expect(page.getByRole('heading', { name: 'Nový trenér' })).toBeVisible()
   await shoot(page, 'A2-novy-trener')
 })
+
+test('the parent’s children (§G7, §G8, §G9)', async ({ page }) => {
+  const parent = uniqueEmail('rodic')
+  await signIn(page, parent)
+
+  await page.goto('/moji-sportovci')
+  await expect(page.getByRole('heading', { name: 'Moji sportovci' })).toBeVisible()
+  await shoot(page, 'G7-sportovci-prazdne')
+
+  await page.goto('/moji-sportovci/novy')
+  await page.getByLabel('Jméno').first().fill('Milana')
+  await page.getByLabel('Příjmení').first().fill('Kotova')
+  await page.getByLabel('Telefon').fill('777 123 456')
+  await page.getByLabel('Jméno').last().fill('Ivan')
+  await page.getByLabel('Příjmení').last().fill('Kotov')
+  await page.getByLabel('Datum narození').fill('2017-06-08')
+  await page.getByRole('radio', { name: 'Centr' }).click()
+  await page.getByRole('radio', { name: 'Levá' }).click()
+  await shoot(page, 'G10-novy-sportovec')
+
+  await page.getByRole('button', { name: 'Přidat sportovce' }).click()
+  await expect(page.getByText('Ivan Kotov')).toBeVisible()
+  await shoot(page, 'G7-sportovci')
+
+  await page.getByRole('link', { name: /Ivan Kotov/ }).click()
+  await expect(page.getByRole('heading', { name: 'Ivan Kotov' })).toBeVisible()
+  await shoot(page, 'G8-profil-sportovce')
+
+  await page.getByRole('link', { name: 'Upravit' }).click()
+  await expect(page.getByRole('heading', { name: 'Upravit sportovce' })).toBeVisible()
+  await shoot(page, 'G9-upravit-sportovce')
+})

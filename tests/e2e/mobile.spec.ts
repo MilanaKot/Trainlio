@@ -191,9 +191,9 @@ test.describe('on a phone', () => {
     await page.getByLabel('Jméno').last().fill('Ivan')
     await page.getByLabel('Příjmení').last().fill('Kotov')
     await page.getByLabel('Datum narození').fill('2017-10-23')
-    await page.getByLabel('Pozice').selectOption('CENTER')
-    await page.getByLabel('Hůl').selectOption('LEFT')
-    await page.getByRole('button', { name: 'Uložit' }).click()
+    await page.getByRole('radio', { name: 'Centr' }).click()
+    await page.getByRole('radio', { name: 'Levá' }).click()
+    await page.getByRole('button', { name: 'Přidat sportovce' }).click()
     await expect(page.getByText('Ivan Kotov')).toBeVisible()
 
     await expectNoHorizontalScroll(page, 'my athletes')

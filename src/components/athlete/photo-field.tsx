@@ -62,51 +62,66 @@ export function PhotoField({
   }
 
   return (
-    <div className="flex items-center gap-4">
+    <div className="flex items-center gap-3 rounded-card bg-surface p-4 shadow-card">
       {photoUrl ? (
         <Image
           src={photoUrl}
           alt=""
           width={72}
           height={72}
+          // Signed URLs are short-lived and host-specific, so Next's optimizer
+          // is bypassed: it would cache a URL that expires in an hour.
           unoptimized
-          className="size-18 rounded-full object-cover"
+          className="size-18 shrink-0 rounded-full object-cover"
         />
       ) : (
         <span
-          aria-hidden
-          className="flex size-18 items-center justify-center rounded-full bg-black/5 dark:bg-white/10"
-        />
+          aria-hidden="true"
+          className="flex size-18 shrink-0 items-center justify-center rounded-full bg-neutral-50 text-subtle"
+        >
+          <svg viewBox="0 0 24 24" fill="none" className="size-8">
+            <circle cx="12" cy="9" r="3.5" stroke="currentColor" strokeWidth="1.8" />
+            <path
+              d="M5 20c0-3.3 3-5.4 7-5.4s7 2.1 7 5.4"
+              stroke="currentColor"
+              strokeWidth="1.8"
+              strokeLinecap="round"
+            />
+          </svg>
+        </span>
       )}
 
-      <div className="flex flex-col items-start gap-1">
-        <label className="min-h-11 cursor-pointer text-sm underline">
-          {photoUrl ? t.photoReplace : t.photoAdd}
-          <input
-            ref={inputRef}
-            type="file"
-            name="photo"
-            accept={ALLOWED_PHOTO_TYPES.join(',')}
-            disabled={pending}
-            onChange={onPick}
-            className="sr-only"
-          />
-        </label>
+      <div className="flex min-w-0 flex-col items-start gap-1">
+        <span className="flex items-baseline gap-2">
+          <label className="flex min-h-11 cursor-pointer items-center text-row font-semibold text-primary">
+            {photoUrl ? t.photoReplace : t.photoAdd}
+            <input
+              ref={inputRef}
+              type="file"
+              name="photo"
+              accept={ALLOWED_PHOTO_TYPES.join(',')}
+              disabled={pending}
+              onChange={onPick}
+              className="sr-only"
+            />
+          </label>
+          <span className="text-hint text-muted">{t.photoOptional}</span>
+        </span>
 
         {photoUrl ? (
           <button
             type="button"
             onClick={onRemove}
             disabled={pending}
-            className="text-sm underline opacity-70"
+            className="flex min-h-11 items-center text-row font-semibold text-danger disabled:text-muted"
           >
             {t.photoRemove}
           </button>
         ) : null}
 
-        <p className="text-xs opacity-60">{t.photoHint}</p>
+        <p className="text-hint text-muted">{t.photoHint}</p>
         {error ? (
-          <p role="alert" className="text-sm text-red-600">
+          <p role="alert" className="text-hint font-semibold text-danger">
             {error}
           </p>
         ) : null}

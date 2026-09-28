@@ -4,6 +4,7 @@ import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { messages } from '@/lib/i18n'
 import { setAthleteActive } from '@/server/athletes/actions'
+import { Switch } from '@/components/ui/switch'
 
 /**
  * D-09. Deactivation blocks new bookings only — existing bookings, sport
@@ -29,21 +30,27 @@ export function ActiveToggle({ athleteId, isActive }: { athleteId: string; isAct
   }
 
   return (
-    <div className="flex flex-col gap-2 border-t border-black/10 pt-6 dark:border-white/15">
-      <p className="text-sm leading-relaxed opacity-70">{messages.athlete.deactivateExplain}</p>
-      <button
-        type="button"
-        onClick={onToggle}
-        disabled={pending}
-        className="min-h-11 self-start text-sm underline disabled:opacity-60"
-      >
-        {isActive ? messages.athlete.deactivate : messages.athlete.reactivate}
-      </button>
-      {error ? (
-        <p role="alert" className="text-sm text-red-600">
-          {error}
+    <section className="flex flex-col gap-2.5">
+      <h2 className="text-caption font-bold uppercase tracking-[0.8px] text-muted">
+        {messages.athlete.stateCaption}
+      </h2>
+      <div className="flex flex-col gap-3 rounded-card bg-surface p-4 shadow-card">
+        <Switch
+          checked={isActive}
+          onChange={onToggle}
+          label={messages.athlete.activeSwitch}
+          hint={messages.athlete.activeSwitchHint}
+          disabled={pending}
+        />
+        <p className="rounded-control-lg bg-bg p-3 text-meta text-muted">
+          {messages.athlete.deactivateExplain}
         </p>
-      ) : null}
-    </div>
+        {error ? (
+          <p role="alert" className="text-hint font-semibold text-danger">
+            {error}
+          </p>
+        ) : null}
+      </div>
+    </section>
   )
 }

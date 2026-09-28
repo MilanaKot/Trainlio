@@ -1,63 +1,71 @@
 import Link from 'next/link'
-import Image from 'next/image'
 import { messages } from '@/lib/i18n'
-import { HOCKEY_POSITION_LABELS, STICK_SIDE_LABELS } from '@/lib/enums/hockey'
-import { birthYear } from '@/lib/time/workspace-time'
+import { HOCKEY_POSITION_LABELS } from '@/lib/enums/hockey'
+import { formatBirthDate } from '@/lib/time/workspace-time'
+import { Avatar } from '@/components/ui/avatar'
 import type { GuardianAthlete } from '@/server/athletes/queries'
 
+const t = messages.athlete
+
+/**
+ * One child on the parent's list (guardian/SPEC.md §G7).
+ *
+ * The chip carries the sport and, when it is set, the position: a parent with
+ * one child in hockey and one in football should be able to tell them apart
+ * without opening either.
+ */
 export function AthleteCard({ athlete }: { athlete: GuardianAthlete }) {
-  const hockey = athlete.sportProfiles.find((p) => p.sportCode === 'HOCKEY')
-  const summary = [
-    hockey?.position ? HOCKEY_POSITION_LABELS[hockey.position] : null,
-    hockey?.stickSide
-      ? `${messages.athlete.stickSide}: ${STICK_SIDE_LABELS[hockey.stickSide]}`
-      : null,
-    hockey?.jerseyNumber ? `#${hockey.jerseyNumber}` : null,
-  ]
-    .filter(Boolean)
-    .join(' · ')
+  const sports = messages.sports as Record<string, string>
 
   return (
     <li>
       <Link
-        href={`/moji-sportovci/${athlete.id}`}
-        className="flex items-center gap-4 rounded-xl border border-black/10 p-3 dark:border-white/15"
+        href={{ pathname: `/moji-sportovci/${athlete.id}` }}
+        className="flex items-center gap-3 rounded-card bg-surface p-3 shadow-card"
       >
-        {athlete.photoUrl ? (
-          <Image
-            src={athlete.photoUrl}
-            alt=""
-            width={56}
-            height={56}
-            // Signed URLs are short-lived and host-specific, so Next's optimizer
-            // is bypassed: it would cache a URL that expires in an hour.
-            unoptimized
-            className="size-14 shrink-0 rounded-full object-cover"
-          />
-        ) : (
-          <span
-            aria-hidden
-            className="flex size-14 shrink-0 items-center justify-center rounded-full bg-black/5 text-lg dark:bg-white/10"
-          >
-            {athlete.firstName.slice(0, 1)}
-          </span>
-        )}
+        <Avatar
+          firstName={athlete.firstName}
+          lastName={athlete.lastName}
+          {...(athlete.photoUrl ? { photoUrl: athlete.photoUrl } : {})}
+          size={56}
+          muted={!athlete.isActive}
+        />
 
-        <span className="flex min-w-0 flex-col gap-0.5">
+        <span className="flex min-w-0 flex-1 flex-col gap-1">
           <span className="flex items-center gap-2">
-            <span className="truncate font-medium">
+            <span className="truncate text-[1.0625rem] font-bold text-ink">
               {athlete.firstName} {athlete.lastName}
             </span>
-            {!athlete.isActive ? (
-              <span className="shrink-0 rounded bg-black/10 px-1.5 py-0.5 text-[11px] uppercase dark:bg-white/15">
-                {messages.athlete.inactive}
+            {athlete.isActive ? null : (
+              <span className="shrink-0 rounded-badge bg-neutral-50 px-1.5 text-badge font-bold uppercase text-muted">
+                {t.inactive}
               </span>
-            ) : null}
+            )}
           </span>
-          <span className="text-sm opacity-70">
-            {messages.athlete.birthYear.replace('{year}', String(birthYear(athlete.dateOfBirth)))}
-          </span>
-          {summary ? <span className="truncate text-sm opacity-70">{summary}</span> : null}
+
+          <span className="text-meta text-muted">{formatBirthDate(athlete.dateOfBirth)}</span>
+
+          {athlete.sportProfiles.length > 0 ? (
+            <span className="flex flex-wrap gap-1.5">
+              {athlete.sportProfiles.map((profile) => (
+                <span
+                  key={profile.id}
+                  className="rounded-chip bg-neutral-50 px-2 py-0.5 text-hint font-semibold text-muted"
+                >
+                  {[
+                    sports[profile.sportCode] ?? profile.sportCode,
+                    profile.position ? HOCKEY_POSITION_LABELS[profile.position] : null,
+                  ]
+                    .filter(Boolean)
+                    .join(' · ')}
+                </span>
+              ))}
+            </span>
+          ) : null}
+        </span>
+
+        <span aria-hidden="true" className="text-subtle">
+          ›
         </span>
       </Link>
     </li>

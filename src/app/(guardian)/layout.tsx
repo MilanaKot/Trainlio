@@ -2,12 +2,7 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { BottomNav } from '@/components/ui/bottom-nav'
 import { ToastProvider } from '@/components/ui/toast'
-import {
-  CalendarIcon,
-  CheckCalendarIcon,
-  PeopleIcon,
-  PersonIcon,
-} from '@/components/ui/nav-icons'
+import { CalendarIcon, CheckCalendarIcon, PeopleIcon, PersonIcon } from '@/components/ui/nav-icons'
 import { messages } from '@/lib/i18n'
 
 /**
@@ -33,6 +28,10 @@ export default async function GuardianLayout({ children }: { children: React.Rea
       {/* Bottom padding clears the fixed navigation. */}
       <div className="mx-auto min-h-dvh max-w-md px-4 pb-28 pt-6">{children}</div>
       <BottomNav
+        // A form is a task, not a tab (§G9, §G10): it ends with `Zrušit` at
+        // the top and one button at the bottom, which would otherwise sit
+        // under the navigation.
+        hideWhen="^/moji-sportovci/novy$|/upravit$"
         items={[
           { href: '/treninky', label: messages.nav.sessions, icon: <CalendarIcon /> },
           { href: '/moje-treninky', label: messages.nav.myBookings, icon: <CheckCalendarIcon /> },

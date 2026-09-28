@@ -239,3 +239,16 @@ export function relativeDayLabel(
 
   return target === tomorrow ? 'TOMORROW' : null
 }
+
+/**
+ * `8. 6. 2017` — a date of birth, which is a calendar date and not an instant.
+ *
+ * Formatted from the `YYYY-MM-DD` string rather than through a Date, because a
+ * Date would place it at midnight UTC and a device west of Greenwich would
+ * then show the day before.
+ */
+export function formatBirthDate(dateOfBirth: string): string {
+  const [year, month, day] = dateOfBirth.split('-')
+  if (!year || !month || !day) return dateOfBirth
+  return `${Number(day)}. ${Number(month)}. ${year}`
+}

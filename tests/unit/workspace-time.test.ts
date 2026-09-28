@@ -9,6 +9,7 @@ import {
   formatTimeRange,
   localDateKey,
   weeklyOccurrenceDates,
+  formatBirthDate,
 } from '@/lib/time/workspace-time'
 
 const PRAGUE = DEFAULT_TIMEZONE
@@ -190,5 +191,22 @@ describe('formatLocalDateKey', () => {
   it('rejects anything that is not a calendar date', () => {
     expect(() => formatLocalDateKey('2026-10-04T09:00:00Z')).toThrow()
     expect(() => formatLocalDateKey('4. 10. 2026')).toThrow()
+  })
+})
+
+describe('a date of birth', () => {
+  it('reads as a Czech calendar date', () => {
+    expect(formatBirthDate('2017-06-08')).toBe('8. 6. 2017')
+    expect(formatBirthDate('2010-12-31')).toBe('31. 12. 2010')
+  })
+
+  // Through a Date it would be midnight UTC, and a device west of Greenwich
+  // would show the day before — a child's birthday, wrong by one day.
+  it('does not move with the device timezone', () => {
+    expect(formatBirthDate('2017-01-01')).toBe('1. 1. 2017')
+  })
+
+  it('gives back what it cannot read', () => {
+    expect(formatBirthDate('')).toBe('')
   })
 })

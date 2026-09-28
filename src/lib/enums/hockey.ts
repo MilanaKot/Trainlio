@@ -29,8 +29,12 @@ export const STICK_SIDES = ['LEFT', 'RIGHT', 'UNKNOWN'] as const
 
 export type StickSide = (typeof STICK_SIDES)[number]
 
+/**
+ * Feminine, to agree with `hůl` — `Levá hůl`, not `Levé hůl`. The brief wrote
+ * these in the neuter; the design corrected them and is right.
+ */
 export const STICK_SIDE_LABELS: Record<StickSide, string> = {
-  LEFT: 'Levé',
-  RIGHT: 'Pravé',
+  LEFT: 'Levá',
+  RIGHT: 'Pravá',
   UNKNOWN: 'Nevím',
 }

@@ -170,7 +170,9 @@ test.describe('a guardian, from first sign-in to a withdrawn booking', () => {
 
     // D-10 is stated before the child is registered, not after.
     await page.goto('/moji-sportovci')
-    await expect(page.getByText('Zatím nemáte žádného sportovce.')).toBeVisible()
+    await expect(
+      page.getByText('Přidejte prvního sportovce a můžete začít rezervovat tréninky.'),
+    ).toBeVisible()
     await page.getByRole('link', { name: 'Přidat sportovce' }).first().click()
 
     // AC-278 / AC-279: the first registration asks who the parent is, because the
@@ -183,9 +185,9 @@ test.describe('a guardian, from first sign-in to a withdrawn booking', () => {
     await page.getByLabel('Jméno').last().fill('Ivan')
     await page.getByLabel('Příjmení').last().fill('Kotov')
     await page.getByLabel('Datum narození').fill('2017-10-23')
-    await page.getByLabel('Pozice').selectOption('CENTER')
-    await page.getByLabel('Hůl').selectOption('LEFT')
-    await page.getByRole('button', { name: 'Uložit' }).click()
+    await page.getByRole('radio', { name: 'Centr' }).click()
+    await page.getByRole('radio', { name: 'Levá' }).click()
+    await page.getByRole('button', { name: 'Přidat sportovce' }).click()
 
     await expect(page.getByText('Ivan Kotov')).toBeVisible()
 
@@ -272,9 +274,9 @@ test.describe('a guardian, from first sign-in to a withdrawn booking', () => {
     await page.getByLabel('Jméno').last().fill('Anna')
     await page.getByLabel('Příjmení').last().fill('Kotova')
     await page.getByLabel('Datum narození').fill('2018-03-04')
-    await page.getByLabel('Pozice').selectOption('GOALIE')
-    await page.getByLabel('Hůl').selectOption('RIGHT')
-    await page.getByRole('button', { name: 'Uložit' }).click()
+    await page.getByRole('radio', { name: 'Brankář' }).click()
+    await page.getByRole('radio', { name: 'Pravá' }).click()
+    await page.getByRole('button', { name: 'Přidat sportovce' }).click()
     await expect(page.getByText('Anna Kotova')).toBeVisible()
 
     await page.goto('/treninky')
@@ -321,9 +323,9 @@ test.describe('a guardian, from first sign-in to a withdrawn booking', () => {
     await page.getByLabel('Jméno').last().fill('Petr')
     await page.getByLabel('Příjmení').last().fill('Kotov')
     await page.getByLabel('Datum narození').fill('2017-02-02')
-    await page.getByLabel('Pozice').selectOption('CENTER')
-    await page.getByLabel('Hůl').selectOption('LEFT')
-    await page.getByRole('button', { name: 'Uložit' }).click()
+    await page.getByRole('radio', { name: 'Centr' }).click()
+    await page.getByRole('radio', { name: 'Levá' }).click()
+    await page.getByRole('button', { name: 'Přidat sportovce' }).click()
     await expect(page.getByText('Petr Kotov')).toBeVisible()
 
     await page.goto('/treninky')

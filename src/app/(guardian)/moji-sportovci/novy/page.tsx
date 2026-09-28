@@ -1,8 +1,12 @@
+import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { getOwnProfile, listJoinableWorkspaces } from '@/server/athletes/queries'
 import { AthleteForm } from '@/components/athlete/athlete-form'
 import { messages } from '@/lib/i18n'
 
+const t = messages.athlete
+
+/** A new child (guardian/SPEC.md §G10). */
 export default async function NewAthletePage() {
   const [workspaces, profile] = await Promise.all([listJoinableWorkspaces(), getOwnProfile()])
 
@@ -12,8 +16,15 @@ export default async function NewAthletePage() {
   if (!workspace) notFound()
 
   return (
-    <main className="flex flex-col gap-6">
-      <h1 className="text-2xl font-semibold">{messages.athlete.newTitle}</h1>
+    <main className="flex flex-col gap-5 pb-36">
+      <Link
+        href="/moji-sportovci"
+        className="flex min-h-11 items-center self-start text-row font-semibold text-muted"
+      >
+        {messages.common.cancel}
+      </Link>
+      <h1 className="font-display text-form-title font-bold text-ink">{t.newTitle}</h1>
+
       <AthleteForm
         workspaceId={workspace.id}
         workspaceName={workspace.name}

@@ -10,7 +10,12 @@ import {
   STICK_SIDE_LABELS,
 } from '@/lib/enums/hockey'
 import { createAthlete, updateAthlete } from '@/server/athletes/actions'
+import { Button } from '@/components/ui/button'
+import { Field } from '@/components/ui/field'
+import { Notice } from '@/components/ui/notice'
+import { RadioPills } from '@/components/ui/radio-pills'
 import type { GuardianAthlete } from '@/server/athletes/queries'
+import type { HockeyPosition, StickSide } from '@/lib/enums/hockey'
 
 type Props = {
   workspaceId: string
@@ -26,6 +31,17 @@ type Props = {
 }
 
 const t = messages.athlete
+
+function Panel({ caption, children }: { caption?: string; children: React.ReactNode }) {
+  return (
+    <section className="flex flex-col gap-2.5">
+      {caption ? (
+        <h2 className="text-caption font-bold uppercase tracking-[0.8px] text-muted">{caption}</h2>
+      ) : null}
+      <div className="flex flex-col gap-4 rounded-card bg-surface p-4 shadow-card">{children}</div>
+    </section>
+  )
+}
 
 function errorText(code: string | undefined): string {
   if (!code) return t.errors.generic
@@ -54,6 +70,8 @@ export function AthleteForm({
 
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
   const [formError, setFormError] = useState<string | null>(null)
+  const [position, setPosition] = useState<HockeyPosition | ''>(hockey?.position ?? '')
+  const [stickSide, setStickSide] = useState<StickSide | ''>(hockey?.stickSide ?? '')
   const [pending, startTransition] = useTransition()
 
   function onSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -81,196 +99,214 @@ export function AthleteForm({
     })
   }
 
-  function fieldError(name: string) {
+  function fieldError(name: string): string | undefined {
     const code = fieldErrors[name]
-    if (!code) return null
-    return (
-      <p role="alert" className="text-sm text-red-600">
-        {errorText(code)}
-      </p>
-    )
+    return code ? errorText(code) : undefined
   }
 
-  const inputClass =
-    'min-h-11 rounded-lg border border-black/15 px-3 py-3 text-base dark:border-white/20'
-
   return (
-    <form onSubmit={onSubmit} className="flex flex-col gap-6">
+    <form onSubmit={onSubmit} className="flex flex-col gap-5">
       {/* First, because it is about the person filling the form in, and
           because guardian/SPEC.md §G16 is where these words come from. */}
       {askGuardianDetails ? (
-        <fieldset className="flex flex-col gap-4">
-          <legend className="mb-2 text-sm font-semibold uppercase tracking-wide opacity-60">
-            {messages.account.yourDetails}
-          </legend>
-          <p className="text-sm opacity-70">{messages.account.yourDetailsIntro}</p>
+        <Panel caption={messages.account.yourDetails}>
+          <p className="text-meta text-muted">{messages.account.yourDetailsIntro}</p>
 
-          <label className="flex flex-col gap-2 text-sm font-medium">
-            {messages.account.firstName}
-            <input name="guardianFirstName" required className={inputClass} />
-          </label>
-          {fieldError('guardianFirstName')}
+          <Field
+            label={messages.account.firstName}
+            required
+            {...(fieldError('guardianFirstName') ? { error: fieldError('guardianFirstName') } : {})}
+          >
+            {(props) => <input {...props} name="guardianFirstName" type="text" required />}
+          </Field>
 
-          <label className="flex flex-col gap-2 text-sm font-medium">
-            {messages.account.lastName}
-            <input name="guardianLastName" className={inputClass} />
-          </label>
+          <Field label={messages.account.lastName} optional>
+            {(props) => <input {...props} name="guardianLastName" type="text" />}
+          </Field>
 
-          <label className="flex flex-col gap-2 text-sm font-medium">
-            {messages.account.phone}
-            <input
-              name="guardianPhone"
-              type="tel"
-              inputMode="tel"
-              autoComplete="tel"
-              placeholder={messages.account.phonePlaceholder}
-              className={inputClass}
-            />
-            <span className="text-xs font-normal opacity-70">{messages.account.phoneHint}</span>
-          </label>
-          {fieldError('guardianPhone')}
-        </fieldset>
+          <Field
+            label={messages.account.phone}
+            optional
+            hint={messages.account.phoneHint}
+            {...(fieldError('guardianPhone') ? { error: fieldError('guardianPhone') } : {})}
+          >
+            {(props) => (
+              <input
+                {...props}
+                name="guardianPhone"
+                type="tel"
+                inputMode="tel"
+                autoComplete="tel"
+                placeholder={messages.account.phonePlaceholder}
+              />
+            )}
+          </Field>
+        </Panel>
       ) : null}
 
-      <fieldset className="flex flex-col gap-4">
-        <legend className="mb-2 text-sm font-semibold uppercase tracking-wide opacity-60">
-          {t.coreSection}
-        </legend>
+      <Panel>
+        <Field
+          label={t.firstName}
+          required
+          {...(fieldError('firstName') ? { error: fieldError('firstName') } : {})}
+        >
+          {(props) => (
+            <input
+              {...props}
+              name="firstName"
+              type="text"
+              required
+              autoComplete="off"
+              maxLength={100}
+              defaultValue={athlete?.firstName ?? ''}
+            />
+          )}
+        </Field>
 
-        <label className="flex flex-col gap-2 text-sm font-medium">
-          {t.firstName}
-          <input
-            name="firstName"
-            required
-            autoComplete="off"
-            maxLength={100}
-            defaultValue={athlete?.firstName ?? ''}
-            className={inputClass}
-          />
-          {fieldError('firstName')}
-        </label>
+        <Field
+          label={t.lastName}
+          required
+          {...(fieldError('lastName') ? { error: fieldError('lastName') } : {})}
+        >
+          {(props) => (
+            <input
+              {...props}
+              name="lastName"
+              type="text"
+              required
+              autoComplete="off"
+              maxLength={100}
+              defaultValue={athlete?.lastName ?? ''}
+            />
+          )}
+        </Field>
 
-        <label className="flex flex-col gap-2 text-sm font-medium">
-          {t.lastName}
-          <input
-            name="lastName"
-            required
-            autoComplete="off"
-            maxLength={100}
-            defaultValue={athlete?.lastName ?? ''}
-            className={inputClass}
-          />
-          {fieldError('lastName')}
-        </label>
+        {/* AC-011: a full date, never just a birth year. Eligibility is derived
+            from it server-side. */}
+        <Field
+          label={t.dateOfBirth}
+          required
+          {...(fieldError('dateOfBirth') ? { error: fieldError('dateOfBirth') } : {})}
+        >
+          {(props) => (
+            <input
+              {...props}
+              name="dateOfBirth"
+              type="date"
+              required
+              defaultValue={athlete?.dateOfBirth ?? ''}
+            />
+          )}
+        </Field>
+      </Panel>
 
-        <label className="flex flex-col gap-2 text-sm font-medium">
-          {t.dateOfBirth}
-          {/* AC-011: a full date, never just a birth year. Eligibility is
-              derived from it server-side. */}
-          <input
-            name="dateOfBirth"
-            type="date"
-            required
-            defaultValue={athlete?.dateOfBirth ?? ''}
-            className={inputClass}
-          />
-          {fieldError('dateOfBirth')}
-        </label>
-      </fieldset>
+      <Panel caption={t.hockeySection}>
+        <Field label={t.club} optional>
+          {(props) => (
+            <input
+              {...props}
+              name="clubName"
+              type="text"
+              placeholder={t.clubPlaceholder}
+              defaultValue={hockey?.clubName ?? ''}
+            />
+          )}
+        </Field>
 
-      <fieldset className="flex flex-col gap-4">
-        <legend className="mb-2 text-sm font-semibold uppercase tracking-wide opacity-60">
-          {t.hockeySection}
-        </legend>
+        <Field label={t.team} optional>
+          {(props) => (
+            <input
+              {...props}
+              name="teamOrCategory"
+              type="text"
+              placeholder={t.teamPlaceholder}
+              defaultValue={hockey?.teamOrCategory ?? ''}
+            />
+          )}
+        </Field>
 
-        <label className="flex flex-col gap-2 text-sm font-medium">
-          {t.position}
-          <select
+        {/* Pills rather than a select, and no free text: these are the values
+            the database accepts (AC-013, AC-014). */}
+        <div className="flex flex-col gap-2">
+          <span className="text-meta font-semibold text-ink">
+            {t.position}
+            <span className="text-danger"> *</span>
+          </span>
+          <RadioPills
             name="position"
-            required
-            defaultValue={hockey?.position ?? ''}
-            className={inputClass}
-          >
-            <option value="" disabled>
-              —
-            </option>
-            {HOCKEY_POSITIONS.map((position) => (
-              <option key={position} value={position}>
-                {HOCKEY_POSITION_LABELS[position]}
-              </option>
-            ))}
-          </select>
-          {fieldError('position')}
-        </label>
+            label={t.position}
+            value={position}
+            onChange={setPosition}
+            options={HOCKEY_POSITIONS.map((code) => ({
+              value: code,
+              label: HOCKEY_POSITION_LABELS[code],
+            }))}
+          />
+          {fieldError('position') ? (
+            <p role="alert" className="text-hint font-semibold text-danger">
+              {fieldError('position')}
+            </p>
+          ) : null}
+        </div>
 
-        <label className="flex flex-col gap-2 text-sm font-medium">
-          {t.stickSide}
-          <select
+        <div className="flex flex-col gap-2">
+          <span className="text-meta font-semibold text-ink">
+            {t.stickSide}
+            <span className="text-danger"> *</span>
+          </span>
+          <RadioPills
             name="stickSide"
-            required
-            defaultValue={hockey?.stickSide ?? ''}
-            className={inputClass}
-          >
-            <option value="" disabled>
-              —
-            </option>
-            {STICK_SIDES.map((side) => (
-              <option key={side} value={side}>
-                {STICK_SIDE_LABELS[side]}
-              </option>
-            ))}
-          </select>
-          {fieldError('stickSide')}
-        </label>
-
-        <label className="flex flex-col gap-2 text-sm font-medium">
-          {t.club} <span className="font-normal opacity-60">({t.optional})</span>
-          <input name="clubName" defaultValue={hockey?.clubName ?? ''} className={inputClass} />
-        </label>
-
-        <label className="flex flex-col gap-2 text-sm font-medium">
-          {t.team} <span className="font-normal opacity-60">({t.optional})</span>
-          <input
-            name="teamOrCategory"
-            defaultValue={hockey?.teamOrCategory ?? ''}
-            className={inputClass}
+            label={t.stickSide}
+            columns={3}
+            value={stickSide}
+            onChange={setStickSide}
+            options={STICK_SIDES.map((code) => ({ value: code, label: STICK_SIDE_LABELS[code] }))}
           />
-        </label>
+          {fieldError('stickSide') ? (
+            <p role="alert" className="text-hint font-semibold text-danger">
+              {fieldError('stickSide')}
+            </p>
+          ) : null}
+        </div>
 
-        <label className="flex flex-col gap-2 text-sm font-medium">
-          {t.jerseyNumber} <span className="font-normal opacity-60">({t.optional})</span>
-          <input
-            name="jerseyNumber"
-            inputMode="numeric"
-            maxLength={10}
-            defaultValue={hockey?.jerseyNumber ?? ''}
-            className={inputClass}
-          />
-          {fieldError('jerseyNumber')}
-        </label>
-      </fieldset>
+        <Field
+          label={t.jerseyNumber}
+          optional
+          className="max-w-[50%]"
+          {...(fieldError('jerseyNumber') ? { error: fieldError('jerseyNumber') } : {})}
+        >
+          {(props) => (
+            <input
+              {...props}
+              name="jerseyNumber"
+              type="text"
+              inputMode="numeric"
+              maxLength={10}
+              defaultValue={hockey?.jerseyNumber ?? ''}
+            />
+          )}
+        </Field>
+      </Panel>
 
       {/* D-10: registering makes the child visible to that workspace's coaches.
           Said before submitting, not buried in a privacy policy. */}
       {!isEdit ? (
-        <p className="rounded-lg bg-black/5 p-3 text-sm leading-relaxed dark:bg-white/10">
-          {t.workspaceNotice} <span className="font-medium">{workspaceName}</span>
-        </p>
+        <Notice variant="info">
+          {t.workspaceNotice} <span className="font-semibold">{workspaceName}</span>
+        </Notice>
       ) : null}
 
       {formError ? (
-        <p role="alert" className="text-sm text-red-600">
+        <p role="alert" className="text-hint font-semibold text-danger">
           {formError}
         </p>
       ) : null}
 
-      <button
-        type="submit"
-        disabled={pending}
-        className="min-h-12 rounded-lg bg-black px-4 text-base font-medium text-white disabled:opacity-60 dark:bg-white dark:text-black"
-      >
-        {pending ? t.saving : t.save}
-      </button>
+      <div className="fixed inset-x-0 bottom-0 z-30 mx-auto flex max-w-md flex-col gap-3 bg-bg/95 px-4 pb-5 pt-3 shadow-[0_-1px_0_var(--color-line)] backdrop-blur">
+        <Button type="submit" size="lg" {...(pending ? { loadingLabel: t.saving } : {})}>
+          {isEdit ? t.save : t.add}
+        </Button>
+      </div>
     </form>
   )
 }

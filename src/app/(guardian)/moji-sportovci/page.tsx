@@ -1,34 +1,46 @@
 import Link from 'next/link'
 import { listGuardianAthletes } from '@/server/athletes/queries'
 import { AthleteCard } from '@/components/athlete/athlete-card'
+import { EmptyState } from '@/components/ui/empty-state'
+import { buttonVariants } from '@/components/ui/button'
 import { messages } from '@/lib/i18n'
 
+const t = messages.athlete
+
+/** The parent's children (guardian/SPEC.md §G7). */
 export default async function MyAthletesPage() {
   const athletes = await listGuardianAthletes()
 
   return (
-    <main className="flex flex-col gap-6">
-      <h1 className="text-2xl font-semibold">{messages.athlete.listTitle}</h1>
+    <main className="flex flex-col gap-5">
+      <h1 className="font-display text-page font-bold text-ink">{t.listTitle}</h1>
 
       {athletes.length === 0 ? (
-        <div className="flex flex-col gap-2 rounded-xl border border-dashed border-black/15 p-6 text-center dark:border-white/20">
-          <p className="font-medium">{messages.athlete.addFirst}</p>
-          <p className="text-sm opacity-70">{messages.athlete.addFirstHint}</p>
-        </div>
+        <EmptyState
+          action={
+            <Link href="/moji-sportovci/novy" className={buttonVariants({ size: 'md' })}>
+              {t.add}
+            </Link>
+          }
+        >
+          {t.addFirstEmpty}
+        </EmptyState>
       ) : (
-        <ul className="flex flex-col gap-3">
-          {athletes.map((athlete) => (
-            <AthleteCard key={athlete.id} athlete={athlete} />
-          ))}
-        </ul>
-      )}
+        <>
+          <ul className="flex flex-col gap-2">
+            {athletes.map((athlete) => (
+              <AthleteCard key={athlete.id} athlete={athlete} />
+            ))}
+          </ul>
 
-      <Link
-        href="/moji-sportovci/novy"
-        className="flex min-h-12 items-center justify-center rounded-lg bg-black px-4 text-base font-medium text-white dark:bg-white dark:text-black"
-      >
-        {messages.athlete.add}
-      </Link>
+          <Link
+            href="/moji-sportovci/novy"
+            className="flex h-btn-block items-center justify-center rounded-control-lg bg-primary-100 text-body font-bold text-primary"
+          >
+            {t.addBlock}
+          </Link>
+        </>
+      )}
     </main>
   )
 }
