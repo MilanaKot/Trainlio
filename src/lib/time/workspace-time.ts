@@ -91,6 +91,18 @@ export function formatLocalDateKey(dateKey: string): string {
   return `${capitalised} ${Number(day)}. ${Number(month)}.`
 }
 
+/**
+ * `Ne 4. 10.` — the same calendar date, abbreviated.
+ *
+ * For a list of generated dates, where nine `Neděle` down the left-hand side
+ * is nine times the same word and the number is what the coach is reading.
+ */
+export function formatLocalDateShort(dateKey: string): string {
+  const full = formatLocalDateKey(dateKey)
+  const [weekday, ...rest] = full.split(' ')
+  return [weekday?.slice(0, 2), ...rest].join(' ')
+}
+
 /** Birth year from a full date of birth (PRD §9). */
 export function birthYear(dateOfBirth: string): number {
   const year = Number(dateOfBirth.slice(0, 4))

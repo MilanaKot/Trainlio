@@ -207,3 +207,39 @@ is what the picker offers and what the browser validates. What may be _stored_
 is narrower, because the sheet rasterises every choice to a 512px PNG and an
 SVG served back from our own origin is a script: the server checks the bytes
 rather than the declared type, and the bucket takes `image/png` only.
+
+## Confirmed with the product, 29 September 2026
+
+Four of the choices above were open questions; they are now decisions, and this
+is the record so they are not reopened by accident.
+
+**`organization` stays the `workspaces` row**, bucket and all. The word differs
+between the design and the schema; the entity does not.
+
+**The route stays Czech.** `Trenéři` and `Organizace` live under
+`/trener/vice/…`, which also makes the tab bar correct: the path says which tab
+you are in.
+
+**The mark stays in the coach's own header**, though the handoff lists it as out
+of scope.
+
+**`Hůl` reads `Levá` / `Pravá`.** The brief wrote them in the neuter; `hůl` is
+feminine, and `guardian/SPEC.md` flags it as a question for the product. It is
+answered.
+
+Two things are deliberately not built:
+
+**Changing your e-mail (§G14).** A new address needs a code sent to it and, with
+Supabase's default, a confirmation from the old one as well. The account screen
+shows the address and does not offer to change it, rather than offering a
+chevron that leads nowhere.
+
+**Inviting a coach by e-mail.** `admin/SPEC.md` leaves it as "handled
+separately", and nothing about it is designed yet. A coach added on A2 exists
+and can lead trainings from that moment; they simply cannot sign in until
+somebody grants them a login.
+
+One label departs from the drawing on purpose: the birth-year selects read
+`Od ročníku` / `Do ročníku` rather than the design's bare `Od` / `Do`, because
+the series screen carries a date range under those very words in another panel,
+and a screen reader cannot see which panel it is in.

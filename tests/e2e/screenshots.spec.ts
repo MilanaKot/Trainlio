@@ -270,3 +270,24 @@ test('the parent’s account (§G13, §G16)', async ({ page }) => {
   await expect(page.getByRole('heading', { name: 'Účet' })).toBeVisible()
   await shoot(page, 'G13-ucet')
 })
+
+test('a season and a copy of it (§K11, §K4b)', async ({ page }) => {
+  const coach = uniqueEmail('trener')
+  await signIn(page, coach)
+  await grantCoach(coach)
+
+  await page.goto('/trener/serie/nova')
+  await expect(page.getByRole('heading', { name: 'Série tréninků' })).toBeVisible()
+  await shoot(page, 'K11-serie')
+
+  await page.goto('/trener/novy')
+  await page.getByLabel('Datum').fill(dateInput(14))
+  await page.getByLabel('Šatna').fill('Šatna 4')
+  await page.getByRole('button', { name: 'Vytvořit trénink' }).click()
+  await expect(page.getByText('Šatna 4')).toBeVisible()
+  const sessionId = page.url().split('/trener/')[1]?.split('/')[0] ?? ''
+
+  await page.goto(`/trener/serie/nova?from=${sessionId}`)
+  await expect(page.getByText('ZKOPÍRUJE SE')).toBeVisible()
+  await shoot(page, 'K4b-duplikovat-obdobi')
+})

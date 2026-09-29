@@ -4,7 +4,7 @@ import { useMemo, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { messages, plural } from '@/lib/i18n'
-import { weeklyOccurrenceDates, formatLocalDateKey } from '@/lib/time/workspace-time'
+import { weeklyOccurrenceDates, formatLocalDateShort } from '@/lib/time/workspace-time'
 import { ISO_WEEKDAYS, MAX_SERIES_OCCURRENCES } from '@/lib/domain/series'
 import { createSeries } from '@/server/sessions/actions'
 import { Button } from '@/components/ui/button'
@@ -165,7 +165,9 @@ export function SeriesForm({
       {source ? (
         <div className="flex flex-col gap-3">
           <Notice variant="info" title={t.duplicateNotice.replace('{source}', source.label)}>
-            {t.duplicateNoticeAction}
+            {/* Not `Vyberte nové datum` here: on a period the dates come from
+                the pattern below, not from a field. */}
+            {t.duplicateNoticeAthletes}
           </Notice>
 
           <div
@@ -192,7 +194,7 @@ export function SeriesForm({
         </div>
       ) : null}
 
-      <Panel caption={t.repeatCaption}>
+      <Panel caption={source ? t.whenCaption : t.repeatCaption}>
         {/* Multi-select, 44px (coach/SPEC.md §K4b). The checked days are posted
             as the pattern; the server normalises and re-derives the dates. */}
         <fieldset className="flex flex-col gap-2">
@@ -307,7 +309,7 @@ export function SeriesForm({
         </Panel>
       )}
 
-      <Panel caption={t.previewCaption}>
+      <Panel>
         {preview.length === 0 ? (
           <p className="text-meta text-muted">{t.previewEmpty}</p>
         ) : (
@@ -332,7 +334,7 @@ export function SeriesForm({
                         <span
                           className={on ? 'text-row text-ink' : 'text-row text-muted line-through'}
                         >
-                          {formatLocalDateKey(date)}
+                          {formatLocalDateShort(date)}
                         </span>
                       </span>
                       {/* The same time on every line, including across a

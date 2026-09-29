@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
+  formatLocalDateShort,
   DEFAULT_TIMEZONE,
   birthYear,
   formatLocalDateKey,
@@ -208,5 +209,17 @@ describe('a date of birth', () => {
 
   it('gives back what it cannot read', () => {
     expect(formatBirthDate('')).toBe('')
+  })
+})
+
+describe('an abbreviated calendar date', () => {
+  it('keeps two letters of the weekday', () => {
+    expect(formatLocalDateShort('2026-10-04')).toBe('Ne 4. 10.')
+    expect(formatLocalDateShort('2026-11-29')).toBe('Ne 29. 11.')
+  })
+
+  // Čt, not Ct: the accent is part of the letter.
+  it('does not cut a Czech letter in half', () => {
+    expect(formatLocalDateShort('2026-10-01')).toBe('Čt 1. 10.')
   })
 })

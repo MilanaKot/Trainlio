@@ -39,10 +39,47 @@ export type SessionFormValues = {
   internalNotes: string
 }
 
-export function Panel({ caption, children }: { caption: string; children: React.ReactNode }) {
+/** A note parents read, and one only the staff do (§K3 POZNÁMKY, D-13). */
+function GlobeIcon() {
+  return (
+    <svg viewBox="0 0 16 16" fill="none" className="size-4 shrink-0 text-muted" aria-hidden="true">
+      <circle cx="8" cy="8" r="6" stroke="currentColor" strokeWidth="1.4" />
+      <path
+        d="M2.2 8h11.6M8 2.2c3 3.4 3 8.2 0 11.6-3-3.4-3-8.2 0-11.6"
+        stroke="currentColor"
+        strokeWidth="1.4"
+      />
+    </svg>
+  )
+}
+
+function LockIcon() {
+  return (
+    <svg
+      viewBox="0 0 16 16"
+      fill="none"
+      className="size-4 shrink-0 text-internal-ink"
+      aria-hidden="true"
+    >
+      <rect x="3" y="7" width="10" height="7" rx="2" stroke="currentColor" strokeWidth="1.4" />
+      <path d="M5.5 7V5a2.5 2.5 0 015 0v2" stroke="currentColor" strokeWidth="1.4" />
+    </svg>
+  )
+}
+
+export function Panel({
+  caption,
+  children,
+}: {
+  /** Optional: the preview panel's own heading is what a caption would say. */
+  caption?: string
+  children: React.ReactNode
+}) {
   return (
     <section className="flex flex-col gap-2.5">
-      <h2 className="text-caption font-bold uppercase tracking-[0.8px] text-muted">{caption}</h2>
+      {caption ? (
+        <h2 className="text-caption font-bold uppercase tracking-[0.8px] text-muted">{caption}</h2>
+      ) : null}
       <div className="flex flex-col gap-4 rounded-card bg-surface p-4 shadow-card">{children}</div>
     </section>
   )
@@ -159,6 +196,7 @@ export function TrainingFields({
               {...props}
               type="text"
               value={values.changingRoom}
+              placeholder={t.changingRoomPlaceholder}
               maxLength={40}
               onChange={(event) => set('changingRoom', event.target.value)}
             />
@@ -292,7 +330,11 @@ export function TrainingFields({
       {/* D-13: two fields, because one is read by parents and one never is. */}
       <Panel caption={t.notesCaption}>
         <div className="flex flex-col gap-2">
-          <label htmlFor="public-notes" className="text-meta font-semibold text-ink">
+          <label
+            htmlFor="public-notes"
+            className="flex items-center gap-1.5 text-meta font-semibold text-ink"
+          >
+            <GlobeIcon />
             {t.publicNotesLabel}
           </label>
           <TextareaWithCounter
@@ -308,8 +350,13 @@ export function TrainingFields({
         </div>
 
         <div className="flex flex-col gap-2">
-          <label htmlFor="internal-notes" className="text-meta font-semibold text-ink">
+          <label
+            htmlFor="internal-notes"
+            className="flex items-center gap-1.5 text-meta font-semibold text-ink"
+          >
+            <LockIcon />
             {t.internalNotesLabel}
+            <span className="font-normal text-muted">· {t.changingRoomOptional.toLowerCase()}</span>
           </label>
           <TextareaWithCounter
             id="internal-notes"

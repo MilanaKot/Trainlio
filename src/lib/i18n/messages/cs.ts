@@ -501,6 +501,7 @@ export const cs = {
     yearFrom: 'Od',
     yearTo: 'Do',
     changingRoomOptional: 'Nepovinné',
+    changingRoomPlaceholder: 'Např. 4',
     publicNotesLabel: 'Informace pro sportovce · vidí rodiče',
     internalNotesLabel: 'Interní poznámka · jen trenéři',
     /* A new training starts with the two things this coach writes every time.
@@ -531,10 +532,10 @@ export const cs = {
     repeatCaption: 'OPAKOVÁNÍ',
     copiedCaption: 'ZKOPÍRUJE SE',
     editCopied: 'Upravit',
-    previewCaption: 'NÁHLED',
     /* K4, duplicating one training. */
     duplicateNotice: 'Kopie tréninku {source}.',
     duplicateNoticeAction: 'Vyberte nové datum. Přihlášení sportovci se nekopírují.',
+    duplicateNoticeAthletes: 'Přihlášení sportovci se nekopírují.',
     duplicateOne: 'Jeden termín',
     duplicatePeriod: 'Na období',
     pickDateFirst: 'Nejdřív vyberte datum',
