@@ -28,6 +28,12 @@ sentence on every training, so forty cards carry it forty times, and the parent
 who needs it — the one bringing a child on Thursday — meets it on the booking
 detail (§G6) where it belongs.
 
+## No `+ Přidat sport` on the athlete profile
+
+§G8 ends with a low-emphasis `+ Přidat sport`. A second sport has no screen
+behind it in the MVP — one workspace, one sport — so the button would open
+nothing. It comes back with the screen it needs.
+
 ## The message catalogue stays TypeScript
 
 `shared/DESIGN_SYSTEM.md` §8 proposes `messages/cs.json` in ICU syntax. The

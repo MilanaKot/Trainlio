@@ -217,11 +217,9 @@ export const cs = {
 
     removedByCoach: 'Sportovce odebral trenér. Pro opětovné přihlášení kontaktujte trenéra.',
     sessionCancelled: 'Trénink byl zrušen.',
-    acknowledge: 'Rozumím',
     confirm: 'Přihlásit',
     booking: 'Přihlašuji…',
     noEligible: 'Žádný z vašich sportovců se na tento trénink nemůže přihlásit.',
-    noEligibleHint: 'Zkontrolujte ročník a hokejový profil sportovce.',
     errors: {
       EMPTY_SELECTION: 'Vyberte alespoň jednoho sportovce.',
       DUPLICATE_ATHLETE_IN_REQUEST: 'Sportovec je ve výběru dvakrát.',
@@ -290,7 +288,6 @@ export const cs = {
     edit: 'Upravit',
     born: 'Narozen {date}',
     sportsCaption: 'SPORTY',
-    addSport: '+ Přidat sport',
     stateCaption: 'STAV',
     activeSwitch: 'Aktivní sportovec',
     activeSwitchHint: 'Lze ho přihlašovat na nové tréninky',
