@@ -11,6 +11,7 @@ import {
   formatTimeRange,
 } from '@/lib/time/workspace-time'
 import { bookAthletes } from '@/server/bookings/actions'
+import { Avatar } from '@/components/ui/avatar'
 import { BottomSheet } from '@/components/ui/bottom-sheet'
 import { Button } from '@/components/ui/button'
 import { Notice } from '@/components/ui/notice'
@@ -201,6 +202,16 @@ export function BookingSheet({
                 checked={selected.includes(athlete.athleteId)}
                 disabled={!athlete.canBook}
                 onChange={() => toggle(athlete.athleteId)}
+                // §G2 puts a face beside the name: a parent choosing between
+                // two children under pressure reads the picture first.
+                leading={
+                  <Avatar
+                    firstName={athlete.firstName}
+                    lastName={athlete.lastName}
+                    size={36}
+                    muted={!athlete.canBook}
+                  />
+                }
                 title={`${athlete.firstName} ${athlete.lastName}`}
                 meta={metaFor(athlete)}
               />

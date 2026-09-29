@@ -293,6 +293,9 @@ test('a season and a copy of it (§K11, §K4b)', async ({ page }) => {
 })
 
 test('a booking a parent holds (§G4, §G6)', async ({ page, browser }) => {
+  // Two sign-ins, a training, a child and a booking: more than the default 30s.
+  test.setTimeout(120_000)
+
   // A training to book into, opened by a coach in a context of their own.
   const coachContext = await browser.newContext()
   const coachPage = await coachContext.newPage()
@@ -324,13 +327,65 @@ test('a booking a parent holds (§G4, §G6)', async ({ page, browser }) => {
   await card.getByRole('button', { name: 'Přihlásit' }).click()
   await page.getByRole('dialog').getByRole('button', { name: 'Přihlásit' }).click()
   await expect(page.getByText('Přihlášeno', { exact: true })).toBeVisible()
-  await shoot(page, 'G1-treninky-s-prihlaskou')
+  await shoot(page, 'G1-treninky-s-prihlaskou', { full: false })
 
   await page.goto('/moje-treninky')
   await expect(page.getByText('Ivan Kotov').first()).toBeVisible()
-  await shoot(page, 'G4-moje-treninky')
+  await shoot(page, 'G4-moje-treninky', { full: false })
 
   await page.locator('main li').first().getByRole('link').first().click()
   await expect(page.getByText('INFORMACE PRO SPORTOVCE')).toBeVisible()
   await shoot(page, 'G6-detail-prihlasky')
+})
+
+test('the booking sheet, with room and without (§G2, §G3)', async ({ page, browser }) => {
+  test.setTimeout(120_000)
+
+  // A training with exactly one place, so the sheet has both states to show.
+  const coachContext = await browser.newContext()
+  const coachPage = await coachContext.newPage()
+  const coach = uniqueEmail('trener')
+  await signIn(coachPage, coach)
+  await grantCoach(coach)
+  await coachPage.goto('/trener/novy')
+  await coachPage.getByLabel('Datum').fill(dateInput(11))
+  await coachPage.getByLabel('Kapacita', { exact: true }).fill('1')
+  const room = `Šatna ${Date.now()}`
+  await coachPage.getByLabel('Šatna').fill(room)
+  await coachPage.getByRole('button', { name: 'Vytvořit trénink' }).click()
+  await expect(coachPage.getByText(room)).toBeVisible()
+  await coachContext.close()
+
+  await signIn(page, uniqueEmail('rodic'))
+
+  for (const [first, born] of [
+    ['Ivan', '2017-06-08'],
+    ['Anna', '2018-03-14'],
+  ] as const) {
+    await page.goto('/moji-sportovci/novy')
+    if (first === 'Ivan') {
+      await page.getByLabel('Jméno').first().fill('Milana')
+      await page.getByLabel('Příjmení').first().fill('Kotova')
+    }
+    await page.getByLabel('Jméno').last().fill(first)
+    await page.getByLabel('Příjmení').last().fill('Kotov')
+    await page.getByLabel('Datum narození').fill(born)
+    await page.getByRole('radio', { name: 'Centr' }).click()
+    await page.getByRole('radio', { name: 'Levá' }).click()
+    await page.getByRole('button', { name: 'Přidat sportovce' }).click()
+    await expect(page.getByText(`${first} Kotov`)).toBeVisible()
+  }
+
+  await page.goto('/treninky')
+  const card = page.locator('main li', { hasText: room }).first()
+  await card.getByRole('button', { name: 'Přihlásit' }).click()
+  await expect(page.getByRole('dialog')).toContainText('Koho chcete přihlásit?')
+  await shoot(page, 'G2-prihlaseni', { full: false })
+
+  // Two children, one place: §G3 says so rather than failing on submit.
+  const sheet = page.getByRole('dialog')
+  await sheet.getByText('Ivan Kotov').click()
+  await sheet.getByText('Anna Kotov').click()
+  await expect(sheet).toContainText('Není dostatek volných míst')
+  await shoot(page, 'G3-malo-mist', { full: false })
 })
