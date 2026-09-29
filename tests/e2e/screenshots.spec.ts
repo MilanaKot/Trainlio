@@ -12,8 +12,29 @@ import {
 } from './helpers'
 
 /** A child booked into a training, so the edit screen has somebody to warn about. */
-async function bookedAthlete(firstName: string, birthYear: number, sessionId: string) {
+async function bookedAthlete(
+  firstName: string,
+  birthYear: number,
+  sessionId: string,
+  guardian = 'Milana Kotová',
+) {
   const token = await tokenFor(uniqueEmail(`rodina.${firstName.toLowerCase()}`))
+
+  // The parent says who they are, because the coach's roster names whoever
+  // booked each child and a dash there is not what a real one looks like.
+  const profileId = (await (
+    await fetch(`${STACK}/rest/v1/rpc/current_profile_id`, {
+      method: 'POST',
+      headers: asUser(token),
+      body: '{}',
+    })
+  ).json()) as string
+  const [first, ...rest] = guardian.split(' ')
+  await fetch(`${STACK}/rest/v1/app_profiles?id=eq.${profileId}`, {
+    method: 'PATCH',
+    headers: asUser(token),
+    body: JSON.stringify({ first_name: first, last_name: rest.join(' ') }),
+  })
   const workspaces = (await (
     await fetch(`${STACK}/rest/v1/rpc/joinable_workspaces`, {
       method: 'POST',
@@ -405,4 +426,30 @@ test('signing in (§G11, §G12)', async ({ page }) => {
   await expect(page.getByRole('heading', { name: 'Zadejte kód' })).toBeVisible()
   await page.getByLabel('Kód').fill('4817')
   await shoot(page, 'G12-kod')
+})
+
+test('one training and its roster (§K2)', async ({ page }) => {
+  test.setTimeout(120_000)
+
+  const coach = uniqueEmail('trener')
+  await signIn(page, coach)
+  await grantCoach(coach)
+
+  await page.goto('/trener/novy')
+  await page.getByLabel('Datum').fill(dateInput(13))
+  await page.getByLabel('Šatna').fill('Šatna 4')
+  await page.getByRole('button', { name: 'Vytvořit trénink' }).click()
+  await expect(page.getByText('Šatna 4')).toBeVisible()
+
+  const sessionId = page.url().split('/trener/')[1]?.split('/')[0] ?? ''
+  for (const [name, year] of [
+    ['Ivan', 2017],
+    ['Anna', 2018],
+  ] as const) {
+    await bookedAthlete(name, year, sessionId)
+  }
+
+  await page.reload()
+  await expect(page.getByRole('heading', { name: 'Sportovci 2' })).toBeVisible()
+  await shoot(page, 'K2-detail-treninku')
 })

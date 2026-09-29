@@ -95,7 +95,7 @@ export function RosterList({
                   <span className="text-hint text-muted">
                     {(attribution(entry) === 'STAFF' ? t.bookedByCoach : t.bookedBy).replace(
                       '{name}',
-                      entry.bookedByName ?? t.none,
+                      entry.bookedByName ?? t.bookedByParent,
                     )}{' '}
                     · {formatDateTime(new Date(entry.bookedAt), timezone)}
                   </span>

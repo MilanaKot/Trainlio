@@ -486,6 +486,9 @@ export const cs = {
        product does not collect gender and will not guess it from a name, and
        `Přihlásil(a)` reads as a form rather than as a sentence. */
     bookedBy: 'Přihlásil {name}',
+    /* A parent who has not given their name yet: `Přihlásil —` reads as a
+       missing record rather than as a person the coach can still ring. */
+    bookedByParent: 'rodič',
     bookedByCoach: 'Přidal trenér {name}',
     bookedAt: '{date} v {time}',
     overCapacityBadge: 'Nad kapacitu',
