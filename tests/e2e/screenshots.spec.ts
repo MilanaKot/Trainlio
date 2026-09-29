@@ -291,3 +291,46 @@ test('a season and a copy of it (§K11, §K4b)', async ({ page }) => {
   await expect(page.getByText('ZKOPÍRUJE SE')).toBeVisible()
   await shoot(page, 'K4b-duplikovat-obdobi')
 })
+
+test('a booking a parent holds (§G4, §G6)', async ({ page, browser }) => {
+  // A training to book into, opened by a coach in a context of their own.
+  const coachContext = await browser.newContext()
+  const coachPage = await coachContext.newPage()
+  const coach = uniqueEmail('trener')
+  await signIn(coachPage, coach)
+  await grantCoach(coach)
+  await coachPage.goto('/trener/novy')
+  await coachPage.getByLabel('Datum').fill(dateInput(9))
+  await coachPage.getByLabel('Šatna').fill('Šatna 4')
+  await coachPage.getByRole('button', { name: 'Vytvořit trénink' }).click()
+  await expect(coachPage.getByText('Šatna 4')).toBeVisible()
+  await coachContext.close()
+
+  await signIn(page, uniqueEmail('rodic'))
+
+  await page.goto('/moji-sportovci/novy')
+  await page.getByLabel('Jméno').first().fill('Milana')
+  await page.getByLabel('Příjmení').first().fill('Kotova')
+  await page.getByLabel('Jméno').last().fill('Ivan')
+  await page.getByLabel('Příjmení').last().fill('Kotov')
+  await page.getByLabel('Datum narození').fill('2017-06-08')
+  await page.getByRole('radio', { name: 'Centr' }).click()
+  await page.getByRole('radio', { name: 'Levá' }).click()
+  await page.getByRole('button', { name: 'Přidat sportovce' }).click()
+  await expect(page.getByText('Ivan Kotov')).toBeVisible()
+
+  await page.goto('/treninky')
+  const card = page.locator('main li', { hasText: 'Šatna 4' }).first()
+  await card.getByRole('button', { name: 'Přihlásit' }).click()
+  await page.getByRole('dialog').getByRole('button', { name: 'Přihlásit' }).click()
+  await expect(page.getByText('Přihlášeno', { exact: true })).toBeVisible()
+  await shoot(page, 'G1-treninky-s-prihlaskou')
+
+  await page.goto('/moje-treninky')
+  await expect(page.getByText('Ivan Kotov').first()).toBeVisible()
+  await shoot(page, 'G4-moje-treninky')
+
+  await page.locator('main li').first().getByRole('link').first().click()
+  await expect(page.getByText('INFORMACE PRO SPORTOVCE')).toBeVisible()
+  await shoot(page, 'G6-detail-prihlasky')
+})
