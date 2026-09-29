@@ -20,6 +20,14 @@ consistency with a document that itself calls URLs a detail of the codebase.
 Code, schema, comments and docs are English as CLAUDE.md requires; the URL is
 something a parent reads.
 
+## The public note is not on the training card
+
+It was, for a while. `shared/DESIGN_SYSTEM.md` §6.5 lists the card's rows and
+the note is not among them, and the design is right: a club writes the same
+sentence on every training, so forty cards carry it forty times, and the parent
+who needs it — the one bringing a child on Thursday — meets it on the booking
+detail (§G6) where it belongs.
+
 ## The message catalogue stays TypeScript
 
 `shared/DESIGN_SYSTEM.md` §8 proposes `messages/cs.json` in ICU syntax. The

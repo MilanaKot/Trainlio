@@ -26,6 +26,7 @@ const session = (over = {}) => ({
   confirmedCount: 4,
   locationName: 'Příbram',
   facilityCode: 'VH',
+  facilityName: 'Velká hala',
   changingRoom: 'Šatna 2',
   publicNotes: null,
   eligibilityMode: 'ALL' as const,

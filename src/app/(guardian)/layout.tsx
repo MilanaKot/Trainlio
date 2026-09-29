@@ -31,7 +31,7 @@ export default async function GuardianLayout({ children }: { children: React.Rea
         // A form is a task, not a tab (§G9, §G10): it ends with `Zrušit` at
         // the top and one button at the bottom, which would otherwise sit
         // under the navigation.
-        hideWhen="^/moji-sportovci/novy$|^/ucet/udaje$|/upravit$"
+        hideWhen="^/moji-sportovci/novy$|^/ucet/udaje$|^/moje-treninky/[^/]+$|/upravit$"
         items={[
           { href: '/treninky', label: messages.nav.sessions, icon: <CalendarIcon /> },
           { href: '/moje-treninky', label: messages.nav.myBookings, icon: <CheckCalendarIcon /> },

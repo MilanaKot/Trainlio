@@ -1,8 +1,9 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { getMyBooking } from '@/server/bookings/queries'
+import { getCancellationDeadlineHours, getMyBooking } from '@/server/bookings/queries'
 import { getSessionCoaches } from '@/server/sessions/queries'
 import { listJoinableWorkspaces } from '@/server/athletes/queries'
+import { BookingActions } from '@/components/booking/booking-actions'
 import { MarkSeen } from '@/components/booking/mark-seen'
 import { Avatar } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
@@ -18,6 +19,7 @@ import {
   formatTimeRange,
 } from '@/lib/time/workspace-time'
 import { messages } from '@/lib/i18n'
+import { cn } from '@/lib/utils'
 
 const t = messages.myTrainings
 
@@ -28,9 +30,10 @@ export default async function BookingDetailPage({
 }) {
   const { bookingId } = await params
 
-  const [booking, workspaces] = await Promise.all([
+  const [booking, workspaces, deadlineHours] = await Promise.all([
     getMyBooking(bookingId),
     listJoinableWorkspaces(),
+    getCancellationDeadlineHours(),
   ])
 
   // Not found rather than forbidden: the row policy already limits the read to
@@ -47,6 +50,8 @@ export default async function BookingDetailPage({
   const variant = bookingCardVariant(booking, session)
   const rows = changeRows(session.significantChange, session, timezone)
   const assistants = coaches.filter((c) => c.role === 'ASSISTANT')
+  const struck = variant === 'cancelledSession'
+  const now = new Date()
 
   const years = eligibilityLabel(
     session.eligibilityMode,
@@ -56,7 +61,7 @@ export default async function BookingDetailPage({
   )
 
   return (
-    <main className="flex flex-col gap-5">
+    <main className={cn('flex flex-col gap-5', struck ? '' : 'pb-40')}>
       {/* The badge is silenced by opening the booking, not by rendering it. */}
       <MarkSeen bookingId={booking.bookingId} />
 
@@ -78,11 +83,44 @@ export default async function BookingDetailPage({
           ) : null}
           {variant === 'selfCancelled' ? <Badge>{t.badgeSelfCancelled}</Badge> : null}
         </span>
-        <p className="nums font-display text-hero font-bold text-ink">
+        <p
+          className={cn(
+            'nums font-display text-hero font-bold',
+            struck ? 'text-muted line-through' : 'text-ink',
+          )}
+        >
           {formatTimeRange(start, end, timezone)}
         </p>
-        <p className="text-sheet-title font-bold text-ink">{formatDateGroup(start, timezone)}</p>
+        <p
+          className={cn(
+            'text-sheet-title font-bold',
+            struck ? 'text-muted line-through' : 'text-ink',
+          )}
+        >
+          {formatDateGroup(start, timezone)}
+        </p>
       </header>
+
+      {/* §G6: the training is off. Said as a sentence, not only as the badge
+          beside the name, because this is the screen a parent opens to find
+          out what is happening. */}
+      {struck ? <Notice variant="danger">{t.sessionCancelledNotice}</Notice> : null}
+
+      {/* §G6d: the training happens, this child is not on it. */}
+      {variant === 'removedByCoach' ? (
+        <Notice variant="warning" title={t.removedTitle}>
+          <div className="flex flex-col gap-1">
+            <p>{t.removedBody.replace('{athlete}', booking.athleteName)}</p>
+            {booking.cancelledByName && booking.cancelledAt ? (
+              <p className="text-hint text-muted">
+                {t.removedMeta
+                  .replace('{name}', booking.cancelledByName)
+                  .replace('{when}', formatDateTime(new Date(booking.cancelledAt), timezone))}
+              </p>
+            ) : null}
+          </div>
+        </Notice>
+      ) : null}
 
       {/* §G6: shown whether or not the parent has seen it, until the training
           starts. The badge on the card is the "new" signal; this is the fact. */}
@@ -115,7 +153,12 @@ export default async function BookingDetailPage({
 
       <DetailList
         items={[
-          { term: t.place, value: `${session.locationName} · ${session.facilityCode}` },
+          {
+            term: t.place,
+            value: session.facilityName
+              ? `${session.locationName} · ${session.facilityName} (${session.facilityCode})`
+              : `${session.locationName} · ${session.facilityCode}`,
+          },
           { term: t.changingRoom, value: session.changingRoom },
           { term: t.years, value: years },
           {
@@ -133,9 +176,7 @@ export default async function BookingDetailPage({
                     <span key={coach.profileId}>{coach.displayName}</span>
                   ))}
                 </span>
-              ) : (
-                <span className="text-subtle">{t.none}</span>
-              ),
+              ) : null,
           },
           {
             term: t.occupancy,
@@ -159,6 +200,13 @@ export default async function BookingDetailPage({
           <p className="whitespace-pre-line text-body text-ink">{session.publicNotes}</p>
         </section>
       ) : null}
+
+      <BookingActions
+        booking={booking}
+        timezone={timezone}
+        deadlineHours={deadlineHours}
+        now={now}
+      />
     </main>
   )
 }

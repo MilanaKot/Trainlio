@@ -33,6 +33,8 @@ export type GuardianSession = {
   confirmedCount: number
   locationName: string
   facilityCode: string
+  /** `Malá hala`, so the detail screen can spell the code out (§G6). */
+  facilityName: string
   changingRoom: string | null
   publicNotes: string | null
   eligibilityMode: EligibilityMode
@@ -98,7 +100,7 @@ const SESSION_COLUMNS = `
   id, start_at, end_at, status, capacity, changing_room, public_notes,
   eligibility_mode, birth_year_from, birth_year_to,
   significant_changed_at, significant_change,
-  facilities ( code ),
+  facilities ( code, name ),
   locations ( name ),
   app_profiles!training_sessions_main_coach_profile_id_fkey ( display_name ),
   training_session_occupancy ( confirmed_count ),
@@ -121,7 +123,7 @@ type Row = {
   birth_year_to: number | null
   significant_changed_at: string | null
   significant_change: SignificantChange | null
-  facilities: { code: string } | null
+  facilities: { code: string; name: string } | null
   locations: { name: string } | null
   app_profiles: { display_name: string | null } | null
   training_session_occupancy: { confirmed_count: number } | null
@@ -152,6 +154,7 @@ function toSession(row: Row): GuardianSession {
     confirmedCount: row.training_session_occupancy?.confirmed_count ?? 0,
     locationName: row.locations?.name ?? '',
     facilityCode: row.facilities?.code ?? '',
+    facilityName: row.facilities?.name ?? '',
     changingRoom: row.changing_room,
     publicNotes: row.public_notes,
     eligibilityMode: row.eligibility_mode,

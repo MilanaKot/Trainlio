@@ -33,6 +33,10 @@ function LockIcon() {
  * never who is booked (BR-090). The occupancy is live, and the count drives the
  * meter, the "last places" hint and the footer together, so they cannot
  * disagree about whether the training is full.
+ *
+ * The public note is deliberately not here, as §6.5 has it: it is on the
+ * booking detail, where it reaches the parent who is actually bringing a child
+ * — and on every card it would be the same sentence forty times.
  */
 export function TrainingCard({
   session,
@@ -82,10 +86,6 @@ export function TrainingCard({
       </p>
       <p className="text-meta text-muted">{venue}</p>
       <p className="text-meta text-muted">{eligibility}</p>
-
-      {session.publicNotes ? (
-        <p className="whitespace-pre-line text-meta text-muted">{session.publicNotes}</p>
-      ) : null}
 
       {/* Only while a parent can still act on it: on a closed or full card the
           number of places left is not a nudge, it is noise. */}

@@ -168,6 +168,12 @@ export const cs = {
     occupancy: 'Obsazenost',
     athleteInfo: 'INFORMACE PRO SPORTOVCE',
     coachMessage: 'Zpráva od trenéra',
+    /* §G6: a training the coach called off, and a child the coach took off it.
+       Each says who acted and what it means for this family. */
+    sessionCancelledNotice: 'Trénink byl zrušen trenérem.',
+    removedTitle: 'Trenér odhlásil sportovce z tréninku',
+    removedBody: 'Trénink se koná, ale {athlete} na něm není přihlášen.',
+    removedMeta: 'Odhlásil {name} · {when}',
     none: '—',
   },
 
