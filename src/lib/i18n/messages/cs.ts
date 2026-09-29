@@ -26,12 +26,16 @@ export const cs = {
     sendCode: 'Poslat kód',
     sending: 'Odesílám…',
     codeTitle: 'Zadejte kód',
-    codeSentTo: 'Kód jsme poslali na {email}. Platí 10 minut.',
+    codeSentTo: 'Poslali jsme ho na {email}',
     code: 'Kód',
+    /* §G12: the countdown reads as a clock, `0:42`, not as `42 s`. */
+    resendIn: 'Poslat znovu za {time}',
+    resendNow: 'Poslat znovu',
+    changeEmail: 'Změnit e-mail',
+    back: 'Zpět',
     verify: 'Přihlásit se',
     verifying: 'Přihlašuji…',
     resend: 'Poslat kód znovu',
-    resendIn: 'Nový kód můžete poslat za {seconds} s',
     useAnotherEmail: 'Použít jiný e-mail',
     signOut: 'Odhlásit se',
     errors: {

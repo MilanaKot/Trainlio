@@ -394,3 +394,15 @@ test('the booking sheet, with room and without (§G2, §G3)', async ({ page, bro
   await expect(sheet).toContainText('Není dostatek volných míst')
   await shoot(page, 'G3-malo-mist', { full: false })
 })
+
+test('signing in (§G11, §G12)', async ({ page }) => {
+  await page.goto('/prihlaseni')
+  await expect(page.getByRole('heading', { name: 'Přihlášení' })).toBeVisible()
+  await shoot(page, 'G11-prihlaseni')
+
+  await page.getByLabel('E-mail').fill(uniqueEmail('rodic'))
+  await page.getByRole('button', { name: 'Poslat kód' }).click()
+  await expect(page.getByRole('heading', { name: 'Zadejte kód' })).toBeVisible()
+  await page.getByLabel('Kód').fill('4817')
+  await shoot(page, 'G12-kod')
+})

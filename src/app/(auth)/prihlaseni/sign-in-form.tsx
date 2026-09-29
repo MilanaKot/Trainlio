@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { requestCode, verifyCode } from '@/server/auth/actions'
 import { messages } from '@/lib/i18n'
 import { Button } from '@/components/ui/button'
+import { CodeInput } from '@/components/ui/code-input'
 import { Field } from '@/components/ui/field'
 
 const RESEND_SECONDS = 60
@@ -81,6 +82,7 @@ export function SignInForm() {
   }
 
   const t = messages.auth
+  const countdown = `${Math.floor(cooldown / 60)}:${String(cooldown % 60).padStart(2, '0')}`
 
   return (
     <div className="flex flex-col gap-6">
@@ -88,9 +90,15 @@ export function SignInForm() {
         <h1 className="font-display text-page font-bold text-ink">
           {stage.name === 'email' ? t.signInTitle : t.codeTitle}
         </h1>
-        <p className="text-body text-muted">
-          {stage.name === 'email' ? t.signInIntro : t.codeSentTo.replace('{email}', stage.email)}
-        </p>
+        {stage.name === 'email' ? (
+          <p className="text-body text-muted">{t.signInIntro}</p>
+        ) : (
+          <p className="text-body text-muted">
+            {t.codeSentTo.split('{email}')[0]}
+            <span className="font-semibold text-ink">{stage.email}</span>
+            {t.codeSentTo.split('{email}')[1]}
+          </p>
+        )}
       </header>
 
       {stage.name === 'email' ? (
@@ -125,26 +133,13 @@ export function SignInForm() {
         </form>
       ) : (
         <form onSubmit={onVerify} className="flex flex-col gap-4">
-          <Field label={t.code} {...(error ? { error } : {})}>
-            {(props) => (
-              <input
-                {...props}
-                type="text"
-                name="code"
-                // A numeric keypad and no autocorrect: the code is six digits
-                // and is usually typed with one thumb from another app.
-                inputMode="numeric"
-                pattern="\d{6}"
-                maxLength={6}
-                autoComplete="one-time-code"
-                autoFocus
-                required
-                value={code}
-                onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))}
-                className={`${props.className} text-center font-display text-sheet-title tracking-[0.4em] nums`}
-              />
-            )}
-          </Field>
+          <CodeInput value={code} onChange={setCode} label={t.code} autoFocus />
+
+          {error ? (
+            <p role="alert" className="text-hint font-semibold text-danger">
+              {error}
+            </p>
+          ) : null}
 
           <Button
             type="submit"
@@ -156,14 +151,23 @@ export function SignInForm() {
           </Button>
 
           <div className="flex items-center justify-between gap-3">
-            <button
-              type="button"
-              onClick={onResend}
-              disabled={pending || cooldown > 0}
-              className="flex min-h-11 items-center text-hint font-semibold text-primary disabled:text-muted"
-            >
-              {cooldown > 0 ? t.resendIn.replace('{seconds}', String(cooldown)) : t.resend}
-            </button>
+            {/* A countdown rather than a dead link: a parent who did not get
+                the code should see when they may ask again, not a button that
+                refuses. */}
+            {cooldown > 0 ? (
+              <span className="flex min-h-11 items-center text-hint text-muted">
+                {t.resendIn.replace('{time}', countdown)}
+              </span>
+            ) : (
+              <button
+                type="button"
+                onClick={onResend}
+                disabled={pending}
+                className="flex min-h-11 items-center text-hint font-semibold text-primary disabled:text-muted"
+              >
+                {t.resendNow}
+              </button>
+            )}
 
             <button
               type="button"
@@ -174,7 +178,7 @@ export function SignInForm() {
               }}
               className="flex min-h-11 items-center text-hint font-semibold text-primary"
             >
-              {t.useAnotherEmail}
+              {t.changeEmail}
             </button>
           </div>
         </form>
