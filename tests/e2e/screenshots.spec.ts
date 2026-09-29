@@ -350,7 +350,9 @@ test('the booking sheet, with room and without (§G2, §G3)', async ({ page, bro
   await coachPage.goto('/trener/novy')
   await coachPage.getByLabel('Datum').fill(dateInput(11))
   await coachPage.getByLabel('Kapacita', { exact: true }).fill('1')
-  const room = `Šatna ${Date.now()}`
+  // A plain room name: this spec runs on a database reset for it, so nothing
+  // else is on the board to confuse it with.
+  const room = 'Šatna 2'
   await coachPage.getByLabel('Šatna').fill(room)
   await coachPage.getByRole('button', { name: 'Vytvořit trénink' }).click()
   await expect(coachPage.getByText(room)).toBeVisible()
@@ -368,12 +370,15 @@ test('the booking sheet, with room and without (§G2, §G3)', async ({ page, bro
       await page.getByLabel('Příjmení').first().fill('Kotova')
     }
     await page.getByLabel('Jméno').last().fill(first)
-    await page.getByLabel('Příjmení').last().fill('Kotov')
+    await page
+      .getByLabel('Příjmení')
+      .last()
+      .fill(first === 'Anna' ? 'Kotová' : 'Kotov')
     await page.getByLabel('Datum narození').fill(born)
     await page.getByRole('radio', { name: 'Centr' }).click()
     await page.getByRole('radio', { name: 'Levá' }).click()
     await page.getByRole('button', { name: 'Přidat sportovce' }).click()
-    await expect(page.getByText(`${first} Kotov`)).toBeVisible()
+    await expect(page.getByText(new RegExp(first))).toBeVisible()
   }
 
   await page.goto('/treninky')
@@ -385,7 +390,7 @@ test('the booking sheet, with room and without (§G2, §G3)', async ({ page, bro
   // Two children, one place: §G3 says so rather than failing on submit.
   const sheet = page.getByRole('dialog')
   await sheet.getByText('Ivan Kotov').click()
-  await sheet.getByText('Anna Kotov').click()
+  await sheet.getByText('Anna Kotová').click()
   await expect(sheet).toContainText('Není dostatek volných míst')
   await shoot(page, 'G3-malo-mist', { full: false })
 })
