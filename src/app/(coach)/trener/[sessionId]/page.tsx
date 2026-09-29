@@ -22,6 +22,20 @@ import { messages } from '@/lib/i18n'
 
 const t = messages.coach
 
+/** The note parents read (§K2). */
+function GlobeIcon() {
+  return (
+    <svg viewBox="0 0 16 16" fill="none" className="size-3.5 shrink-0" aria-hidden="true">
+      <circle cx="8" cy="8" r="6" stroke="currentColor" strokeWidth="1.5" />
+      <path
+        d="M2.2 8h11.6M8 2.2c3 3.4 3 8.2 0 11.6-3-3.4-3-8.2 0-11.6"
+        stroke="currentColor"
+        strokeWidth="1.5"
+      />
+    </svg>
+  )
+}
+
 function LockIcon() {
   return (
     <svg viewBox="0 0 16 16" fill="none" className="size-3.5 shrink-0" aria-hidden="true">
@@ -65,7 +79,11 @@ export default async function SessionDetailPage({
 
   const venue = [
     session.locationName,
-    session.facilityCode,
+    // `Malá hala (MH)`, as §K2 has it: the code alone is shorthand for the
+    // people who already know it.
+    session.facilityName
+      ? `${session.facilityName} (${session.facilityCode})`
+      : session.facilityCode,
     session.changingRoom,
     eligibilityLabel(
       session.eligibilityMode,
@@ -121,7 +139,7 @@ export default async function SessionDetailPage({
         ) : null}
       </header>
 
-      <section className="flex flex-col gap-2 rounded-card bg-surface p-4 shadow-card">
+      <section className="flex items-center justify-between gap-3 rounded-card bg-surface p-4 shadow-card">
         <h2 className="text-caption font-bold uppercase tracking-[0.05em] text-muted">
           {t.occupancyCaption}
         </h2>
@@ -147,16 +165,15 @@ export default async function SessionDetailPage({
                     <span key={coach.profileId}>{coach.displayName}</span>
                   ))}
                 </span>
-              ) : (
-                <span className="text-subtle">{t.none}</span>
-              ),
+              ) : null,
           },
         ]}
       />
 
       {session.publicNotes ? (
         <section className="flex flex-col gap-2 rounded-card bg-surface p-4 shadow-card">
-          <h2 className="text-caption font-bold uppercase tracking-[0.05em] text-muted">
+          <h2 className="flex items-center gap-1.5 text-caption font-bold uppercase tracking-[0.05em] text-muted">
+            <GlobeIcon />
             {t.publicNoteCaption}
           </h2>
           <p className="whitespace-pre-line text-body text-ink">{session.publicNotes}</p>

@@ -26,6 +26,8 @@ export type CoachSession = {
   capacity: number
   confirmedCount: number
   facilityCode: string
+  /** `Malá hala`, so the detail screen can spell the code out (§K2). */
+  facilityName: string
   locationName: string
   changingRoom: string | null
   eligibilityMode: EligibilityMode
@@ -115,7 +117,7 @@ const SESSION_COLUMNS = `
   id, start_at, end_at, status, capacity, changing_room, public_notes,
   eligibility_mode, birth_year_from, birth_year_to, significant_changed_at,
   main_coach_profile_id,
-  facilities ( code ),
+  facilities ( code, name ),
   locations ( name ),
   app_profiles!training_sessions_main_coach_profile_id_fkey ( display_name ),
   training_session_occupancy ( confirmed_count ),
@@ -135,7 +137,7 @@ type Row = {
   birth_year_to: number | null
   significant_changed_at: string | null
   main_coach_profile_id: string
-  facilities: { code: string } | null
+  facilities: { code: string; name: string } | null
   locations: { name: string } | null
   app_profiles: { display_name: string | null } | null
   training_session_occupancy: { confirmed_count: number } | null
@@ -152,6 +154,7 @@ function toSession(row: Row): CoachSession {
     // The count comes from the projection, never from counting booking rows.
     confirmedCount: row.training_session_occupancy?.confirmed_count ?? 0,
     facilityCode: row.facilities?.code ?? '',
+    facilityName: row.facilities?.name ?? '',
     locationName: row.locations?.name ?? '',
     changingRoom: row.changing_room,
     eligibilityMode: row.eligibility_mode,
@@ -247,7 +250,7 @@ export async function listCoachSeries(): Promise<CoachSeries[]> {
     .select(
       `id, by_weekdays, excluded_dates, local_date_from, local_date_to, local_start_time, local_end_time,
        generated_count, generated_at, generated_in_timezone, capacity,
-       facilities ( code ),
+       facilities ( code, name ),
        training_sessions ( status )`,
     )
     .order('created_at', { ascending: false })

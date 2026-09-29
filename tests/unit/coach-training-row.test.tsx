@@ -13,6 +13,7 @@ const session = (over: Partial<CoachSession> = {}): CoachSession => ({
   capacity: 10,
   confirmedCount: 4,
   facilityCode: 'MH',
+  facilityName: 'Malá hala',
   locationName: 'Příbram',
   changingRoom: 'Šatna 4',
   eligibilityMode: 'ALL',
