@@ -65,7 +65,13 @@ select pg_temp.check(
   (select is_nullable from information_schema.columns
     where table_schema='public' and table_name='athletes' and column_name='date_of_birth'),
   'NO', 'and it is required');
--- AC-222. The one deliberate exception is documented on the column itself.
+-- AC-222. Two deliberate exceptions, each documented on its own column.
+--
+--   * notification_deliveries.recipient_email — where a message was sent, under
+--     a retention window, scrubbed by the drain.
+--   * staff_contacts.email — the address a coach signs in with (migration 36).
+--     An invited coach has no auth.users row yet, so there is nowhere else for
+--     it to live; the table has RLS on, no policy and no grant to any client.
 --
 -- Restricted to columns that could actually hold an address: a retention
 -- setting in days is named for email and cannot store one. Widening the scan
@@ -77,8 +83,8 @@ select pg_temp.check(
     where table_schema = 'public'
       and data_type in ('text', 'character varying', 'character')
       and (column_name ilike '%email%' or column_name ilike '%e_mail%')),
-  'notification_deliveries.recipient_email',
-  'no operational table stores an email address (AC-222)');
+  'notification_deliveries.recipient_email, staff_contacts.email',
+  'only the two documented tables store an email address (AC-222)');
 select pg_temp.check(
   (select is_nullable from information_schema.columns
     where table_schema='public' and table_name='notification_deliveries' and column_name='recipient_email'),

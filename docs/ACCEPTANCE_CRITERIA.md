@@ -467,7 +467,13 @@ AC-221
 Deleting an authentication record preserves guardian access links.
 
 AC-222  
-No operational table stores an email address except the notification delivery audit, which is service-role only and scrubbable.
+No operational table stores an email address except two, and both are
+unreachable by any client role. The notification delivery audit holds the
+address a message was sent to, which is service-role only and scrubbable. The
+staff contact table holds the address a coach signs in with (handoff v3,
+DR-07), because an invited coach has no authentication record yet — there is
+nowhere else for it to be until they first sign in — and that table has row
+level security on, no policy and no grant.
 
 AC-223  
 Audit entries remain attributable after an authentication record is removed.
@@ -783,3 +789,22 @@ the counts in the tabs, and a training that has been edited since it was created
 says so — it no longer matches the pattern. There is no action anywhere that
 edits or cancels a series as a whole, and the screen says why: the occurrences
 are independent from the moment they are made.
+
+## A coach who can sign in (handoff v3, DR-07)
+
+AC-289  
+Given an administrator adding a coach with an e-mail address  
+Then the coach exists immediately, as they always did — able to lead trainings
+before they have ever opened the app — and an invitation goes to that address.
+Until they first sign in the list shows them as `Pozván`, and without an address
+as `Bez přístupu`; a second invitation inside the hour is refused by the
+database, not merely by the button. The address is unique across the whole
+application, not only the staff: one that somebody already signs in with is
+refused, because the first sign-in attaches the authentication record to the
+profile that holds it. That attachment is the point — the coach signs in as
+themselves, with the trainings they already lead, instead of receiving a second
+profile. Everyone else still gets a fresh profile, exactly as before.
+Invitations never expire: signing in is always a code to an address, so an
+unaccepted invitation is a state and not a deadline. After the first sign-in the
+coach sees the welcome screen once, where they may record the number parents
+will be given when a child is removed, and never again.

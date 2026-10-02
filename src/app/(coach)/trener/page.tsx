@@ -1,6 +1,8 @@
 import Link from 'next/link'
-import { notFound } from 'next/navigation'
+import { notFound, redirect } from 'next/navigation'
 import { getCoachWorkspace, listCoachSessions } from '@/server/sessions/queries'
+import { getOwnStaffState } from '@/server/staff/queries'
+import { touchStaffSeen } from '@/server/staff/actions'
 import { CoachTrainingRow } from '@/components/session/coach-training-row'
 import { CoachTrainingsTabs } from '@/components/session/coach-trainings-tabs'
 import { CreateSheet } from '@/components/session/create-sheet'
@@ -35,6 +37,17 @@ export default async function CoachSessionsPage({
   // route does: `return null` renders a blank 200, which is the wrong answer if
   // the layout guard is ever moved or a route is added outside it.
   if (!workspace) notFound()
+
+  // §K0, once: a coach who has signed in and never been welcomed is sent there
+  // first. Here rather than in the layout because this is where signing in
+  // lands, and a layout cannot tell which screen it is wrapping.
+  const state = await getOwnStaffState()
+  if (state?.isStaff && state.firstSignInAt !== null && state.welcomedAt === null) {
+    redirect('/trener/vitejte')
+  }
+
+  // §A3's `Naposledy v aplikaci`. The database writes at most hourly.
+  await touchStaffSeen()
 
   const { upcoming, past } = await listCoachSessions()
   const showingPast = tab === 'minule'

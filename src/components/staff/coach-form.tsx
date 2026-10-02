@@ -4,11 +4,20 @@ import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { messages, plural } from '@/lib/i18n'
 import { formatPhone, normalisePhone } from '@/lib/domain/phone'
-import { addCoach, setMemberActive, setMemberName, setMemberPhone } from '@/server/staff/actions'
+import { formatDateShort, formatTime, DEFAULT_TIMEZONE } from '@/lib/time/workspace-time'
+import {
+  addCoach,
+  inviteCoach,
+  setMemberActive,
+  setMemberEmail,
+  setMemberName,
+  setMemberPhone,
+} from '@/server/staff/actions'
 import { Button } from '@/components/ui/button'
 import { ConfirmDialog } from '@/components/ui/dialog'
 import { Field } from '@/components/ui/field'
 import { Notice } from '@/components/ui/notice'
+import { AccessStatus } from '@/components/ui/access-status'
 import { Switch } from '@/components/ui/switch'
 import { useToast } from '@/components/ui/toast'
 import type { StaffMember } from '@/server/staff/queries'
@@ -18,6 +27,69 @@ const t = messages.staff
 function errorText(code: string | undefined): string {
   const table = t.errors as Record<string, string>
   return table[code ?? ''] ?? t.errors.generic
+}
+
+/** `Pozvánka odeslána 4. 10. v 09:12` — one stamp, two sentences (§A3). */
+function stamp(template: string, iso: string): string {
+  const at = new Date(iso)
+  return template
+    .replace('{date}', formatDateShort(at, DEFAULT_TIMEZONE))
+    .replace('{time}', formatTime(at, DEFAULT_TIMEZONE))
+}
+
+function EmailField({
+  value,
+  onChange,
+  error,
+  autoFocus = false,
+}: {
+  value: string
+  onChange: (value: string) => void
+  error?: string
+  autoFocus?: boolean
+}) {
+  return (
+    <Field label={t.email} hint={t.emailHint} {...(error ? { error } : {})}>
+      {(props) => (
+        <input
+          {...props}
+          type="email"
+          inputMode="email"
+          autoComplete="off"
+          autoFocus={autoFocus}
+          value={value}
+          maxLength={160}
+          onChange={(event) => onChange(event.target.value)}
+        />
+      )}
+    </Field>
+  )
+}
+
+function PhoneField({
+  value,
+  onChange,
+  error,
+}: {
+  value: string
+  onChange: (value: string) => void
+  error?: string
+}) {
+  return (
+    <Field label={t.phone} optional hint={t.phoneHint} {...(error ? { error } : {})}>
+      {(props) => (
+        <input
+          {...props}
+          type="tel"
+          inputMode="tel"
+          autoComplete="tel"
+          value={value}
+          maxLength={24}
+          onChange={(event) => onChange(event.target.value)}
+        />
+      )}
+    </Field>
+  )
 }
 
 function Panel({ caption, children }: { caption?: string; children: React.ReactNode }) {
@@ -62,12 +134,15 @@ export function CoachForm({
   const [lastName, setLastName] = useState(member?.lastName ?? '')
   const [isActive, setIsActive] = useState(member?.isActive ?? true)
   const [phone, setPhone] = useState(member?.phone ? formatPhone(member.phone) : '')
+  const [email, setEmail] = useState(member?.email ?? '')
   const [errors, setErrors] = useState<{
     firstName?: string
     lastName?: string
     phone?: string
+    email?: string
     form?: string
   }>({})
+  const [inviting, startInviting] = useTransition()
   const [confirmFuture, setConfirmFuture] = useState<number | null>(null)
   const [pending, startSaving] = useTransition()
 
@@ -76,12 +151,17 @@ export function CoachForm({
     member === undefined && name !== '' && existingNames.some((existing) => existing === name)
 
   function validate(): boolean {
-    const next: { firstName?: string; lastName?: string; phone?: string } = {}
+    const next: { firstName?: string; lastName?: string; phone?: string; email?: string } = {}
     if (firstName.trim() === '') next.firstName = t.errors.FIRST_NAME_REQUIRED
     if (lastName.trim() === '') next.lastName = t.errors.LAST_NAME_REQUIRED
     // The same two shapes the column accepts, refused here so the number is
     // rejected under its own field rather than as a failed save (§A3).
     if (!normalisePhone(phone).ok) next.phone = t.errors.PHONE_MALFORMED
+    // The address is optional, and recommended: the server holds it to the same
+    // shape and decides whether anybody else already has it.
+    if (email.trim() !== '' && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email.trim())) {
+      next.email = t.errors.EMAIL_MALFORMED
+    }
     setErrors(next)
     return Object.keys(next).length === 0
   }
@@ -91,12 +171,29 @@ export function CoachForm({
 
     startSaving(async () => {
       if (!member) {
-        const created = await addCoach(workspaceId, firstName.trim(), lastName.trim())
+        const typed = normalisePhone(phone)
+        const created = await addCoach(workspaceId, firstName.trim(), lastName.trim(), {
+          ...(email.trim() ? { email: email.trim() } : {}),
+          ...(typed.ok && typed.value ? { phone: typed.value } : {}),
+        })
         if (!created.ok) {
-          setErrors({ form: errorText(created.code) })
+          setErrors(
+            created.code === 'EMAIL_TAKEN'
+              ? { email: errorText(created.code) }
+              : { form: errorText(created.code) },
+          )
           return
         }
-        toast(t.added)
+
+        // §A2: the invitation is the point of the address, so it goes with the
+        // save rather than waiting for somebody to open A3b and ask for it.
+        if (email.trim() && created.profileId) {
+          const invited = await inviteCoach(workspaceId, created.profileId)
+          toast(invited.ok ? t.addedWithInvite : t.added)
+        } else {
+          toast(t.added)
+        }
+
         router.push('/trener/vice/treneri')
         router.refresh()
         return
@@ -111,6 +208,25 @@ export function CoachForm({
       if (!renamed.ok) {
         setErrors({ form: errorText(renamed.code) })
         return
+      }
+
+      const nextEmail = email.trim()
+      if (nextEmail !== (member.email ?? '')) {
+        const stored = await setMemberEmail(workspaceId, member.profileId, nextEmail)
+        if (!stored.ok) {
+          setErrors(
+            stored.code === 'EMAIL_TAKEN' || stored.code === 'EMAIL_MALFORMED'
+              ? { email: errorText(stored.code) }
+              : { form: errorText(stored.code) },
+          )
+          return
+        }
+
+        // §A3c: a new address on a coach who has never signed in is an
+        // invitation waiting to happen, and the helper text promised one.
+        if (nextEmail && member.access !== 'signed_in') {
+          await inviteCoach(workspaceId, member.profileId)
+        }
       }
 
       const typedPhone = normalisePhone(phone)
@@ -197,30 +313,75 @@ export function CoachForm({
 
       {duplicate ? <Notice variant="warning">{t.duplicateName}</Notice> : null}
 
-      {/* §A3 KONTAKT. On A2 the panel arrives with the e-mail beside it, which
-          is what sends the invitation; here the number stands on its own. */}
+      {/* §A2/§A3 PŘÍSTUP DO APLIKACE. The address is what makes a coach able to
+          sign in at all, so on A3 it sits under the state it produces. */}
       {member ? (
-        <Panel caption={t.contactCaption}>
-          <Field
-            label={t.phone}
-            optional
-            hint={t.phoneHint}
-            {...(errors.phone ? { error: errors.phone } : {})}
-          >
-            {(props) => (
-              <input
-                {...props}
-                type="tel"
-                inputMode="tel"
-                autoComplete="tel"
-                value={phone}
-                maxLength={24}
-                onChange={(event) => setPhone(event.target.value)}
-              />
-            )}
-          </Field>
+        <Panel caption={t.accessCaption}>
+          <AccessStatus
+            access={member.access}
+            detail={
+              isSelf
+                ? t.accessItsYou
+                : member.access === 'signed_in'
+                  ? member.lastSeenAt
+                    ? stamp(t.accessLastSeen, member.lastSeenAt)
+                    : undefined
+                  : member.access === 'invited'
+                    ? member.invitedAt
+                      ? stamp(t.accessInvitedAt, member.invitedAt)
+                      : undefined
+                    : t.accessNoEmailBody
+            }
+          />
+          <EmailField
+            value={email}
+            onChange={setEmail}
+            autoFocus={member.access === 'no_email'}
+            {...(errors.email ? { error: errors.email } : {})}
+          />
+
+          {/* §A3b: at most once an hour, which the database enforces — this
+              button only reports what it answered. */}
+          {member.access !== 'signed_in' ? (
+            <div className="flex flex-col gap-2">
+              <Button
+                variant="outline"
+                size="md"
+                disabled={email.trim() === '' || inviting || pending}
+                onClick={() =>
+                  startInviting(async () => {
+                    const result = await inviteCoach(workspaceId, member.profileId)
+                    if (result.ok) {
+                      toast(t.accessSent)
+                      router.refresh()
+                    } else {
+                      setErrors({ form: errorText(result.code) })
+                    }
+                  })
+                }
+              >
+                {member.access === 'invited' ? t.accessResend : t.accessSend}
+              </Button>
+              <p className="text-hint text-muted">{t.accessResendHelper}</p>
+            </div>
+          ) : null}
         </Panel>
       ) : null}
+
+      <Panel caption={t.contactCaption}>
+        {member ? null : (
+          <EmailField
+            value={email}
+            onChange={setEmail}
+            {...(errors.email ? { error: errors.email } : {})}
+          />
+        )}
+        <PhoneField
+          value={phone}
+          onChange={setPhone}
+          {...(errors.phone ? { error: errors.phone } : {})}
+        />
+      </Panel>
 
       {member ? (
         <Panel caption={t.stateCaption}>
@@ -266,7 +427,7 @@ export function CoachForm({
           onClick={() => save()}
           {...(pending ? { loadingLabel: messages.coach.saving } : {})}
         >
-          {member ? messages.coach.saveChanges : t.addSubmit}
+          {member ? messages.coach.saveChanges : email.trim() ? t.addWithInvite : t.addSubmit}
         </Button>
       </div>
 

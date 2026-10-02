@@ -743,19 +743,34 @@ export type Database = {
       }
       staff_contacts: {
         Row: {
-          phone: string
+          email: string | null
+          first_sign_in_at: string | null
+          invited_at: string | null
+          last_seen_at: string | null
+          phone: string | null
           profile_id: string
           updated_at: string
+          welcomed_at: string | null
         }
         Insert: {
-          phone: string
+          email?: string | null
+          first_sign_in_at?: string | null
+          invited_at?: string | null
+          last_seen_at?: string | null
+          phone?: string | null
           profile_id: string
           updated_at?: string
+          welcomed_at?: string | null
         }
         Update: {
-          phone?: string
+          email?: string | null
+          first_sign_in_at?: string | null
+          invited_at?: string | null
+          last_seen_at?: string | null
+          phone?: string | null
           profile_id?: string
           updated_at?: string
+          welcomed_at?: string | null
         }
         Relationships: [
           {
@@ -1296,6 +1311,7 @@ export type Database = {
           position_code: string
         }[]
       }
+      complete_staff_welcome: { Args: { p_phone?: string }; Returns: Json }
       create_athlete_with_guardian: {
         Args: {
           p_attributes?: Json
@@ -1353,8 +1369,10 @@ export type Database = {
       }
       create_workspace_coach: {
         Args: {
+          p_email?: string
           p_first_name: string
           p_last_name: string
+          p_phone?: string
           p_role?: Database["public"]["Enums"]["workspace_role"]
           p_workspace_id: string
         }
@@ -1488,9 +1506,29 @@ export type Database = {
           sport_code: string
         }[]
       }
+      own_staff_state: {
+        Args: never
+        Returns: {
+          email: string
+          first_sign_in_at: string
+          is_admin: boolean
+          is_staff: boolean
+          phone: string
+          profile_id: string
+          welcomed_at: string
+        }[]
+      }
       pending_notification_events: {
         Args: { p_limit?: number }
         Returns: string[]
+      }
+      prepare_coach_invitation: {
+        Args: { p_profile_id: string; p_workspace_id: string }
+        Returns: Json
+      }
+      record_coach_invitation: {
+        Args: { p_profile_id: string; p_workspace_id: string }
+        Returns: Json
       }
       record_notification_delivery: {
         Args: {
@@ -1561,6 +1599,10 @@ export type Database = {
         }
         Returns: Json
       }
+      set_member_email: {
+        Args: { p_email: string; p_profile_id: string; p_workspace_id: string }
+        Returns: Json
+      }
       set_member_name: {
         Args: {
           p_first_name: string
@@ -1595,6 +1637,7 @@ export type Database = {
         }
         Returns: Json
       }
+      touch_staff_seen: { Args: never; Returns: undefined }
       update_training_session: {
         Args: {
           p_birth_year_from?: number
@@ -1640,12 +1683,16 @@ export type Database = {
         Args: { p_workspace_id: string }
         Returns: {
           display_name: string
+          email: string
           first_name: string
+          first_sign_in_at: string
           future_sessions: number
           has_login: boolean
+          invited_at: string
           is_active: boolean
           is_editable: boolean
           last_name: string
+          last_seen_at: string
           phone: string
           profile_id: string
           roles: Database["public"]["Enums"]["workspace_role"][]

@@ -31,6 +31,13 @@ const serverSchema = z.object({
   AUTH_SENDER_EMAIL: z.email(),
   /** Shared secret for the notification drain cron route. */
   CRON_SECRET: z.string().min(16),
+  /**
+   * Where the application's own e-mails go. `mailpit` is local development and
+   * the browser suite, where Resend cannot be reached and nothing could be read
+   * back if it could. Production sets neither and gets Resend.
+   */
+  EMAIL_TRANSPORT: z.enum(['resend', 'mailpit']).default('resend'),
+  MAILPIT_URL: z.url().default('http://127.0.0.1:54324'),
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
 })
 
@@ -69,6 +76,8 @@ export function getServerEnv(): z.infer<typeof serverSchema> {
     RESEND_API_KEY: process.env.RESEND_API_KEY,
     AUTH_SENDER_EMAIL: process.env.AUTH_SENDER_EMAIL,
     CRON_SECRET: process.env.CRON_SECRET,
+    EMAIL_TRANSPORT: process.env.EMAIL_TRANSPORT,
+    MAILPIT_URL: process.env.MAILPIT_URL,
     NODE_ENV: process.env.NODE_ENV,
   })
 
@@ -88,6 +97,8 @@ export function assertEnv(): void {
     RESEND_API_KEY: process.env.RESEND_API_KEY,
     AUTH_SENDER_EMAIL: process.env.AUTH_SENDER_EMAIL,
     CRON_SECRET: process.env.CRON_SECRET,
+    EMAIL_TRANSPORT: process.env.EMAIL_TRANSPORT,
+    MAILPIT_URL: process.env.MAILPIT_URL,
     NODE_ENV: process.env.NODE_ENV,
   })
 

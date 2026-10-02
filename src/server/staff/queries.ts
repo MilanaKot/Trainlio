@@ -20,6 +20,24 @@ export type StaffMember = {
    * themselves, and to nobody else (migration 33).
    */
   phone: string | null
+  /** The address they sign in with (§A2). Null means no access at all. */
+  email: string | null
+  invitedAt: string | null
+  firstSignInAt: string | null
+  lastSeenAt: string | null
+  /** Derived, never stored (§A2 data). */
+  access: CoachAccess
+}
+
+/** §A2: `Bez přístupu` · `Pozván` · `Přihlášen`. */
+export type CoachAccess = 'no_email' | 'invited' | 'signed_in'
+
+export function coachAccess(member: {
+  email: string | null
+  firstSignInAt: string | null
+}): CoachAccess {
+  if (member.firstSignInAt !== null) return 'signed_in'
+  return member.email === null ? 'no_email' : 'invited'
 }
 
 /**
@@ -55,5 +73,46 @@ export async function getWorkspaceStaff(workspaceId: string): Promise<StaffMembe
     isEditable: member.is_editable,
     futureSessions: member.future_sessions,
     phone: member.phone,
+    email: member.email,
+    invitedAt: member.invited_at,
+    firstSignInAt: member.first_sign_in_at,
+    lastSeenAt: member.last_seen_at,
+    access: coachAccess({
+      email: member.email,
+      firstSignInAt: member.first_sign_in_at,
+    }),
   }))
+}
+
+export type OwnStaffState = {
+  profileId: string
+  isStaff: boolean
+  isAdmin: boolean
+  phone: string | null
+  email: string | null
+  firstSignInAt: string | null
+  welcomedAt: string | null
+}
+
+/**
+ * Who the signed-in person is, as the coach app needs to know it (§K0, §A3).
+ *
+ * One call rather than three reads: the layout asks it on every coach page to
+ * decide whether the welcome screen is still owed.
+ */
+export async function getOwnStaffState(): Promise<OwnStaffState | null> {
+  const supabase = await createClient()
+
+  const state = rows('own_staff_state', await supabase.rpc('own_staff_state'))[0]
+  if (!state) return null
+
+  return {
+    profileId: state.profile_id,
+    isStaff: state.is_staff,
+    isAdmin: state.is_admin,
+    phone: state.phone,
+    email: state.email,
+    firstSignInAt: state.first_sign_in_at,
+    welcomedAt: state.welcomed_at,
+  }
 }

@@ -19,8 +19,13 @@ const t = messages.auth
  * visitor came for. Then this falls back to the product's own mark rather than
  * showing the wrong crest.
  */
-export default async function SignInPage() {
+export default async function SignInPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ email?: string }>
+}) {
   const supabase = await createClient()
+  const { email } = await searchParams
 
   // getUser() revalidates against the auth server. getSession() only reads the
   // cookie, so it must never gate a redirect.
@@ -51,7 +56,12 @@ export default async function SignInPage() {
           )}
         </header>
 
-        <SignInForm />
+        {/* §A6: the invitation link carries the address an administrator
+            recorded, so a coach signing in for the first time does not have to
+            remember which one it was. The code is not sent by the link itself —
+            scanners and preview services fetch links, and a code sent by one of
+            those is a code the coach never asked for. */}
+        <SignInForm {...(email ? { initialEmail: email } : {})} />
       </div>
 
       <footer className="flex items-center justify-center gap-1.5 pt-8 text-hint font-normal text-muted">

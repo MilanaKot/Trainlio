@@ -150,3 +150,98 @@ update public.app_profiles set anonymized_at = now() where id = :COACH2;
 select pg_temp.check(
   (select count(*)::text from public.staff_contacts where profile_id = :COACH2),
   '0', 'the D-18 stamp takes the coach''s number too (AC-280)');
+
+\echo ''
+\echo '── An invited coach signs in as themselves (§A6, AC-289) ────────────'
+-- A coach the club added before they ever opened the app (migration 21). The
+-- invitation exists so that the login they eventually make lands on this
+-- profile, and not on a second one with none of their trainings on it.
+create temp table t_invited as
+select (pg_temp.as_user(:ADMIN, format($$select (public.create_workspace_coach(
+  (select id from public.workspaces limit 1), 'Petr', 'Pozvaný', 'COACH', 'petr.pozvany@example.test')
+  ->> 'profile_id')$$)))::uuid as id;
+create or replace function pg_temp.invited() returns uuid language sql stable as
+  $$ select id from t_invited $$;
+
+select pg_temp.check(
+  (select email from public.staff_contacts where profile_id = pg_temp.invited()),
+  'petr.pozvany@example.test', 'the address an administrator recorded (AC-289)');
+select pg_temp.check(
+  pg_temp.as_user(:ADMIN, format($$select coalesce((select first_sign_in_at::text
+    from public.workspace_staff((select id from public.workspaces limit 1))
+   where profile_id = %L), '(null)')$$, pg_temp.invited())),
+  '(null)', 'and no first sign-in yet: the state is `Pozván` (AC-289)');
+
+-- Nobody else may hold it. A guardian signing in with this address would be
+-- attached to the coach's profile by the trigger below and would find
+-- themselves looking at the club.
+select pg_temp.check(
+  pg_temp.as_user(:ADMIN, format($$select (public.set_member_email(
+    (select id from public.workspaces limit 1), %L, 'petr.pozvany@example.test') ->> 'code')$$,
+    :COACH)),
+  'EMAIL_TAKEN', 'a second coach cannot take the same address (AC-289)');
+select pg_temp.check(
+  pg_temp.as_user(:ADMIN, format($$select (public.set_member_email(
+    (select id from public.workspaces limit 1), %L, 'familyA@example.test') ->> 'code')$$,
+    :COACH)),
+  'EMAIL_TAKEN', 'nor an address somebody already signs in with (AC-289)');
+select pg_temp.check(
+  pg_temp.as_user(:COACH, format($$select (public.set_member_email(
+    (select id from public.workspaces limit 1), %L, 'kdokoli@example.test') ->> 'code')$$,
+    pg_temp.invited())),
+  'NOT_AUTHORIZED', 'and a coach cannot hand out access at all (AC-289)');
+
+-- The invitation: checked before it is sent, stamped after.
+select pg_temp.check(
+  pg_temp.as_user(:ADMIN, format($$select (public.prepare_coach_invitation(
+    (select id from public.workspaces limit 1), %L) -> 'data' ->> 'email')$$, pg_temp.invited())),
+  'petr.pozvany@example.test', 'the invitation knows where to go (AC-289)');
+select pg_temp.check(
+  pg_temp.as_user(:ADMIN, format($$select (public.record_coach_invitation(
+    (select id from public.workspaces limit 1), %L) ->> 'ok')$$, pg_temp.invited())),
+  'true', 'and is recorded once it has gone (AC-289)');
+-- §A3b: once an hour, per coach. The stamp is the limit.
+select pg_temp.check(
+  pg_temp.as_user(:ADMIN, format($$select (public.prepare_coach_invitation(
+    (select id from public.workspaces limit 1), %L) ->> 'code')$$, pg_temp.invited())),
+  'RATE_LIMITED', 'a second one within the hour is refused (AC-289)');
+select pg_temp.check(
+  (select count(*)::text from public.audit_log where action = 'MEMBER_INVITED'),
+  '1', 'and the club has a record of who was let in (AC-289)');
+
+-- The sign-in itself. This is the whole point: the authentication record
+-- attaches to the profile that already leads trainings.
+insert into auth.users (id, email)
+values ('00000000-0000-0000-0000-0000000a1111', 'petr.pozvany@example.test');
+select pg_temp.check(
+  (select (auth_user_id = '00000000-0000-0000-0000-0000000a1111')::text
+     from public.app_profiles where id = pg_temp.invited()),
+  'true', 'the first sign-in attaches the coach''s own profile (AC-289)');
+select pg_temp.check(
+  (select count(*)::text from public.app_profiles p
+    where p.auth_user_id = '00000000-0000-0000-0000-0000000a1111'),
+  '1', 'and no second profile is made for them (AC-289)');
+select pg_temp.check(
+  (select (first_sign_in_at is not null)::text
+     from public.staff_contacts where profile_id = pg_temp.invited()),
+  'true', 'the state becomes `Přihlášen` (AC-289)');
+select pg_temp.check(
+  pg_temp.as_user(:ADMIN, format($$select (public.prepare_coach_invitation(
+    (select id from public.workspaces limit 1), %L) ->> 'code')$$, pg_temp.invited())),
+  'ALREADY_SIGNED_IN', 'and there is nothing left to invite them to (AC-289)');
+
+-- Everybody else still gets a profile of their own, as they always did.
+insert into auth.users (id, email)
+values ('00000000-0000-0000-0000-0000000a2222', 'nekdo.jiny@example.test');
+select pg_temp.check(
+  (select count(*)::text from public.app_profiles p
+    where p.auth_user_id = '00000000-0000-0000-0000-0000000a2222'),
+  '1', 'an address nobody recorded makes a new profile (AC-289)');
+
+\echo ''
+\echo '── §K0 is shown once (AC-289) ───────────────────────────────────────'
+select pg_temp.check(
+  (select coalesce(welcomed_at::text, '(null)')
+     from public.staff_contacts where profile_id = pg_temp.invited()),
+  '(null)', 'a coach who has not seen it yet (AC-289)');
+

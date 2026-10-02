@@ -2,6 +2,10 @@
 
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
+import { publicEnv } from '@/lib/env'
+import { logoUrl } from '@/lib/domain/logo'
+import { emailProvider } from '@/lib/email/provider'
+import { composeInvitationEmail } from '@/lib/notifications/invitation'
 
 /**
  * Managing the coaching staff (D-11, DESIGN_BRIEF §34).
@@ -15,13 +19,14 @@ import { createClient } from '@/lib/supabase/server'
  */
 
 export type StaffResult =
-  | { ok: true; displayName?: string | undefined }
+  | { ok: true; displayName?: string | undefined; profileId?: string | undefined }
   | { ok: false; code: string; futureSessions?: number | undefined }
 
 type RpcResult = {
   ok?: boolean
   code?: string
   display_name?: string | null
+  profile_id?: string | null
   details?: { future_sessions?: number }
 }
 
@@ -73,6 +78,7 @@ export async function addCoach(
   workspaceId: string,
   firstName: string,
   lastName: string,
+  contact: { email?: string; phone?: string } = {},
 ): Promise<StaffResult> {
   const supabase = await createClient()
 
@@ -80,6 +86,9 @@ export async function addCoach(
     p_workspace_id: workspaceId,
     p_first_name: firstName.slice(0, 100),
     p_last_name: lastName.slice(0, 100),
+    p_role: 'COACH',
+    p_email: contact.email?.slice(0, 160) ?? '',
+    p_phone: contact.phone?.slice(0, 40) ?? '',
   })
 
   if (error) return { ok: false, code: 'generic' }
@@ -88,7 +97,11 @@ export async function addCoach(
   if (!result.ok) return { ok: false, code: result.code ?? 'generic' }
 
   refresh()
-  return { ok: true, displayName: result.display_name ?? undefined }
+  return {
+    ok: true,
+    displayName: result.display_name ?? undefined,
+    profileId: result.profile_id ?? undefined,
+  }
 }
 
 /**
@@ -158,4 +171,133 @@ export async function setMemberActive(
 
   refresh()
   return { ok: true }
+}
+
+/**
+ * The address a coach signs in with (§A2, §A3, §A3c).
+ *
+ * Refused when anybody else in the application already holds it — not only
+ * another coach. A guardian signing in with an address recorded here would be
+ * attached to this coach's profile by the trigger in migration 36, and would
+ * find themselves looking at the club's trainings.
+ */
+export async function setMemberEmail(
+  workspaceId: string,
+  profileId: string,
+  email: string,
+): Promise<StaffResult & { changed?: boolean }> {
+  const supabase = await createClient()
+
+  const { data, error } = await supabase.rpc('set_member_email', {
+    p_workspace_id: workspaceId,
+    p_profile_id: profileId,
+    p_email: email.slice(0, 160),
+  })
+
+  if (error) return { ok: false, code: 'generic' }
+
+  const result = data as { ok?: boolean; code?: string; data?: { changed?: boolean } } | null
+  if (!result?.ok) return { ok: false, code: result?.code ?? 'generic' }
+
+  refresh()
+  return { ok: true, changed: result.data?.changed ?? false }
+}
+
+/**
+ * Sending the invitation (§A6).
+ *
+ * Three steps, and the order is the point: the database checks (an
+ * administrator, an address, not signed in yet, not within the hour) and hands
+ * back what the message needs; the message goes; and only then is the send
+ * recorded. Stamping first would lock an administrator out for an hour over a
+ * message that never left.
+ */
+export async function inviteCoach(
+  workspaceId: string,
+  profileId: string,
+): Promise<{ ok: true } | { ok: false; code: string }> {
+  const supabase = await createClient()
+
+  const { data, error } = await supabase.rpc('prepare_coach_invitation', {
+    p_workspace_id: workspaceId,
+    p_profile_id: profileId,
+  })
+
+  if (error) return { ok: false, code: 'generic' }
+
+  const prepared = data as {
+    ok?: boolean
+    code?: string
+    data?: {
+      email?: string
+      coach_name?: string | null
+      admin_name?: string | null
+      organization_name?: string
+      organization_logo_path?: string | null
+    }
+  } | null
+
+  if (!prepared?.ok || !prepared.data?.email) {
+    return { ok: false, code: prepared?.code ?? 'generic' }
+  }
+
+  const message = composeInvitationEmail(
+    {
+      email: prepared.data.email,
+      coachName: prepared.data.coach_name ?? null,
+      adminName: prepared.data.admin_name ?? null,
+      organizationName: prepared.data.organization_name ?? '',
+      organizationLogoUrl: logoUrl(
+        publicEnv.NEXT_PUBLIC_SUPABASE_URL,
+        prepared.data.organization_logo_path ?? null,
+      ),
+    },
+    publicEnv.NEXT_PUBLIC_SITE_URL,
+  )
+
+  const sent = await emailProvider().send(message)
+  if (!sent.ok) return { ok: false, code: 'SEND_FAILED' }
+
+  const { data: recorded } = await supabase.rpc('record_coach_invitation', {
+    p_workspace_id: workspaceId,
+    p_profile_id: profileId,
+  })
+
+  const result = readRpc(recorded)
+  if (!result.ok) return { ok: false, code: result.code ?? 'generic' }
+
+  refresh()
+  return { ok: true }
+}
+
+/**
+ * §K0, once. The phone is optional and goes in the same call, so a coach who
+ * types it does not have to find the account screen to save it.
+ */
+export async function completeWelcome(phone: string): Promise<StaffResult> {
+  const supabase = await createClient()
+
+  const { data, error } = await supabase.rpc('complete_staff_welcome', {
+    p_phone: phone.slice(0, 40),
+  })
+
+  if (error) return { ok: false, code: 'generic' }
+
+  const result = readRpc(data)
+  if (!result.ok) return { ok: false, code: result.code ?? 'generic' }
+
+  return { ok: true }
+}
+
+/**
+ * `Naposledy v aplikaci` on §A3.
+ *
+ * Called from the coach's own list, not from the layout: once per visit to the
+ * screen a coach opens the app for is enough, and the database writes at most
+ * hourly anyway. A failure is silent — this is a line on an administrative
+ * screen, and nothing a coach does should fail because of it.
+ */
+export async function touchStaffSeen(): Promise<void> {
+  const supabase = await createClient()
+  await supabase.rpc('touch_staff_seen')
 }

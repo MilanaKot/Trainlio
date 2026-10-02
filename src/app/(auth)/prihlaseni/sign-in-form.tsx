@@ -19,10 +19,10 @@ type Stage = { name: 'email' } | { name: 'code'; email: string }
  * on the code step. A parent opening the coach's link on a phone should reach
  * the app in two taps and six digits.
  */
-export function SignInForm() {
+export function SignInForm({ initialEmail = '' }: { initialEmail?: string }) {
   const router = useRouter()
   const [stage, setStage] = useState<Stage>({ name: 'email' })
-  const [email, setEmail] = useState('')
+  const [email, setEmail] = useState(initialEmail)
   const [code, setCode] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [cooldown, setCooldown] = useState(0)

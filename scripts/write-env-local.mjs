@@ -38,8 +38,11 @@ if (!status.ANON_KEY || !status.SERVICE_ROLE_KEY || !status.API_URL) {
   process.exit(1)
 }
 
-// Resend is not reached in local development: Supabase delivers the one-time
-// code to Mailpit instead, so these two only have to satisfy the schema.
+// Resend is not reached in local development. Supabase delivers the one-time
+// code to Mailpit, and `EMAIL_TRANSPORT=mailpit` sends everything the
+// application writes itself to the same place — so an invitation or a
+// cancellation e-mail is readable at http://127.0.0.1:54324 while it is being
+// worked on, instead of vanishing into an unreachable API.
 writeFileSync(
   TARGET,
   [
@@ -48,6 +51,7 @@ writeFileSync(
     'NEXT_PUBLIC_SITE_URL=http://127.0.0.1:3000',
     `SUPABASE_SERVICE_ROLE_KEY=${status.SERVICE_ROLE_KEY}`,
     'RESEND_API_KEY=not-used-in-local-development',
+    'EMAIL_TRANSPORT=mailpit',
     'AUTH_SENDER_EMAIL=trainlio@example.test',
     'CRON_SECRET=local-development-secret-value',
     '',

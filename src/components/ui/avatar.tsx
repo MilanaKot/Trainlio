@@ -11,6 +11,7 @@ const SIZES = {
   28: 'size-7 text-[0.6875rem]',
   36: 'size-9 text-[0.8125rem]',
   40: 'size-10 text-[0.875rem]',
+  44: 'size-11 text-[0.9375rem]',
   56: 'size-14 text-[1.125rem]',
   72: 'size-18 text-[1.5rem]',
 } as const

@@ -101,6 +101,19 @@ export const cs = {
     /* guardian/SPEC.md §G1: shown above the list, not instead of it. */
     noAthletes: 'Přidejte prvního sportovce a můžete začít rezervovat tréninky.',
     /* K12/K13 (v3, DR-01): the coach's athletes. */
+    /* K0 (v3, DR-07): the first screen an invited coach ever sees. */
+    welcomeTitle: 'Vítejte v týmu',
+    welcomeBody: 'Jste přihlášen jako trenér v organizaci {org}.',
+    welcomeRole: 'Trenér',
+    welcomeSessions: {
+      one: 'Trenér · {count} naplánovaný trénink',
+      few: 'Trenér · {count} naplánované tréninky',
+      many: 'Trenér · {count} naplánovaných tréninků',
+    } satisfies PluralForms,
+    welcomeWrongName: 'Nesedí jméno? Napište administrátorovi {admin}.',
+    welcomePhone: 'Váš telefon',
+    welcomePhoneHint: 'Uvidí ho rodiče, jejichž dítě z tréninku odhlásíte.',
+    welcomeContinue: 'Pokračovat na tréninky',
     athletesTitle: 'Sportovci',
     athletesActive: '{count} aktivních',
     athletesSearch: 'Hledat jméno nebo rodiče',
@@ -418,6 +431,19 @@ export const cs = {
     detail: 'Detail',
     noSessions: 'Zatím žádné tréninky.',
     /* K12/K13 (v3, DR-01): the coach's athletes. */
+    /* K0 (v3, DR-07): the first screen an invited coach ever sees. */
+    welcomeTitle: 'Vítejte v týmu',
+    welcomeBody: 'Jste přihlášen jako trenér v organizaci {org}.',
+    welcomeRole: 'Trenér',
+    welcomeSessions: {
+      one: 'Trenér · {count} naplánovaný trénink',
+      few: 'Trenér · {count} naplánované tréninky',
+      many: 'Trenér · {count} naplánovaných tréninků',
+    } satisfies PluralForms,
+    welcomeWrongName: 'Nesedí jméno? Napište administrátorovi {admin}.',
+    welcomePhone: 'Váš telefon',
+    welcomePhoneHint: 'Uvidí ho rodiče, jejichž dítě z tréninku odhlásíte.',
+    welcomeContinue: 'Pokračovat na tréninky',
     athletesTitle: 'Sportovci',
     athletesActive: '{count} aktivních',
     athletesSearch: 'Hledat jméno nebo rodiče',
@@ -900,6 +926,24 @@ export const cs = {
     } as Record<string, string>,
     footer:
       'Tento e-mail jste dostali, protože máte sportovce přihlášeného na trénink v aplikaci {org}.',
+    /* A6, the coach's invitation (admin/SPEC.md). The same template as every
+       other message — it is the only one that does not go to a parent, so its
+       footer says something else. */
+    invitation: {
+      label: 'Pozvánka',
+      subject: 'Pozvánka do aplikace · {org}',
+      title: 'Pozvánka do aplikace',
+      body: 'Dobrý den, {admin} vás přidal jako trenéra do aplikace pro rezervace tréninků {org}. Uvidíte v ní své tréninky, kdo je přihlášený, a kontakty na rodiče.',
+      rowName: 'Jméno',
+      rowEmail: 'Přihlašovací e-mail',
+      button: 'Přihlásit se do aplikace',
+      /* The link prefills the address; the code goes out when the coach
+         confirms it, which is one tap and no accidental sends. */
+      helper:
+        'Po kliknutí stačí potvrdit a pošleme vám jednorázový kód na tento e-mail. Heslo nepotřebujete. Přihlásit se můžete kdykoli — pozvánka nevyprší.',
+      footer: 'Pozvánku jste nečekali? Tento e-mail ignorujte, bez přihlášení se nic nestane.',
+      byAdmin: 'administrátor',
+    },
     poweredBy: 'Běží na trainlio',
     /* Plain-text part: the same rows, the same order. */
     previousText: '(dříve {value})',
@@ -1008,6 +1052,29 @@ export const cs = {
     link: 'Trenéři',
     intro: 'Jméno trenéra uvidí rodiče u tréninku. Spravuje je správce klubu.',
     roleCOACH: 'Trenér',
+    /* §A1/§A3 (v3, DR-07): the three states of access to the application. */
+    accessSignedIn: 'Přihlášen',
+    accessInvited: 'Pozván',
+    accessNoEmail: 'Bez přístupu',
+    accessInvitedMeta: 'Ještě se nepřihlásil',
+    accessNoEmailMeta: 'Chybí e-mail',
+    accessCaption: 'PŘÍSTUP DO APLIKACE',
+    accessLastSeen: 'Naposledy v aplikaci {date} v {time}',
+    accessItsYou: 'To jste vy',
+    accessWaiting: 'Čeká na první přihlášení',
+    accessInvitedAt: 'Pozvánka odeslána {date} v {time}',
+    accessNoEmailBody:
+      'Bez e-mailu se trenér nemůže přihlásit. U tréninků ho přesto můžete uvádět.',
+    accessResend: 'Poslat pozvánku znovu',
+    accessResendHelper:
+      'Znovu lze poslat nejdřív za hodinu. Změníte-li e-mail, pošle se nová pozvánka po uložení.',
+    accessSend: 'Poslat pozvánku',
+    accessSent: 'Pozvánka odeslána',
+    email: 'E-mail',
+    emailSuffix: 'Pro přihlášení',
+    emailHint: 'Pošleme sem pozvánku. Bez e-mailu se trenér do aplikace nepřihlásí.',
+    addWithInvite: 'Přidat a poslat pozvánku',
+    addedWithInvite: 'Trenér přidán, pozvánka odeslána',
     roleWORKSPACE_ADMIN: 'Správce',
     noName: 'Bez jména',
     neverSignedIn: 'Bez přihlášení',
@@ -1065,6 +1132,12 @@ export const cs = {
       LAST_NAME_REQUIRED: 'Vyplňte příjmení.',
       LAST_ADMIN: 'Klub musí mít aspoň jednoho aktivního správce.',
       PHONE_MALFORMED: 'Zadejte platné telefonní číslo.',
+      EMAIL_MALFORMED: 'Zadejte platný e-mail.',
+      EMAIL_TAKEN: 'Tento e-mail už v aplikaci používá někdo jiný.',
+      NO_EMAIL: 'Nejdřív doplňte e-mail.',
+      ALREADY_SIGNED_IN: 'Trenér je už přihlášený, pozvánku nepotřebuje.',
+      RATE_LIMITED: 'Pozvánku lze poslat znovu nejdřív za hodinu.',
+      SEND_FAILED: 'Pozvánku se nepodařilo odeslat. Zkuste to prosím znovu.',
       NOT_STAFF: 'Telefon si může uložit jen trenér klubu.',
       generic: 'Uložení se nezdařilo. Zkuste to prosím znovu.',
     },

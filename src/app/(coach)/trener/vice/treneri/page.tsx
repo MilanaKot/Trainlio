@@ -24,12 +24,18 @@ function sortStaff(staff: StaffMember[]): StaffMember[] {
 
 function Row({ member, canEdit }: { member: StaffMember; canEdit: boolean }) {
   const name = member.displayName ?? t.noName
+
+  // §A1 (v3): the meta line says the one thing an administrator is looking for
+  // — whether this coach can actually get in — and falls back to the role when
+  // they can.
   const meta = member.isActive
-    ? member.roles.includes('WORKSPACE_ADMIN')
-      ? t.roleWORKSPACE_ADMIN
-      : member.hasLogin
-        ? null
-        : t.neverSignedIn
+    ? member.access === 'invited'
+      ? t.accessInvitedMeta
+      : member.access === 'no_email'
+        ? t.accessNoEmailMeta
+        : member.roles.includes('WORKSPACE_ADMIN')
+          ? t.roleWORKSPACE_ADMIN
+          : null
     : t.inactiveMeta
 
   const inside = (
@@ -48,7 +54,13 @@ function Row({ member, canEdit }: { member: StaffMember; canEdit: boolean }) {
         </span>
         {meta ? <span className="truncate text-hint text-muted">{meta}</span> : null}
       </span>
-      {member.isActive ? null : <Badge variant="neutral">{t.inactive}</Badge>}
+      {!member.isActive ? (
+        <Badge variant="neutral">{t.inactive}</Badge>
+      ) : member.access === 'invited' ? (
+        <Badge variant="warning">{t.accessInvited}</Badge>
+      ) : member.access === 'no_email' ? (
+        <Badge variant="neutral">{t.accessNoEmail}</Badge>
+      ) : null}
       {canEdit ? (
         <span aria-hidden="true" className="text-subtle">
           ›

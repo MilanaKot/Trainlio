@@ -1,5 +1,5 @@
-import { expect, test } from '@playwright/test'
-import { grantCoach, grantWorkspaceRole, profileFor, signIn, uniqueEmail } from './helpers'
+import { expect, test, type Page } from '@playwright/test'
+import { grantCoach, grantWorkspaceRole, profileFor, signIn, uniqueEmail, MAILPIT } from './helpers'
 
 /**
  * The Trenéři screen: who may add a coach and fill in their name, and who only
@@ -10,6 +10,69 @@ import { grantCoach, grantWorkspaceRole, profileFor, signIn, uniqueEmail } from 
  * and the schema gave nobody a way to fix it. D-11 says the coach is the
  * product, so the empty name was a defect, not a blank field.
  */
+
+/** The invitation Mailpit received, as text (§A6). */
+async function readInvitation(email: string): Promise<string> {
+  for (let attempt = 0; attempt < 20; attempt += 1) {
+    const box = (await (await fetch(`${MAILPIT}/api/v1/messages`)).json()) as {
+      messages?: { ID: string; Subject?: string; To?: { Address: string }[] }[]
+    }
+    const message = box.messages?.find(
+      (m) => m.To?.some((to) => to.Address === email) && m.Subject?.includes('Pozvánka'),
+    )
+
+    if (message) {
+      const body = (await (await fetch(`${MAILPIT}/api/v1/message/${message.ID}`)).json()) as {
+        Text?: string
+        HTML?: string
+      }
+      return `${body.Text ?? ''}\n${body.HTML ?? ''}`
+    }
+
+    await new Promise((resolve) => setTimeout(resolve, 500))
+  }
+
+  throw new Error(`No invitation reached ${email}`)
+}
+
+/**
+ * The second half of signing in, when the address is already in the field.
+ *
+ * `signIn` types it; this one proves the invitation's link did (§A6). The code
+ * is not sent by the link itself — a scanner fetching it would burn one.
+ */
+async function signInWithPrefilledAddress(page: Page, email: string): Promise<void> {
+  await page.getByRole('button', { name: 'Poslat kód' }).click()
+  await page.getByLabel('Kód').waitFor()
+  await page.getByLabel('Kód').fill(await readSignInCode(email))
+  await page.getByRole('button', { name: 'Přihlásit se' }).click()
+  await page.waitForURL((url) => !url.pathname.includes('/prihlaseni'), { timeout: 30_000 })
+}
+
+/** The six digits GoTrue just e-mailed. */
+async function readSignInCode(email: string): Promise<string> {
+  for (let attempt = 0; attempt < 20; attempt += 1) {
+    const box = (await (await fetch(`${MAILPIT}/api/v1/messages`)).json()) as {
+      messages?: { ID: string; Subject?: string; To?: { Address: string }[] }[]
+    }
+    const message = box.messages?.find(
+      (m) => m.To?.some((to) => to.Address === email) && !m.Subject?.includes('Pozvánka'),
+    )
+
+    if (message) {
+      const body = (await (await fetch(`${MAILPIT}/api/v1/message/${message.ID}`)).json()) as {
+        Text?: string
+        HTML?: string
+      }
+      const code = /\b(\d{6})\b/.exec(body.Text ?? body.HTML ?? '')?.[1]
+      if (code) return code
+    }
+
+    await new Promise((resolve) => setTimeout(resolve, 500))
+  }
+
+  throw new Error(`No sign-in code reached ${email}`)
+}
 
 test.describe('a workspace administrator manages the coaching staff', () => {
   test('adds a coach, names themselves, and a coach can only read it', async ({ page }) => {
@@ -126,6 +189,76 @@ test.describe('a workspace administrator manages the coaching staff', () => {
     await expect(page.getByRole('link', { name: '+ Přidat trenéra' })).toHaveCount(0)
     await expect(page.getByRole('link', { name: new RegExp(`Pavel Zeman${run}`) })).toHaveCount(0)
     await expect(page.getByRole('button', { name: '+ Přidat trenéra' })).toHaveCount(0)
+  })
+
+  /**
+   * Admin tests 11 to 13 (§A2, §A3b, §A6, §K0). The hole this closed: a coach
+   * added on A2 could lead trainings and could not sign in, and nobody in the
+   * application could give them a login.
+   */
+  test('invites a coach, who signs in as themselves (AC-289)', async ({ page }) => {
+    const admin = uniqueEmail('spravce.pozvanka')
+    await signIn(page, admin)
+    await grantWorkspaceRole(admin, 'WORKSPACE_ADMIN')
+
+    const run = Date.now()
+    const coachEmail = uniqueEmail('trener.pozvany')
+
+    await page.goto('/trener/vice/treneri/novy')
+    await page.getByLabel('Jméno').fill('Petr')
+    await page.getByLabel('Příjmení').fill(`Pozvaný${run}`)
+    await page.getByLabel('E-mail').fill(coachEmail)
+    await page.getByLabel('Telefon').fill('777 222 333')
+
+    // §A2: the button says what saving will do, because it will send an e-mail.
+    await page.getByRole('button', { name: 'Přidat a poslat pozvánku' }).click()
+    await expect(page.getByText('Trenér přidán, pozvánka odeslána')).toBeVisible()
+
+    // §A1: the state the design gives them until they first sign in.
+    const row = page.locator('li', { hasText: `Petr Pozvaný${run}` })
+    await expect(row).toContainText('Pozván')
+    await expect(row).toContainText('Ještě se nepřihlásil')
+
+    // §A3b: a second invitation inside the hour is refused by the database.
+    await row.getByRole('link').click()
+    await expect(page.getByText('Čeká na první přihlášení')).toBeVisible()
+    await page.getByRole('button', { name: 'Poslat pozvánku znovu' }).click()
+    await expect(page.getByText('Pozvánku lze poslat znovu nejdřív za hodinu.')).toBeVisible()
+
+    // §A6: the message itself, with the link that prefills the address.
+    const invitation = await readInvitation(coachEmail)
+    expect(invitation).toContain('Pozvánka do aplikace')
+    expect(invitation).toContain(`Petr Pozvaný${run}`)
+    expect(invitation).toContain('pozvánka nevyprší')
+    expect(invitation).toContain(`/prihlaseni?email=${encodeURIComponent(coachEmail)}`)
+
+    // Sign out, and sign in as the coach — through the invitation's own link.
+    await page.goto('/trener/vice')
+    await page.getByRole('button', { name: 'Odhlásit se z aplikace' }).click()
+    await page
+      .getByRole('alertdialog')
+      .getByRole('button', { name: 'Odhlásit se', exact: true })
+      .click()
+    await page.waitForURL(/\/prihlaseni/)
+
+    await page.goto(`/prihlaseni?email=${encodeURIComponent(coachEmail)}`)
+    await expect(page.getByLabel('E-mail')).toHaveValue(coachEmail)
+    await signInWithPrefilledAddress(page, coachEmail)
+
+    // §K0, once: the coach lands on the welcome screen and not on the list.
+    await expect(page).toHaveURL(/\/trener\/vitejte$/)
+    await expect(page.getByRole('heading', { name: 'Vítejte v týmu' })).toBeVisible()
+    // The profile they were attached to is the one the administrator named —
+    // not a second one made by signing up.
+    await expect(page.getByText(`Petr Pozvaný${run}`)).toBeVisible()
+    await page.getByLabel('Váš telefon').fill('777 999 000')
+    await page.getByRole('button', { name: 'Pokračovat na tréninky' }).click()
+
+    await expect(page).toHaveURL(/\/trener$/)
+    // And never again: §K0 is shown once.
+    await page.goto('/trener')
+    await expect(page).toHaveURL(/\/trener$/)
+    await expect(page.getByRole('heading', { name: 'Tréninky' })).toBeVisible()
   })
 
   test('a guardian never reaches the staff screen (AC-241)', async ({ page }) => {

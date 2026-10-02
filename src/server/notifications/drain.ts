@@ -1,9 +1,9 @@
 import 'server-only'
 
 import { createAdminClient } from '@/lib/supabase/admin'
-import { getServerEnv, publicEnv } from '@/lib/env'
+import { publicEnv } from '@/lib/env'
 import { logoUrl } from '@/lib/domain/logo'
-import { resendProvider } from '@/lib/email/resend'
+import { emailProvider } from '@/lib/email/provider'
 import {
   composeNotificationEmail,
   type ClaimedDelivery,
@@ -142,9 +142,8 @@ export async function drainNotifications(options?: {
   eventLimit?: number
   deliveryLimit?: number
 }): Promise<DrainReport> {
-  const env = getServerEnv()
   const supabase = createAdminClient()
-  const provider = options?.provider ?? resendProvider(env.RESEND_API_KEY, env.AUTH_SENDER_EMAIL)
+  const provider = options?.provider ?? emailProvider()
   // The site root: each template chooses its own screen (EMAILS.md §2).
   const appUrl = publicEnv.NEXT_PUBLIC_SITE_URL.replace(/\/$/, '')
 
