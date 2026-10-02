@@ -1,6 +1,10 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { getCancellationDeadlineHours, getMyBooking } from '@/server/bookings/queries'
+import {
+  getCancellationDeadlineHours,
+  getMyBooking,
+  getRemovedBookingCoach,
+} from '@/server/bookings/queries'
 import { getSessionCoaches } from '@/server/sessions/queries'
 import { listJoinableWorkspaces } from '@/server/athletes/queries'
 import { BookingActions } from '@/components/booking/booking-actions'
@@ -43,7 +47,12 @@ export default async function BookingDetailPage({
 
   const { session } = booking
   const timezone = workspaces[0]?.timezone ?? DEFAULT_TIMEZONE
-  const coaches = await getSessionCoaches(session.id)
+  // §G6d. Null unless a coach removed this athlete, so it costs one query on a
+  // screen that is already fetching the roster's coaches.
+  const [coaches, removedBy] = await Promise.all([
+    getSessionCoaches(session.id),
+    getRemovedBookingCoach(bookingId),
+  ])
 
   const start = new Date(session.startAt)
   const end = new Date(session.endAt)
@@ -206,6 +215,7 @@ export default async function BookingDetailPage({
         timezone={timezone}
         deadlineHours={deadlineHours}
         now={now}
+        removedBy={removedBy}
       />
     </main>
   )

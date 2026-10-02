@@ -14,6 +14,12 @@ export type StaffMember = {
   hasLogin: boolean
   isEditable: boolean
   futureSessions: number
+  /**
+   * The coach's own contact number, or null — also when the caller may not see
+   * it. `workspace_staff` returns it to an administrator and to the coach
+   * themselves, and to nobody else (migration 33).
+   */
+  phone: string | null
 }
 
 /**
@@ -48,5 +54,6 @@ export async function getWorkspaceStaff(workspaceId: string): Promise<StaffMembe
     hasLogin: member.has_login,
     isEditable: member.is_editable,
     futureSessions: member.future_sessions,
+    phone: member.phone,
   }))
 }

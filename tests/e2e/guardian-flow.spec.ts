@@ -155,6 +155,62 @@ async function fillSession(sessionId: string): Promise<void> {
   expect(booked.ok, `the other family could not book: ${booked.code}`).toBe(true)
 }
 
+/**
+ * The coach takes one athlete off the training, through the domain function the
+ * roster sheet calls — and gives a number first, so the parent has something to
+ * ring (§G6d, decision 28).
+ */
+async function removeByCoach(
+  coachEmail: string,
+  sessionId: string,
+  athleteName: string,
+  phone: string | null,
+): Promise<void> {
+  const token = await tokenFor(coachEmail)
+  const { profileId } = await grantCoach(coachEmail)
+
+  // A real club names its coaches (migration 21); this one is a signup with no
+  // name, and §G6d is about reading the name beside the number.
+  await fetch(`${STACK}/rest/v1/app_profiles?id=eq.${profileId}`, {
+    method: 'PATCH',
+    headers: admin,
+    body: JSON.stringify({ first_name: 'Milan', last_name: 'Filipi' }),
+  })
+
+  if (phone) {
+    const stored = (await (
+      await fetch(`${STACK}/rest/v1/rpc/set_own_staff_phone`, {
+        method: 'POST',
+        headers: asUser(token),
+        body: JSON.stringify({ p_phone: phone }),
+      })
+    ).json()) as { ok?: boolean; code?: string }
+    expect(stored.ok, `the coach could not record a number: ${stored.code}`).toBe(true)
+  }
+
+  const roster = (await (
+    await fetch(
+      `${STACK}/rest/v1/bookings?select=id,athletes(first_name,last_name)` +
+        `&training_session_id=eq.${sessionId}&status=eq.CONFIRMED`,
+      { headers: admin },
+    )
+  ).json()) as { id: string; athletes: { first_name: string; last_name: string } | null }[]
+
+  const booking = roster.find(
+    (row) => `${row.athletes?.first_name} ${row.athletes?.last_name}` === athleteName,
+  )
+  expect(booking, `${athleteName} is not on this roster`).toBeDefined()
+
+  const removed = (await (
+    await fetch(`${STACK}/rest/v1/rpc/cancel_booking_as_coach`, {
+      method: 'POST',
+      headers: asUser(token),
+      body: JSON.stringify({ p_booking_id: booking?.id, p_reason: 'Zranění' }),
+    })
+  ).json()) as { ok?: boolean; code?: string }
+  expect(removed.ok, `the removal failed: ${removed.code}`).toBe(true)
+}
+
 test.describe('a guardian, from first sign-in to a withdrawn booking', () => {
   // The whole path is one test on purpose. Split into four it would need four
   // sign-ins and four registrations, and it would stop proving the one thing
@@ -367,6 +423,73 @@ test.describe('a guardian, from first sign-in to a withdrawn booking', () => {
     await expect(page.locator('main li', { hasText: 'Petr Kotov' }).first()).toContainText(
       '08:00–09:00',
     )
+  })
+
+  /**
+   * Test 7b (§G4b, §G6d, D-06). A removal the parent cannot undo: the card
+   * states who can, the detail screen offers the coach, and booking the same
+   * child again is refused by the domain function — not merely hidden.
+   */
+  test('a child the coach removed cannot be booked again (AC-042a)', async ({ page }) => {
+    const parent = uniqueEmail('odebrani')
+    const coach = uniqueEmail('trener')
+    const room = `Šatna ${Date.now()}`
+    const sessionId = await openSession(coach, 10, room)
+
+    await signIn(page, parent)
+    await page.goto('/moji-sportovci/novy')
+    await page.getByLabel('Jméno').first().fill('Hana')
+    await page.getByLabel('Příjmení').first().fill('Procházková')
+    await page.getByLabel('Jméno').last().fill('Eliška')
+    await page.getByLabel('Příjmení').last().fill('Procházková')
+    await page.getByLabel('Datum narození').fill('2017-04-04')
+    await page.getByRole('radio', { name: 'Centr' }).click()
+    await page.getByRole('radio', { name: 'Levá' }).click()
+    await page.getByRole('button', { name: 'Přidat sportovce' }).click()
+    await expect(page.getByText('Eliška Procházková')).toBeVisible()
+
+    await page.goto('/treninky')
+    await page
+      .locator('li', { hasText: room })
+      .first()
+      .getByRole('button', { name: 'Přihlásit' })
+      .click()
+    await page.getByRole('dialog').getByRole('button', { name: 'Přihlásit' }).click()
+    await expect(page.getByRole('status')).toContainText('Přihlášeno')
+
+    await removeByCoach(coach, sessionId, 'Eliška Procházková', '777 654 321')
+
+    // §G4b: the orange badge, no strike-through, and no button at all.
+    await page.goto('/moje-treninky')
+    const card = page.locator('main li', { hasText: 'Eliška Procházková' }).first()
+    await expect(card).toContainText('Odhlášeno trenérem')
+    await expect(card).toContainText('Znovu přihlásit může jen trenér')
+    await expect(card.getByRole('button')).toHaveCount(0)
+
+    // §G6d: the coach instead of an action, with links that really dial.
+    await card.getByRole('link').first().click()
+    await expect(page.getByRole('status').first()).toContainText(
+      'Trenér odhlásil sportovce z tréninku',
+    )
+    await expect(page.getByText('Zpráva od trenéra')).toBeVisible()
+    await expect(page.getByText('Milan Filipi · 777 654 321')).toBeVisible()
+    await expect(page.getByRole('link', { name: 'Zavolat Milan Filipi' })).toHaveAttribute(
+      'href',
+      'tel:777654321',
+    )
+    await expect(page.getByRole('link', { name: 'Napsat SMS Milan Filipi' })).toHaveAttribute(
+      'href',
+      'sms:777654321',
+    )
+    await expect(page.getByRole('button', { name: 'Odhlásit' })).toHaveCount(0)
+    await expect(page.getByRole('button', { name: 'Přihlásit znovu' })).toHaveCount(0)
+
+    // D-06: the training is open and has places, and this child still cannot go
+    // back on it. The card says why rather than offering a button that fails.
+    await page.goto('/treninky')
+    const training = page.locator('li', { hasText: room }).first()
+    await expect(training).toContainText('Sportovce odebral trenér')
+    await expect(training.getByRole('button', { name: 'Přihlásit' })).toBeDisabled()
   })
 
   test('signing out ends the session (AC-002)', async ({ page }) => {

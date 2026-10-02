@@ -193,11 +193,14 @@ export function BookingCard({
         </span>
       </Link>
 
-      {/* D-06: a guardian cannot put back an athlete the coach removed, so the
-          design's secondary "Přihlásit" would be a button that always fails.
-          See docs/DESIGN_DEVIATIONS.md. */}
+      {/* §G4b, D-06: no button. A guardian cannot put back an athlete the coach
+          removed, so the footer names who can instead of offering an action
+          that would always fail. */}
       {variant === 'removedByCoach' && upcoming ? (
-        <p className="border-t border-line pt-3 text-hint text-muted">{t.rebookContactCoach}</p>
+        <p className="flex items-center gap-1.5 border-t border-line pt-3 text-hint text-muted">
+          <InfoIcon />
+          {t.rebookCoachOnly}
+        </p>
       ) : null}
 
       {variant === 'normal' && upcoming ? (

@@ -329,3 +329,34 @@ export async function getCancellationDeadlineHours(): Promise<number> {
 
   return maybeRow('getCancellationDeadlineHours', result)?.cancellation_deadline_hours ?? 12
 }
+
+export type RemovedByCoach = {
+  profileId: string
+  displayName: string | null
+  phone: string | null
+}
+
+/**
+ * The coach to ring about a booking they removed (§G6d, handoff v3 decision 28).
+ *
+ * The number is not on the coach's profile and no client session can read the
+ * table that holds it (migration 33). `removed_booking_coach` answers for one
+ * booking, and only while that booking is a coach's removal — so this returns
+ * null on a normal booking even though the same screen renders it.
+ */
+export async function getRemovedBookingCoach(bookingId: string): Promise<RemovedByCoach | null> {
+  const supabase = await createClient()
+
+  const coach = rows(
+    'getRemovedBookingCoach',
+    await supabase.rpc('removed_booking_coach', { p_booking_id: bookingId }),
+  )[0]
+
+  if (!coach) return null
+
+  return {
+    profileId: coach.profile_id,
+    displayName: coach.display_name,
+    phone: coach.phone,
+  }
+}

@@ -169,7 +169,12 @@ select pg_temp.check(
 select pg_temp.check(
   (select count(*)::text from public.notification_deliveries where recipient_email like '%+420%'),
   '0', 'nor into the delivery record, which is for addresses under a retention window (AC-256)');
+-- Two numbers now live in this schema and they are different data: the
+-- parent's own, on their profile, and the coach's, which the club publishes to
+-- one family at a time (handoff v3, decision 28). Each has exactly one home.
 select pg_temp.check(
-  (select count(*)::text from information_schema.columns
+  (select string_agg(table_name, ',' order by table_name)
+     from information_schema.columns
     where table_schema = 'public' and column_name = 'phone'),
-  '1', 'and the column exists in exactly one table (AC-256)');
+  'app_profiles,staff_contacts',
+  'and each number exists in exactly one table (AC-256)');

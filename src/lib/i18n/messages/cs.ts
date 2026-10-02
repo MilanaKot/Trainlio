@@ -150,7 +150,13 @@ export const cs = {
        and will not guess it from a name (DESIGN_SYSTEM §8). */
     cancelledBy: 'Odhlásil {name} · {when}',
     sessionDidNotHappen: 'Trénink se nekonal · {place}',
-    rebookContactCoach: 'Pro opětovné přihlášení kontaktujte trenéra.',
+    /* §G4b/§G6d, D-06: the parent cannot undo a removal, so the line says who
+       can rather than what they should do about it. */
+    rebookCoachOnly: 'Znovu přihlásit může jen trenér',
+    call: 'Zavolat',
+    sendSms: 'Napsat SMS',
+    callAria: 'Zavolat {name}',
+    smsAria: 'Napsat SMS {name}',
     previously: 'Původně {value}',
     changedOn: 'Změněno {when}',
     /* §G6: the notice above the detail list. */
@@ -858,6 +864,11 @@ export const cs = {
     duplicateName: 'Trenér se stejným jménem už existuje.',
     added: 'Trenér přidán',
     editTitle: 'Upravit trenéra',
+    /* §A2/§A3 KONTAKT. The helper says exactly where a parent meets the
+       number, because that is the only place they do (§G6d, decision 28). */
+    contactCaption: 'KONTAKT',
+    phone: 'Telefon',
+    phoneHint: 'Rodiče ho uvidí, když trenér jejich dítě odhlásí z tréninku.',
     stateCaption: 'STAV',
     activeSwitch: 'Aktivní trenér',
     activeSwitchHint: 'Lze ho vybrat pro nové tréninky',
@@ -890,6 +901,8 @@ export const cs = {
       FIRST_NAME_REQUIRED: 'Vyplňte jméno.',
       LAST_NAME_REQUIRED: 'Vyplňte příjmení.',
       LAST_ADMIN: 'Klub musí mít aspoň jednoho aktivního správce.',
+      PHONE_MALFORMED: 'Zadejte platné telefonní číslo.',
+      NOT_STAFF: 'Telefon si může uložit jen trenér klubu.',
       generic: 'Uložení se nezdařilo. Zkuste to prosím znovu.',
     },
   },

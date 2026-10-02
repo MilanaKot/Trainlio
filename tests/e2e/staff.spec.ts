@@ -40,8 +40,20 @@ test.describe('a workspace administrator manages the coaching staff', () => {
     // this assertion before this run's own save has landed.
     const run = Date.now()
     await page.getByLabel('Příjmení').fill(`Zeman${run}`)
+    // §A3 KONTAKT (decision 28). What a parent is given when this coach removes
+    // their child — and the only place a parent ever meets it (§G6d).
+    await page.getByLabel('Telefon').fill('777 123 456')
     await page.getByRole('button', { name: 'Uložit změny' }).click()
     await expect(page.getByText(`Pavel Zeman${run}`)).toBeVisible()
+
+    // Read back from the database, grouped as a person reads it.
+    await page.goto(`/trener/vice/treneri/${await profileFor(admin)}`)
+    await expect(page.getByLabel('Telefon')).toHaveValue('777 123 456')
+    // The shape is the column's, so the refusal is the same one it would give.
+    await page.getByLabel('Telefon').fill('12345')
+    await page.getByRole('button', { name: 'Uložit změny' }).click()
+    await expect(page.getByText('Zadejte platné telefonní číslo.')).toBeVisible()
+    await page.getByLabel('Telefon').fill('777 123 456')
 
     // An administrator cannot switch themselves off (§A3), and the database
     // refuses the case that matters — the last active administrator — whatever

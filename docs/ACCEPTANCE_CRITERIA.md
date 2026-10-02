@@ -670,3 +670,26 @@ Then the form asks for it in the words of §G16 — a first name, an optional su
 
 AC-279  
 A guardian's own profile is read filtered by their own profile id. Since a guardian can also read the profile of any coach named on a training they can see, an unfiltered read returns several rows, and the failure renders as an empty account form — which would invite a parent to save their own name away.
+
+## The coach's own telephone number (handoff v3, decision 28)
+
+AC-280  
+A coach may record a number for the club to pass on, and it is not the column a
+parent's number lives in. It is in a table no signed-in client can read — no
+grant, no policy — so a parent who may read a coach's name to learn who leads a
+training cannot read the staff's numbers along with it. Three doors exist and
+nothing else: a coach writes their own, an administrator of that workspace writes
+any of the staff's, and the roster function returns a number to an administrator
+or to its owner and to nobody else. What is written is held to the same two
+shapes as a parent's number, the audit entry records that a number changed
+without recording the number, and the D-18 stamp takes it with the name.
+
+AC-281  
+Given an athlete the coach removed from a training (D-06)  
+Then the parent's card carries no button at all and says that only the coach can
+put them back, and the booking screen offers that coach instead of an action:
+their name, their number when they gave one, and a `tel:` and an `sms:` link that
+really dial. Without a number there are no buttons rather than dead ones, and
+without a name the number still stands on its own. The number is readable for
+that one booking and only while it is a coach's removal — another family, a
+stranger, and any other booking get nothing.

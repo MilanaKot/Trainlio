@@ -105,9 +105,11 @@ describe('a booking something happened to (AC-271)', () => {
     )
     expect(screen.getByText('Odhlášeno trenérem')).toBeInTheDocument()
     expect(screen.getByText('Odhlásil Jan Novák · 2. 10. 11:15')).toBeInTheDocument()
-    // D-06: a guardian cannot put them back, so no button pretends otherwise.
-    expect(screen.getByText('Pro opětovné přihlášení kontaktujte trenéra.')).toBeInTheDocument()
+    // §G4b, D-06: the footer names who can re-book instead of offering a
+    // button that would always fail, and there is no button at all on the card.
+    expect(screen.getByText('Znovu přihlásit může jen trenér')).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Odhlásit' })).toBeNull()
+    expect(screen.queryByRole('button', { name: 'Přihlásit' })).toBeNull()
   })
 
   it('reports a cancelled training and says it did not happen', () => {

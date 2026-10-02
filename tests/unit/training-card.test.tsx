@@ -39,7 +39,7 @@ const session = (over: Partial<GuardianSession> = {}): GuardianSession => ({
   confirmedCount: 0,
   locationName: 'Příbram',
   facilityCode: 'MH',
-    facilityName: 'Malá hala',
+  facilityName: 'Malá hala',
   changingRoom: 'Šatna 4',
   publicNotes: null,
   eligibilityMode: 'ALL',

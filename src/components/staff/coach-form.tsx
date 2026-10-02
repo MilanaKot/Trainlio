@@ -3,7 +3,8 @@
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { messages, plural } from '@/lib/i18n'
-import { addCoach, setMemberActive, setMemberName } from '@/server/staff/actions'
+import { formatPhone, normalisePhone } from '@/lib/domain/phone'
+import { addCoach, setMemberActive, setMemberName, setMemberPhone } from '@/server/staff/actions'
 import { Button } from '@/components/ui/button'
 import { ConfirmDialog } from '@/components/ui/dialog'
 import { Field } from '@/components/ui/field'
@@ -60,7 +61,13 @@ export function CoachForm({
   const [firstName, setFirstName] = useState(member?.firstName ?? '')
   const [lastName, setLastName] = useState(member?.lastName ?? '')
   const [isActive, setIsActive] = useState(member?.isActive ?? true)
-  const [errors, setErrors] = useState<{ firstName?: string; lastName?: string; form?: string }>({})
+  const [phone, setPhone] = useState(member?.phone ? formatPhone(member.phone) : '')
+  const [errors, setErrors] = useState<{
+    firstName?: string
+    lastName?: string
+    phone?: string
+    form?: string
+  }>({})
   const [confirmFuture, setConfirmFuture] = useState<number | null>(null)
   const [pending, startSaving] = useTransition()
 
@@ -69,9 +76,12 @@ export function CoachForm({
     member === undefined && name !== '' && existingNames.some((existing) => existing === name)
 
   function validate(): boolean {
-    const next: { firstName?: string; lastName?: string } = {}
+    const next: { firstName?: string; lastName?: string; phone?: string } = {}
     if (firstName.trim() === '') next.firstName = t.errors.FIRST_NAME_REQUIRED
     if (lastName.trim() === '') next.lastName = t.errors.LAST_NAME_REQUIRED
+    // The same two shapes the column accepts, refused here so the number is
+    // rejected under its own field rather than as a failed save (§A3).
+    if (!normalisePhone(phone).ok) next.phone = t.errors.PHONE_MALFORMED
     setErrors(next)
     return Object.keys(next).length === 0
   }
@@ -101,6 +111,16 @@ export function CoachForm({
       if (!renamed.ok) {
         setErrors({ form: errorText(renamed.code) })
         return
+      }
+
+      const typedPhone = normalisePhone(phone)
+      const nextPhone = typedPhone.ok ? typedPhone.value : null
+      if (nextPhone !== (member.phone ?? null)) {
+        const stored = await setMemberPhone(workspaceId, member.profileId, nextPhone ?? '')
+        if (!stored.ok) {
+          setErrors({ form: errorText(stored.code) })
+          return
+        }
       }
 
       if (isActive !== member.isActive) {
@@ -176,6 +196,31 @@ export function CoachForm({
       </Panel>
 
       {duplicate ? <Notice variant="warning">{t.duplicateName}</Notice> : null}
+
+      {/* §A3 KONTAKT. On A2 the panel arrives with the e-mail beside it, which
+          is what sends the invitation; here the number stands on its own. */}
+      {member ? (
+        <Panel caption={t.contactCaption}>
+          <Field
+            label={t.phone}
+            optional
+            hint={t.phoneHint}
+            {...(errors.phone ? { error: errors.phone } : {})}
+          >
+            {(props) => (
+              <input
+                {...props}
+                type="tel"
+                inputMode="tel"
+                autoComplete="tel"
+                value={phone}
+                maxLength={24}
+                onChange={(event) => setPhone(event.target.value)}
+              />
+            )}
+          </Field>
+        </Panel>
+      ) : null}
 
       {member ? (
         <Panel caption={t.stateCaption}>

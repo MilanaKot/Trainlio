@@ -695,6 +695,32 @@ export type Database = {
         }
         Relationships: []
       }
+      staff_contacts: {
+        Row: {
+          phone: string
+          profile_id: string
+          updated_at: string
+        }
+        Insert: {
+          phone: string
+          profile_id: string
+          updated_at?: string
+        }
+        Update: {
+          phone?: string
+          profile_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "staff_contacts_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: true
+            referencedRelation: "app_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       training_session_coaches: {
         Row: {
           created_at: string
@@ -1394,6 +1420,14 @@ export type Database = {
         }
         Returns: Json
       }
+      removed_booking_coach: {
+        Args: { p_booking_id: string }
+        Returns: {
+          display_name: string
+          phone: string
+          profile_id: string
+        }[]
+      }
       repair_occupancy: {
         Args: { p_training_session_id?: string }
         Returns: Json
@@ -1451,6 +1485,11 @@ export type Database = {
         }
         Returns: Json
       }
+      set_member_phone: {
+        Args: { p_phone: string; p_profile_id: string; p_workspace_id: string }
+        Returns: Json
+      }
+      set_own_staff_phone: { Args: { p_phone: string }; Returns: Json }
       set_session_assistants: {
         Args: { p_profile_ids?: string[]; p_training_session_id: string }
         Returns: Json
@@ -1522,6 +1561,7 @@ export type Database = {
           is_active: boolean
           is_editable: boolean
           last_name: string
+          phone: string
           profile_id: string
           roles: Database["public"]["Enums"]["workspace_role"][]
         }[]

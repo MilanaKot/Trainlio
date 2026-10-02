@@ -92,6 +92,36 @@ export async function addCoach(
 }
 
 /**
+ * The number a parent is given when this coach removes their child (§A3, §G6d).
+ *
+ * Its own action rather than part of the rename, because it is written to its
+ * own table through its own check: an administrator of this workspace, and the
+ * audit entry records that a number changed without recording the number
+ * (migration 33).
+ */
+export async function setMemberPhone(
+  workspaceId: string,
+  profileId: string,
+  phone: string,
+): Promise<StaffResult> {
+  const supabase = await createClient()
+
+  const { data, error } = await supabase.rpc('set_member_phone', {
+    p_workspace_id: workspaceId,
+    p_profile_id: profileId,
+    p_phone: phone.slice(0, 40),
+  })
+
+  if (error) return { ok: false, code: 'generic' }
+
+  const result = readRpc(data)
+  if (!result.ok) return { ok: false, code: result.code ?? 'generic' }
+
+  refresh()
+  return { ok: true }
+}
+
+/**
  * A coach leaves, or comes back. Never a delete: a coach who led a training
  * last winter is part of that training's record.
  *

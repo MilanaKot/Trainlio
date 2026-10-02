@@ -5,12 +5,15 @@ import { useRouter } from 'next/navigation'
 import { messages } from '@/lib/i18n'
 import { canCancel } from '@/lib/domain/booking'
 import { bookingCardVariant } from '@/lib/domain/booking-card'
+import { formatPhone } from '@/lib/domain/phone'
 import { formatDateGroup, formatDeadline, formatTimeRange } from '@/lib/time/workspace-time'
 import { cancelBooking } from '@/server/bookings/actions'
+import { Avatar } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
+import { ContactActions } from '@/components/ui/contact-actions'
 import { ConfirmDialog } from '@/components/ui/dialog'
 import { useToast } from '@/components/ui/toast'
-import type { MyBooking } from '@/server/bookings/queries'
+import type { MyBooking, RemovedByCoach } from '@/server/bookings/queries'
 
 const t = messages.myTrainings
 const c = messages.cancellation
@@ -50,11 +53,18 @@ export function BookingActions({
   timezone,
   deadlineHours,
   now,
+  removedBy,
 }: {
   booking: MyBooking
   timezone: string
   deadlineHours: number
   now: Date
+  /**
+   * The coach who removed this athlete, with their number when they gave one
+   * (§G6d). It comes from `removed_booking_coach()`, which answers only for a
+   * booking a coach actually removed, so it is null everywhere else.
+   */
+  removedBy?: RemovedByCoach | null
 }) {
   const router = useRouter()
   const toast = useToast()
@@ -70,16 +80,29 @@ export function BookingActions({
 
   if (!upcoming || variant === 'cancelledSession' || variant === 'selfCancelled') return null
 
-  // D-06: a guardian cannot put back an athlete the coach removed, so the
-  // design's `Přihlásit znovu` would be a button that always fails. See
-  // docs/DESIGN_DEVIATIONS.md.
+  // §G6d, D-06: not an action but a person. The parent cannot put the athlete
+  // back — only the coach can — so the footer is the coach: their name, their
+  // number when they gave one, and two real links.
   if (variant === 'removedByCoach') {
+    const coachName = removedBy?.displayName ?? booking.cancelledByName ?? ''
+    const phone = removedBy?.phone ?? null
+
     return (
       <Footer>
-        <p className="flex items-center gap-1.5 text-hint text-muted">
-          <InfoIcon />
-          {t.rebookContactCoach}
-        </p>
+        <div className="flex items-center gap-3">
+          {coachName ? <Avatar firstName={coachName} size={40} /> : null}
+          <span className="flex min-w-0 flex-col">
+            <span className="text-row font-bold text-ink">{t.rebookCoachOnly}</span>
+            {/* Whichever of the two the club has: a coach nobody has named yet
+                is still a coach a parent can ring. */}
+            {coachName || phone ? (
+              <span className="text-hint text-muted">
+                {[coachName, phone ? formatPhone(phone) : null].filter(Boolean).join(' · ')}
+              </span>
+            ) : null}
+          </span>
+        </div>
+        <ContactActions phone={phone} name={coachName} />
       </Footer>
     )
   }
