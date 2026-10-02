@@ -30,6 +30,7 @@ export function CoachTrainingRow({
   session,
   timezone,
   variant = 'upcoming',
+  showEdited = false,
 }: {
   session: CoachSession
   timezone: string
@@ -40,6 +41,12 @@ export function CoachTrainingRow({
    * other figure would imply who came.
    */
   variant?: 'upcoming' | 'past'
+  /**
+   * §K16 only: says that this training no longer matches the series that made
+   * it. Everywhere else it would be noise — every training a coach has ever
+   * touched would carry it.
+   */
+  showEdited?: boolean
 }) {
   const start = new Date(session.startAt)
   const end = new Date(session.endAt)
@@ -90,6 +97,8 @@ export function CoachTrainingRow({
             <span className="pt-0.5">
               <Badge>{t.draft}</Badge>
             </span>
+          ) : showEdited && session.editedSinceCreated ? (
+            <span className="text-hint font-semibold text-muted">{t.seriesOutOfPattern}</span>
           ) : state === 'over' ? (
             <span className="text-hint font-semibold text-muted">{t.overCapacityBadge}</span>
           ) : session.status === 'CLOSED' ? (

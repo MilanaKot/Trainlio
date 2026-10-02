@@ -24,6 +24,7 @@ const session = (over: Partial<CoachSession> = {}): CoachSession => ({
   mainCoachId: 'c1',
   mainCoachName: 'Jan Novák',
   significantChangedAt: null,
+  editedSinceCreated: false,
   ...over,
 })
 

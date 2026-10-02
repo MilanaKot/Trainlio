@@ -10,11 +10,14 @@ import { cn } from '@/lib/utils'
 export function EmptyState({
   icon,
   children,
+  body,
   action,
   className,
 }: {
   icon?: React.ReactNode
   children: React.ReactNode
+  /** The sentence under the headline that says what the thing is for (§K15b). */
+  body?: string
   action?: React.ReactNode
   className?: string
 }) {
@@ -29,6 +32,7 @@ export function EmptyState({
         </span>
       ) : null}
       <p className="text-center text-body font-semibold text-ink">{children}</p>
+      {body ? <p className="text-center text-meta text-muted">{body}</p> : null}
       {action}
     </div>
   )

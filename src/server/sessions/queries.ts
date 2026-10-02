@@ -38,6 +38,13 @@ export type CoachSession = {
   mainCoachId: string
   mainCoachName: string | null
   significantChangedAt: string | null
+  /**
+   * §K16: a training the coach has touched since it was created. For one made
+   * by a series that means it no longer matches the pattern — which is the
+   * whole point of the screen, since a series is provenance and not a template
+   * anything follows.
+   */
+  editedSinceCreated: boolean
 }
 
 /**
@@ -116,7 +123,7 @@ export async function getCoachWorkspace(): Promise<CoachWorkspace | null> {
 const SESSION_COLUMNS = `
   id, start_at, end_at, status, capacity, changing_room, public_notes,
   eligibility_mode, birth_year_from, birth_year_to, significant_changed_at,
-  main_coach_profile_id,
+  main_coach_profile_id, created_at, updated_at,
   facilities ( code, name ),
   locations ( name ),
   app_profiles!training_sessions_main_coach_profile_id_fkey ( display_name ),
@@ -137,6 +144,8 @@ type Row = {
   birth_year_to: number | null
   significant_changed_at: string | null
   main_coach_profile_id: string
+  created_at: string
+  updated_at: string
   facilities: { code: string; name: string } | null
   locations: { name: string } | null
   app_profiles: { display_name: string | null } | null
@@ -167,6 +176,9 @@ function toSession(row: Row): CoachSession {
     mainCoachId: row.main_coach_profile_id,
     mainCoachName: row.app_profiles?.display_name ?? null,
     significantChangedAt: row.significant_changed_at,
+    // Both are set in the same statement when the row is written, so an equal
+    // pair means nothing has touched it since.
+    editedSinceCreated: row.updated_at > row.created_at,
   }
 }
 
@@ -219,10 +231,17 @@ export type CoachSeries = {
   generatedAt: string | null
   generatedInTimezone: string
   facilityCode: string
+  facilityName: string
+  changingRoom: string | null
+  eligibilityMode: EligibilityMode
+  birthYearFrom: number | null
+  birthYearTo: number | null
   capacity: number
   /** How many of the generated occurrences still exist and are not cancelled. */
   activeCount: number
   cancelledCount: number
+  /** Of those, how many are still to come — `zbývá {n}` on the card (§K15). */
+  remainingCount: number
 }
 
 type SeriesRow = {
@@ -237,8 +256,12 @@ type SeriesRow = {
   generated_at: string | null
   generated_in_timezone: string
   capacity: number
-  facilities: { code: string } | null
-  training_sessions: { status: string }[] | null
+  changing_room: string | null
+  eligibility_mode: EligibilityMode
+  birth_year_from: number | null
+  birth_year_to: number | null
+  facilities: { code: string; name: string } | null
+  training_sessions: { status: string; start_at: string }[] | null
 }
 
 /** Series in the coach's workspace, newest first. */
@@ -249,11 +272,14 @@ export async function listCoachSeries(): Promise<CoachSeries[]> {
     .from('session_series')
     .select(
       `id, by_weekdays, excluded_dates, local_date_from, local_date_to, local_start_time, local_end_time,
-       generated_count, generated_at, generated_in_timezone, capacity,
+       generated_count, generated_at, generated_in_timezone, capacity, changing_room,
+       eligibility_mode, birth_year_from, birth_year_to,
        facilities ( code, name ),
-       training_sessions ( status )`,
+       training_sessions ( status, start_at )`,
     )
     .order('created_at', { ascending: false })
+
+  const now = new Date().toISOString()
 
   return (rows('listCoachSeries', result) as unknown as SeriesRow[]).map((row) => {
     const occurrences = row.training_sessions ?? []
@@ -270,13 +296,47 @@ export async function listCoachSeries(): Promise<CoachSeries[]> {
       generatedAt: row.generated_at,
       generatedInTimezone: row.generated_in_timezone,
       facilityCode: row.facilities?.code ?? '',
+      facilityName: row.facilities?.name ?? '',
+      changingRoom: row.changing_room,
+      eligibilityMode: row.eligibility_mode,
+      birthYearFrom: row.birth_year_from,
+      birthYearTo: row.birth_year_to,
       capacity: row.capacity,
       // Counted from the occurrences, not from the series row: the series is
       // provenance and never follows what happens to them afterwards.
       activeCount: occurrences.filter((s) => s.status !== 'CANCELLED').length,
       cancelledCount: occurrences.filter((s) => s.status === 'CANCELLED').length,
+      // §K15 splits the list by whether anything is left, so this counts the
+      // occurrences rather than reading the pattern's end date: a series whose
+      // last three trainings were cancelled is over, whatever the range says.
+      remainingCount: occurrences.filter((s) => s.status !== 'CANCELLED' && s.start_at > now)
+        .length,
     }
   })
+}
+
+/**
+ * The trainings one series produced (§K16).
+ *
+ * By `series_id` rather than by re-deriving the pattern: the occurrences are
+ * independent from the moment they are created, and a coach who moved one of
+ * them must still find it here.
+ */
+export async function listSeriesSessions(seriesId: string): Promise<CoachSession[]> {
+  const supabase = await createClient()
+
+  const result = await supabase
+    .from('training_sessions')
+    .select(SESSION_COLUMNS)
+    .eq('series_id', seriesId)
+    .order('start_at')
+
+  return (rows('listSeriesSessions', result) as unknown as Row[]).map(toSession)
+}
+
+export async function getCoachSeries(seriesId: string): Promise<CoachSeries | null> {
+  const all = await listCoachSeries()
+  return all.find((series) => series.id === seriesId) ?? null
 }
 
 export type SessionCoach = {

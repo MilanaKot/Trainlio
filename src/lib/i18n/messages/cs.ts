@@ -70,6 +70,9 @@ export const cs = {
     title: 'Více',
     roleCoach: 'Trenér',
     roleAdmin: 'Trenér · Administrátor',
+    /* §A0 (v3): planning is every coach's, management is the admin's. */
+    planningCaption: 'PLÁNOVÁNÍ',
+    seriesRow: 'Série tréninků',
     manageCaption: 'SPRÁVA',
     accountCaption: 'ÚČET',
     organization: 'Organizace',
@@ -677,9 +680,25 @@ export const cs = {
     ineligibleKept: 'Jejich přihlášky zůstanou zachovány.',
     ineligibleNotified: 'Dotčení rodiče budou upozorněni.',
     series: 'Série tréninků',
-    newSeries: '+ Série',
+    newSeries: '+ Nová série',
     newSeriesTitle: 'Nová série tréninků',
-    noSeries: 'Zatím žádné série.',
+    noSeries: 'Zatím nemáte žádnou sérii.',
+    /* K15/K15b/K16 (v3, DR-03). */
+    seriesTitle: 'Série',
+    seriesHelper: 'Tréninky ze série jsou po vytvoření samostatné. Upravit je můžete jednotlivě.',
+    seriesRunning: 'PROBÍHAJÍCÍ · {count}',
+    seriesEnded: 'UKONČENÉ · {count}',
+    seriesEmptyBody:
+      'Série vytvoří tréninky na celé období najednou — například každé úterý a čtvrtek do Vánoc.',
+    seriesRemaining: '{total} tréninků, zbývá {remaining}',
+    seriesTotal: '{total} tréninků',
+    seriesBack: 'Série tréninků',
+    seriesOutOfPattern: 'Upraveno mimo sérii',
+    seriesNoEdit:
+      'Celou sérii nelze upravit ani zrušit najednou. Každý trénink otevřete a upravte zvlášť.',
+    seriesUpcomingTab: 'Nadcházející · {count}',
+    seriesPastTab: 'Minulé · {count}',
+    seriesTabs: 'Nadcházející nebo minulé tréninky série',
     weekday: 'Den v týdnu',
     /* coach/SPEC.md §K4b: the panel repeats on several weekdays, not one. */
     repeatEvery: 'Opakovat každý',

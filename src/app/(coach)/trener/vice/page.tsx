@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation'
 import { getManagedOrganization } from '@/server/organization/queries'
 import { getOwnProfile } from '@/server/athletes/queries'
 import { getWorkspaceStaff } from '@/server/staff/queries'
+import { listCoachSeries } from '@/server/sessions/queries'
 import { Avatar } from '@/components/ui/avatar'
 import { OrgLogo } from '@/components/ui/org-logo'
 import { SignOutButton } from '@/components/staff/sign-out-button'
@@ -14,6 +15,33 @@ function Chevron() {
   return (
     <span aria-hidden="true" className="text-subtle">
       ›
+    </span>
+  )
+}
+
+function CalendarIcon() {
+  return (
+    <span
+      aria-hidden="true"
+      className="flex size-7 items-center justify-center rounded-chip bg-primary-100 text-primary"
+    >
+      <svg viewBox="0 0 20 20" fill="none" className="size-4">
+        <rect
+          x="3"
+          y="4.5"
+          width="14"
+          height="12"
+          rx="2.5"
+          stroke="currentColor"
+          strokeWidth="1.6"
+        />
+        <path
+          d="M3 8.5h14M7 3v3M13 3v3"
+          stroke="currentColor"
+          strokeWidth="1.6"
+          strokeLinecap="round"
+        />
+      </svg>
     </span>
   )
 }
@@ -37,7 +65,11 @@ export default async function MorePage() {
   if (!organization) notFound()
 
   const profile = await getOwnProfile()
-  const staff = organization.canEdit ? await getWorkspaceStaff(organization.id) : []
+  const [staff, series] = await Promise.all([
+    organization.canEdit ? getWorkspaceStaff(organization.id) : [],
+    listCoachSeries(),
+  ])
+  const running = series.filter((item) => item.remainingCount > 0).length
 
   const name = [profile?.firstName, profile?.lastName].filter(Boolean).join(' ')
 
@@ -57,6 +89,24 @@ export default async function MorePage() {
             {organization.canEdit ? t.roleAdmin : t.roleCoach}
           </span>
         </div>
+      </section>
+
+      {/* §A0 (v3): planning is every coach's, management is the admin's. */}
+      <section className="flex flex-col gap-2.5">
+        <Caption>{t.planningCaption}</Caption>
+        <ul className="flex flex-col rounded-card bg-surface px-4 shadow-card">
+          <li>
+            <Link
+              href="/trener/serie"
+              className="flex min-h-14 items-center gap-3 py-2 text-row font-semibold text-ink"
+            >
+              <CalendarIcon />
+              <span className="flex-1">{t.seriesRow}</span>
+              <span className="text-meta font-normal text-muted">{running}</span>
+              <Chevron />
+            </Link>
+          </li>
+        </ul>
       </section>
 
       {organization.canEdit ? (

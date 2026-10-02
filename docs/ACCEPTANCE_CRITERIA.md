@@ -769,3 +769,17 @@ guardian of that very child reads no rows rather than a null column, and cannot
 write one either (D-13). The 200-character limit is the server's as well as the
 form's, clearing it leaves no empty row behind, and the note goes when the child
 is forgotten (D-18).
+
+## The series a coach created (handoff v3, DR-03)
+
+AC-288  
+Series live under `Více › Série tréninků`, which every coach has — planning is
+not an administrator's privilege. The list splits them by whether anything is
+still to come rather than by the pattern's end date, since a series whose last
+trainings were cancelled is over whatever its range says, and each card carries
+the weekdays, the time, the place and how many of its trainings are left.
+Opening one shows the trainings it produced, split into upcoming and past with
+the counts in the tabs, and a training that has been edited since it was created
+says so — it no longer matches the pattern. There is no action anywhere that
+edits or cancels a series as a whole, and the screen says why: the occurrences
+are independent from the moment they are made.
