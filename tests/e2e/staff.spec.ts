@@ -261,6 +261,65 @@ test.describe('a workspace administrator manages the coaching staff', () => {
     await expect(page.getByRole('heading', { name: 'Tréninky' })).toBeVisible()
   })
 
+  /**
+   * Admin tests 14 and 15 (§A3 ROLE, §A3d, §A3e). The role had been in the
+   * schema since the first migration with nothing in the application reading
+   * it.
+   */
+  test('grants and revokes the administrator role (AC-290)', async ({ page }) => {
+    const admin = uniqueEmail('spravce.role')
+    await signIn(page, admin)
+    await grantWorkspaceRole(admin, 'WORKSPACE_ADMIN')
+
+    const run = Date.now()
+    await page.goto('/trener/vice/treneri/novy')
+    await page.getByLabel('Jméno').fill('Jana')
+    await page.getByLabel('Příjmení').fill(`Kolegová${run}`)
+    await page.getByRole('button', { name: 'Přidat trenéra' }).click()
+    await expect(page.getByText('Trenér přidán')).toBeVisible()
+
+    // §A3: the switch, and what it says it does.
+    await page.getByRole('link', { name: new RegExp(`Jana Kolegová${run}`) }).click()
+    const adminSwitch = page.getByRole('switch', { name: 'Administrátor' })
+    await expect(adminSwitch).not.toBeChecked()
+    await page.locator('label', { hasText: 'Administrátor' }).click()
+    await page.getByRole('button', { name: 'Uložit změny' }).click()
+    await expect(page.getByText('Uloženo')).toBeVisible()
+
+    await page.getByRole('link', { name: new RegExp(`Jana Kolegová${run}`) }).click()
+    await expect(page.getByRole('switch', { name: 'Administrátor' })).toBeChecked()
+    // §A1: the meta line answers the question an administrator is actually
+    // asking — can this person get in — so a coach with no address says so
+    // rather than announcing a role they cannot yet use.
+    await page.goto('/trener/vice/treneri')
+    const row = page.locator('li', { hasText: `Jana Kolegová${run}` })
+    await expect(row).toContainText('Chybí e-mail')
+    await expect(row).toContainText('Bez přístupu')
+
+    // §A3e: revoking your own asks first, and the server refuses without it.
+    // This administrator signed in and was granted the role; nobody has given
+    // them a name yet, and §A3 requires both halves of one before it saves.
+    await page.goto(`/trener/vice/treneri/${await profileFor(admin)}`)
+    await page.getByLabel('Jméno').fill('Milana')
+    await page.getByLabel('Příjmení').fill(`Správná${run}`)
+    await page.locator('label', { hasText: 'Administrátor' }).click()
+    await page.getByRole('button', { name: 'Uložit změny' }).click()
+
+    const confirm = page.getByRole('alertdialog')
+    await expect(confirm).toContainText('Odebrat si práva administrátora?')
+    // Named, but not necessarily this run's: the database is shared between
+    // runs and projects, and any other administrator could give them back.
+    await expect(confirm).toContainText('Práva vám může vrátit jen')
+    await confirm.getByRole('button', { name: 'Odebrat práva' }).click()
+
+    // And the section it administers is gone from Více.
+    await page.goto('/trener/vice')
+    await expect(page.getByText('SPRÁVA')).toHaveCount(0)
+    await expect(page.getByRole('link', { name: /Trenéři/ })).toHaveCount(0)
+    // Planning is every coach's, and stays.
+    await expect(page.getByRole('link', { name: /Série tréninků/ })).toBeVisible()
+  })
+
   test('a guardian never reaches the staff screen (AC-241)', async ({ page }) => {
     await signIn(page, uniqueEmail('rodic.stab'))
 

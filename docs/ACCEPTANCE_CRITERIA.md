@@ -808,3 +808,18 @@ Invitations never expire: signing in is always a code to an address, so an
 unaccepted invitation is a state and not a deadline. After the first sign-in the
 coach sees the welcome screen once, where they may record the number parents
 will be given when a child is removed, and never again.
+
+## Who may administer the club (handoff v3, DR-08)
+
+AC-290  
+`workspace_role` has been in the schema since the first migration with nothing
+reading it. Now any administrator may grant or revoke it, including to a coach
+who has not signed in yet — the grant is on the membership, so it is simply true
+when they arrive. Three refusals come from the database and not from the screen:
+a coach cannot grant themselves anything, the last active administrator cannot
+lose the role by any path, and revoking your own needs an explicit confirmation,
+because the screen that offers it is the screen it takes away. Deactivating a
+member takes the role with them, so bringing somebody back brings back a coach
+and not quietly an administrator, and somebody who held only that role keeps a
+place on the staff. Every change is audited: this is a change to who controls
+the club.

@@ -347,6 +347,18 @@ export const cs = {
     edit: 'Upravit',
     born: 'Narozen {date}',
     sportsCaption: 'SPORTY',
+    /* §A3 ROLE (v3, DR-08). */
+    roleCaption: 'ROLE',
+    adminSwitch: 'Administrátor',
+    adminSwitchHint: 'Spravuje trenéry, pozvánky a organizaci',
+    lastAdminNotice:
+      'Jste jediný administrátor. Práva si můžete odebrat, až je udělíte jinému trenérovi.',
+    removeOwnAdminTitle: 'Odebrat si práva administrátora?',
+    removeOwnAdminBody:
+      'Přijdete o správu trenérů a organizace. Tréninky dál uvidíte a upravíte. Práva vám může vrátit jen {admin}.',
+    removeOwnAdminConfirm: 'Odebrat práva',
+    removeOwnAdminKeep: 'Ponechat',
+    someoneElse: 'jiný administrátor',
     stateCaption: 'STAV',
     activeSwitch: 'Aktivní sportovec',
     activeSwitchHint: 'Lze ho přihlašovat na nové tréninky',
@@ -1099,6 +1111,18 @@ export const cs = {
     contactCaption: 'KONTAKT',
     phone: 'Telefon',
     phoneHint: 'Rodiče ho uvidí, když trenér jejich dítě odhlásí z tréninku.',
+    /* §A3 ROLE (v3, DR-08). */
+    roleCaption: 'ROLE',
+    adminSwitch: 'Administrátor',
+    adminSwitchHint: 'Spravuje trenéry, pozvánky a organizaci',
+    lastAdminNotice:
+      'Jste jediný administrátor. Práva si můžete odebrat, až je udělíte jinému trenérovi.',
+    removeOwnAdminTitle: 'Odebrat si práva administrátora?',
+    removeOwnAdminBody:
+      'Přijdete o správu trenérů a organizace. Tréninky dál uvidíte a upravíte. Práva vám může vrátit jen {admin}.',
+    removeOwnAdminConfirm: 'Odebrat práva',
+    removeOwnAdminKeep: 'Ponechat',
+    someoneElse: 'jiný administrátor',
     stateCaption: 'STAV',
     activeSwitch: 'Aktivní trenér',
     activeSwitchHint: 'Lze ho vybrat pro nové tréninky',
@@ -1130,7 +1154,8 @@ export const cs = {
       NAME_REQUIRED: 'Zadejte jméno i příjmení.',
       FIRST_NAME_REQUIRED: 'Vyplňte jméno.',
       LAST_NAME_REQUIRED: 'Vyplňte příjmení.',
-      LAST_ADMIN: 'Klub musí mít aspoň jednoho aktivního správce.',
+      LAST_ADMIN: 'Klub musí mít aspoň jednoho aktivního administrátora.',
+      CONFIRM_SELF: 'Potvrďte prosím odebrání vlastních práv.',
       PHONE_MALFORMED: 'Zadejte platné telefonní číslo.',
       EMAIL_MALFORMED: 'Zadejte platný e-mail.',
       EMAIL_TAKEN: 'Tento e-mail už v aplikaci používá někdo jiný.',

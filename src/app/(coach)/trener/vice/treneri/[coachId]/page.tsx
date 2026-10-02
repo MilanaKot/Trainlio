@@ -25,11 +25,19 @@ export default async function EditCoachPage({ params }: { params: Promise<{ coac
 
   const own = await getOwnProfile()
 
+  // §A3d: the last administrator cannot lose the role, and the switch says so
+  // rather than offering a change the server will refuse. The count is the
+  // database's own, read from the same rows `is_workspace_admin` reads.
+  const admins = staff.filter((one) => one.isActive && one.roles.includes('WORKSPACE_ADMIN'))
+  const otherAdmin = admins.find((one) => one.profileId !== member.profileId)
+
   return (
     <main className="flex flex-col gap-4">
       <CoachForm
         workspaceId={workspace.id}
         member={member}
+        isLastAdmin={admins.length === 1 && admins[0]?.profileId === member.profileId}
+        {...(otherAdmin?.displayName ? { otherAdminName: otherAdmin.displayName } : {})}
         // An administrator cannot switch themselves off (§A3). The database
         // says the same thing in the case that matters — the last active
         // administrator is refused outright — and this is the courtesy in

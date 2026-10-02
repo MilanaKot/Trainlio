@@ -38,6 +38,10 @@ function readRpc(value: unknown): RpcResult {
 function refresh() {
   // The name a guardian reads is on the session pages, not only here.
   revalidatePath('/trener/vice/treneri')
+  // §A0 counts the staff and shows `Správa` only to an administrator, so it is
+  // stale the moment either changes — including when an administrator has just
+  // given their own rights away (§A3e).
+  revalidatePath('/trener/vice')
   revalidatePath('/trener')
   revalidatePath('/treninky')
   revalidatePath('/moje-treninky')
@@ -300,4 +304,36 @@ export async function completeWelcome(phone: string): Promise<StaffResult> {
 export async function touchStaffSeen(): Promise<void> {
   const supabase = await createClient()
   await supabase.rpc('touch_staff_seen')
+}
+
+/**
+ * Who may administer the club (§A3, §A3d, §A3e).
+ *
+ * `confirmSelf` is a server-side gate, not a dialog this action decides to
+ * show: without it the domain function refuses an administrator revoking their
+ * own role, exactly as the capacity override and the deactivation do. The
+ * screen that offers this is the screen it takes away.
+ */
+export async function setMemberRole(
+  workspaceId: string,
+  profileId: string,
+  isAdmin: boolean,
+  confirmSelf = false,
+): Promise<StaffResult> {
+  const supabase = await createClient()
+
+  const { data, error } = await supabase.rpc('set_member_role', {
+    p_workspace_id: workspaceId,
+    p_profile_id: profileId,
+    p_is_admin: isAdmin,
+    p_confirm_self: confirmSelf,
+  })
+
+  if (error) return { ok: false, code: 'generic' }
+
+  const result = readRpc(data)
+  if (!result.ok) return { ok: false, code: result.code ?? 'generic' }
+
+  refresh()
+  return { ok: true }
 }

@@ -369,7 +369,14 @@ select pg_temp.check(
 -- administrator it created has no login to act as. Restore the first, so this
 -- section has a working one — and assert every administrative call, because a
 -- refused one would let the cases below pass without proving anything.
+--
+-- The role has to be restored as well as the membership: since migration 37,
+-- deactivating a member deletes their WORKSPACE_ADMIN row, so that bringing
+-- somebody back brings back a coach and not quietly an administrator (§A3).
 update public.workspace_members set is_active = true where profile_id = :ADMIN;
+insert into public.workspace_members (workspace_id, profile_id, role, is_active)
+values (pg_temp.ws(), :ADMIN, 'WORKSPACE_ADMIN', true)
+on conflict (workspace_id, profile_id, role) do update set is_active = true;
 
 select pg_temp.check(
   pg_temp.as_user(:ADMIN, $$select public.set_member_active(pg_temp.ws(),
@@ -626,3 +633,100 @@ select pg_temp.check(
   pg_temp.as_user(:A, $$select coalesce(location_name, '(null)') from public.joinable_workspaces()$$),
   '(null)', 'and says nothing rather than pick one of two (m31)');
 delete from public.locations where name = 'Beroun';
+
+\echo ''
+\echo '── Who may administer the club (§A3, §A3d, §A3e, AC-290) ────────────'
+-- The role had been in the schema since migration 1 with nothing reading it.
+create temp table t_role as
+select (pg_temp.as_user(:ADMIN, $$select (public.create_workspace_coach(pg_temp.ws(),
+  'Nový', 'Kolega') ->> 'profile_id')$$))::uuid as id;
+create or replace function pg_temp.colleague() returns uuid language sql stable as
+  $$ select id from t_role $$;
+
+select pg_temp.check(
+  pg_temp.as_user(:COACH, format($$select (public.set_member_role(pg_temp.ws(), %L, true) ->> 'code')$$,
+    pg_temp.colleague())),
+  'NOT_AUTHORIZED', 'a coach cannot make themselves anything (AC-290)');
+select pg_temp.check(
+  pg_temp.as_user(:ADMIN, format($$select (public.set_member_role(pg_temp.ws(), %L, true) ->> 'ok')$$,
+    pg_temp.colleague())),
+  'true', 'an administrator grants the role (AC-290)');
+-- The grant is on the membership, so it is simply true when they arrive: a
+-- coach who has not signed in yet can be made an administrator today.
+select pg_temp.check(
+  (select count(*)::text from public.workspace_members m
+    where m.profile_id = pg_temp.colleague() and m.role = 'WORKSPACE_ADMIN' and m.is_active),
+  '1', 'and it holds the moment they first sign in (AC-290)');
+select pg_temp.check(
+  (select count(*)::text from public.audit_log where action = 'MEMBER_ROLE_CHANGED'),
+  '1', 'recorded, because it is a change to who controls the club (AC-290)');
+
+-- §A3e: revoking your own is the one that needs a confirmation, because the
+-- screen that offers it disappears afterwards.
+select pg_temp.check(
+  pg_temp.as_user(:ADMIN, format($$select (public.set_member_role(pg_temp.ws(), %L, false) ->> 'code')$$,
+    :ADMIN)),
+  'CONFIRM_SELF', 'taking your own away asks first (AC-290)');
+select pg_temp.check(
+  pg_temp.as_user(:ADMIN, format($$select (public.set_member_role(pg_temp.ws(), %L, false, true) ->> 'ok')$$,
+    :ADMIN)),
+  'true', 'and then does it (AC-290)');
+select pg_temp.check(
+  pg_temp.as_user(:ADMIN, $$select public.is_workspace_admin(pg_temp.ws())::text$$),
+  'false', 'the administrator is a coach again (AC-290)');
+-- Still on the staff: a person who held only the administrator role must not
+-- fall off it when the role goes.
+select pg_temp.check(
+  (select count(*)::text from public.workspace_members m
+    where m.profile_id = :ADMIN and m.role = 'COACH' and m.is_active),
+  '1', 'and is still on the staff (AC-290)');
+select pg_temp.check(
+  pg_temp.as_user(:ADMIN, format($$select (public.set_member_role(pg_temp.ws(), %L, false, true) ->> 'code')$$,
+    pg_temp.colleague())),
+  'NOT_AUTHORIZED', 'a coach who gave their rights away cannot take another''s (AC-290)');
+
+-- §A3d: the last one cannot lose it, by any path. The suite has created other
+-- administrators along the way, so they are cleared out first — directly,
+-- because the point of the cases below is what the function refuses, not how
+-- many ways there are to get there.
+delete from public.workspace_members m
+ where m.workspace_id = pg_temp.ws() and m.role = 'WORKSPACE_ADMIN' and m.profile_id <> :ADMIN;
+insert into public.workspace_members (workspace_id, profile_id, role, is_active)
+values (pg_temp.ws(), :ADMIN, 'WORKSPACE_ADMIN', true)
+on conflict (workspace_id, profile_id, role) do update set is_active = true;
+
+select pg_temp.check(
+  (select count(*)::text from public.workspace_members m
+    where m.workspace_id = pg_temp.ws() and m.role = 'WORKSPACE_ADMIN' and m.is_active),
+  '1', 'one administrator left (AC-290)');
+select pg_temp.check(
+  pg_temp.as_user(:ADMIN, format($$select (public.set_member_role(pg_temp.ws(), %L, false, true) ->> 'code')$$,
+    :ADMIN)),
+  'LAST_ADMIN', 'who may not give the role away (AC-290)');
+select pg_temp.check(
+  pg_temp.as_user(:ADMIN, $$select (public.set_member_active(pg_temp.ws(),
+    '00000000-0000-0000-0000-00000000ad11'::uuid, false, true) ->> 'code')$$),
+  'LAST_ADMIN', 'nor be deactivated out of it (AC-290, AC-250)');
+
+-- And deactivation takes the role with it, so bringing somebody back brings
+-- back a coach rather than quietly an administrator (§A3).
+select pg_temp.check(
+  pg_temp.as_user(:ADMIN, format($$select (public.set_member_role(pg_temp.ws(), %L, true) ->> 'ok')$$,
+    pg_temp.colleague())),
+  'true', 'a second administrator again (AC-290)');
+select pg_temp.check(
+  pg_temp.as_user(:ADMIN, format($$select (public.set_member_active(pg_temp.ws(), %L, false, true) ->> 'ok')$$,
+    pg_temp.colleague())),
+  'true', 'who is then deactivated (AC-290)');
+select pg_temp.check(
+  (select count(*)::text from public.workspace_members m
+    where m.profile_id = pg_temp.colleague() and m.role = 'WORKSPACE_ADMIN'),
+  '0', 'and loses the role in the doing (AC-290)');
+select pg_temp.check(
+  pg_temp.as_user(:ADMIN, format($$select (public.set_member_active(pg_temp.ws(), %L, true) ->> 'ok')$$,
+    pg_temp.colleague())),
+  'true', 'bringing them back (AC-290)');
+select pg_temp.check(
+  (select count(*)::text from public.workspace_members m
+    where m.profile_id = pg_temp.colleague() and m.role = 'WORKSPACE_ADMIN' and m.is_active),
+  '0', 'brings back a coach, not an administrator (AC-290)');

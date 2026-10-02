@@ -12,6 +12,7 @@ import {
   setMemberEmail,
   setMemberName,
   setMemberPhone,
+  setMemberRole,
 } from '@/server/staff/actions'
 import { Button } from '@/components/ui/button'
 import { ConfirmDialog } from '@/components/ui/dialog'
@@ -120,12 +121,18 @@ export function CoachForm({
   member,
   existingNames = [],
   isSelf = false,
+  isLastAdmin = false,
+  otherAdminName,
 }: {
   workspaceId: string
   member?: StaffMember
   /** §A2 warns — and does not block — on an exact duplicate. */
   existingNames?: string[]
   isSelf?: boolean
+  /** §A3d: the role cannot be given away when there is nobody to give it to. */
+  isLastAdmin?: boolean
+  /** §A3e names who could give it back. */
+  otherAdminName?: string
 }) {
   const router = useRouter()
   const toast = useToast()
@@ -133,6 +140,8 @@ export function CoachForm({
   const [firstName, setFirstName] = useState(member?.firstName ?? '')
   const [lastName, setLastName] = useState(member?.lastName ?? '')
   const [isActive, setIsActive] = useState(member?.isActive ?? true)
+  const [isAdmin, setIsAdmin] = useState(member?.roles.includes('WORKSPACE_ADMIN') ?? false)
+  const [confirmOwnRole, setConfirmOwnRole] = useState(false)
   const [phone, setPhone] = useState(member?.phone ? formatPhone(member.phone) : '')
   const [email, setEmail] = useState(member?.email ?? '')
   const [errors, setErrors] = useState<{
@@ -166,7 +175,7 @@ export function CoachForm({
     return Object.keys(next).length === 0
   }
 
-  function save(confirmFutureSessions = false) {
+  function save(confirmFutureSessions = false, confirmOwnRoleRemoval = false) {
     if (!validate()) return
 
     startSaving(async () => {
@@ -197,6 +206,31 @@ export function CoachForm({
         router.push('/trener/vice/treneri')
         router.refresh()
         return
+      }
+
+      // §A3/§A3e: the role first, before anything else writes.
+      //
+      // Not an ordering preference: §A3e's confirmation is a refusal from the
+      // server, and a save that had already renamed somebody would have
+      // revalidated this screen underneath the dialog — resetting the switch
+      // the administrator had just moved. Asking before anything has changed
+      // also means an administrator who cancels has changed nothing.
+      const wasAdmin = member.roles.includes('WORKSPACE_ADMIN')
+      if (isAdmin !== wasAdmin) {
+        const changed = await setMemberRole(
+          workspaceId,
+          member.profileId,
+          isAdmin,
+          confirmOwnRoleRemoval,
+        )
+        if (!changed.ok) {
+          if (changed.code === 'CONFIRM_SELF') {
+            setConfirmOwnRole(true)
+            return
+          }
+          setErrors({ form: errorText(changed.code) })
+          return
+        }
       }
 
       const renamed = await setMemberName(
@@ -383,6 +417,20 @@ export function CoachForm({
         />
       </Panel>
 
+      {/* §A3 ROLE (v3, DR-08). The rules are the server's; this explains them. */}
+      {member ? (
+        <Panel caption={t.roleCaption}>
+          <Switch
+            checked={isAdmin}
+            onChange={setIsAdmin}
+            label={t.adminSwitch}
+            hint={t.adminSwitchHint}
+            disabled={isLastAdmin}
+          />
+          {isLastAdmin ? <Notice variant="neutral">{t.lastAdminNotice}</Notice> : null}
+        </Panel>
+      ) : null}
+
       {member ? (
         <Panel caption={t.stateCaption}>
           <Switch
@@ -430,6 +478,23 @@ export function CoachForm({
           {member ? messages.coach.saveChanges : email.trim() ? t.addWithInvite : t.addSubmit}
         </Button>
       </div>
+
+      {/* §A3e: a confirmation rather than a warning, because afterwards this
+          screen is gone. */}
+      <ConfirmDialog
+        open={confirmOwnRole}
+        onOpenChange={(open) => (open ? undefined : setConfirmOwnRole(false))}
+        title={t.removeOwnAdminTitle}
+        tone="warning"
+        cancelLabel={t.removeOwnAdminKeep}
+        confirmLabel={t.removeOwnAdminConfirm}
+        pending={pending}
+        onConfirm={() => save(false, true)}
+      >
+        <p className="text-meta text-muted">
+          {t.removeOwnAdminBody.replace('{admin}', otherAdminName ?? t.someoneElse)}
+        </p>
+      </ConfirmDialog>
 
       <ConfirmDialog
         open={confirmFuture !== null}

@@ -1616,6 +1616,15 @@ export type Database = {
         Args: { p_phone: string; p_profile_id: string; p_workspace_id: string }
         Returns: Json
       }
+      set_member_role: {
+        Args: {
+          p_confirm_self?: boolean
+          p_is_admin: boolean
+          p_profile_id: string
+          p_workspace_id: string
+        }
+        Returns: Json
+      }
       set_own_staff_phone: { Args: { p_phone: string }; Returns: Json }
       set_session_assistants: {
         Args: { p_profile_ids?: string[]; p_training_session_id: string }
