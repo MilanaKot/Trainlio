@@ -124,49 +124,6 @@ The design's sentence is right for the case it was written for. Told to a
 parent whose child the coach removed, it sends them to correct a date of birth
 that is perfectly correct.
 
-## The public note stays on the training card — open question
-
-The card in `DESIGN_SYSTEM.md` §6.5 has no row for the coach's public note, and
-`guardian/SPEC.md` puts `INFORMACE PRO SPORTOVCE` on G6, the booking detail.
-G6 is reachable only from a booking, and there is no detail screen for a
-training a parent has not booked yet, so as drawn a note like "bring your
-pads, meet fifteen minutes early" is invisible until after booking.
-
-The note is kept on the card for now, where the previous implementation had it.
-It is guardian-visible by D-13 and the coach wrote it for exactly these parents.
-The cost is that a card with a long note is taller than the design's.
-
-**To decide:** clamp it to two lines on the card, move it into the booking
-sheet, or leave it as it is.
-
-## The club's mark is not in the design
-
-Every header in the handoff is the product's — `Tréninky` with
-`Lední hokej · Příbram` beneath it — and the only brand mark anywhere is the
-Trainlio wordmark on the sign-in screen. A club emblem was asked for after the
-design arrived, so three choices were made here rather than drawn:
-
-A rounded square with the image contained inside it, not a circle. Club
-emblems are shields and crests, and a circular crop cuts their corners off. A
-white tile behind it, because a logo drawn for white paper disappears on the
-app's grey.
-
-Nothing at all when a club has no mark, rather than a monogram: a placeholder
-standing in for information that does not exist is noise.
-
-In the e-mail it is 40px beside the club's name, with the name as its
-alternative text. Mail clients refuse remote images until the reader asks, so
-nothing the message says is inside the picture.
-
-All three are one component (`components/ui/club-mark.tsx`) and cheap for the
-designer to overrule.
-
-**The bucket is public**, unlike `athlete-photos`. That is the consequence of
-putting the mark in e-mails: a mail client can follow neither a signed URL that
-expires in an hour nor private storage. A club's emblem is its public face; a
-child's photograph is not, and that bucket keeps its 60-minute signed URLs
-(BR-093, AC-092, D-19).
-
 ## A parent's surname is optional
 
 `guardian/SPEC.md` §G16 marks both `Jméno` and `Příjmení` required. The first
@@ -182,14 +139,22 @@ still refused, because `Přihlásil Nováková` is a form, not a person.
 Worth revisiting if a coach ever cannot tell two Janas apart; cheap to change,
 since it is one validation rule in `updateOwnProfile`.
 
+## The club's mark is in a public bucket
+
+Unlike `athlete-photos`. That is the consequence of putting the mark in
+e-mails: a mail client can follow neither a signed URL that expires in an hour
+nor private storage. A club's emblem is its public face; a child's photograph
+is not, and that bucket keeps its 60-minute signed URLs (BR-093, AC-092, D-19).
+
 ## The organization logo, after handoff v2
 
 The handoff's second delivery designed the club mark properly (README decisions
-20–22, DESIGN_SYSTEM §6.23, admin A4/A4b/A5, guardian G11/G1), which replaced
-the three choices recorded above. `ClubMark` is gone; `OrgLogo` is the one
-component, the monogram now exists, and the mark is on the sign-in screen.
+20–22, DESIGN_SYSTEM §6.23, admin A4/A4b/A5, guardian G11/G1), and it replaced
+every choice made here before it arrived. `ClubMark` is gone; `OrgLogo` is the
+one component, the monogram now exists — where we had deliberately shown nothing
+— and the mark is on the sign-in screen.
 
-Four places where the implementation still differs from what is drawn, all of
+Five places where the implementation still differs from what is drawn, all of
 them deliberate:
 
 **`organization` is the `workspaces` row.** The spec gives the organization its
@@ -199,11 +164,10 @@ fields were added there (migration 30). The bucket keeps the name migration 29
 gave it, `workspace-logos`, for the same reason: renaming storage to match a
 word costs a migration and a re-upload and buys nothing.
 
-**The route is `/trener/organizace`**, not `/coach/more/organization`. This
-repository's routes are Czech, and the `Více` tab the design hangs A0 under does
-not exist yet — the coach group still has its pre-design header, and the screen
-is reached from there until the coach navigation is rebuilt. A0 itself is not
-built.
+**The route is `/trener/vice/organizace`**, not `/coach/more/organization`.
+This repository's routes are Czech (see the first entry in this file). A0 and
+the `Více` tab it hangs under are built as drawn, and the Czech path is what
+makes the tab bar correct: the path says which tab you are in.
 
 **The mark is also in the coach's own header.** The task lists that as out of
 scope, and `admin/SPEC.md` leaves it as an open question answered "assume no".

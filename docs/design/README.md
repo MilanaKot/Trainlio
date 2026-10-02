@@ -58,7 +58,9 @@ The prototypes are visual references with sample data (names like Jan Novák, El
 21. Logo appears in the login screen (72), the guardian `Tréninky` header (36) and e-mail headers. No logo → cobalt monogram from the first two words of the name (`HŠ`), same size and shape. One `OrgLogo` component (DS §6.23).
 22. No "how parents will see it" preview on the admin screen.
 
-Open questions are listed at the end of each SPEC.md.
+Open questions are listed at the end of each SPEC.md. What the implementation
+still needs answered — those questions, plus the screens that shipped without a
+design — is collected in `DESIGN_REQUESTS.md`.
 
 ## Changelog
 - **v2 — organization logo.** New: DS §6.23 OrgLogo; admin A4/A4b/A5 + A0 row `Organizace`; guardian G11 header (G11b/G11c) and G1 header (G1b/G1c); decisions 20–22. See `CLAUDE_CODE_TASK_logo.md` for the implementation prompt.
