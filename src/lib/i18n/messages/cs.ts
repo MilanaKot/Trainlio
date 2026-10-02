@@ -348,11 +348,21 @@ export const cs = {
 
   coach: {
     sessionsTitle: 'Tréninky',
-    /* K1: the list is chronological, and the past is a link at the bottom
-       rather than a second section nobody scrolls past. */
+    /* K1/K14 (v3, DR-02): the same switch a parent has on their own list,
+       rather than the link at the bottom this screen used to carry. */
+    tabs: 'Nadcházející nebo minulé tréninky',
+    upcoming: 'Nadcházející',
+    past: 'Minulé',
     pastSessions: 'Minulé tréninky',
     upcomingSessions: 'Nadcházející tréninky',
-    noPastSessions: 'Zatím žádné minulé tréninky.',
+    noPastSessions: 'Zatím žádné odehrané tréninky.',
+    /* K14: a finished training reports who was booked and nothing more —
+       attendance is not tracked, so the row must never imply who came. */
+    bookedLabel: {
+      one: 'přihlášený',
+      few: 'přihlášení',
+      many: 'přihlášených',
+    } satisfies PluralForms,
     noSessionsAction: 'Vytvořit trénink',
     /* K10, the sheet behind the FAB. */
     create: 'Vytvořit',

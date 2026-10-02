@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { getCoachWorkspace, listCoachSessions } from '@/server/sessions/queries'
 import { CoachTrainingRow } from '@/components/session/coach-training-row'
+import { CoachTrainingsTabs } from '@/components/session/coach-trainings-tabs'
 import { CreateSheet } from '@/components/session/create-sheet'
 import { TodayChip } from '@/components/ui/badge'
 import { OrgLogo } from '@/components/ui/org-logo'
@@ -17,9 +18,10 @@ const t = messages.coach
  * The coach's training list (coach/SPEC.md §K1).
  *
  * Chronological, not a calendar, and not a dashboard: a coach opens this to
- * see what is on and how full it is. The past is a link at the bottom rather
- * than a second section, because it is looked at rarely and pushes the next
- * training off the screen when it is not.
+ * see what is on and how full it is. The past is behind the same switch a
+ * parent has on their own list (v3, DR-02), newest first — it is read in the
+ * other direction, because what a coach looks back at is the training that has
+ * just finished.
  */
 export default async function CoachSessionsPage({
   searchParams,
@@ -51,12 +53,12 @@ export default async function CoachSessionsPage({
       <header className="flex items-center gap-3">
         <OrgLogo org={workspace.organization} size={36} />
         <div className="flex min-w-0 flex-col gap-1">
-          <h1 className="font-display text-page font-bold text-ink">
-            {showingPast ? t.pastSessions : t.sessionsTitle}
-          </h1>
+          <h1 className="font-display text-page font-bold text-ink">{t.sessionsTitle}</h1>
           {meta.length > 0 ? <p className="text-meta text-muted">{meta.join(' · ')}</p> : null}
         </div>
       </header>
+
+      <CoachTrainingsTabs value={showingPast ? 'past' : 'upcoming'} />
 
       {sessions.length === 0 ? (
         <EmptyState
@@ -91,6 +93,7 @@ export default async function CoachSessionsPage({
                     key={session.id}
                     session={session}
                     timezone={workspace.timezone}
+                    variant={showingPast ? 'past' : 'upcoming'}
                   />
                 ))}
               </ul>
@@ -99,14 +102,8 @@ export default async function CoachSessionsPage({
         })
       )}
 
-      <Link
-        href={showingPast ? '/trener' : '/trener?tab=minule'}
-        className="flex min-h-11 items-center justify-center text-row font-semibold text-primary"
-      >
-        {showingPast ? t.upcomingSessions : t.pastSessions}
-      </Link>
-
-      <CreateSheet />
+      {/* §K14: nothing is created from the past. */}
+      {showingPast ? null : <CreateSheet />}
     </main>
   )
 }

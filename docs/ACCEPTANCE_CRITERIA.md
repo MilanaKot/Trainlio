@@ -733,3 +733,15 @@ by when they can undo it, and nobody else on the training hears anything. It is
 sent for an over-capacity addition too. A guardian booking their own child raises
 no such event: the app said so already.
 
+## The coach's past trainings (handoff v3, DR-02)
+
+AC-285  
+The coach's list carries the same `Nadcházející / Minulé` switch a parent has on
+their own, with the tab in the URL so the browser's back button lands where it
+left. The past is newest first, because what a coach looks back at is the
+training that has just finished. A finished row reports how many were booked,
+in the Czech the count requires, and nothing else: no meter, because free places
+no longer exist, and no other figure, because the MVP tracks no attendance and a
+number there would read as who came. A cancelled training keeps its badge in
+both tabs. Nothing is created from the past, so the button that creates is not
+on that tab.

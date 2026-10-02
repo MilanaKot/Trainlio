@@ -84,3 +84,47 @@ describe('the coach training row (AC-272)', () => {
     expect(screen.getByText('17:30–18:30')).toHaveClass('line-through')
   })
 })
+
+/**
+ * §K14 (v3, DR-02). A finished training has no free places to report and no
+ * attendance to report either, so the row says one thing: how many were booked.
+ */
+describe('a finished training (AC-285)', () => {
+  const renderPast = (s: CoachSession) =>
+    render(
+      <ul>
+        <CoachTrainingRow session={s} timezone={PRAGUE} variant="past" />
+      </ul>,
+    )
+
+  it('counts who was booked, in the right Czech', () => {
+    renderPast(session({ confirmedCount: 1 }))
+    expect(screen.getByText('1')).toBeInTheDocument()
+    expect(screen.getByText('přihlášený')).toBeInTheDocument()
+  })
+
+  it('agrees for two to four', () => {
+    renderPast(session({ confirmedCount: 3 }))
+    expect(screen.getByText('přihlášení')).toBeInTheDocument()
+  })
+
+  it('and beyond five, and for none at all', () => {
+    renderPast(session({ confirmedCount: 8 }))
+    expect(screen.getByText('přihlášených')).toBeInTheDocument()
+    screen.getByText('8')
+  })
+
+  it('shows no meter: fullness means nothing once it is over', () => {
+    renderPast(session({ confirmedCount: 8 }))
+    expect(screen.queryByRole('meter')).toBeNull()
+    expect(screen.queryByText('8 / 10')).toBeNull()
+  })
+
+  // A cancelled training reads the same in both tabs: it did not happen, and
+  // the count of who had been booked would read as who came.
+  it('keeps the cancelled badge instead of a count', () => {
+    renderPast(session({ status: 'CANCELLED', confirmedCount: 8 }))
+    expect(screen.getByText('Zrušeno')).toBeInTheDocument()
+    expect(screen.queryByText('přihlášených')).toBeNull()
+  })
+})

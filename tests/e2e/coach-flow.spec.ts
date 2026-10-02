@@ -1,5 +1,14 @@
 import { expect, test } from '@playwright/test'
-import { asUser, dateInput, grantCoach, signIn, tokenFor, uniqueEmail, STACK } from './helpers'
+import {
+  asUser,
+  dateInput,
+  grantCoach,
+  signIn,
+  tokenFor,
+  uniqueEmail,
+  SERVICE,
+  STACK,
+} from './helpers'
 
 /**
  * The coach's path: publish a training, read the roster, add a child by hand,
@@ -56,6 +65,30 @@ async function family(firstName: string, options: { bookInto?: string } = {}): P
     })
   ).json()) as { ok?: boolean; code?: string }
   expect(booked.ok, `booking failed: ${booked.code}`).toBe(true)
+}
+
+/**
+ * Moves a training into the past, which no interface can do and nothing should.
+ *
+ * `create_training_session` refuses a date that has already happened, and
+ * rightly — but `Minulé` cannot be tested without one, so the test does the one
+ * thing only the service role can: it moves the clock under the training.
+ */
+async function moveToPast(sessionId: string): Promise<void> {
+  const yesterday = new Date(Date.now() - 86_400_000)
+  const start = new Date(yesterday.setHours(9, 0, 0, 0)).toISOString()
+  const end = new Date(yesterday.setHours(10, 0, 0, 0)).toISOString()
+
+  const response = await fetch(`${STACK}/rest/v1/training_sessions?id=eq.${sessionId}`, {
+    method: 'PATCH',
+    headers: {
+      apikey: SERVICE,
+      authorization: `Bearer ${SERVICE}`,
+      'content-type': 'application/json',
+    },
+    body: JSON.stringify({ start_at: start, end_at: end }),
+  })
+  expect(response.ok, `could not move the training: ${response.status}`).toBe(true)
 }
 
 test.describe('a coach publishes a training and runs its roster', () => {
@@ -151,6 +184,53 @@ test.describe('a coach publishes a training and runs its roster', () => {
     // BR-044: nothing is deleted, so the removal stays on the record.
     await page.getByText(/Odebraní a odhlášení/).click()
     await expect(page.getByText('Odebral trenér').first()).toBeVisible()
+  })
+
+  /**
+   * Coach test 10 (§K1, §K14). The past is behind the same switch a parent has,
+   * and a finished training reports who was booked — never a meter, which would
+   * report free places that no longer exist, and never anything that could read
+   * as who actually came.
+   */
+  test('the past is a tab, and it counts rather than measures (AC-285)', async ({ page }) => {
+    const coach = uniqueEmail('trener.minule')
+    await signIn(page, coach)
+    await grantCoach(coach)
+
+    await page.goto('/trener/novy')
+    await page.getByLabel('Datum').fill(dateInput(10))
+    await page.getByLabel('Začátek').fill('09:00')
+    await page.getByLabel('Konec').fill('10:00')
+    await page.getByLabel('Kapacita', { exact: true }).fill('10')
+    const room = `Šatna ${Date.now()}`
+    await page.getByLabel('Šatna').fill(room)
+    await page.getByRole('button', { name: 'Vytvořit trénink' }).click()
+
+    await expect(page.getByText(room)).toBeVisible()
+    const sessionId = page.url().split('/trener/')[1]?.split('/')[0] ?? ''
+    await family('Dalibor', { bookInto: sessionId })
+    await moveToPast(sessionId)
+
+    await page.goto('/trener')
+    const tabs = page.getByRole('tablist')
+    await expect(tabs).toBeVisible()
+    // Finished, so it is not on the list a coach opens the app for.
+    await expect(page.locator('main').getByText(room)).toHaveCount(0)
+
+    await tabs.getByRole('tab', { name: 'Minulé' }).click()
+    const row = page.locator('main li', { hasText: room })
+    await expect(row).toBeVisible()
+    await expect(row).toContainText('1')
+    await expect(row).toContainText('přihlášený')
+    // No meter, no `1 / 10`: free places mean nothing once it is over.
+    await expect(row.getByRole('meter')).toHaveCount(0)
+    await expect(row).not.toContainText('/')
+    // Nothing is created from the past.
+    await expect(page.getByRole('button', { name: 'Vytvořit', exact: true })).toHaveCount(0)
+
+    await page.getByRole('tab', { name: 'Nadcházející' }).click()
+    await expect(page.locator('main').getByText(room)).toHaveCount(0)
+    await expect(page.getByRole('button', { name: 'Vytvořit', exact: true })).toBeVisible()
   })
 
   test('a guardian cannot reach the coach area by URL', async ({ page }) => {

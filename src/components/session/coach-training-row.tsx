@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { messages } from '@/lib/i18n'
+import { messages, plural } from '@/lib/i18n'
 import { eligibilityLabel } from '@/lib/domain/session'
 import { capacityState } from '@/lib/domain/capacity'
 import { formatTimeRange } from '@/lib/time/workspace-time'
@@ -29,9 +29,17 @@ function LockIcon() {
 export function CoachTrainingRow({
   session,
   timezone,
+  variant = 'upcoming',
 }: {
   session: CoachSession
   timezone: string
+  /**
+   * §K14: a finished training reports how many were booked and nothing else.
+   * Free places no longer matter, and there is no attendance tracking in the
+   * MVP — so a meter here would imply a fullness that means nothing, and any
+   * other figure would imply who came.
+   */
+  variant?: 'upcoming' | 'past'
 }) {
   const start = new Date(session.startAt)
   const end = new Date(session.endAt)
@@ -95,6 +103,15 @@ export function CoachTrainingRow({
         <span className="flex shrink-0 items-center gap-2">
           {cancelled ? (
             <Badge variant="danger">{t.cancelledBadge}</Badge>
+          ) : variant === 'past' ? (
+            <span className="flex flex-col items-end">
+              <span className="nums font-display text-[1.375rem] font-bold leading-6 text-ink">
+                {session.confirmedCount}
+              </span>
+              <span className="text-caption text-muted">
+                {plural(session.confirmedCount, t.bookedLabel)}
+              </span>
+            </span>
           ) : (
             <CapacityMeter
               booked={session.confirmedCount}
