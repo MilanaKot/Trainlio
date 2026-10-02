@@ -693,3 +693,18 @@ really dial. Without a number there are no buttons rather than dead ones, and
 without a name the number still stands on its own. The number is readable for
 that one booking and only while it is a coach's removal — another family, a
 stranger, and any other booking get nothing.
+
+## A photograph from an iPhone (handoff v3, DR-13)
+
+AC-282  
+Given a guardian picking a HEIC photograph, the format every iPhone takes by
+default  
+Then the picker offers it — by type and by extension, because a `.heic` from the
+Files app often arrives with no type at all — and the browser converts it to a
+JPEG before anything is uploaded, saying `Převádím fotku…` while it does. The
+converter is loaded only for a file that needs it. The 5 MB limit applies to the
+file the parent picked, so an oversized one is refused before it is decoded
+rather than after; a file that cannot be converted says to upload a JPG instead.
+What may be stored is unchanged: the server accepts JPEG, PNG and WebP and
+refuses HEIC, so nothing undecodable reaches the bucket.
+

@@ -278,7 +278,10 @@ export const cs = {
     photoAdd: 'Nahrát fotografii',
     photoReplace: 'Změnit fotografii',
     photoRemove: 'Odebrat fotografii',
-    photoHint: 'JPG, PNG nebo WebP, maximálně 5 MB.',
+    /* DR-13: HEIC is what an iPhone takes, so it is in the list a parent reads
+       as well as in the one the picker accepts. */
+    photoHint: 'JPG, PNG, WebP nebo HEIC, maximálně 5 MB.',
+    photoConverting: 'Převádím fotku…',
     club: 'Klub',
     team: 'Tým / kategorie',
     position: 'Pozice',
@@ -325,7 +328,8 @@ export const cs = {
       STICK_SIDE_REQUIRED: 'Vyberte stranu hole.',
       JERSEY_TOO_LONG: 'Číslo dresu je příliš dlouhé.',
       PHOTO_TOO_LARGE: 'Fotografie je větší než 5 MB.',
-      PHOTO_TYPE_NOT_ALLOWED: 'Podporujeme JPG, PNG a WebP.',
+      PHOTO_TYPE_NOT_ALLOWED: 'Podporujeme JPG, PNG, WebP a HEIC.',
+      PHOTO_CONVERT_FAILED: 'Fotku se nepodařilo převést. Zkuste ji nahrát jako JPG.',
       PHOTO_EMPTY: 'Soubor je prázdný.',
       NOT_AUTHENTICATED: 'Nejste přihlášeni.',
       NOT_AUTHORIZED_FOR_ATHLETE: 'K tomuto sportovci nemáte přístup.',

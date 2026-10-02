@@ -9,8 +9,37 @@
  */
 export const PHOTO_BUCKET = 'athlete-photos'
 export const MAX_PHOTO_BYTES = 5 * 1024 * 1024
+/** What may be *stored*. The server checks this and nothing else. */
 export const ALLOWED_PHOTO_TYPES = ['image/jpeg', 'image/png', 'image/webp'] as const
 export const PHOTO_SIGNED_URL_SECONDS = 60 * 60 // D-19
+
+/**
+ * What the picker offers (handoff v3, DR-13).
+ *
+ * HEIC is the default on every iPhone, so refusing it refuses the camera most
+ * of these photographs come from. It is accepted and converted to JPEG in the
+ * browser, which is why it is not in `ALLOWED_PHOTO_TYPES`: nothing HEIC ever
+ * reaches the bucket, and the server still refuses it.
+ *
+ * The extensions are in the list because they have to be. A `.heic` file picked
+ * from the Files app arrives with `type: ''` in several browsers, and an
+ * `accept` of MIME types alone then greys it out in the picker.
+ */
+export const PICKER_PHOTO_TYPES = [...ALLOWED_PHOTO_TYPES, 'image/heic', 'image/heif'] as const
+export const PICKER_ACCEPT = [...PICKER_PHOTO_TYPES, '.heic', '.heif'].join(',')
+
+/**
+ * A file the browser has to convert before anything else can look at it.
+ *
+ * By type when the browser gave one, by extension when it did not — and the
+ * extension alone is enough, because a file named `.heic` that turns out to be
+ * something else fails the conversion and says so.
+ */
+export function isHeic(file: { name: string; type: string }): boolean {
+  const type = file.type.toLowerCase()
+  if (type === 'image/heic' || type === 'image/heif') return true
+  return /\.hei[cf]$/i.test(file.name)
+}
 
 const EXTENSION_BY_TYPE: Record<string, string> = {
   'image/jpeg': 'jpg',
