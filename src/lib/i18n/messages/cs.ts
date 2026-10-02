@@ -702,49 +702,111 @@ export const cs = {
    * Transactional email (BR-061, BR-072). Czech, like every other user-facing
    * string; the event types and codes around them stay English.
    */
+  /* The e-mails a parent receives (shared/EMAILS.md, E01–E08). The subjects
+     always carry the date, because a parent searching their inbox searches for
+     the training, not for the word "změna". */
   email: {
-    greeting: 'Dobrý den,',
-    signature: 'Trainlio',
-    /* AC-073: one email per guardian, naming that guardian's own athletes. */
-    athletes: {
-      one: 'Přihlášený sportovec: {names}',
-      few: 'Přihlášení sportovci: {names}',
-      many: 'Přihlášení sportovci: {names}',
-    } satisfies PluralForms,
-    reason: 'Důvod: {reason}',
-    /* A message the coach wrote for this parent, not an internal note. */
-    coachMessage: 'Zpráva od trenéra: {reason}',
-    removedAthletes: {
-      one: 'Odhlášený sportovec: {names}',
-      few: 'Odhlášení sportovci: {names}',
-      many: 'Odhlášení sportovci: {names}',
-    } satisfies PluralForms,
-    /* D-06: the parent cannot put the child back themselves. */
-    contactCoach: 'Pro opětovné přihlášení kontaktujte trenéra.',
-    link: 'Podrobnosti najdete v aplikaci: {url}',
-    preserved: 'Přihlášky zůstávají v aplikaci k nahlédnutí.',
+    labels: {
+      SESSION_CANCELLED: 'Trénink zrušen',
+      SESSION_SCHEDULE_CHANGED: 'Změna času',
+      SESSION_SCHEDULE_CHANGED_DATE: 'Změna termínu',
+      SESSION_LOCATION_CHANGED: 'Změna místa',
+      SESSION_FACILITY_CHANGED: 'Změna haly',
+      SESSION_MAIN_COACH_CHANGED: 'Změna trenéra',
+      SESSION_ELIGIBILITY_NARROWED: 'Odhlášeno',
+      BOOKING_REMOVED_BY_COACH: 'Odhlášeno trenérem',
+      BOOKING_ADDED_BY_COACH: 'Nová přihláška',
+      SESSION_CHANGED: 'Změna tréninku',
+    },
     subjects: {
-      SESSION_CANCELLED: 'Zrušený trénink — {when}',
-      SESSION_SCHEDULE_CHANGED: 'Změna času tréninku — {when}',
-      SESSION_LOCATION_CHANGED: 'Změna místa tréninku — {when}',
-      SESSION_FACILITY_CHANGED: 'Změna haly — {when}',
-      SESSION_MAIN_COACH_CHANGED: 'Změna trenéra — {when}',
-      SESSION_ELIGIBILITY_NARROWED: 'Změna ročníků tréninku — {when}',
-      BOOKING_REMOVED_BY_COACH: 'Odhlášení z tréninku — {when}',
+      SESSION_CANCELLED: 'Zrušeno: trénink {day} v {time}',
+      SESSION_SCHEDULE_CHANGED: 'Změna času: trénink {day} — nově {time}',
+      SESSION_SCHEDULE_CHANGED_DATE: 'Změna termínu: trénink {previousDay} — nově {day}',
+      SESSION_LOCATION_CHANGED: 'Změna místa: trénink {day}',
+      SESSION_FACILITY_CHANGED: 'Změna haly: trénink {day} — {facility}',
+      SESSION_MAIN_COACH_CHANGED: 'Jiný trenér: trénink {day}',
+      SESSION_ELIGIBILITY_NARROWED: 'Odhlášení z tréninku {day} — změna ročníků',
+      BOOKING_REMOVED_BY_COACH: 'Odhlášení z tréninku {day} v {time}',
+      BOOKING_ADDED_BY_COACH: 'Přihláška na trénink {day} v {time}',
+      SESSION_CHANGED: 'Změna tréninku: trénink {day}',
+    },
+    titles: {
+      SESSION_CANCELLED: 'Trénink byl zrušen',
+      SESSION_SCHEDULE_CHANGED: 'Trénink začíná v jiný čas',
+      SESSION_SCHEDULE_CHANGED_DATE: 'Trénink je v jiný den',
+      SESSION_LOCATION_CHANGED: 'Trénink bude jinde',
+      SESSION_FACILITY_CHANGED: 'Trénink se přesouvá do {facility}',
+      SESSION_MAIN_COACH_CHANGED: 'Trénink povede jiný trenér',
+      SESSION_ELIGIBILITY_NARROWED: 'Sportovec byl z tréninku odhlášen',
+      BOOKING_REMOVED_BY_COACH: 'Trenér odhlásil sportovce z tréninku',
+      BOOKING_ADDED_BY_COACH: 'Trenér přihlásil sportovce na trénink',
+      SESSION_CHANGED: 'Trénink se změnil',
     },
     bodies: {
-      SESSION_CANCELLED: 'trénink {when}, {where}, byl zrušen.',
-      SESSION_SCHEDULE_CHANGED: 'trénink byl přesunut na {when}, {where}.',
-      SESSION_LOCATION_CHANGED: 'trénink {when} se koná na jiném místě: {where}.',
-      SESSION_FACILITY_CHANGED: 'trénink {when} se koná v jiné hale: {where}.',
-      SESSION_MAIN_COACH_CHANGED: 'trénink {when}, {where}, povede jiný trenér.',
+      SESSION_CANCELLED:
+        'Trenér zrušil trénink, na který je přihlášen sportovec. Přihláška se tím ruší, nic dalšího dělat nemusíte.',
+      SESSION_SCHEDULE_CHANGED: 'Trenér změnil čas tréninku. Přihláška platí dál, s novým časem.',
+      SESSION_SCHEDULE_CHANGED_DATE:
+        'Trenér změnil termín tréninku. Přihláška platí dál, s novým termínem.',
+      SESSION_LOCATION_CHANGED: 'Trenér změnil místo tréninku. Čas zůstává stejný.',
+      SESSION_FACILITY_CHANGED: 'Trenér změnil halu. Místo i čas zůstávají stejné.',
+      SESSION_MAIN_COACH_CHANGED:
+        'Hlavního trenéra tréninku vystřídá kolega. Čas i místo zůstávají stejné.',
       SESSION_ELIGIBILITY_NARROWED:
-        'u tréninku {when}, {where}, se změnil rozsah ročníků. Vaše přihláška zůstává v platnosti.',
-      /* The training still happens — which is the whole difference from a
-         cancellation, and the reason a parent would otherwise drive there. */
+        'Trenér upravil ročníky tréninku. Sportovec do nového rozsahu nespadá, a proto byla jeho přihláška zrušena.',
       BOOKING_REMOVED_BY_COACH:
-        'trenér odhlásil sportovce z tréninku {when}, {where}. Trénink se koná, sportovec na něm ale už není v sestavě.',
+        'Trénink se koná, ale sportovec na něm už není přihlášen. Znovu ho přihlásit může jen trenér.',
+      BOOKING_ADDED_BY_COACH:
+        '{coach} přihlásil sportovce na trénink. Najdete ho v aplikaci v Moje tréninky.',
+      SESSION_CHANGED: 'Trenér upravil trénink. Přihláška platí dál, se změnami níže.',
     },
+    /* `Trénink se přesouvá do Malé haly`: the hall's name has to decline, and
+       only these two exist in the MVP. Anything else gets the sentence that
+       needs no case at all. */
+    facilityGenitive: {
+      'Malá hala': 'Malé haly',
+      'Velká hala': 'Velké haly',
+    } as Record<string, string>,
+    facilityGenitiveFallback: 'jiné haly',
+    buttons: {
+      booking: 'Otevřít v aplikaci',
+      sessions: 'Zobrazit další tréninky',
+      findAnother: 'Najít jiný trénink',
+    },
+    rows: {
+      athletes: {
+        one: 'Sportovec',
+        few: 'Sportovci',
+        many: 'Sportovci',
+      } satisfies PluralForms,
+      when: 'Kdy',
+      where: 'Kde',
+      facility: 'Hala',
+      mainCoach: 'Hlavní trenér',
+      years: 'Ročníky',
+      coach: 'Trenér',
+      deadline: 'Odhlásit lze',
+    },
+    deadlineValue: 'do {day} v {time}',
+    allYears: 'Všichni sportovci',
+    yearRange: '{from}–{to}',
+    /* The caption above what the coach wrote for this one parent. Never the
+       internal note, which no parent ever sees (D-13). */
+    coachMessage: 'Zpráva od trenéra',
+    helpers: {
+      SESSION_SCHEDULE_CHANGED:
+        'Nový čas vám nevyhovuje? Sportovce můžete v aplikaci odhlásit do uvedeného termínu.',
+      SESSION_CHANGED:
+        'Změna vám nevyhovuje? Sportovce můžete v aplikaci odhlásit do uvedeného termínu.',
+      BOOKING_ADDED_BY_COACH:
+        'Sportovec nepůjde? Odhlaste ho v aplikaci do uvedeného termínu, ať místo může dostat někdo jiný.',
+    } as Record<string, string>,
+    footer:
+      'Tento e-mail jste dostali, protože máte sportovce přihlášeného na trénink v aplikaci {org}.',
+    poweredBy: 'Běží na trainlio',
+    /* Plain-text part: the same rows, the same order. */
+    previousText: '(dříve {value})',
+    linkText: '{label}: {url}',
   },
 
   account: {

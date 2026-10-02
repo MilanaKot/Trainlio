@@ -468,5 +468,125 @@ select pg_temp.check(
   (select status::text from public.bookings where id = pg_temp.tomas_b()),
   'CONFIRMED', 'the sibling keeps their place (AC-260)');
 
+\echo ''
+\echo '── One save, one e-mail (EMAILS.md §2, AC-283) ──────────────────────'
+-- A second session: the one above has been cancelled, and these cases are about
+-- a training that is still running.
+insert into t_ids (k, v)
+select 's2', (pg_temp.as_user(:COACH, format($$select (public.create_training_session(
+  %L::uuid, (current_date + 40)::date, time '09:00', time '10:00', %L::uuid, 10, 'ALL',
+  null, null, 'Šatna 2')
+  -> 'data' ->> 'training_session_id')$$, pg_temp.ws(), pg_temp.fac('MH'))))::uuid;
+create or replace function pg_temp.s2() returns uuid language sql stable as
+  $$ select v from t_ids where k = 's2' $$;
+
+select pg_temp.as_user(:A, format($$select (public.book_athletes_as_guardian(%L::uuid,
+  array[%L::uuid]) ->> 'ok')$$, pg_temp.s2(), pg_temp.ath('Ivan')));
+
+-- The time and the hall, in one save. Before v3 this was two e-mails a minute
+-- apart; now it is one, and its label is `Změna tréninku`.
+select pg_temp.check(
+  pg_temp.as_user(:COACH, format($$select (public.update_training_session(
+    %L::uuid, (current_date + 40)::date, time '10:30', time '11:30', %L::uuid, 10, 'ALL')
+    -> 'data' ->> 'significant')$$, pg_temp.s2(), pg_temp.fac('VH'))),
+  'true', 'two significant fields change in one save (AC-283)');
+select pg_temp.check(
+  (select count(*)::text from public.notification_events where training_session_id = pg_temp.s2()),
+  '1', 'and queue one event, not one per field (AC-283)');
+select pg_temp.check(
+  (select event_type from public.notification_events where training_session_id = pg_temp.s2()),
+  'SESSION_CHANGED', 'under the type the design gives that case (AC-283)');
+select pg_temp.check(
+  (select array_to_string(array(
+      select jsonb_array_elements_text(payload -> 'change' -> 'fields') order by 1), ',')
+     from public.notification_events where training_session_id = pg_temp.s2()),
+  'FACILITY,TIME', 'naming both fields, so both rows can be highlighted (AC-283)');
+-- The value that was, which is what the struck-through line under each row
+-- prints. It comes from migration 28's record, so the e-mail and the app cannot
+-- disagree about what the training used to be.
+select pg_temp.check(
+  (select payload -> 'change' -> 'previous' ->> 'facility_code'
+     from public.notification_events where training_session_id = pg_temp.s2()),
+  'MH', 'and what it used to be (AC-283)');
+select pg_temp.check(
+  (select (payload -> 'change' -> 'previous' ->> 'start_at' is not null)::text
+     from public.notification_events where training_session_id = pg_temp.s2()),
+  'true', 'including the time it used to start (AC-283)');
+
+\echo ''
+\echo '── The coach books a child, and the parent hears (DR-12, AC-284) ────'
+select pg_temp.check(
+  pg_temp.as_user(:COACH, format($$select (public.book_athlete_as_coach(%L::uuid, %L::uuid) ->> 'ok')$$,
+    pg_temp.s2(), pg_temp.ath('Anna'))),
+  'true', 'the coach adds an athlete by hand (AC-284)');
+select pg_temp.check(
+  (select count(*)::text from public.notification_events
+    where training_session_id = pg_temp.s2() and event_type = 'BOOKING_ADDED_BY_COACH'),
+  '1', 'which raises the event the design added for it (AC-284)');
+create or replace function pg_temp.added() returns uuid language sql stable as
+  $$ select id from public.notification_events
+     where training_session_id = pg_temp.s2() and event_type = 'BOOKING_ADDED_BY_COACH'
+     order by created_at desc limit 1 $$;
+select pg_temp.check(
+  (select array_to_string(athlete_names, ', ')
+     from public.notification_event_recipients(pg_temp.added())),
+  'Anna Kotova', 'told to the family of that child (AC-284)');
+select pg_temp.check(
+  (select count(*)::text from public.notification_event_recipients(pg_temp.added())),
+  '1', 'and to nobody else on the training (AC-284)');
+select pg_temp.check(
+  (select (payload ->> 'actor_profile_id')
+     from public.notification_events where id = pg_temp.added()),
+  '00000000-0000-0000-0000-00000000c0ac', 'carrying the coach, whom E08 names (AC-284)');
+
+-- A parent who books their own child needs no e-mail about it (EMAILS.md §4).
+select pg_temp.check(
+  pg_temp.as_user(:A, format($$select (public.book_athletes_as_guardian(%L::uuid,
+    array[%L::uuid]) ->> 'ok')$$, pg_temp.s2(), pg_temp.ath('Tomáš'))),
+  'true', 'a parent books their own (AC-284)');
+select pg_temp.check(
+  (select count(*)::text from public.notification_events
+    where training_session_id = pg_temp.s2() and event_type = 'BOOKING_ADDED_BY_COACH'),
+  '1', 'and that raises nothing: the e-mail is about what the coach did (AC-284)');
+
+\echo ''
+\echo '── What a template cannot look up, the claim resolves (AC-283) ──────'
+select pg_temp.as_user(:COACH, $$select public.set_own_staff_phone('777654321')->>'ok'$$);
+create or replace function pg_temp.ivan_b2() returns uuid language sql stable as
+  $$ select b.id from public.bookings b
+      where b.training_session_id = pg_temp.s2()
+        and b.athlete_id = pg_temp.ath('Ivan') limit 1 $$;
+select pg_temp.as_user(:COACH, format($$select (public.cancel_booking_as_coach(%L::uuid, 'Nemoc') ->> 'ok')$$,
+  pg_temp.ivan_b2()));
+create or replace function pg_temp.removed2() returns uuid language sql stable as
+  $$ select id from public.notification_events
+     where training_session_id = pg_temp.s2() and event_type = 'BOOKING_REMOVED_BY_COACH'
+     order by created_at desc limit 1 $$;
+select public.expand_notification_event(pg_temp.removed2());
+
+create temp table t_claim as
+  select * from public.claim_notification_deliveries(50) c
+   where c.event_id = pg_temp.removed2();
+
+select pg_temp.check(
+  (select session_payload ->> 'coach_name' from t_claim),
+  'Trenér Novák', 'the coach who removed the athlete, by name (AC-283)');
+-- The second of exactly two places a parent is given this number (decision 28).
+-- The drain is the service role; no client session can read that table at all.
+select pg_temp.check(
+  (select session_payload ->> 'coach_phone' from t_claim),
+  '777654321', 'and their number, for E07 (AC-283, AC-280)');
+select pg_temp.check(
+  (select session_payload ->> 'deadline_hours' from t_claim),
+  '12', 'the deadline the workspace keeps, for `Odhlásit lze` (AC-283)');
+select pg_temp.check(
+  (select session_payload ->> 'facility_name' from t_claim),
+  'Velká hala', 'the hall by name, because the e-mail declines it (AC-283)');
+-- The button opens this booking's own screen (§G6d), so the delivery carries it.
+select pg_temp.check(
+  (select array_to_string(array(select jsonb_array_elements_text(delivery_payload -> 'booking_ids')), ',')
+     from t_claim),
+  pg_temp.ivan_b2()::text, 'and the booking the button opens (AC-283)');
+
 drop function pg_temp.as_user(text,text);
 drop function pg_temp.check(text,text,text);

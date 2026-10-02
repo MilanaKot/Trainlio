@@ -4,7 +4,11 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { getServerEnv, publicEnv } from '@/lib/env'
 import { logoUrl } from '@/lib/domain/logo'
 import { resendProvider } from '@/lib/email/resend'
-import { composeNotificationEmail, type ClaimedDelivery } from '@/lib/notifications/compose'
+import {
+  composeNotificationEmail,
+  type ClaimedDelivery,
+  type SignificantChangeRecord,
+} from '@/lib/notifications/compose'
 import type { EmailProvider } from '@/lib/email/types'
 import type { Timezone } from '@/lib/time/workspace-time'
 
@@ -50,25 +54,76 @@ type ClaimRow = {
   workspace_logo_path: string | null
 }
 
+/** The payload is `jsonb`, so every field is checked rather than asserted. */
+function text(value: unknown): string | null {
+  return typeof value === 'string' && value !== '' ? value : null
+}
+
+function count(value: unknown): number | null {
+  return typeof value === 'number' ? value : null
+}
+
+function strings(value: unknown): string[] {
+  return Array.isArray(value) ? value.filter((v): v is string => typeof v === 'string') : []
+}
+
+/**
+ * The record of what moved (migration 28), as the e-mail reads it.
+ *
+ * Shaped rather than cast: it comes from a jsonb column, and a template that
+ * trusted it would print `undefined` into a parent's inbox.
+ */
+function changeRecord(value: unknown): SignificantChangeRecord | null {
+  if (typeof value !== 'object' || value === null) return null
+  const record = value as { fields?: unknown; previous?: unknown }
+  const fields = strings(record.fields)
+  if (fields.length === 0) return null
+
+  const previous = (
+    typeof record.previous === 'object' && record.previous !== null ? record.previous : {}
+  ) as Record<string, unknown>
+
+  return {
+    fields,
+    previous: {
+      start_at: text(previous.start_at),
+      end_at: text(previous.end_at),
+      location_name: text(previous.location_name),
+      facility_code: text(previous.facility_code),
+      facility_name: text(previous.facility_name),
+      main_coach_name: text(previous.main_coach_name),
+    },
+  }
+}
+
 function toClaimedDelivery(row: ClaimRow): ClaimedDelivery {
   const session = row.session_payload ?? {}
-  const names = (row.delivery_payload ?? {}).athlete_names
+  const delivery = row.delivery_payload ?? {}
 
   return {
     deliveryId: row.delivery_id,
     eventType: row.event_type,
     recipientEmail: row.recipient_email,
     session: {
-      startAt: typeof session.start_at === 'string' ? session.start_at : null,
-      endAt: typeof session.end_at === 'string' ? session.end_at : null,
-      facilityCode: typeof session.facility_code === 'string' ? session.facility_code : null,
-      locationName: typeof session.location_name === 'string' ? session.location_name : null,
-      changingRoom: typeof session.changing_room === 'string' ? session.changing_room : null,
-      reason: typeof session.reason === 'string' ? session.reason : null,
+      startAt: text(session.start_at),
+      endAt: text(session.end_at),
+      facilityCode: text(session.facility_code),
+      facilityName: text(session.facility_name),
+      locationName: text(session.location_name),
+      changingRoom: text(session.changing_room),
+      reason: text(session.reason),
+      birthYearFrom: count(session.birth_year_from),
+      birthYearTo: count(session.birth_year_to),
+      previousBirthYearFrom: count(session.previous_birth_year_from),
+      previousBirthYearTo: count(session.previous_birth_year_to),
+      coachName: text(session.coach_name),
+      coachPhone: text(session.coach_phone),
+      mainCoachName: text(session.main_coach_name),
+      deadlineHours: count(session.deadline_hours),
+      change: changeRecord(session.change),
     },
-    athleteNames: Array.isArray(names)
-      ? names.filter((n): n is string => typeof n === 'string')
-      : [],
+    athleteNames: strings(delivery.athlete_names),
+    bookingIds: strings(delivery.booking_ids),
     workspaceTimezone: row.workspace_timezone as Timezone,
     workspaceName: row.workspace_name,
     // Built here rather than read: the drain has no browser storage client,
@@ -90,7 +145,8 @@ export async function drainNotifications(options?: {
   const env = getServerEnv()
   const supabase = createAdminClient()
   const provider = options?.provider ?? resendProvider(env.RESEND_API_KEY, env.AUTH_SENDER_EMAIL)
-  const appUrl = `${publicEnv.NEXT_PUBLIC_SITE_URL.replace(/\/$/, '')}/moje-treninky`
+  // The site root: each template chooses its own screen (EMAILS.md §2).
+  const appUrl = publicEnv.NEXT_PUBLIC_SITE_URL.replace(/\/$/, '')
 
   let expandedEvents = 0
   let createdDeliveries = 0

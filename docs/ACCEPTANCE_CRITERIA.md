@@ -708,3 +708,28 @@ rather than after; a file that cannot be converted says to upload a JPG instead.
 What may be stored is unchanged: the server accepts JPEG, PNG and WebP and
 refuses HEIC, so nothing undecodable reaches the bucket.
 
+## The e-mails a parent receives (handoff v3, DR-05)
+
+AC-283  
+Every message is the one template of `shared/EMAILS.md`: tables and inline
+styles with no stylesheet to strip, Arial rather than a web font, a 520 px card,
+a button that is a real link and never an image, and a preheader that is the
+first sentence. The subject always carries the date. The details are a block,
+never a sentence, and a value that changed prints what it replaced struck
+through beneath it — so nothing is signalled by colour alone and the message
+reads whole with images blocked. One save produces one e-mail: a coach who moves
+a training and changes the hall at once sends a single message with both rows
+highlighted, under the type the design gives that case, and the previous values
+come from the same record the app's own screens draw. What a template cannot
+look up, the claim resolves: the coach behind the event, their number for E07,
+the workspace's cancellation deadline, and the booking whose screen the button
+opens. A guardian with two children in one event still receives one e-mail
+naming both, and its subject is unchanged.
+
+AC-284  
+Given a coach adding an athlete to a training by hand  
+Then that athlete's guardians are e-mailed (E08), told who booked the child and
+by when they can undo it, and nobody else on the training hears anything. It is
+sent for an over-capacity addition too. A guardian booking their own child raises
+no such event: the app said so already.
+
