@@ -76,9 +76,12 @@ async function family(firstName: string, options: { bookInto?: string } = {}): P
  * thing only the service role can: it moves the clock under the training.
  */
 async function moveToPast(sessionId: string): Promise<void> {
-  const yesterday = new Date(Date.now() - 86_400_000)
-  const start = new Date(yesterday.setHours(9, 0, 0, 0)).toISOString()
-  const end = new Date(yesterday.setHours(10, 0, 0, 0)).toISOString()
+  // Two hours ago, not yesterday: every run against this shared database leaves
+  // its own finished trainings behind, the list is newest first and capped, and
+  // a pile of them stamped `yesterday 09:00` sorts by nothing at all. The one
+  // this test is about has to be the most recent.
+  const start = new Date(Date.now() - 2 * 3_600_000).toISOString()
+  const end = new Date(Date.now() - 3_600_000).toISOString()
 
   const response = await fetch(`${STACK}/rest/v1/training_sessions?id=eq.${sessionId}`, {
     method: 'PATCH',

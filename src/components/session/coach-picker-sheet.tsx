@@ -8,6 +8,7 @@ import { BottomSheet } from '@/components/ui/bottom-sheet'
 import { Button } from '@/components/ui/button'
 import { Notice } from '@/components/ui/notice'
 import { PickerRow } from '@/components/ui/picker-row'
+import { SearchField } from '@/components/ui/search-field'
 
 const t = messages.coach
 
@@ -63,10 +64,21 @@ export function CoachPickerSheet({
   const [chosen, setChosen] = useState<string[]>(selected)
   const [query, setQuery] = useState('')
 
-  const shown = useMemo(() => {
-    if (coaches.length < SEARCHABLE_FROM || query.trim() === '') return coaches
-    return coaches.filter((coach) => matchesName(coach.displayName ?? '', query))
-  }, [coaches, query])
+  // §6.13 (v3): what matches, and what is already chosen. Someone a coach has
+  // just ticked must not disappear because the next keystroke stops matching
+  // them — the one thing a multi-select sheet can get wrong.
+  const { pinned, shown } = useMemo(() => {
+    const searching = coaches.length >= SEARCHABLE_FROM && query.trim() !== ''
+    if (!searching) return { pinned: [], shown: coaches }
+
+    const matching = coaches.filter((coach) => matchesName(coach.displayName ?? '', query))
+    const matched = new Set(matching.map((coach) => coach.id))
+
+    return {
+      pinned: coaches.filter((coach) => chosen.includes(coach.id) && !matched.has(coach.id)),
+      shown: matching,
+    }
+  }, [coaches, query, chosen])
 
   const picking = mode === 'main'
 
@@ -102,15 +114,36 @@ export function CoachPickerSheet({
         ) : null}
 
         {coaches.length >= SEARCHABLE_FROM ? (
-          <input
-            type="search"
+          <SearchField
             value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            placeholder={t.searchPlaceholder}
-            aria-label={t.searchPlaceholder}
-            className="h-12 rounded-control-lg bg-neutral-50 px-4 text-body text-ink placeholder:text-muted"
+            onChange={setQuery}
+            label={t.searchPlaceholder}
+            variant="fill"
           />
         ) : null}
+
+        {pinned.length > 0 ? (
+          <>
+            <h3 className="text-caption font-bold uppercase tracking-[0.8px] text-muted">
+              {t.pickerChosen}
+            </h3>
+            <ul className="flex flex-col gap-2">
+              {pinned.map((coach) => (
+                <li key={coach.id}>
+                  <PickerRow
+                    control={picking ? 'radio' : 'checkbox'}
+                    checked
+                    onChange={(checked) => toggle(coach.id, checked)}
+                    leading={<Avatar firstName={coach.displayName ?? '?'} size={36} />}
+                    title={coach.displayName ?? t.none}
+                  />
+                </li>
+              ))}
+            </ul>
+          </>
+        ) : null}
+
+        {shown.length === 0 ? <p className="text-row text-muted">{t.pickerNoMatch}</p> : null}
 
         <ul className="flex flex-col gap-2">
           {shown.map((coach) => {

@@ -65,7 +65,12 @@ export async function signIn(page: Page, email: string): Promise<void> {
 
   await page.getByLabel('Kód').waitFor()
   await page.getByLabel('Kód').fill(await readCode(email))
-  await page.getByRole('button', { name: 'Přihlásit se' }).click()
+
+  // §6.26: the sixth digit submits, so the button has usually gone by now. It
+  // is still pressed when it is there — a code that arrives some other way, or
+  // a submission that did not take — and never required.
+  const submit = page.getByRole('button', { name: 'Přihlásit se' })
+  if (await submit.isVisible().catch(() => false)) await submit.click().catch(() => undefined)
 
   await page.waitForURL((url) => !url.pathname.includes('/prihlaseni'), { timeout: 30_000 })
 }

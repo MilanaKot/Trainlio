@@ -44,8 +44,8 @@ async function readInvitation(email: string): Promise<string> {
 async function signInWithPrefilledAddress(page: Page, email: string): Promise<void> {
   await page.getByRole('button', { name: 'Poslat kód' }).click()
   await page.getByLabel('Kód').waitFor()
+  // §6.26: the sixth digit submits.
   await page.getByLabel('Kód').fill(await readSignInCode(email))
-  await page.getByRole('button', { name: 'Přihlásit se' }).click()
   await page.waitForURL((url) => !url.pathname.includes('/prihlaseni'), { timeout: 30_000 })
 }
 
@@ -136,7 +136,10 @@ test.describe('a workspace administrator manages the coaching staff', () => {
     await expect(page.getByText('Trenér přidán')).toBeVisible()
     const added = page.getByRole('link', { name: new RegExp(`Petr ${surname}`) })
     await expect(added).toBeVisible()
-    await expect(added).toContainText('Bez přihlášení')
+    // §A1 (v3): the meta answers whether this coach can get in, and this one
+    // was added without an address.
+    await expect(added).toContainText('Chybí e-mail')
+    await expect(added).toContainText('Bez přístupu')
 
     // AC-249: leaving is a deactivation, never a delete, and it is reversible.
     await added.click()

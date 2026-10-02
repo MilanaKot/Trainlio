@@ -10,6 +10,8 @@ import { CapacityMeter } from '@/components/ui/capacity-meter'
 import { PickerRow } from '@/components/ui/picker-row'
 import { SegmentedControl } from '@/components/ui/segmented-control'
 import { Stepper } from '@/components/ui/stepper'
+import { CodeInput } from '@/components/ui/code-input'
+import { Switch } from '@/components/ui/switch'
 import { DetailList } from '@/components/ui/detail-list'
 import { TextareaWithCounter } from '@/components/ui/field'
 import { Field } from '@/components/ui/field'
@@ -242,5 +244,134 @@ describe('BottomNav', () => {
     vi.mocked(usePathname).mockReturnValue('/trener/novy')
     const { container } = render(<BottomNav items={items} hideWhen="^/trener/novy$" />)
     expect(container).toBeEmptyDOMElement()
+  })
+})
+
+/**
+ * DESIGN_SYSTEM §6.11 and §6.26, as handoff v3 specified them. These are the
+ * two controls a person fights with when they are wrong: one sets a number with
+ * a thumb, the other takes a code at the one moment somebody is already
+ * irritated.
+ */
+describe('Stepper, to the letter of §6.11 (AC-291)', () => {
+  function Harness({ start = 10 }: { start?: number }) {
+    const [value, setValue] = useState(start)
+    return <Stepper value={value} onChange={setValue} label="Kapacita" min={1} max={99} />
+  }
+
+  it('commits a typed number when the field is left', async () => {
+    render(<Harness />)
+    const field = screen.getByLabelText('Kapacita')
+    await userEvent.clear(field)
+    await userEvent.type(field, '24')
+    await userEvent.tab()
+    expect(field).toHaveValue(24)
+  })
+
+  // Enter is what a person presses when they have finished typing; without it
+  // the number they typed is still a draft and the form saves the old one.
+  it('and when Enter is pressed', async () => {
+    render(<Harness />)
+    const field = screen.getByLabelText('Kapacita')
+    await userEvent.clear(field)
+    await userEvent.type(field, '24{Enter}')
+    expect(field).toHaveValue(24)
+  })
+
+  it('snaps a number outside the limits back, and says so', async () => {
+    render(<Harness />)
+    const field = screen.getByLabelText('Kapacita')
+    await userEvent.clear(field)
+    await userEvent.type(field, '240{Enter}')
+
+    expect(field).toHaveValue(99)
+    expect(screen.getByRole('status')).toHaveTextContent('Kapacita musí být 1–99.')
+  })
+
+  it('says nothing when the number was fine', async () => {
+    render(<Harness />)
+    const field = screen.getByLabelText('Kapacita')
+    await userEvent.clear(field)
+    await userEvent.type(field, '12{Enter}')
+    expect(screen.queryByRole('status')).toBeNull()
+  })
+
+  it('disables the buttons at the limits rather than refusing silently', () => {
+    render(<Harness start={1} />)
+    expect(screen.getByRole('button', { name: 'Kapacita: ubrat' })).toBeDisabled()
+    expect(screen.getByRole('button', { name: 'Kapacita: přidat' })).toBeEnabled()
+  })
+})
+
+describe('CodeInput, to the letter of §6.26 (AC-291)', () => {
+  function Harness({ onComplete }: { onComplete: (value: string) => void }) {
+    const [code, setCode] = useState('')
+    return <CodeInput value={code} onChange={setCode} onComplete={onComplete} label="Kód" />
+  }
+
+  // The sixth digit submits: a person who has entered the whole code has said
+  // everything they have to say.
+  it('reports the code the moment the last digit arrives', async () => {
+    const onComplete = vi.fn()
+    render(<Harness onComplete={onComplete} />)
+
+    await userEvent.type(screen.getByLabelText('Kód'), '12345')
+    expect(onComplete).not.toHaveBeenCalled()
+
+    await userEvent.type(screen.getByLabelText('Kód'), '6')
+    expect(onComplete).toHaveBeenCalledWith('123456')
+  })
+
+  // Pasting `123 456` is what a person does with the code in their mail app.
+  it('takes a pasted code with spaces in it', async () => {
+    const onComplete = vi.fn()
+    render(<Harness onComplete={onComplete} />)
+
+    const field = screen.getByLabelText('Kód')
+    field.focus()
+    await userEvent.paste('123 456')
+    expect(onComplete).toHaveBeenCalledWith('123456')
+  })
+
+  it('ignores anything that is not a digit', async () => {
+    const onComplete = vi.fn()
+    render(<Harness onComplete={onComplete} />)
+    await userEvent.type(screen.getByLabelText('Kód'), 'abc')
+    expect(screen.getByLabelText('Kód')).toHaveValue('')
+    expect(onComplete).not.toHaveBeenCalled()
+  })
+})
+
+describe('Switch, to the letter of §6.24 (AC-291)', () => {
+  function Harness({ disabled = false }: { disabled?: boolean }) {
+    const [on, setOn] = useState(false)
+    return (
+      <Switch
+        checked={on}
+        onChange={setOn}
+        label="Administrátor"
+        hint="Spravuje trenéry"
+        disabled={disabled}
+        disabledHint="Jste jediný administrátor."
+      />
+    )
+  }
+
+  // A real checkbox with role="switch": the keyboard, the screen reader and the
+  // form all keep working, and the label is the 44px target.
+  it('is a real control the whole row toggles', async () => {
+    render(<Harness />)
+    const control = screen.getByRole('switch', { name: /Administrátor/ })
+    expect(control).not.toBeChecked()
+
+    await userEvent.click(screen.getByText('Administrátor'))
+    expect(control).toBeChecked()
+  })
+
+  it('says why it cannot be moved, in place of the hint', () => {
+    render(<Harness disabled />)
+    expect(screen.getByRole('switch', { name: /Administrátor/ })).toBeDisabled()
+    expect(screen.getByText('Jste jediný administrátor.')).toBeInTheDocument()
+    expect(screen.queryByText('Spravuje trenéry')).toBeNull()
   })
 })

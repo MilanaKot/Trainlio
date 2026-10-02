@@ -221,3 +221,63 @@ One label departs from the drawing on purpose: the birth-year selects read
 `Od ročníku` / `Do ročníku` rather than the design's bare `Od` / `Do`, because
 the series screen carries a date range under those very words in another panel,
 and a screen reader cannot see which panel it is in.
+
+## After handoff v3
+
+The third delivery answered every request in `DESIGN_REQUESTS.md`, and most of
+them are now simply built. These are the places where what shipped is not quite
+what is drawn, and the reasons.
+
+**The invitation link prefills the address; it does not send the code.** §A6's
+copy said "Po kliknutí vám pošleme jednorázový kód", and a link that sends one
+when it is fetched is a link that spends the code on whoever fetched it first.
+Scanners, SafeLinks and preview services all fetch links in e-mails. The link
+opens the sign-in screen with the address already in the field and the copy says
+`stačí potvrdit`: one tap, and nothing a machine can do by accident.
+
+**`/trener/vitejte` and `/trener/sportovci/[id]`**, not `/coach/welcome` and
+`/coach/athletes/[id]`. Routes are Czech here, as the first entry in this file
+records.
+
+**The code input has no `maxlength`.** §6.26 asks for one and also asks that a
+code pasted as `123 456` work. It cannot do both: `maxlength` counts characters,
+so the paste arrives as `123 45` and the space is stripped out of a string that
+has already lost a digit. The length is enforced on the digits instead, which is
+what the attribute was there to do.
+
+**`ChoiceGrid` is a `radiogroup` with a label, not a `fieldset` with a legend.**
+Both are announced correctly; the pills are already inside a labelled field on
+every screen that uses them, and a legend there would have a screen reader read
+the name twice.
+
+**§K14 loads fifty past trainings rather than paging twenty days at a time.**
+The design asks for infinite scroll. Fifty is more than a club has in a season
+and the screen is read rarely; the paging can arrive with the first club that
+needs it.
+
+**The e-mails are tables and inline styles.** `emails/*.html` is drawn with
+flexbox, custom properties and a stylesheet, which is right for a browser and
+reaches no mail client: Gmail strips `<style>` and Outlook renders with Word.
+The same design is expressed in what mail clients actually have.
+
+**One e-mail links to a booking when there is exactly one.** §E02 and §E08 send
+the parent to that booking's screen. A guardian with two children in one event
+receives one message about both, and there is no screen for two bookings, so the
+button opens the list that holds them.
+
+## Decided in v3, and recorded so they are not reopened
+
+The designer answered fourteen requests. Nine of them confirmed what was already
+built (the mark in the coach's header, the public note on the detail only,
+`Od ročníku` / `Do ročníku`, the optional surname, every guardian on the roster,
+Czech routes, reopening registration, no out-of-range additions, and `end_at`
+deciding which list a booking is in). The rest became the work above.
+
+Three remain deliberately unbuilt: **changing your e-mail** (§G14), **a second
+sport** (`+ Přidat sport`), and **the language screen** (§G15). **Dark mode**
+stays off until it has a palette of its own; the `dark:` variant is still bound
+to nothing.
+
+One question is still open, and it is the designer's: **deactivating a coach who
+is the main coach of future trainings** warns and allows, as it always has.
+Whether it should instead force a reassignment is in `DESIGN_REQUESTS.md`.

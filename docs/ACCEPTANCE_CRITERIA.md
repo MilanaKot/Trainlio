@@ -823,3 +823,16 @@ member takes the role with them, so bringing somebody back brings back a coach
 and not quietly an administrator, and somebody who held only that role keeps a
 place on the staff. Every change is audited: this is a change to who controls
 the club.
+
+## The shared controls, to the letter of the system (handoff v3, DR-06)
+
+AC-291  
+The stepper takes a typed number and commits it when the field is left or Enter
+is pressed; a number outside the limits snaps back and says so, rather than
+silently becoming something else; the buttons stop at the limits and a long
+press repeats. The code input takes six digits from typing, from a paste that
+carries spaces, and from the phone's own one-time-code fill, ignores everything
+that is not a digit, and submits on the sixth — a person who has entered the
+whole code has said everything they have to say. A picker sheet grows a search
+once the list is long enough to need one, keeps what is already chosen on screen
+when the query stops matching it, and says so when nothing matches.

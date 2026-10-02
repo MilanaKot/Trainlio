@@ -55,13 +55,20 @@ export function Switch({
         aria-hidden="true"
         className={cn(
           'relative h-8 w-13 shrink-0 rounded-full transition-colors',
-          disabled ? 'bg-neutral-200' : checked ? 'bg-success' : 'bg-neutral-300',
+          // §6.24: off is its own grey, not the neutral the rest of the system
+          // uses — a switch that reads as "disabled" when it is merely off is
+          // the one mistake this control can make.
+          checked ? 'bg-success' : 'bg-[#DCE2EC]',
+          disabled && 'opacity-45',
+          // No animation for anyone who asked for none.
+          'motion-reduce:transition-none',
         )}
       >
         <span
           className={cn(
-            'absolute top-1 size-6 rounded-full bg-surface shadow-card transition-all',
-            checked ? 'left-6' : 'left-1',
+            'absolute top-[3px] size-[26px] rounded-full bg-white shadow-[0_1px_3px_rgb(0_0_0/.2)]',
+            'transition-all duration-150 motion-reduce:transition-none',
+            checked ? 'left-[23px]' : 'left-[3px]',
           )}
         />
       </span>

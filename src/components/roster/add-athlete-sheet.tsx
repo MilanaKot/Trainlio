@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button'
 import { CapacityMeter } from '@/components/ui/capacity-meter'
 import { ConfirmDialog } from '@/components/ui/dialog'
 import { PickerRow } from '@/components/ui/picker-row'
+import { SearchField } from '@/components/ui/search-field'
 import { useToast } from '@/components/ui/toast'
 import type { CandidateAthlete } from '@/server/roster/queries'
 
@@ -57,6 +58,14 @@ export function AddAthleteSheet({
     () => addable.filter((c) => matchesName(`${c.firstName} ${c.lastName}`, query)),
     [addable, query],
   )
+  // §6.13 (v3): somebody already ticked stays on screen, even once the query
+  // has stopped matching them — otherwise a coach adding three children loses
+  // two of them to the next keystroke.
+  const pinned = useMemo(() => {
+    if (query.trim() === '') return []
+    const matched = new Set(shown.map((c) => c.athleteId))
+    return addable.filter((c) => selected.includes(c.athleteId) && !matched.has(c.athleteId))
+  }, [addable, shown, selected, query])
 
   function toggle(athleteId: string) {
     setError(null)
@@ -124,15 +133,13 @@ export function AddAthleteSheet({
             <CapacityMeter booked={confirmedCount} capacity={capacity} registrationOpen size="sm" />
           </div>
 
-          <input
-            type="search"
+          {/* §6.13/§6.27: the sheet's own search, filled rather than outlined —
+              an outline inside a white sheet fights the panel it sits in. */}
+          <SearchField
             value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            placeholder={t.searchPlaceholder}
-            aria-label={t.searchPlaceholder}
-            // `muted`, not `subtle`: the placeholder is the only thing that says
-            // what the field is for, and subtle on neutral-50 measures 2.75:1.
-            className="h-12 rounded-control-lg bg-neutral-50 px-4 text-body text-ink placeholder:text-muted"
+            onChange={setQuery}
+            label={t.searchPlaceholder}
+            variant="fill"
           />
 
           <p className="text-hint text-muted">{t.addAthleteHint}</p>
@@ -141,6 +148,32 @@ export function AddAthleteSheet({
             <p role="alert" className="text-hint text-danger">
               {error}
             </p>
+          ) : null}
+
+          {pinned.length > 0 ? (
+            <>
+              <h3 className="text-caption font-bold uppercase tracking-[0.8px] text-muted">
+                {messages.coach.pickerChosen}
+              </h3>
+              <ul className="flex flex-col gap-2">
+                {pinned.map((candidate) => (
+                  <li key={candidate.athleteId}>
+                    <PickerRow
+                      checked
+                      onChange={() => toggle(candidate.athleteId)}
+                      leading={
+                        <Avatar
+                          firstName={candidate.firstName}
+                          lastName={candidate.lastName}
+                          size={36}
+                        />
+                      }
+                      title={`${candidate.firstName} ${candidate.lastName}`}
+                    />
+                  </li>
+                ))}
+              </ul>
+            </>
           ) : null}
 
           {addable.length === 0 ? (

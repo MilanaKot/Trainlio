@@ -434,6 +434,11 @@ export const cs = {
        says `Vytvořit sérii`. */
     createSeriesOption: 'Série tréninků',
     createSeriesHint: 'Opakovaně, např. každou neděli',
+    /* §6.11 (v3): a typed number outside the limits snaps back, and says so. */
+    stepperLimit: 'Kapacita musí být {min}–{max}.',
+    /* §6.13 (v3): a search inside a picker sheet. */
+    pickerChosen: 'VYBRÁNO',
+    pickerNoMatch: 'Nikoho takového nenacházíme.',
     draft: 'Koncept',
     cancelledBadge: 'Zrušeno',
     newSession: '+ Trénink',

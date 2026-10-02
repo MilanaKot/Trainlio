@@ -19,12 +19,19 @@ export function CodeInput({
   length = 6,
   label,
   autoFocus = false,
+  onComplete,
 }: {
   value: string
   onChange: (value: string) => void
   length?: number
   label: string
   autoFocus?: boolean
+  /**
+   * §6.26: called when the last digit arrives, typed or pasted or filled in by
+   * the phone. A person who has entered the whole code has said everything
+   * they have to say; asking them to find a button as well is asking twice.
+   */
+  onComplete?: (value: string) => void
 }) {
   const input = useRef<HTMLInputElement>(null)
   const [focused, setFocused] = useState(false)
@@ -61,10 +68,17 @@ export function CodeInput({
         inputMode="numeric"
         autoComplete="one-time-code"
         pattern="\d*"
-        maxLength={length}
+        // Deliberately no `maxLength`: it counts characters, not digits, so a
+        // code pasted as `123 456` from a mail app would be truncated to
+        // `123 45` before anything could strip the space out of it. The length
+        // is enforced below, on the digits.
         autoFocus={autoFocus}
         value={value}
-        onChange={(event) => onChange(event.target.value.replace(/\D/g, '').slice(0, length))}
+        onChange={(event) => {
+          const digits = event.target.value.replace(/\D/g, '').slice(0, length)
+          onChange(digits)
+          if (digits.length === length) onComplete?.(digits)
+        }}
         onFocus={() => setFocused(true)}
         onBlur={() => setFocused(false)}
         // The focus ring belongs on the boxes, not on the transparent field

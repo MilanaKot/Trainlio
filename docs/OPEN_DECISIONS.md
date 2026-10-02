@@ -102,3 +102,18 @@ there is not meant to be.
 | D-19        | Signed URL lifetime                                  | 60 minutes, issued server-side.                                                                                                                                                                                                          |
 | D-20        | Next.js router                                       | App Router, Server Components, Server Actions calling the domain functions.                                                                                                                                                              |
 | D-18        | Account deletion and anonymisation                   | Closed in Phase 9 — see above.                                                                                                                                                                                                           |
+
+## Decided by the design handoff, v3 (2 October 2026)
+
+The designer answered `docs/design/DESIGN_REQUESTS.md`; the answers are in
+`docs/design/DESIGN_REQUESTS_ANSWERS.md` and the numbered decisions 23–32 of
+`docs/design/README.md`. Four of them changed what the schema has to do, and
+are recorded here because a later reader will meet the consequence before the
+reason.
+
+| #    | Question                                         | Resolution                                                                                                                                                                                                                                                                                                      |
+| ---- | ------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| D-21 | Where does a coach's telephone number live?      | `staff_contacts`, a table with row level security on, no policy and no grant — not a column on `app_profiles`, which every parent may read for a staff member in order to learn who leads a training. A parent is given the number in exactly two places: the removed-booking footer (§G6d) and the e-mail E07. |
+| D-22 | Where does an invited coach's e-mail live?       | The same table. `app_profiles` holds no e-mail by design, and an invited coach has no `auth.users` row yet — there is nowhere else for it to be until they first sign in. It is unique across the whole application, because the first sign-in attaches the authentication record to the profile that holds it. |
+| D-23 | One e-mail per changed field, or per save?       | Per save. A coach who moves a training and changes the hall in one edit sends one message with both rows highlighted, under `SESSION_CHANGED`; a single change keeps its own event type so the subject can still name it.                                                                                       |
+| D-24 | Is a parent told when a coach books their child? | Yes — E08, with the deadline by which they can undo it, and for an over-capacity addition too. A guardian's own booking still raises nothing.                                                                                                                                                                   |

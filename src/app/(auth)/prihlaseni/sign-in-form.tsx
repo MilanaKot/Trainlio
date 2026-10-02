@@ -55,11 +55,15 @@ export function SignInForm({ initialEmail = '' }: { initialEmail?: string }) {
     })
   }
 
-  function onVerify(e: React.FormEvent) {
-    e.preventDefault()
+  /**
+   * The code, verified. Takes the digits rather than reading state, because the
+   * sixth one submits (§6.26) and the state holding it has not been applied yet
+   * when that happens.
+   */
+  function verify(digits: string) {
     setError(null)
     startTransition(async () => {
-      const result = await verifyCode(email, code)
+      const result = await verifyCode(email, digits)
       if (!result.ok) {
         setError(result.message)
         return
@@ -67,6 +71,11 @@ export function SignInForm({ initialEmail = '' }: { initialEmail?: string }) {
       router.replace('/')
       router.refresh()
     })
+  }
+
+  function onVerify(e: React.FormEvent) {
+    e.preventDefault()
+    verify(code)
   }
 
   function onResend() {
@@ -133,7 +142,14 @@ export function SignInForm({ initialEmail = '' }: { initialEmail?: string }) {
         </form>
       ) : (
         <form onSubmit={onVerify} className="flex flex-col gap-4">
-          <CodeInput value={code} onChange={setCode} label={t.code} autoFocus />
+          {/* §6.26: the sixth digit submits. */}
+          <CodeInput
+            value={code}
+            onChange={setCode}
+            onComplete={(digits) => verify(digits)}
+            label={t.code}
+            autoFocus
+          />
 
           {error ? (
             <p role="alert" className="text-hint font-semibold text-danger">
