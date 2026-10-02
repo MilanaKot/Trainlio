@@ -59,6 +59,10 @@ async function readCode(email: string): Promise<string> {
  * cookies — which is the part that has to work for every page below.
  */
 export async function signIn(page: Page, email: string): Promise<void> {
+  // A sign-out leaves the client router mid-navigation, and a `goto` that
+  // arrives in that moment is aborted by it. Waiting for the page it is on to
+  // settle first costs nothing and removes the race.
+  await page.waitForLoadState('load').catch(() => undefined)
   await page.goto('/prihlaseni')
   await page.getByLabel('E-mail').fill(email)
   await page.getByRole('button', { name: 'Poslat kód' }).click()
@@ -66,12 +70,9 @@ export async function signIn(page: Page, email: string): Promise<void> {
   await page.getByLabel('Kód').waitFor()
   await page.getByLabel('Kód').fill(await readCode(email))
 
-  // §6.26: the sixth digit submits, so the button has usually gone by now. It
-  // is still pressed when it is there — a code that arrives some other way, or
-  // a submission that did not take — and never required.
-  const submit = page.getByRole('button', { name: 'Přihlásit se' })
-  if (await submit.isVisible().catch(() => false)) await submit.click().catch(() => undefined)
-
+  // §6.26: the sixth digit submits, so nothing is clicked here. Pressing the
+  // button as well raced the submission the code had already started, and the
+  // second attempt arrived with a one-time code that had just been spent.
   await page.waitForURL((url) => !url.pathname.includes('/prihlaseni'), { timeout: 30_000 })
 }
 

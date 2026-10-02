@@ -76,6 +76,12 @@ async function readSignInCode(email: string): Promise<string> {
 
 test.describe('a workspace administrator manages the coaching staff', () => {
   test('adds a coach, names themselves, and a coach can only read it', async ({ page }) => {
+    // This one walks the whole screen — name, contact, role, state, both
+    // directions of deactivation, and a second sign-in as a plain coach — and
+    // v3 gave A3 two more panels to walk. It is the longest test here and it
+    // outgrew the default budget on the slower project.
+    test.setTimeout(90_000)
+
     // Signed in through the interface first, then granted the role: two OTP
     // requests for one address inside a minute is what GoTrue rate-limits.
     const admin = uniqueEmail('spravce')
@@ -314,6 +320,10 @@ test.describe('a workspace administrator manages the coaching staff', () => {
     // runs and projects, and any other administrator could give them back.
     await expect(confirm).toContainText('Práva vám může vrátit jen')
     await confirm.getByRole('button', { name: 'Odebrat práva' }).click()
+    // The save lands the administrator back on the list; waiting for it is how
+    // the test knows the server has answered, rather than navigating away while
+    // the action is still running.
+    await page.waitForURL(/\/trener\/vice\/treneri$/)
 
     // And the section it administers is gone from Více.
     await page.goto('/trener/vice')
