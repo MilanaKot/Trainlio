@@ -1,8 +1,8 @@
 import 'server-only'
 
 import { createClient } from '@/lib/supabase/server'
-import { rows } from '@/server/query-result'
-import type { BookingStatus, BookingCreatorRole } from '@/types/database'
+import { maybeRow, rows } from '@/server/query-result'
+import type { BookingStatus, BookingCreatorRole, SessionStatus } from '@/types/database'
 
 export type RosterEntry = {
   bookingId: string
@@ -124,13 +124,39 @@ export async function getBookingGuardians(bookingId: string): Promise<BookingGua
   }))
 }
 
-export type WorkspaceAthlete = {
+export type CoachAthlete = {
   id: string
   firstName: string
   lastName: string
   birthYear: number
+  dateOfBirth: string
   isActive: boolean
+  photoPath: string | null
   positionCode: string | null
+  stickSideCode: string | null
+  jerseyNumber: string | null
+  clubName: string | null
+  teamName: string | null
+  /** Confirmed, not cancelled, still ahead — the figure §K12 puts on the row. */
+  upcomingCount: number
+  /** Matched by the search, because a coach often remembers the parent (§K12). */
+  guardianNames: string[]
+}
+
+export type AthleteGuardian = {
+  profileId: string
+  displayName: string | null
+  relationshipCode: string
+  phone: string | null
+}
+
+export type CoachAthleteSession = {
+  sessionId: string
+  startAt: string
+  endAt: string
+  status: SessionStatus
+  facilityCode: string | null
+  bookingStatus: BookingStatus
 }
 
 /**
@@ -142,31 +168,100 @@ export type WorkspaceAthlete = {
  * membership of a workspace this person coaches. A guardian running the same
  * query gets their own children and nobody else's.
  */
-export async function listWorkspaceAthletes(): Promise<WorkspaceAthlete[]> {
+export async function listCoachAthletes(workspaceId: string): Promise<CoachAthlete[]> {
   const supabase = await createClient()
 
-  const result = await supabase
-    .from('athletes')
-    .select(
-      'id, first_name, last_name, date_of_birth, is_active, athlete_sport_profiles ( attributes )',
-    )
-    .order('last_name')
-    .order('first_name')
+  const result = await supabase.rpc('coach_athletes', { p_workspace_id: workspaceId })
 
-  return rows('listWorkspaceAthletes', result).map((row) => {
-    const profile = (row.athlete_sport_profiles ?? [])[0] as { attributes?: unknown } | undefined
+  return rows('coach_athletes', result).map((row) => {
     const attributes =
-      typeof profile?.attributes === 'object' && profile.attributes !== null
-        ? (profile.attributes as Record<string, unknown>)
+      typeof row.attributes === 'object' && row.attributes !== null
+        ? (row.attributes as Record<string, unknown>)
         : {}
 
     return {
-      id: row.id,
+      id: row.athlete_id,
       firstName: row.first_name,
       lastName: row.last_name,
       birthYear: Number(row.date_of_birth.slice(0, 4)),
+      dateOfBirth: row.date_of_birth,
       isActive: row.is_active,
+      photoPath: row.photo_path,
       positionCode: typeof attributes.position === 'string' ? attributes.position : null,
+      stickSideCode: typeof attributes.stick_side === 'string' ? attributes.stick_side : null,
+      jerseyNumber: typeof attributes.jersey_number === 'string' ? attributes.jersey_number : null,
+      clubName: typeof attributes.club === 'string' ? attributes.club : null,
+      teamName: typeof attributes.team === 'string' ? attributes.team : null,
+      upcomingCount: row.upcoming_count,
+      guardianNames: row.guardian_names ?? [],
     }
   })
+}
+
+/**
+ * The family of one athlete (§K13).
+ *
+ * `booking_guardians` answers the same question for one booking, and
+ * deliberately so (migration 22). This is the other half: an athlete opened on
+ * purpose, by the staff of a club the child actually trains at — including an
+ * athlete who is booked into nothing, which is exactly the one a coach needs to
+ * ring about.
+ */
+export async function getAthleteGuardians(athleteId: string): Promise<AthleteGuardian[]> {
+  const supabase = await createClient()
+
+  return rows(
+    'athlete_guardians',
+    await supabase.rpc('athlete_guardians', { p_athlete_id: athleteId }),
+  ).map((row) => ({
+    profileId: row.profile_id,
+    displayName: row.display_name,
+    relationshipCode: row.relationship_code,
+    phone: row.phone,
+  }))
+}
+
+/** This athlete's trainings at this club, newest first (§K13). */
+export async function listAthleteSessions(
+  workspaceId: string,
+  athleteId: string,
+): Promise<CoachAthleteSession[]> {
+  const supabase = await createClient()
+
+  return rows(
+    'coach_athlete_sessions',
+    await supabase.rpc('coach_athlete_sessions', {
+      p_workspace_id: workspaceId,
+      p_athlete_id: athleteId,
+    }),
+  ).map((row) => ({
+    sessionId: row.training_session_id,
+    startAt: row.start_at,
+    endAt: row.end_at,
+    status: row.status,
+    facilityCode: row.facility_code,
+    bookingStatus: row.booking_status,
+  }))
+}
+
+/**
+ * The staff's note about an athlete (§K13, D-13).
+ *
+ * Its own table with a staff-only policy, so a guardian session reading it gets
+ * no rows — not a null column (migration 35).
+ */
+export async function getAthleteInternalNote(
+  workspaceId: string,
+  athleteId: string,
+): Promise<string | null> {
+  const supabase = await createClient()
+
+  const result = await supabase
+    .from('athlete_internal_notes')
+    .select('notes')
+    .eq('workspace_id', workspaceId)
+    .eq('athlete_id', athleteId)
+    .maybeSingle()
+
+  return maybeRow('getAthleteInternalNote', result)?.notes ?? null
 }

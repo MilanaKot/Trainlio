@@ -45,6 +45,52 @@ export type Database = {
         }
         Relationships: []
       }
+      athlete_internal_notes: {
+        Row: {
+          athlete_id: string
+          notes: string | null
+          updated_at: string
+          updated_by: string | null
+          workspace_id: string
+        }
+        Insert: {
+          athlete_id: string
+          notes?: string | null
+          updated_at?: string
+          updated_by?: string | null
+          workspace_id: string
+        }
+        Update: {
+          athlete_id?: string
+          notes?: string | null
+          updated_at?: string
+          updated_by?: string | null
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "athlete_internal_notes_athlete_id_fkey"
+            columns: ["athlete_id"]
+            isOneToOne: false
+            referencedRelation: "athletes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "athlete_internal_notes_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "app_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "athlete_internal_notes_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       athlete_sport_profiles: {
         Row: {
           athlete_id: string
@@ -1139,6 +1185,15 @@ export type Database = {
         Args: { p_athlete_id: string; p_training_session_id: string }
         Returns: string
       }
+      athlete_guardians: {
+        Args: { p_athlete_id: string }
+        Returns: {
+          display_name: string
+          phone: string
+          profile_id: string
+          relationship_code: string
+        }[]
+      }
       book_athlete_as_coach: {
         Args: {
           p_athlete_id: string
@@ -1197,6 +1252,31 @@ export type Database = {
           workspace_logo_path: string
           workspace_name: string
           workspace_timezone: string
+        }[]
+      }
+      coach_athlete_sessions: {
+        Args: { p_athlete_id: string; p_workspace_id: string }
+        Returns: {
+          booking_status: Database["public"]["Enums"]["booking_status"]
+          end_at: string
+          facility_code: string
+          start_at: string
+          status: Database["public"]["Enums"]["session_status"]
+          training_session_id: string
+        }[]
+      }
+      coach_athletes: {
+        Args: { p_workspace_id: string }
+        Returns: {
+          athlete_id: string
+          attributes: Json
+          date_of_birth: string
+          first_name: string
+          guardian_names: string[]
+          is_active: boolean
+          last_name: string
+          photo_path: string
+          upcoming_count: number
         }[]
       }
       coach_can_see_athlete: {
@@ -1382,6 +1462,7 @@ export type Database = {
         Returns: {
           athlete_ids: string[]
           athlete_names: string[]
+          booking_ids: string[]
           recipient_profile_id: string
         }[]
       }
@@ -1467,6 +1548,10 @@ export type Database = {
         }[]
       }
       sessions_without_occupancy: { Args: never; Returns: string[] }
+      set_athlete_internal_note: {
+        Args: { p_athlete_id: string; p_notes: string; p_workspace_id: string }
+        Returns: Json
+      }
       set_member_active: {
         Args: {
           p_confirm?: boolean

@@ -89,6 +89,20 @@ async function signPhotos(
 }
 
 /**
+ * One photograph, signed for whoever is asking (§K13).
+ *
+ * The storage policy decides: a guardian of that athlete, or a coach of a club
+ * the child trains at (migration 08). This only asks for a URL — if the policy
+ * says no, the screen loses an avatar and keeps everything else.
+ */
+export async function signAthletePhoto(path: string | null): Promise<string | null> {
+  if (!path) return null
+  const supabase = await createClient()
+  const signed = await signPhotos(supabase, [path])
+  return signed.get(path) ?? null
+}
+
+/**
  * Every athlete the signed-in guardian has active access to.
  *
  * No workspace or guardian filter is written here: the `athletes` row policy

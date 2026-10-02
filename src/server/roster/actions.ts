@@ -137,3 +137,32 @@ export async function addAthletesToSession(
 export async function loadBookingGuardians(bookingId: string): Promise<BookingGuardian[]> {
   return getBookingGuardians(bookingId)
 }
+
+/**
+ * The staff's note about an athlete (§K13, D-13).
+ *
+ * Through a domain function, not a table write: the check is "this athlete
+ * trains at this club and I am staff here", which no row policy on an empty
+ * table can express for an insert (migration 35).
+ */
+export async function saveAthleteNote(
+  workspaceId: string,
+  athleteId: string,
+  notes: string,
+): Promise<{ ok: true } | { ok: false; code: string }> {
+  const supabase = await createClient()
+
+  const { data, error } = await supabase.rpc('set_athlete_internal_note', {
+    p_workspace_id: workspaceId,
+    p_athlete_id: athleteId,
+    p_notes: notes.slice(0, 200),
+  })
+
+  if (error) return { ok: false, code: 'generic' }
+
+  const result = data as { ok?: boolean; code?: string } | null
+  if (!result?.ok) return { ok: false, code: result?.code ?? 'generic' }
+
+  revalidatePath(`/trener/sportovci/${athleteId}`)
+  return { ok: true }
+}

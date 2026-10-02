@@ -396,5 +396,111 @@ select pg_temp.check(
   pg_temp.as_user(:COACH, format($$select count(*)::text from public.session_roster(%L::uuid) where first_name='Tomáš'$$, pg_temp.s())),
   '1', 'but their existing booking stays on the roster (D-09)');
 
+\echo ''
+\echo '── The coach''s athletes (§K12, §K13, AC-286) ────────────────────────'
+-- The list: one row per athlete of the club, with what the design shows.
+select pg_temp.check(
+  pg_temp.as_user(:COACH, format($$select count(*)::text from public.coach_athletes(%L::uuid)$$, pg_temp.ws())),
+  '3', 'a coach reads the club''s athletes (AC-286)');
+select pg_temp.check(
+  pg_temp.as_user(:A, format($$select count(*)::text from public.coach_athletes(%L::uuid)$$, pg_temp.ws())),
+  '0', 'a parent reads none of it, even their own child''s row (AC-286)');
+select pg_temp.check(
+  pg_temp.as_user(:STRANGER, format($$select count(*)::text from public.coach_athletes(%L::uuid)$$, pg_temp.ws())),
+  '0', 'and somebody with no club at all reads nothing (AC-286)');
+
+-- The search matches a parent's name, so the list has to carry them. A coach
+-- looking for a child often remembers the parent.
+select pg_temp.check(
+  pg_temp.as_user(:COACH, format($$select array_to_string(guardian_names, ',')
+    from public.coach_athletes(%L::uuid) where first_name = 'Ivan'$$, pg_temp.ws())),
+  'Rodina A', 'and carries the guardians the search matches (AC-286)');
+-- But not their numbers: §K12 says the row has no telephone, and a list of
+-- sixty families' numbers is not what reading a list requires.
+select pg_temp.check(
+  (select count(*)::text from information_schema.columns
+    where table_schema = 'public' and table_name = 'coach_athletes' and column_name = 'phone'),
+  '0', 'and no numbers, which belong to one athlete at a time (AC-286)');
+
+-- How many trainings each still has: the figure the design puts on every row,
+-- and the one that tells a coach who is signed up for nothing.
+select pg_temp.check(
+  pg_temp.as_user(:COACH, format($$select upcoming_count::text
+    from public.coach_athletes(%L::uuid) where first_name = 'Ivan'$$, pg_temp.ws())),
+  (select count(*)::text
+     from public.bookings b
+     join public.training_sessions s on s.id = b.training_session_id
+    where b.athlete_id = pg_temp.ath('Ivan')
+      and b.status = 'CONFIRMED'
+      and s.status <> 'CANCELLED'
+      and s.start_at > now()),
+  'with how many trainings each still has (AC-286)');
+-- Not every booking they have ever had: this suite has cancelled sessions and
+-- removed bookings behind it, and none of them is something still to come.
+select pg_temp.check(
+  pg_temp.as_user(:COACH, format($$select (upcoming_count < (
+      select count(*) from public.bookings b where b.athlete_id = %L::uuid))::text
+    from public.coach_athletes(%L::uuid) where first_name = 'Ivan'$$,
+    pg_temp.ath('Ivan'), pg_temp.ws())),
+  'true', 'counting only what is still ahead of them (AC-286)');
+
+\echo ''
+\echo '── One family at a time (§K13, AC-286) ──────────────────────────────'
+select pg_temp.check(
+  pg_temp.as_user(:COACH, format($$select display_name || ' · ' || coalesce(phone, '(null)')
+    from public.athlete_guardians(%L::uuid)$$, pg_temp.ath('Ivan'))),
+  'Rodina A · (null)', 'a coach opens one athlete and reaches the family (AC-286)');
+select pg_temp.as_user(:A, $$update public.app_profiles set phone='777123456'
+  where id = public.current_profile_id() returning phone$$);
+select pg_temp.check(
+  pg_temp.as_user(:COACH, format($$select phone from public.athlete_guardians(%L::uuid)$$,
+    pg_temp.ath('Ivan'))),
+  '777123456', 'with the number when the parent gave one (AC-286, decision 18)');
+select pg_temp.check(
+  pg_temp.as_user(:B, format($$select count(*)::text from public.athlete_guardians(%L::uuid)$$,
+    pg_temp.ath('Ivan'))),
+  '0', 'another family reaches nobody (AC-286, AC-091)');
+select pg_temp.check(
+  pg_temp.as_user(:A, format($$select count(*)::text from public.athlete_guardians(%L::uuid)$$,
+    pg_temp.ath('Ivan'))),
+  '0', 'nor does the family itself: this is not how they read their own data (AC-286)');
+
+\echo ''
+\echo '── The note about an athlete is the staff''s (D-13, AC-287) ──────────'
+select pg_temp.check(
+  pg_temp.as_user(:COACH, format($$select (public.set_athlete_internal_note(%L::uuid, %L::uuid,
+    'Alergie na ořechy, matka volá před tréninkem.') ->> 'ok')$$, pg_temp.ws(), pg_temp.ath('Ivan'))),
+  'true', 'a coach writes it (AC-287)');
+select pg_temp.check(
+  pg_temp.as_user(:COACH, format($$select notes from public.athlete_internal_notes
+    where athlete_id = %L::uuid$$, pg_temp.ath('Ivan'))),
+  'Alergie na ořechy, matka volá před tréninkem.', 'and reads it back (AC-287)');
+-- D-13, the whole reason this is a table of its own: no guardian-facing read
+-- path can return it, because the guardian has no read path to it at all.
+select pg_temp.check(
+  pg_temp.as_user(:A, format($$select count(*)::text from public.athlete_internal_notes
+    where athlete_id = %L::uuid$$, pg_temp.ath('Ivan'))),
+  '0', 'the parent of that very child reads nothing (AC-287, D-13)');
+select pg_temp.check(
+  pg_temp.as_user(:A, format($$select (public.set_athlete_internal_note(%L::uuid, %L::uuid, 'Moje')
+    ->> 'code')$$, pg_temp.ws(), pg_temp.ath('Ivan'))),
+  'NOT_AUTHORIZED', 'and cannot write one either (AC-287)');
+select pg_temp.check(
+  (select count(*)::text from information_schema.role_table_grants
+    where table_schema='public' and table_name='athlete_internal_notes'
+      and grantee='authenticated' and privilege_type in ('INSERT','UPDATE','DELETE')),
+  '0', 'nobody writes it directly: the function is the only door (AC-287)');
+select pg_temp.check(
+  pg_temp.as_user(:COACH, format($$select (public.set_athlete_internal_note(%L::uuid, %L::uuid,
+    repeat('x', 201)) ->> 'code')$$, pg_temp.ws(), pg_temp.ath('Ivan'))),
+  'NOTE_TOO_LONG', 'the form''s limit is the server''s too (AC-287)');
+select pg_temp.check(
+  pg_temp.as_user(:COACH, format($$select (public.set_athlete_internal_note(%L::uuid, %L::uuid, '   ')
+    ->> 'ok')$$, pg_temp.ws(), pg_temp.ath('Ivan'))),
+  'true', 'clearing it is saving nothing, not saving spaces (AC-287)');
+select pg_temp.check(
+  (select count(*)::text from public.athlete_internal_notes where athlete_id = pg_temp.ath('Ivan')),
+  '0', 'and leaves no empty row behind (AC-287)');
+
 drop function pg_temp.as_user(text,text);
 drop function pg_temp.check(text,text,text);

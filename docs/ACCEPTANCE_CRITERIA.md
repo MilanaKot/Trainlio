@@ -745,3 +745,27 @@ no longer exist, and no other figure, because the MVP tracks no attendance and a
 number there would read as who came. A cancelled training keeps its badge in
 both tabs. Nothing is created from the past, so the button that creates is not
 on that tab.
+
+## The coach's athletes (handoff v3, DR-01)
+
+AC-286  
+The `Sportovci` tab is the club's athletes, grouped by birth year and sorted by
+surname inside each group, with the deactivated ones in their own group at the
+bottom. Each row says what a coach scans for: the position, and how many
+trainings that athlete still has — a figure that counts only what is ahead,
+never a cancelled training or a booking that has been and gone. The search
+ignores diacritics and matches the guardians' names as well as the athlete's,
+because a coach who met the family at the rink remembers the parent. No
+telephone number is on a row; opening one athlete returns that one family's,
+with every active guardian rather than a single "parent". Only the staff of a
+club the child trains at may read any of it: a parent reading their own child's
+row through the same function gets nothing.
+
+AC-287  
+Given a coach writing a note about an athlete  
+Then it is readable by the staff of that workspace and by nobody else — a
+separate table with a staff-only policy and no write grant at all, so the
+guardian of that very child reads no rows rather than a null column, and cannot
+write one either (D-13). The 200-character limit is the server's as well as the
+form's, clearing it leaves no empty row behind, and the note goes when the child
+is forgotten (D-18).

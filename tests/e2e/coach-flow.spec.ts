@@ -3,6 +3,7 @@ import {
   asUser,
   dateInput,
   grantCoach,
+  profileFor,
   signIn,
   tokenFor,
   uniqueEmail,
@@ -231,6 +232,99 @@ test.describe('a coach publishes a training and runs its roster', () => {
     await page.getByRole('tab', { name: 'Nadcházející' }).click()
     await expect(page.locator('main').getByText(room)).toHaveCount(0)
     await expect(page.getByRole('button', { name: 'Vytvořit', exact: true })).toBeVisible()
+  })
+
+  /**
+   * Coach tests 11 and 12 (§K12, §K13). The tab that had no design is now the
+   * one a coach uses to find a child and reach their family — and the note on
+   * that screen is the one thing on it a parent must never see.
+   */
+  test('the athletes tab finds a child by their parent, and keeps the note (AC-286)', async ({
+    page,
+  }) => {
+    const coach = uniqueEmail('trener.sportovci')
+    await signIn(page, coach)
+    await grantCoach(coach)
+
+    // A family of this run's own, so the shared database's other athletes do
+    // not decide what the assertions below find.
+    const run = Date.now()
+    const parentEmail = uniqueEmail('rodic.hledani')
+    const token = await tokenFor(parentEmail)
+    const workspaces = (await (
+      await fetch(`${STACK}/rest/v1/rpc/joinable_workspaces`, {
+        method: 'POST',
+        headers: asUser(token),
+        body: '{}',
+      })
+    ).json()) as { id: string }[]
+
+    await fetch(`${STACK}/rest/v1/app_profiles?id=eq.${await profileFor(parentEmail)}`, {
+      method: 'PATCH',
+      headers: {
+        apikey: SERVICE,
+        authorization: `Bearer ${SERVICE}`,
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({
+        first_name: 'Hana',
+        last_name: `Řezníčková${run}`,
+        phone: '777111222',
+      }),
+    })
+
+    const created = (await (
+      await fetch(`${STACK}/rest/v1/rpc/create_athlete_with_guardian`, {
+        method: 'POST',
+        headers: asUser(token),
+        body: JSON.stringify({
+          p_first_name: 'Eliška',
+          p_last_name: `Dítě${run}`,
+          p_date_of_birth: '2017-05-05',
+          p_workspace_id: workspaces[0]?.id,
+          p_sport_code: 'HOCKEY',
+          p_attributes: { position: 'GOALIE', stick_side: 'LEFT' },
+        }),
+      })
+    ).json()) as { ok?: boolean; data?: { athlete_id?: string } }
+    expect(created.ok).toBe(true)
+
+    await page.goto('/trener/sportovci')
+    await expect(page.getByRole('heading', { name: 'Sportovci', level: 1 })).toBeVisible()
+
+    // The search matches the parent, not only the child: a coach who met the
+    // family remembers the parent's name as often as the child's. And it
+    // ignores diacritics, because "Řezníčková" is not what anyone types.
+    await page.getByRole('searchbox').fill(`reznickova${run}`)
+    const row = page.locator('main li', { hasText: `Eliška Dítě${run}` })
+    await expect(row).toBeVisible()
+    await expect(row).toContainText('Brankář')
+    await expect(row).toContainText('bez přihlášek')
+
+    await row.getByRole('link').click()
+    await expect(page.getByRole('heading', { name: `Eliška Dítě${run}` })).toBeVisible()
+    await expect(page.getByText('Ročník 2017 · narozen 5. 5. 2017')).toBeVisible()
+
+    // §K13: the family, with the number a coach may ring.
+    await expect(page.getByText(`Hana Řezníčková${run}`)).toBeVisible()
+    await expect(page.getByRole('link', { name: `Zavolat Hana Řezníčková${run}` })).toHaveAttribute(
+      'href',
+      'tel:777111222',
+    )
+
+    // The note. D-13: the one thing on this screen a parent must never read.
+    await page.getByRole('button', { name: 'Upravit poznámku' }).click()
+    await page.getByLabel('INTERNÍ POZNÁMKA · JEN TRENÉŘI').fill('Alergie na ořechy.')
+    await page.getByRole('button', { name: 'Uložit' }).click()
+    await expect(page.getByText('Alergie na ořechy.')).toBeVisible()
+
+    // Read back by the parent, through their own session: the athlete screen
+    // they have, and the API besides. Neither carries it.
+    const noteForParent = await fetch(
+      `${STACK}/rest/v1/athlete_internal_notes?athlete_id=eq.${created.data?.athlete_id}`,
+      { headers: asUser(token) },
+    )
+    expect(await noteForParent.json()).toEqual([])
   })
 
   test('a guardian cannot reach the coach area by URL', async ({ page }) => {
