@@ -4,7 +4,9 @@ import {
   dateInput,
   grantCoach,
   grantWorkspaceRole,
+  profileFor,
   resetOrganization,
+  SERVICE,
   signIn,
   tokenFor,
   uniqueEmail,
@@ -18,7 +20,13 @@ async function bookedAthlete(
   sessionId: string,
   guardian = 'Milana Kotová',
 ) {
-  const token = await tokenFor(uniqueEmail(`rodina.${firstName.toLowerCase()}`))
+  // The address is built from the child's name, and `Tomáš` is not an address:
+  // GoTrue refuses a local part with diacritics in it.
+  const handle = firstName
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/\p{Diacritic}/gu, '')
+  const token = await tokenFor(uniqueEmail(`rodina.${handle}`))
 
   // The parent says who they are, because the coach's roster names whoever
   // booked each child and a dash there is not what a real one looks like.
@@ -452,4 +460,204 @@ test('one training and its roster (§K2)', async ({ page }) => {
   await page.reload()
   await expect(page.getByRole('heading', { name: 'Sportovci 2' })).toBeVisible()
   await shoot(page, 'K2-detail-treninku')
+})
+
+/**
+ * The screens handoff v3 added (coach K12–K16, admin A3b, guardian G6d).
+ *
+ * One test rather than six, because every one of them needs a club with
+ * athletes, trainings and a series in it, and building that six times is six
+ * minutes of nothing.
+ */
+test('what v3 added (§K12–§K16, §A3b, §G6d)', async ({ page, browser }) => {
+  test.setTimeout(180_000)
+
+  const admin = uniqueEmail('spravce.v3')
+  await signIn(page, admin)
+  await grantWorkspaceRole(admin, 'WORKSPACE_ADMIN')
+
+  // A name, so the screens show a club with people in it rather than dashes.
+  await page.goto(`/trener/vice/treneri/${await profileFor(admin)}`)
+  await page.getByLabel('Jméno').fill('Milan')
+  await page.getByLabel('Příjmení').fill('Filipi')
+  await page.getByLabel('Telefon').fill('777 654 321')
+  await page.getByRole('button', { name: 'Uložit změny' }).click()
+  await page.waitForURL(/\/trener\/vice\/treneri$/)
+
+  // §A3b: a coach who has been invited and has not arrived yet.
+  await page.goto('/trener/vice/treneri/novy')
+  await page.getByLabel('Jméno').fill('Jan')
+  // The club is shared by every run, so the row this test opens has to be
+  // this run's own. The suffix is off the screenshot's right edge.
+  await page.getByLabel('Příjmení').fill('Novák')
+  await page.getByLabel('E-mail').fill(uniqueEmail('trener.pozvany'))
+  await page.getByRole('button', { name: 'Přidat a poslat pozvánku' }).click()
+  await expect(page.getByRole('heading', { name: 'Trenéři' })).toBeVisible()
+  await shoot(page, 'A1-treneri-s-pristupem')
+
+  await page
+    .locator('li', { hasText: 'Jan Novák' })
+    .filter({ hasText: 'Pozván' })
+    .first()
+    .getByRole('link')
+    .click()
+  await expect(page.getByText('Čeká na první přihlášení')).toBeVisible()
+  await shoot(page, 'A3b-trener-pozvan')
+
+  // A training with children on it, then a second one moved into the past. The
+  // changing room is this test's own: the club is shared by every run, and the
+  // parent below has to book into this training and not somebody else's.
+  await page.goto('/trener/novy')
+  await page.getByLabel('Datum').fill(dateInput(9))
+  await page.getByLabel('Šatna').fill('Šatna 12')
+  await page.getByRole('button', { name: 'Vytvořit trénink' }).click()
+  // The id is read off the URL, so the navigation has to have happened first.
+  await expect(page.getByRole('heading', { name: /Sportovci/ })).toBeVisible()
+  const upcomingId = page.url().split('/trener/')[1]?.split('/')[0] ?? ''
+  await bookedAthlete('Ivan', 2017, upcomingId, 'Hana Procházková')
+  await bookedAthlete('Anna', 2018, upcomingId, 'Hana Procházková')
+
+  await page.goto('/trener/novy')
+  await page.getByLabel('Datum').fill(dateInput(2))
+  await page.getByLabel('Šatna').fill('Šatna 2')
+  await page.getByRole('button', { name: 'Vytvořit trénink' }).click()
+  await expect(page.getByRole('heading', { name: /Sportovci/ })).toBeVisible()
+  const pastId = page.url().split('/trener/')[1]?.split('/')[0] ?? ''
+  await bookedAthlete('Tomáš', 2017, pastId, 'Petr Svoboda')
+  await fetch(`${STACK}/rest/v1/training_sessions?id=eq.${pastId}`, {
+    method: 'PATCH',
+    headers: {
+      apikey: SERVICE,
+      authorization: `Bearer ${SERVICE}`,
+      'content-type': 'application/json',
+    },
+    body: JSON.stringify({
+      start_at: new Date(Date.now() - 2 * 3_600_000).toISOString(),
+      end_at: new Date(Date.now() - 3_600_000).toISOString(),
+    }),
+  })
+
+  // §K14: the past, counted rather than measured.
+  await page.goto('/trener?tab=minule')
+  await expect(page.getByRole('tab', { name: 'Minulé' })).toBeVisible()
+  await shoot(page, 'K14-minule-treninky', { full: false })
+
+  // §K12 and §K13: the club's athletes, and one of them.
+  await page.goto('/trener/sportovci')
+  await expect(page.getByRole('heading', { name: 'Sportovci', level: 1 })).toBeVisible()
+  await shoot(page, 'K12-sportovci', { full: false })
+
+  await page.locator('main li', { hasText: 'Ivan Hráč' }).first().getByRole('link').click()
+  await expect(page.getByRole('heading', { name: 'Ivan Hráč' })).toBeVisible()
+  await page.getByRole('button', { name: 'Upravit poznámku' }).click()
+  await page.getByLabel('INTERNÍ POZNÁMKA · JEN TRENÉŘI').fill('Alergie na ořechy.')
+  await page.getByRole('button', { name: 'Uložit' }).click()
+  await expect(page.getByText('Alergie na ořechy.')).toBeVisible()
+  await shoot(page, 'K13-profil-sportovce')
+
+  // §K15 and §K16: a series, and the trainings it made.
+  await page.goto('/trener/serie/nova')
+  const monday = new Date()
+  monday.setDate(monday.getDate() + ((8 - monday.getDay()) % 7 || 7))
+  const later = new Date(monday)
+  later.setDate(later.getDate() + 21)
+  await page.getByLabel('Od *', { exact: true }).fill(monday.toISOString().slice(0, 10))
+  await page.getByLabel('Do *', { exact: true }).fill(later.toISOString().slice(0, 10))
+  await page.getByLabel('Začátek').fill('16:00')
+  await page.getByLabel('Konec').fill('17:00')
+  await page.getByLabel('Šatna').fill('Šatna 4')
+  await page.getByRole('button', { name: /Vytvořit \d+ tréninky|Vytvořit \d+ tréninků/ }).click()
+  await page.waitForURL(/\/trener\/serie$/)
+  await expect(page.getByRole('heading', { name: 'Série', level: 1 })).toBeVisible()
+  await shoot(page, 'K15-serie')
+
+  await page.locator('main li', { hasText: '16:00–17:00' }).first().getByRole('link').click()
+  await expect(page.getByRole('tab', { name: /Nadcházející/ })).toBeVisible()
+  await shoot(page, 'K16-treninky-serie', { full: false })
+
+  // §A0 with the planning section every coach has.
+  await page.goto('/trener/vice')
+  await shoot(page, 'A0-vice')
+
+  // §G6d: the parent's side of a removal, with the coach to ring. Its own
+  // family, because the screen is theirs and the test has to sign in as them.
+  const parent = await browser.newPage()
+  const parentEmail = uniqueEmail('rodic.odhlaseny')
+  await signIn(parent, parentEmail)
+  await parent.goto('/moji-sportovci/novy')
+  await parent.getByLabel('Jméno').first().fill('Hana')
+  await parent.getByLabel('Příjmení').first().fill('Procházková')
+  await parent.getByLabel('Jméno').last().fill('Eliška')
+  await parent.getByLabel('Příjmení').last().fill('Procházková')
+  await parent.getByLabel('Datum narození').fill('2017-05-05')
+  await parent.getByRole('radio', { name: 'Centr' }).click()
+  await parent.getByRole('radio', { name: 'Levá' }).click()
+  await parent.getByRole('button', { name: 'Přidat sportovce' }).click()
+  await expect(parent.getByText('Eliška Procházková')).toBeVisible()
+
+  await parent.goto('/treninky')
+  // This test's own training, found by the date nothing else uses.
+  await parent
+    .locator('li', { hasText: 'Šatna 12' })
+    .first()
+    .getByRole('button', { name: 'Přihlásit' })
+    .click()
+  await parent.getByRole('dialog').getByRole('button', { name: 'Přihlásit' }).click()
+  await expect(parent.getByRole('status')).toContainText('Přihlášeno')
+
+  // Removed by a coach of their own: asking for a second one-time code for the
+  // address that just signed in through the form is what GoTrue rate-limits,
+  // and §G6d is about the coach a parent is given, not about which one it is.
+  const removing = uniqueEmail('trener.odhlasujici')
+  const removingToken = await tokenFor(removing)
+  const { profileId: removingId } = await grantCoach(removing)
+  await fetch(`${STACK}/rest/v1/app_profiles?id=eq.${removingId}`, {
+    method: 'PATCH',
+    headers: {
+      apikey: SERVICE,
+      authorization: `Bearer ${SERVICE}`,
+      'content-type': 'application/json',
+    },
+    body: JSON.stringify({ first_name: 'Milan', last_name: 'Filipi' }),
+  })
+  await fetch(`${STACK}/rest/v1/rpc/set_own_staff_phone`, {
+    method: 'POST',
+    headers: asUser(removingToken),
+    body: JSON.stringify({ p_phone: '777 654 321' }),
+  })
+
+  const roster = (await (
+    await fetch(
+      `${STACK}/rest/v1/bookings?select=id,athletes(first_name)` +
+        `&training_session_id=eq.${upcomingId}&status=eq.CONFIRMED`,
+      {
+        headers: {
+          apikey: SERVICE,
+          authorization: `Bearer ${SERVICE}`,
+          'content-type': 'application/json',
+        },
+      },
+    )
+  ).json()) as { id: string; athletes: { first_name: string } | null }[]
+  const eliska = roster.find((row) => row.athletes?.first_name === 'Eliška')
+  expect(eliska, 'Eliška is booked into this training').toBeDefined()
+
+  await fetch(`${STACK}/rest/v1/rpc/cancel_booking_as_coach`, {
+    method: 'POST',
+    headers: asUser(removingToken),
+    body: JSON.stringify({
+      p_booking_id: eliska?.id,
+      p_reason: 'Dnes trénují jen brankáři, Elišku vezmu ve čtvrtek.',
+    }),
+  })
+
+  await parent.goto('/moje-treninky')
+  const card = parent.locator('main li', { hasText: 'Eliška Procházková' }).first()
+  await expect(card).toContainText('Znovu přihlásit může jen trenér')
+  await shoot(parent, 'G4b-odhlasen-trenerem', { full: false })
+
+  await card.getByRole('link').first().click()
+  await expect(parent.getByText('Zpráva od trenéra')).toBeVisible()
+  await shoot(parent, 'G6d-detail-odhlasen')
+  await parent.close()
 })
