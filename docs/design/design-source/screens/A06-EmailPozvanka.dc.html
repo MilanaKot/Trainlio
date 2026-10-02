@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<title>E-mail — pozvánka trenéra</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@500;600;700&amp;family=Manrope:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0;background:#F3F5F9;font-family:Manrope,"Segoe UI",system-ui,sans-serif;color:#0E1726}
+.s{--bg:#F3F5F9;--surface:#FFFFFF;--ink:#0E1726;--muted:#55607A;--line:#DFE4EE;--n50:#ECEFF5;--accent:#2B55E0;--accentsoft:#E5EBFD;--disp:"Barlow Semi Condensed","Arial Narrow",sans-serif}
+.disp{font-family:var(--disp)}
+.help{font-size:13px;line-height:18px;color:var(--muted)}
+.lbl{display:flex;justify-content:space-between;font-size:14px;line-height:20px;font-weight:600}
+.lbl span{font-weight:400;font-size:13px;color:var(--muted)}
+.inp{height:52px;border-radius:10px;border:0;box-shadow:inset 0 0 0 1.5px var(--line);background:#fff;padding:0 14px;font:500 16px Manrope,sans-serif;color:var(--ink);box-sizing:border-box;width:100%}
+.btn{height:52px;width:100%;border-radius:12px;border:0;font:700 16px/1 Manrope,system-ui,sans-serif;background:var(--accent);color:#fff}
+</style>
+</helmet>
+<div class="s" style="width: 600px; height: 860px; background: #F3F5F9; box-sizing: border-box; padding: 24px 40px; display: flex; flex-direction: column; gap: 14px; font-family: Arial, Helvetica, sans-serif">
+<div style="font-size: 13px; line-height: 20px; color: var(--muted); background: #fff; border-radius: 10px; padding: 10px 14px; box-shadow: inset 0 0 0 1px var(--line)"><b style="color: var(--ink)">Předmět:</b> Pozvánka do aplikace · Hokejová škola Příbram<br><b style="color: var(--ink)">Od:</b> Hokejová škola Příbram &lt;noreply@trainlio.cz&gt;</div>
+<div style="background: #fff; border-radius: 12px; padding: 32px; display: flex; flex-direction: column; gap: 18px; box-shadow: inset 0 0 0 1px var(--line)">
+<div style="display: flex; align-items: center; gap: 12px"><svg width="40" height="40" viewBox="0 0 64 64" aria-hidden="true"><path d="M32 3 57 11v19c0 15.5-10.5 27-25 31C17.5 57 7 45.5 7 30V11z" fill="#0E3A7A"></path><path d="M32 9 51 15v15c0 11.5-7.6 20.5-19 24-11.4-3.5-19-12.5-19-24V15z" fill="#FFFFFF"></path><path d="M17 24h30M17 31h30" stroke="#C8102E" stroke-width="4"></path></svg><b style="font-size: 16px">Hokejová škola Příbram</b></div>
+<h1 style="margin: 4px 0 0; font-size: 26px; line-height: 32px; font-weight: 700">Pozvánka do aplikace</h1>
+<p style="margin: 0; font-size: 16px; line-height: 25px">Dobrý den,<br>Milan Filipi vás přidal jako trenéra do aplikace pro rezervace tréninků <b>Hokejová škola Příbram</b>. Uvidíte v ní své tréninky, kdo je přihlášený, a kontakty na rodiče.</p>
+<div style="display: flex; flex-direction: column; gap: 6px; padding: 14px 16px; border-radius: 10px; background: #F3F5F9; font-size: 15px; line-height: 22px">
+<span><span style="color: var(--muted)">Jméno:</span> <b>Tomáš Říha</b></span>
+<span><span style="color: var(--muted)">Přihlašovací e-mail:</span> <b>tomas.riha@email.cz</b></span>
+</div>
+<a href="#" style="align-self: flex-start; height: 52px; padding: 0 28px; border-radius: 10px; background: #2B55E0; color: #fff; font-size: 16px; font-weight: 700; text-decoration: none; display: flex; align-items: center">Přihlásit se do aplikace</a>
+<p style="margin: 0; font-size: 15px; line-height: 23px; color: var(--muted)">Po kliknutí vám pošleme jednorázový kód na tento e-mail. Heslo nepotřebujete. Přihlásit se můžete kdykoli — pozvánka nevyprší.</p>
+<p style="margin: 0; font-size: 13px; line-height: 20px; color: var(--muted)">Tlačítko nefunguje? Otevřete <span style="color: #2B55E0; text-decoration: underline">https://pribram.trainlio.cz/prihlaseni</span></p>
+<hr style="border: 0; border-top: 1px solid var(--line); margin: 4px 0">
+<p style="margin: 0; font-size: 13px; line-height: 20px; color: var(--muted)">Pozvánku jste nečekali? Tento e-mail ignorujte, bez přihlášení se nic nestane.</p>
+</div>
+<p style="margin: 0; text-align: center; font-size: 12px; color: var(--muted)">Běží na trainlio</p>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":600,"height":860}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

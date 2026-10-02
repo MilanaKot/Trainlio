@@ -2,7 +2,7 @@
 <html lang="cs">
 <head>
 <meta charset="utf-8">
-<title>Upravit trenéra — admin</title>
+<title>Upravit trenéra — pozván</title>
 <script src="./support.js"></script>
 </head>
 <body>
@@ -23,13 +23,10 @@ body{margin:0;background:#F3F5F9;font-family:Manrope,"Segoe UI",system-ui,sans-s
 .help{font-size:13px;line-height:18px;color:var(--muted)}
 .lbl span{font-weight:400;font-size:13px;color:var(--muted);float:right}
 .bo{height:44px;padding:0 16px;border-radius:10px;border:0;background:#fff;box-shadow:inset 0 0 0 1.5px var(--line);font:600 15px/1 Manrope,sans-serif;color:var(--ink);display:inline-flex;align-items:center;gap:8px;align-self:flex-start}
-.sw.off{background:#DCE2EC}
-.sw.off::after{left:3px}
-.sw.dis{opacity:.45}
 .btn{height:52px;width:100%;border-radius:12px;border:0;font:700 16px/1 Manrope,system-ui,sans-serif;background:var(--accent);color:#fff}
 </style>
 </helmet>
-<div class="s" style="width: 390px; height: 1120px; background: var(--bg); display: flex; flex-direction: column; overflow: hidden">
+<div class="s" style="width: 390px; height: 1000px; background: var(--bg); display: flex; flex-direction: column; overflow: hidden">
 <div style="padding: 52px 16px 0">
 <a href="A01-Treneri.dc.html" style="height: 44px; display: inline-flex; align-items: center; color: var(--accent); text-decoration: none; font-size: 15px; font-weight: 700">Zrušit</a>
 </div>
@@ -44,16 +41,10 @@ body{margin:0;background:#F3F5F9;font-family:Manrope,"Segoe UI",system-ui,sans-s
 
 <h2 class="cap" style="margin-top: 4px">Přístup do aplikace</h2>
 <div style="background: var(--surface); border-radius: 16px; padding: 16px; display: flex; flex-direction: column; gap: 14px">
-<div style="display: flex; gap: 12px; padding: 12px 14px; border-radius: 12px; background: #E3F4EC"><span style="color: #13795B; flex-shrink: 0; margin-top: 1px"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"></circle><path d="m8 12.3 2.7 2.7L16 9.6"></path></svg></span><span style="display: flex; flex-direction: column"><b style="font-size: 15px; line-height: 22px; color: #13795B">Přihlášen</b><span class="help" style="color: var(--ink)">Naposledy v aplikaci 30. 9. v 18:40</span></span></div>
+<div style="display: flex; gap: 12px; padding: 12px 14px; border-radius: 12px; background: #FBF0DC"><span style="color: #8F5200; flex-shrink: 0; margin-top: 1px"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"></circle><path d="M12 7.5V12l3 2"></path></svg></span><span style="display: flex; flex-direction: column"><b style="font-size: 15px; line-height: 22px; color: #8F5200">Čeká na první přihlášení</b><span class="help" style="color: var(--ink)">Pozvánka odeslána 1. 10. v 9:12</span></span></div>
 <div class="field"><label class="lbl" for="e">E-mail <span>Pro přihlášení</span></label><input id="e" class="inp" type="email" value="jan.novak@email.cz" placeholder="jmeno@email.cz"></div>
-</div>
-
-<h2 class="cap" style="margin-top: 4px">Role</h2>
-<div style="background: var(--surface); border-radius: 16px; padding: 16px; display: flex; flex-direction: column; gap: 12px">
-<label style="display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 44px">
-<span style="display: flex; flex-direction: column"><b style="font-size: 16px; font-weight: 600">Administrátor</b><span style="font-size: 13px; line-height: 18px; color: var(--muted)">Spravuje trenéry, pozvánky a organizaci</span></span>
-<input type="checkbox" role="switch" style="position: absolute; opacity: 0; width: 1px; height: 1px"><span class="sw off" aria-hidden="true"></span>
-</label>
+<button class="bo"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5.5" width="17" height="13" rx="2"></rect><path d="m4 7 8 6 8-6"></path></svg>Poslat pozvánku znovu</button>
+<span class="help" style="margin-top: -6px">Znovu lze poslat nejdřív za hodinu. Změníte-li e-mail, pošle se nová pozvánka po uložení.</span>
 </div>
 
 <h2 class="cap" style="margin-top: 4px">Stav</h2>
@@ -71,7 +62,7 @@ body{margin:0;background:#F3F5F9;font-family:Manrope,"Segoe UI",system-ui,sans-s
 </footer>
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":1120}}'>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":1000}}'>
 class Component extends DCLogic {
 renderVals() {
 return {};

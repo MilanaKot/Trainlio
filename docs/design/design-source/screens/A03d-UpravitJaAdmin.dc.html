@@ -2,7 +2,7 @@
 <html lang="cs">
 <head>
 <meta charset="utf-8">
-<title>Upravit trenéra — admin</title>
+<title>Upravit trenéra — já, jediný admin</title>
 <script src="./support.js"></script>
 </head>
 <body>
@@ -38,31 +38,32 @@ body{margin:0;background:#F3F5F9;font-family:Manrope,"Segoe UI",system-ui,sans-s
 <h1 class="disp" style="margin: 0; padding: 0 4px; font-size: 36px; line-height: 40px; font-weight: 700">Upravit trenéra</h1>
 
 <div style="background: var(--surface); border-radius: 16px; padding: 16px; display: flex; flex-direction: column; gap: 18px">
-<div class="field"><label class="lbl" for="j">Jméno <i aria-hidden="true">*</i></label><input id="j" class="inp" value="Jan" required></div>
-<div class="field"><label class="lbl" for="p">Příjmení <i aria-hidden="true">*</i></label><input id="p" class="inp" value="Novák" required></div>
+<div class="field"><label class="lbl" for="j">Jméno <i aria-hidden="true">*</i></label><input id="j" class="inp" value="Milan" required></div>
+<div class="field"><label class="lbl" for="p">Příjmení <i aria-hidden="true">*</i></label><input id="p" class="inp" value="Filipi" required></div>
 </div>
 
 <h2 class="cap" style="margin-top: 4px">Přístup do aplikace</h2>
 <div style="background: var(--surface); border-radius: 16px; padding: 16px; display: flex; flex-direction: column; gap: 14px">
-<div style="display: flex; gap: 12px; padding: 12px 14px; border-radius: 12px; background: #E3F4EC"><span style="color: #13795B; flex-shrink: 0; margin-top: 1px"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"></circle><path d="m8 12.3 2.7 2.7L16 9.6"></path></svg></span><span style="display: flex; flex-direction: column"><b style="font-size: 15px; line-height: 22px; color: #13795B">Přihlášen</b><span class="help" style="color: var(--ink)">Naposledy v aplikaci 30. 9. v 18:40</span></span></div>
-<div class="field"><label class="lbl" for="e">E-mail <span>Pro přihlášení</span></label><input id="e" class="inp" type="email" value="jan.novak@email.cz" placeholder="jmeno@email.cz"></div>
+<div style="display: flex; gap: 12px; padding: 12px 14px; border-radius: 12px; background: #E3F4EC"><span style="color: #13795B; flex-shrink: 0; margin-top: 1px"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"></circle><path d="m8 12.3 2.7 2.7L16 9.6"></path></svg></span><span style="display: flex; flex-direction: column"><b style="font-size: 15px; line-height: 22px; color: #13795B">Přihlášen</b><span class="help" style="color: var(--ink)">To jste vy</span></span></div>
+<div class="field"><label class="lbl" for="e">E-mail <span>Pro přihlášení</span></label><input id="e" class="inp" type="email" value="milan.filipi@email.cz" placeholder="jmeno@email.cz"></div>
 </div>
 
 <h2 class="cap" style="margin-top: 4px">Role</h2>
 <div style="background: var(--surface); border-radius: 16px; padding: 16px; display: flex; flex-direction: column; gap: 12px">
 <label style="display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 44px">
 <span style="display: flex; flex-direction: column"><b style="font-size: 16px; font-weight: 600">Administrátor</b><span style="font-size: 13px; line-height: 18px; color: var(--muted)">Spravuje trenéry, pozvánky a organizaci</span></span>
-<input type="checkbox" role="switch" style="position: absolute; opacity: 0; width: 1px; height: 1px"><span class="sw off" aria-hidden="true"></span>
+<input type="checkbox" role="switch" checked="" disabled="" style="position: absolute; opacity: 0; width: 1px; height: 1px"><span class="sw dis" aria-hidden="true"></span>
 </label>
+<div style="padding: 12px 14px; border-radius: 12px; background: var(--bg); font-size: 14px; line-height: 20px; color: var(--muted)">Jste jediný administrátor. Práva si můžete odebrat, až je udělíte jinému trenérovi.</div>
 </div>
 
 <h2 class="cap" style="margin-top: 4px">Stav</h2>
 <div style="background: var(--surface); border-radius: 16px; padding: 16px; display: flex; flex-direction: column; gap: 12px">
 <label style="display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 44px">
 <span style="display: flex; flex-direction: column"><b style="font-size: 16px; font-weight: 600">Aktivní trenér</b><span style="font-size: 13px; line-height: 18px; color: var(--muted)">Lze ho vybrat pro nové tréninky</span></span>
-<input type="checkbox" role="switch" checked style="position: absolute; opacity: 0; width: 1px; height: 1px"><span class="sw" aria-hidden="true"></span>
+<input type="checkbox" role="switch" checked disabled style="position: absolute; opacity: 0; width: 1px; height: 1px"><span class="sw dis" aria-hidden="true"></span>
 </label>
-<div style="padding: 12px 14px; border-radius: 12px; background: var(--bg); font-size: 14px; line-height: 20px; color: var(--muted)">Po deaktivaci zůstane Jan Novák u všech minulých i naplánovaných tréninků (nyní 12). Trenéra nelze smazat, jen deaktivovat.</div>
+<div style="padding: 12px 14px; border-radius: 12px; background: var(--bg); font-size: 14px; line-height: 20px; color: var(--muted)">Sám sebe deaktivovat nemůžete.</div>
 </div>
 </main>
 

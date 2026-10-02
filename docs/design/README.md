@@ -7,16 +7,19 @@ trainlio-handoff/
 ├── README.md                ← this file
 ├── shared/
 │   ├── tokens.css           ← Tailwind 4 @theme tokens (import from app/globals.css)
-│   └── DESIGN_SYSTEM.md     ← principles, type scale, components, formatting, plurals, a11y, error copy
+│   ├── DESIGN_SYSTEM.md     ← principles, type scale, components (§6.1–6.32), formatting, plurals, a11y, error copy
+│   └── EMAILS.md            ← e-mail template + 8 events (subjects, copy, recipients, links)
 ├── guardian/
 │   ├── prototype.html       ← clickable prototype G1–G16 + G1b/G1c, G11b/G11c (org logo states)
 │   └── SPEC.md              ← routes, data, per-screen behaviour, copy, tests, open questions
 ├── coach/
-│   ├── prototype.html       ← K1–K11 (+ A0)
+│   ├── prototype.html       ← K0–K16 (+ A0)
 │   └── SPEC.md
 ├── admin/
-│   ├── prototype.html       ← A0–A5 (coaches + organization logo)
+│   ├── prototype.html       ← A0–A6 (coaches, invitations, roles, organization logo)
 │   └── SPEC.md
+├── emails/                  ← E01–E08 + A06 invitation as standalone HTML (open in a browser)
+├── DESIGN_REQUESTS_ANSWERS.md ← answer to every DR-01…DR-14
 ├── brief/DESIGN_BRIEF.md    ← original product brief
 └── design-source/screens/   ← source of every canvas screen (.dc.html, reference only)
 ```
@@ -52,15 +55,24 @@ The prototypes are visual references with sample data (names like Jan Novák, El
 16. Toasts have no undo action.
 17. Czech actor verbs/participles always use the masculine form (`Přihlásil`, `Odhlásil`, `Přihlášen`, `Narozen`); gender is not collected.
 18. Coaches see the guardian's phone (optional field) and can call/SMS from the roster.
-19. Coach can remove a child from a session (optional message to the parent). Parent sees an orange `Odhlášeno trenérem` badge (no strike-through), gets an e-mail, and may re-book if a place is free.
+19. Coach can remove a child from a session (optional message to the parent). Parent sees an orange `Odhlášeno trenérem` badge (no strike-through) and gets an e-mail. **v3: the parent cannot re-book (D-06)** — G4b/G6d show `Znovu přihlásit může jen trenér` and the coach's contact instead of a button.
 
 20. Admin can upload an organization (club / training-centre) logo and set its name + optional short name (`Více › Organizace`, A4/A5). Logo is cropped to a square, stored as 512 px PNG; SVG is rasterized.
 21. Logo appears in the login screen (72), the guardian `Tréninky` header (36) and e-mail headers. No logo → cobalt monogram from the first two words of the name (`HŠ`), same size and shape. One `OrgLogo` component (DS §6.23).
 22. No "how parents will see it" preview on the admin screen.
+23. Coach `Sportovci` tab: grouped by birth year, search + year chips, row → read-only athlete screen with guardians' contacts and the internal note (K12/K13). Coach edits only the internal note.
+24. Coach past trainings = segmented `Nadcházející / Minulé` like the parent; past row shows `{n} přihlášených`, no meter (K14).
+25. Series list lives in `Více › Série tréninků`; a series opens a filtered list of its trainings, never an edit form (K15/K15b/K16).
+26. Coach invitation: e-mail on A2; access states `Přihlášen / Pozván / Bez přístupu`; invitations never expire; resend max 1×/h; first sign-in screen K0 (A3–A3c, A6, K0).
+27. Admin role is editable in A3; the last admin cannot lose it; revoking your own role needs confirmation (A3d/A3e).
+28. Coach has an optional phone (A2, A3, K0); it is shown to parents only in the removed-by-coach footer (G6d) and e-mail E07.
+29. E-mails: one template, details as a block, changed value highlighted + old struck, one e-mail for several children, system fonts, readable with images blocked (EMAILS.md).
+30. Parents **are** e-mailed when a coach books their child (E08, DR-12).
+31. HEIC photos are accepted and converted in the browser (`Převádím fotku…`) (DR-13).
+32. Confirmed as built (DR-14): org logo also in the coach header; public note only on the detail; `Od ročníku / Do ročníku` labels; parent surname optional; all active guardians on the roster; Czech routes; reopening registration allowed; out-of-range athletes cannot be added manually; removed/cancelled bookings move to Minulé at `end_at`.
 
-Open questions are listed at the end of each SPEC.md. What the implementation
-still needs answered — those questions, plus the screens that shipped without a
-design — is collected in `DESIGN_REQUESTS.md`.
+Open questions are listed at the end of each SPEC.md.
 
 ## Changelog
+- **v3 — design requests DR-01…DR-14.** New coach screens K0, K12–K16 (+ K1 segmented control); admin A1/A2/A3 updated, A3b–A3e, A6; guardian G4b/G6d footers (no re-booking); DS §6.11/6.13/6.17 updated, §6.24–6.32 new; `shared/EMAILS.md` + `emails/`; decisions 23–32. See `DESIGN_REQUESTS_ANSWERS.md` and `CLAUDE_CODE_TASK_v3.md`.
 - **v2 — organization logo.** New: DS §6.23 OrgLogo; admin A4/A4b/A5 + A0 row `Organizace`; guardian G11 header (G11b/G11c) and G1 header (G1b/G1c); decisions 20–22. See `CLAUDE_CODE_TASK_logo.md` for the implementation prompt.

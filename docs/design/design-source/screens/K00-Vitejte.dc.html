@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<title>První přihlášení trenéra</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@500;600;700&amp;family=Manrope:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0;background:#F3F5F9;font-family:Manrope,"Segoe UI",system-ui,sans-serif;color:#0E1726}
+.s{--bg:#F3F5F9;--surface:#FFFFFF;--ink:#0E1726;--muted:#55607A;--line:#DFE4EE;--n50:#ECEFF5;--accent:#2B55E0;--accentsoft:#E5EBFD;--disp:"Barlow Semi Condensed","Arial Narrow",sans-serif}
+.disp{font-family:var(--disp)}
+.help{font-size:13px;line-height:18px;color:var(--muted)}
+.lbl{display:flex;justify-content:space-between;font-size:14px;line-height:20px;font-weight:600}
+.lbl span{font-weight:400;font-size:13px;color:var(--muted)}
+.inp{height:52px;border-radius:10px;border:0;box-shadow:inset 0 0 0 1.5px var(--line);background:#fff;padding:0 14px;font:500 16px Manrope,sans-serif;color:var(--ink);box-sizing:border-box;width:100%}
+.btn{height:52px;width:100%;border-radius:12px;border:0;font:700 16px/1 Manrope,system-ui,sans-serif;background:var(--accent);color:#fff}
+</style>
+</helmet>
+<div class="s" style="width: 390px; height: 844px; background: var(--bg); box-sizing: border-box; padding: 88px 20px 28px; display: flex; flex-direction: column; gap: 24px">
+<span style="width: 72px; height: 72px; border-radius: 20px; background: #fff; box-shadow: inset 0 0 0 1px var(--line); display: flex; align-items: center; justify-content: center"><svg width="56" height="56" viewBox="0 0 64 64" aria-hidden="true"><path d="M32 3 57 11v19c0 15.5-10.5 27-25 31C17.5 57 7 45.5 7 30V11z" fill="#0E3A7A"></path><path d="M32 9 51 15v15c0 11.5-7.6 20.5-19 24-11.4-3.5-19-12.5-19-24V15z" fill="#FFFFFF"></path><path d="M17 24h30M17 31h30" stroke="#C8102E" stroke-width="4"></path></svg></span>
+<div style="display: flex; flex-direction: column; gap: 8px">
+<h1 class="disp" style="margin: 0; font-size: 40px; line-height: 44px; font-weight: 700">Vítejte v týmu</h1>
+<p style="margin: 0; font-size: 16px; line-height: 24px; color: var(--muted)">Jste přihlášen jako trenér v organizaci <b style="color: var(--ink)">Hokejová škola Příbram</b>.</p>
+</div>
+<div style="background: var(--surface); border-radius: 16px; padding: 16px; display: flex; flex-direction: column; gap: 14px">
+<div style="display: flex; align-items: center; gap: 12px"><span style="width: 44px; height: 44px; border-radius: 50%; background: var(--accentsoft); color: var(--accent); display: flex; align-items: center; justify-content: center; font-weight: 700">TŘ</span><span style="display: flex; flex-direction: column"><b style="font-size: 16px">Tomáš Říha</b><span class="help">Trenér · 3 naplánované tréninky</span></span></div>
+<span class="help">Nesedí jméno? Napište administrátorovi Milanu Filipimu.</span>
+<div style="display: flex; flex-direction: column; gap: 6px; padding-top: 14px; box-shadow: 0 -1px 0 var(--line)"><label class="lbl" for="t">Váš telefon <span>Nepovinné</span></label><input id="t" class="inp" type="tel" placeholder="+420 123 456 789"><span class="help">Uvidí ho rodiče, jejichž dítě z tréninku odhlásíte.</span></div>
+</div>
+<div style="margin-top: auto; display: flex; flex-direction: column; gap: 8px"><button class="btn">Pokračovat na tréninky</button></div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

@@ -141,7 +141,8 @@ Label 14/600 above; optional marker `Nepovinné` (13, muted) right-aligned in th
 Textarea (notes): min-height 88; counter bottom-right `N / 200` (13 px muted, tabular). At limit: counter turns danger, typing blocked.
 
 ### 6.11 Stepper
-Width 180, height 52; − / + buttons 52 × 52 on neutral-50; value Barlow 24/700. Min 1, max 99. `aria-label` on buttons ("Ubrat", "Přidat").
+Width 180, height 52 (= field height); − / + buttons 52 × 52 on neutral-50; value Barlow 24/700. Min 1, max 99. `aria-label` on buttons ("Ubrat", "Přidat").
+**v3 (DR-06, confirms the built behaviour):** the value is a real `<input inputmode="numeric">` — typing allowed, committed and clamped to min/max on blur/Enter; −/+ disabled at the limits; long-press repeats every 120 ms. Over-limit typing → value snaps back + helper `Kapacita musí být 1–99.`
 
 ### 6.12 Chip (assistant) / AddChip
 Height 36, radius 18. Assistant chip: neutral-50, name 14/600, remove button 28 px with `aria-label="Odebrat {name}"`. Add chip: primary-100 bg, primary text `+ Přidat asistenta`.
@@ -149,6 +150,7 @@ Height 36, radius 18. Assistant chip: neutral-50, name 14/600, remove button 28 
 ### 6.13 BottomSheet
 Scrim `scrim`; sheet white, top radius 24, padding 10/20/28 (+ safe area), `shadow-sheet`, grabber 40 × 4. Header: title (`text-sheet-title`) + close button 44 × 44 circle `neutral-50` (`aria-label="Zavřít"`). `role="dialog"` `aria-modal="true"` `aria-labelledby`. Focus trap, Esc closes, restore focus to trigger. Swipe-down to close on touch. Tall sheets (Přidat sportovce) start 48 px from top.
 Use for: booking, choosing coaches, "Vytvořit", closing registration.
+**Picker sheet (v3, DR-06 — K3b, K3c, K7):** tall sheet (top 48). Header → SearchField (§6.27, `neutral-50` fill variant) when the list can exceed ~8 items → scrollable list of PickerRows (§6.8; checkbox for multi-select K3b/K7, radio for K3c) → sticky footer with primary lg (`Hotovo` / `Přidat {n} sportovce`). Search filters live (diacritics-insensitive); no results → muted line `Nikoho takového nenacházíme.` Selected items stay visible even when they don't match the query (pinned on top under caption `VYBRÁNO`). Inactive coaches never appear.
 
 ### 6.14 Dialog (centered alert)
 Scrim `scrim-strong`; card left/right 20 px, radius 24, padding 24/20/20, `shadow-dialog`. Icon tile 52 × 52 radius 16 (neutral / warning / danger soft bg). Title `text-sheet-title` (26/30 allowed for long titles). Buttons: two equal columns `[outline cancel] [primary confirm]`, or stacked for destructive (`outline "Nezrušovat"` above `danger "Zrušit trénink"`). `role="alertdialog"`. Initial focus on the **safe** button.
@@ -162,6 +164,7 @@ White card radius 16, `shadow-toast`, 16 px from screen sides, 28 px above botto
 
 ### 6.17 BottomNav
 Guardian: 4 items — Tréninky, Moje tréninky, Moji sportovci, Účet. Coach/admin: 3 items — Tréninky, Sportovci, Více. Icon 22 stroke 1.8 + label 11/600; active `primary`, inactive `muted`. `aria-current="page"`.
+**v3 (DR-06):** height 76 incl. 8 px bottom padding + safe-area inset. Active item = the one whose route is the **longest prefix** of the current path (built that way — confirmed); pushed screens (detail, edit, A1–A6, K13, K15, K16) keep their tab active (`Více` for A* and K15/K16, `Sportovci` for K13). Icons (24 grid, stroke 1.8, round caps): Tréninky = calendar, Moje tréninky = calendar-check, (Moji) sportovci = two people, Účet = person-circle, Více = three dots. Labels never truncate; 4 tabs fit 320 px at 11 px.
 
 ### 6.18 FAB (coach)
 Extended pill 56 px high, radius 28, primary, `+ Vytvořit`, `shadow` `0 8px 24px rgb(43 85 224 / .35)`; right 16, above nav. Opens "Vytvořit" sheet.
@@ -200,6 +203,33 @@ One component for every place the club / training-centre identity appears: `<Org
 - **No logo → monogram:** same size and radius, `primary-100` background, `primary` text, Barlow Semi Condensed 700. Initials = first letter of the first two words of `name` (`Hokejová škola Příbram` → `HŠ`); one-word name → first two letters; uppercase with `toLocaleUpperCase("cs")`, keep diacritics. Never generate a random colour.
 - a11y: logo `<img alt={org.name}>` when it is the only name on screen, otherwise `alt=""` (name is printed next to it). Monogram is `aria-hidden` when the name is next to it.
 - Loading / broken image → fall back to the monogram (no broken-image icon).
+
+### 6.24 Switch (v3, DR-06)
+52 × 32 track, radius 16; knob 26 px white, `0 1px 3px rgb(0 0 0 / .2)`, inset 3. On = `success` (#13795B), off = `#DCE2EC`; disabled = opacity .45. Real `<input type="checkbox" role="switch">` visually hidden inside the `<label>`; the whole row (min-height 44) is the hit area: title 16/600 + sub 13 muted on the left, switch on the right. Transition 150 ms (none with `prefers-reduced-motion`). Used in A3 (`Aktivní trenér`, `Administrátor`), athlete activity.
+
+### 6.25 ChoiceGrid — radio "pills" (v3, DR-06)
+For short single-choice sets in forms (Hůl `Levá / Pravá / Nevím`, Pozice). `<fieldset>` + `<legend>` (label style 14/600). Grid 2 or 3 equal columns, gap 8. Item 44 px, radius 10, white, inset 1.5 px line, 15/600 ink; selected: primary-100 bg, primary text, inset 2 px primary + 16 px check icon before the text. Real radio inputs, arrow keys move selection. Long lists (> 6) → use a select/picker sheet instead. Differs from SegmentedControl (§6.9): Segmented = 2–3 mutually exclusive *views/modes* on a grey track; ChoiceGrid = a *form value*.
+
+### 6.26 CodeInput — six boxes (v3, DR-06)
+Grid 6 × 1fr, gap 8; box 60 px high, radius 10, white, inset 1.5 px line; digit Barlow 30/700 tabular. Current box: inset 2 px primary + focus ring; filled: ink digit; error: all boxes inset 2 px danger + message below. Implementation: **one** hidden-but-focusable `<input inputmode="numeric" autocomplete="one-time-code" maxlength="6" pattern="\d{6}">` drives the boxes (so iOS/Android SMS/e-mail autofill and paste of `123 456` / `123-456` work — strip non-digits); tapping any box focuses the input; Backspace clears the previous digit; auto-submit on the 6th digit. `aria-label="Kód z e-mailu, 6 číslic"`.
+
+### 6.27 SearchField (v3)
+Height 48, radius 12, white with inset 1.5 px line (on white sheets: `neutral-50` fill, no border); 20 px search icon `subtle` at 14 px; input 16/500 (16 px prevents iOS zoom); placeholder subtle. `type="search"`, clear button 32 px appears when non-empty (`aria-label="Vymazat"`). Debounce 150 ms. Matching is diacritics- and case-insensitive.
+
+### 6.28 FilterChips (v3)
+Row of pills, height 36, radius 18, padding 0 14, 14/600; off: white + inset 1.5 px line; on: ink bg + white text. Single-select with `aria-pressed`; first chip `Všechny`. Overflow scrolls horizontally (no wrap, 16 px end padding, scroll-snap). Used for birth years in K12.
+
+### 6.29 WeekdayBadges (v3)
+Seven 24 × 24 squares, radius 6, gap 3, 11/700: `Po Út St Čt Pá So Ne`; selected = primary bg + white, others = neutral-50 + subtle. Decorative (`aria-hidden`) — the container has `aria-label` with the selected days in words (`úterý, čtvrtek`). Used in K15/K16.
+
+### 6.30 AccessStatus (v3)
+Notice-like row inside a panel: radius 12, padding 12/14, icon 20 + title 15/700 + sub 13. `signed_in` = success-soft/success check; `invited` = warning-soft/warning clock; `no_email` = bg/muted lock. Used in A3–A3c.
+
+### 6.31 ContactActions (v3)
+For calling a person from a screen: either two equal outline lg buttons with icon (`Zavolat` / `Napsat SMS`, G6d footer) or two 44 × 44 icon buttons (primary-100 bg, primary icon) at the end of a person row (K13). Always real `<a href="tel:+420…">` / `sms:` links (number without spaces), `aria-label` includes the person's name. Hidden entirely when there is no phone — never a disabled call button.
+
+### 6.32 E-mail layout (v3)
+Defined in `EMAILS.md` — system fonts only, 520 px card, works with images blocked.
 
 ## 7. Formatting helpers (implement once in `lib/format.ts`)
 

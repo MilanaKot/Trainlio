@@ -1,6 +1,6 @@
 # Trainlio — Admin (coach management & organization) UI spec
 
-Audience: Claude Code. Read `../shared/DESIGN_SYSTEM.md` first. Visual reference: `prototype.html` (A0–A5). Admin is a coach account with `isAdmin = true`; admin UI lives inside the coach app under the `Více` tab — no separate back office.
+Audience: Claude Code. Read `../shared/DESIGN_SYSTEM.md` first. Visual reference: `prototype.html` (A0–A6, incl. A3b–A3e). Admin is a coach account with `isAdmin = true`; admin UI lives inside the coach app under the `Více` tab — no separate back office.
 
 ## 1. Routes
 
@@ -23,10 +23,17 @@ interface Coach {
   firstName: string;          // required
   lastName: string;           // required
   active: boolean;
-  isAdmin: boolean;
-  userId: string | null;      // linked auth account (invitation handled separately)
+  isAdmin: boolean;           // = workspace_role WORKSPACE_ADMIN (v3: editable in A3)
+  userId: string | null;      // linked auth account, set on first sign-in
+  email: string | null;       // v3: sign-in e-mail; null → "Bez přístupu"
+  phone: string | null;       // v3: optional; shown to guardians only in G6d
+  invitedAt: string | null;   // v3: last invitation e-mail sent
+  firstSignInAt: string | null; lastSeenAt: string | null; // v3
   assignedSessionsCount: number; // past + future, for A3 helper text
 }
+// derived access state (v3, DR-07)
+type CoachAccess = "no_email" | "invited" | "signed_in";
+// no_email: email == null · invited: email != null && firstSignInAt == null · signed_in: firstSignInAt != null
 ```
 
 ```ts
@@ -51,6 +58,7 @@ Rules (brief §34):
 
 ### A0 · More (`/coach/more`)
 H1 `Více`. Profile card: avatar 56, name 17/700, meta `Trenér · Administrátor` (or `Trenér`).
+Caption `PLÁNOVÁNÍ` (all coaches, v3) → row with calendar icon `Série tréninků` + value `{running series}` + chevron → coach K15.
 Caption `SPRÁVA` (admins only) → row `Organizace` with OrgLogo 28 as icon + value `Logo a název` + chevron → A4; then row: icon + `Trenéři` + value `{count}` + chevron → A1.
 Caption `ÚČET` → row `Osobní údaje a e-mail` (→ same account screens as guardian G13/G16/G14 patterns).
 Button (white, danger text) `Odhlásit se z aplikace` + confirm dialog.
@@ -58,23 +66,43 @@ Bottom nav: `Tréninky`, `Sportovci`, `Více` (active).
 
 ### A1 · Coach list (`/coach/more/coaches`)
 Back `‹ Více`. Header row: H1 `Trenéři` + primary md button `+ Přidat trenéra` (→ A2).
-Caption `AKTIVNÍ · {n}` → list rows (64 px, avatar 40, name 16/600, optional meta `Administrátor`, chevron) → A3.
+Caption `AKTIVNÍ · {n}` → list rows (64 px, avatar 40, name 16/600, meta, optional badge, chevron) → A3. Meta/badge by access state (v3):
+- `signed_in` → meta `Administrátor` (if admin) or none, no badge;
+- `invited` → meta `Ještě se nepřihlásil` + warning badge `Pozván`;
+- `no_email` → meta `Chybí e-mail` + neutral badge `Bez přístupu`.
+Badges `white-space: nowrap`, never wrap.
 Caption `NEAKTIVNÍ · {n}` (only if > 0) → muted rows: neutral avatar, muted name, meta `Nezobrazuje se při výběru trenérů`, neutral badge `Neaktivní`, chevron.
 Sort: last name, then first name (Czech collation `Intl.Collator("cs")`).
 Empty: EmptyState `Zatím není přidaný žádný trenér.` + `Přidat trenéra`.
 
 ### A2 · Add coach (`/new`)
-Top `Zrušit`; title `Nový trenér`. Panel: `Jméno *`, `Příjmení *` (required marker in danger; `required`, `aria-required`). Error example: empty last name → `Vyplňte příjmení.` (and `Vyplňte jméno.`). Helper below panel: `Trenér bude hned k dispozici při výběru hlavního trenéra a asistentů. Pozvánku do aplikace e-mailem lze poslat později.`
-Footer primary lg `Přidat trenéra` → create (active = true) → A1 + toast `Trenér přidán`.
+Top `Zrušit`; title `Nový trenér`. Panel: `Jméno *`, `Příjmení *` (required marker in danger; `required`, `aria-required`). Errors: `Vyplňte příjmení.` / `Vyplňte jméno.`
+**v3:** caption `KONTAKT` → panel: `E-mail` (label suffix `Pro přihlášení`, type email, helper `Pošleme sem pozvánku. Bez e-mailu se trenér do aplikace nepřihlásí.`) and `Telefon` (suffix `Nepovinné`, type tel, helper `Rodiče ho uvidí, když trenér jejich dítě odhlásí z tréninku.`). E-mail is optional but recommended; invalid → `Zadejte platný e-mail.`; already used by another coach/guardian → `Tento e-mail už v aplikaci používá někdo jiný.`
+Helper below: `Trenér bude hned k dispozici při výběru hlavního trenéra a asistentů, i když se ještě nepřihlásil.`
+Footer primary lg: `Přidat a poslat pozvánku` when e-mail is filled, otherwise `Přidat trenéra` → create (active = true; send invitation A6 if e-mail) → A1 + toast `Trenér přidán` / `Trenér přidán, pozvánka odeslána`.
 Validation (Zod): trimmed 1–50 chars each; warn (not block) on exact duplicate name: inline notice `Trenér se stejným jménem už existuje.`
 
 ### A3 · Edit coach (`/[coachId]`)
 Top `Zrušit`; title `Upravit trenéra`. Panel: `Jméno *`, `Příjmení *`.
+**v3 — caption `PŘÍSTUP DO APLIKACE`** → panel: status Notice + `E-mail` field (+ actions). Three states:
+- **A3 · `signed_in`:** success-soft status, check icon, `Přihlášen` + `Naposledy v aplikaci {d. m.} v {HH:MM}` (own card: `To jste vy`). Changing the e-mail here changes the sign-in address after save (next sign-in uses the new one).
+- **A3b · `invited`:** warning-soft status, clock icon, `Čeká na první přihlášení` + `Pozvánka odeslána {d. m.} v {HH:MM}`. Outline md button `Poslat pozvánku znovu` (mail icon) + helper `Znovu lze poslat nejdřív za hodinu. Změníte-li e-mail, pošle se nová pozvánka po uložení.` Rate limit 1/h per coach (button disabled with that helper while limited). Toast `Pozvánka odeslána`.
+- **A3c · `no_email`:** neutral status, lock icon, `Bez přístupu` + `Bez e-mailu se trenér nemůže přihlásit. U tréninků ho přesto můžete uvádět.` E-mail field empty (focused in the design); `Poslat pozvánku` disabled until a valid e-mail is typed; saving with an e-mail sends the invitation.
+Invitations **do not expire** — sign-in is always a 6-digit code to the e-mail (no passwords), so the invitation is only a convenience link; an invited coach can sign in whenever. Unaccepted invitations simply stay `Pozván`.
+**v3 — caption `ROLE`** (DR-08) → panel: Switch row `Administrátor` / sub `Spravuje trenéry, pozvánky a organizaci`. Rules (enforced server-side, the UI explains them):
+- Any admin can grant/revoke admin to another coach (also to an `invited` coach — it applies after first sign-in).
+- **The last admin cannot lose the role** — on own card when you are the only admin: switch on + disabled, Notice `Jste jediný administrátor. Práva si můžete odebrat, až je udělíte jinému trenérovi.` (A3d). Server returns `LAST_ADMIN` otherwise.
+- Revoking **your own** role when another admin exists → BottomSheet confirm (A3e): title `Odebrat si práva administrátora?`, text `Přijdete o správu trenérů a organizace. Tréninky dál uvidíte a upravíte. Práva vám může vrátit jen {other admin}.`, primary `Odebrat práva` / outline `Ponechat`. After save → redirect to A0 (Správa section disappears).
+- A deactivated coach cannot be admin (deactivation also revokes the role; last active admin cannot be deactivated).
 Caption `STAV` → panel: switch row `Aktivní trenér` / sub `Lze ho vybrat pro nové tréninky` (switch 52 × 32, success when on; real `<input type="checkbox" role="switch">`). Info box (bg): `Po deaktivaci zůstane {name} u všech minulých i naplánovaných tréninků (nyní {count}). Trenéra nelze smazat, jen deaktivovat.`
 Footer `Uložit` → toast `Uloženo` → A1.
 Renaming updates the name everywhere (sessions reference the stable ID).
 Deactivating a coach who is main coach of future sessions: allowed; show extra warning Notice before save: `{name} je hlavním trenérem {n} naplánovaných tréninků. Zůstane u nich uveden.` (open question: should it block or prompt reassignment?).
-An admin cannot deactivate themselves or remove the last active admin (disable switch + helper `Nemůžete deaktivovat sám sebe.`).
+An admin cannot deactivate themselves or remove the last active admin (disable switch + helper `Sám sebe deaktivovat nemůžete.`, A3d).
+
+### A6 · Invitation e-mail (DR-07)
+Sent on A2 save (with e-mail), on A3b `Poslat pozvánku znovu`, and when an e-mail is added/changed on a not-yet-signed-in coach. Layout = the shared e-mail template (`../shared/EMAILS.md` §1). Subject `Pozvánka do aplikace · {org name}`. Body: H1 `Pozvánka do aplikace`; `Dobrý den, {admin} vás přidal jako trenéra do aplikace pro rezervace tréninků {org}. Uvidíte v ní své tréninky, kdo je přihlášený, a kontakty na rodiče.`; detail block `Jméno` / `Přihlašovací e-mail`; button `Přihlásit se do aplikace` → `/prihlaseni?email={email}` (prefilled; sends the code immediately); text `Po kliknutí vám pošleme jednorázový kód na tento e-mail. Heslo nepotřebujete. Přihlásit se můžete kdykoli — pozvánka nevyprší.`; fallback URL line; footer `Pozvánku jste nečekali? Tento e-mail ignorujte, bez přihlášení se nic nestane.`
+After the first sign-in the coach sees K0 (coach spec).
 
 ### A4 · Organization — logo uploaded (`/coach/more/organization`)
 Back `‹ Více`; H1 `Organizace`.
@@ -114,10 +142,15 @@ File rules (validate client-side **and** in the server action with Zod):
 8. `Odebrat logo` + confirm → monogram `HŠ` everywhere; old Storage object deleted.
 9. 3 MB file / GIF / 100 × 100 PNG → correct error message, nothing uploaded.
 10. Change name to `Sportovní klub Dobříš` → monogram becomes `SK` live and after save.
+11. A2 with e-mail → invitation e-mail sent; A1 shows `Pozván`; coach signs in with the code → K0 → A1 no badge, A3 `Přihlášen`.
+12. A2 without e-mail → A1 `Bez přístupu`; adding an e-mail in A3c and saving sends the invitation.
+13. `Poslat pozvánku znovu` twice within an hour → second attempt disabled/refused.
+14. Only admin opens own A3 → admin switch disabled with the explanation; API call to revoke returns `LAST_ADMIN`.
+15. With two admins, revoking own role → confirmation sheet → after save the `Správa` section is gone from A0.
 
 ## 5. Open questions
-- E-mail invitation flow for coaches (brief: handled separately).
-- Behaviour when deactivating a main coach of future sessions (warn vs. force reassignment).
-- Can admins grant/revoke admin rights in MVP? (not designed; assume DB-only).
-- Does the coach app header show the org logo too? (not designed; assume no in MVP).
+- ~~E-mail invitation flow~~ → designed v3 (A2, A3–A3c, A6, coach K0).
+- Behaviour when deactivating a main coach of future sessions (warn vs. force reassignment) — still open.
+- ~~Admin rights in the UI~~ → designed v3 (A3 `ROLE`, A3d, A3e).
+- ~~Org logo in the coach header~~ → yes (confirmed v3).
 - E-mail templates: logo in the header when present, otherwise the organization name as text (no monogram in e-mails).

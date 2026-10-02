@@ -1,6 +1,6 @@
 # Trainlio — Coach UI spec
 
-Audience: Claude Code implementing the coach app. Read `../shared/DESIGN_SYSTEM.md` first. Visual reference: `prototype.html` (screen IDs K1–K11 + A0). Admin-only coach management is in `../admin/SPEC.md`. UI copy is Czech, verbatim.
+Audience: Claude Code implementing the coach app. Read `../shared/DESIGN_SYSTEM.md` first. Visual reference: `prototype.html` (screen IDs K0–K16 + A0). Admin-only coach management is in `../admin/SPEC.md`. UI copy is Czech, verbatim.
 
 ## 0. Scope & principles
 
@@ -27,7 +27,12 @@ Audience: Claude Code implementing the coach app. Read `../shared/DESIGN_SYSTEM.
 | K4 Duplicate — single | `/coach/trainings/new?from=[sessionId]` |
 | K4b Duplicate — period | `/coach/trainings/new?from=[sessionId]&mode=period` |
 | K11 Create series | `/coach/trainings/new?mode=series` |
-| Athletes tab | `/coach/athletes` (list/search of athletes; not designed in this round — reuse CoachTrainingRow/Roster row patterns) |
+| K14 Past trainings | `/coach/trainings?tab=past` (implemented as `/trener?tab=minule`) |
+| K12 Athletes tab | `/coach/athletes` |
+| K13 Athlete (coach view) | `/coach/athletes/[athleteId]` |
+| K15 / K15b Series list / empty | `/coach/series` |
+| K16 Trainings of one series | `/coach/series/[seriesId]` (filtered list) |
+| K0 First sign-in welcome | `/coach/welcome` (shown once, then `/coach/trainings`) |
 | A0 More | `/coach/more` (see admin spec for Trenéři) |
 
 Bottom nav (3): `Tréninky`, `Sportovci`, `Více`.
@@ -49,7 +54,16 @@ interface RosterEntry {
   createdBy: { kind: "guardian"; firstName: string; lastName: string } | { kind: "coach"; firstName: string; lastName: string };
   guardian: { firstName: string; lastName: string; phone: string | null }; // coaches may see the phone (decided)
 }
-interface Coach { id: string; firstName: string; lastName: string; active: boolean; isAdmin: boolean }
+interface Coach { id: string; firstName: string; lastName: string; active: boolean; isAdmin: boolean;
+                 phone: string | null }   // v3: optional; shown to guardians only in G6d (removed-by-coach footer)
+interface CoachAthleteRow {             // K12
+  id: string; firstName: string; lastName: string; birthYear: number;
+  position: string | null; active: boolean; upcomingBookings: number;
+}
+interface Series { id: string; weekdays: (0|1|2|3|4|5|6)[]; startTime: string; endTime: string;
+                   from: string; to: string; place: string; hall: "MH" | "VH"; room: string | null;
+                   yearFrom: number | null; yearTo: number | null;
+                   total: number; remaining: number }   // remaining = occurrences with start > now
 ```
 
 Security: `internalNote` must be excluded from any query/RLS policy reachable by guardians (separate column with coach-only RLS or separate table).
@@ -66,8 +80,50 @@ Day groups (heading `text-date` primary; today + TodayChip `Dnes`). Rows = Coach
 - left: time (Barlow 26/30), meta `MH · Šatna 4 · 2017–2018` (`Všichni` when no year limit), optional status line (13/600): `Nad kapacitu` (muted) · lock + `Přihlašování uzavřeno` (muted) · `Koncept` badge for drafts;
 - right: count (Barlow 22/700) + mini meter (6 × 12 segments) — colors per CapacityMeter rules (full = cobalt, over = neutral `+N` pill);
 - cancelled: muted card, struck time, danger badge `Zrušeno` instead of meter.
-Default range: today + future (past accessible via a `Minulé` link at the bottom — reuse segmented pattern if needed).
-FAB `+ Vytvořit` → K10. Empty: `Zatím nemáte žádné tréninky.` + `Vytvořit trénink`.
+Below the header a **SegmentedControl** (`role="tablist"`) `Nadcházející` / `Minulé` (v3, DR-02) — same component as guardian G4/G5. `Minulé` → K14.
+FAB `+ Vytvořit` → K10 (only on `Nadcházející`). Empty: `Zatím nemáte žádné tréninky.` + `Vytvořit trénink`.
+
+### K14 · Past trainings (`?tab=past`) — v3, DR-02
+Same header + segmented control (`Minulé` active). Day groups **descending** (newest first), same heading style. No FAB.
+Row = CoachTrainingRow variant `past`: left time + meta as K1; right **count only** — Barlow 22/700 number + 12 px muted label below, Czech plural: `1 přihlášený`, `2–4 přihlášení`, `5+ přihlášených`, `0 přihlášených`. **No meter** (free places no longer matter; there is no attendance tracking — never imply who came).
+Cancelled session: as in K1 (muted, struck time, danger `Zrušeno`) → K6b.
+Row → K2 (read-only roster; all edit actions hidden for past sessions).
+Paging: load 20 days at a time, infinite scroll; empty `Zatím žádné odehrané tréninky.`
+
+### K12 · Athletes (`/coach/athletes`) — v3, DR-01
+H1 `Sportovci` + meta right `{n} aktivních`.
+SearchField (DS §6.27) `Hledat jméno nebo rodiče` — matches athlete first/last name and guardian names, diacritics-insensitive (`normalize("NFD")`). Always visible.
+FilterChips (DS §6.28) by birth year: `Všechny` + one chip per year present (single select). Horizontal scroll when they overflow.
+List grouped by **ročník**, ascending (`Ročník 2017`, `Ročník 2018` …), heading `text-date` primary + right `{n} sportovců`; inside a group sorted by last name (`Intl.Collator("cs")`).
+Row (64 px, white list panel): Avatar 40 + name 16/600 + meta 13 muted `{position or "Pozice nevyplněna"} · {upcomingBookings} nadcházející` (`bez přihlášek` when 0) + chevron → K13.
+Deactivated athletes: separate group `Neaktivní` at the bottom (heading muted), muted avatar/name, meta `Ročník {y} · deaktivoval rodič`.
+No phone on the row (it is on the roster and in K13). Empty (no athletes at all): `Zatím tu nejsou žádní sportovci. Přidávají je rodiče ve své aplikaci.`
+**Fixed:** coaches cannot create athletes or guardian accounts — no add button.
+
+### K13 · Athlete — coach view (`/coach/athletes/[id]`) — v3, DR-01
+Back `‹ Sportovci`. Header: Avatar 72 (photo if present) + H1 name (Barlow 36/40) + meta `Ročník {y} · narozen {d. m. yyyy}`.
+Caption `LEDNÍ HOKEJ` (sport name) → DetailList: `Pozice`, `Hůl`, `Číslo dresu`, `Tým / kategorie` (`—` when empty).
+Caption `RODIČE` → panel, one row per active guardian: name 15/700 + meta `{relation} · {phone}`; when phone present two 44 × 44 icon buttons (primary-100 bg, primary icon) `tel:` and `sms:` with `aria-label="Zavolat {name}"` / `Napsat SMS {name}`; no phone → meta `… · telefon nevyplněn`, no buttons.
+**Internal note** panel (same style as K2: `#FBF7EC` + inset `#E9D9A8`, caption with lock `INTERNÍ POZNÁMKA · JEN TRENÉŘI`) + text button `Upravit poznámku` → inline textarea (200 chars, counter). **Fixed:** `internal_notes` never reaches guardians (D-13).
+Caption `NADCHÁZEJÍCÍ TRÉNINKY · {n}` → list rows (time Barlow 20 + `Ne 4. 10. · MH` + chevron → K2). Text link `Minulé tréninky ({n})` → same list for the past.
+**Read-only** otherwise (decided): no deactivate, no profile edit — the parent does that in their app.
+
+### K15 · Series list (`/coach/series`) — v3, DR-03
+Entry: A0 `Více` → section `PLÁNOVÁNÍ` → row `Série tréninků` (value = number of running series). Visible to all coaches.
+Back `‹ Více`; header H1 `Série` + primary md button `+ Nová série` (→ K11, `white-space: nowrap`).
+Helper text (muted): `Tréninky ze série jsou po vytvoření samostatné. Upravit je můžete jednotlivě.`
+Captions `PROBÍHAJÍCÍ · {n}` (to ≥ today) and `UKONČENÉ · {n}` (muted cards).
+Series card (whole card → K16): WeekdayBadges (DS §6.29) · time Barlow 26/30 · meta `MH · Šatna 4 · 2017–2018` · meta 13 `{from} – {to} · {total} tréninků, zbývá {remaining}` (ended: `{total} tréninků`).
+### K15b · Series — empty
+EmptyState: calendar icon tile, `Zatím nemáte žádnou sérii.`, text `Série vytvoří tréninky na celé období najednou — například každé úterý a čtvrtek do Vánoc.`, primary `+ Nová série`.
+
+### K16 · Trainings of one series (`/coach/series/[id]`) — v3, DR-03
+Back `‹ Série tréninků`. Header: WeekdayBadges, H1 time (Barlow 36/40), line 15/600 `Úterý a čtvrtek · {from} – {to}`, meta place/years.
+SegmentedControl `Nadcházející · {n}` / `Minulé · {n}`. Rows = CoachTrainingRow (count `9 / 12`, chevron → K2). A training edited individually after creation shows status line `Upraveno mimo sérii` (muted 13/600).
+Footer note (muted 13): `Celou sérii nelze upravit ani zrušit najednou. Každý trénink otevřete a upravte zvlášť.` **Fixed:** no series editing.
+
+### K0 · First sign-in (`/coach/welcome`) — v3, DR-07
+Shown once after the coach's first successful OTP sign-in (`coach.firstSignInAt` was null). OrgLogo 72 · H1 `Vítejte v týmu` · text `Jste přihlášen jako trenér v organizaci {org}.` · panel: Avatar 44 + name + meta `Trenér · {n} naplánované tréninky`; helper `Nesedí jméno? Napište administrátorovi {admin name}.`; field `Váš telefon` (Nepovinné, helper `Uvidí ho rodiče, jejichž dítě z tréninku odhlásíte.`). Footer primary lg `Pokračovat na tréninky` → saves phone if filled → K1.
 
 ### K10 · Create sheet
 BottomSheet title `Vytvořit`; two option rows (72 px, icon tile 44 primary-100, title 17/700, sub 14 muted, chevron):
@@ -167,8 +223,10 @@ Title `Série tréninků`. Panels: `OPAKOVÁNÍ` (weekday toggles, Od/Do, Začá
 | Eligibility change excluding booked athletes | affected only | (open: badge?) |
 | Close / reopen registration | no | card state |
 | Cancel training | all with active bookings | cancelled styling |
-| Coach adds athlete manually | that athlete's guardian (optional, open) | booking appears |
-| Coach removes athlete from session | that athlete's guardian (with optional message) | orange `Odhlášeno trenérem`, may re-book if a place is free |
+| Coach adds athlete manually | **that athlete's guardians — e-mail E08 `BOOKING_ADDED_BY_COACH` (v3, DR-12)** | booking appears |
+| Coach removes athlete from session | that athlete's guardians — E07 (with optional message) | orange `Odhlášeno trenérem`; **only the coach can re-book (D-06)** |
+
+E-mail templates for every row: `../shared/EMAILS.md`.
 
 The UI must always state the notification consequence **before** the coach confirms (footer notice in K3, K3c notice, K6 box, K9 line).
 
@@ -182,11 +240,17 @@ The UI must always state the notification consequence **before** the coach confi
 7. Duplicate → date empty & focused; create disabled until date chosen.
 8. Series Sun 4.10.–29.11. generates 9 dates; unchecking one → button `Vytvořit 8 tréninků`.
 9. Internal note never appears in guardian API responses (integration test on RLS).
+10. K1 ↔ K14 switch via the segmented control; K14 shows counts with correct plurals and no meter.
+11. K12 search `bures` finds `Tomáš Bureš`; year chip `2018` shows only that group; inactive athletes at the bottom.
+12. K13 shows internal note to coaches; the same athlete fetched with a guardian session has no internal note field.
+13. K15 lists running and ended series; K16 shows only that series' trainings; there is no edit-series action anywhere.
+14. Coach adds an athlete in K7 → guardians receive E08 with the cancellation deadline.
+15. First sign-in of an invited coach → K0 once; second sign-in → K1 directly.
 
 ## 6. Assumptions & open questions
-- Reopening closed registration is allowed; guardians can still self-cancel while closed.
+- Reopening closed registration is allowed (`Otevřít přihlašování`) — confirmed v3.
 - Cancelling is final (brief) — confirmed.
-- Coach-added bookings: notify guardian? (not in brief).
-- Allow adding out-of-range athletes manually?
-- Past trainings list for coaches: minimal link/tab only.
-- Athletes tab (coach) content not designed in this round.
+- ~~Coach-added bookings: notify guardian?~~ → **yes**, E08 (v3).
+- ~~Allow adding out-of-range athletes manually?~~ → **no** (`NOT_ELIGIBLE`); capacity may be exceeded deliberately (K7b), birth years may not — confirmed v3.
+- ~~Past trainings list~~ → K14 (v3). ~~Athletes tab~~ → K12/K13 (v3). ~~Series list~~ → K15/K16 (v3).
+- The org logo is also shown in the coach header (built; confirmed v3, DR-14.1) — same OrgLogo 36 row as guardian G1b.

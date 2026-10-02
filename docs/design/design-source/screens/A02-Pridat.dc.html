@@ -19,10 +19,12 @@ body{margin:0;background:#F3F5F9;font-family:Manrope,"Segoe UI",system-ui,sans-s
 .inp{height:52px;border-radius:10px;border:0;box-shadow:inset 0 0 0 1.5px var(--line);background:#fff;padding:0 14px;font:500 16px Manrope,sans-serif;color:var(--ink);box-sizing:border-box;width:100%}
 .inp.f{box-shadow:inset 0 0 0 2px var(--accent),0 0 0 4px var(--accentsoft)}
 .inp.err{box-shadow:inset 0 0 0 2px var(--danger)}
+.help{font-size:13px;line-height:18px;color:var(--muted)}
+.lbl span{font-weight:400;font-size:13px;color:var(--muted);float:right}
 .btn{height:52px;width:100%;border-radius:12px;border:0;font:700 16px/1 Manrope,system-ui,sans-serif;background:var(--accent);color:#fff}
 </style>
 </helmet>
-<div class="s" style="width: 390px; height: 844px; background: var(--bg); display: flex; flex-direction: column; overflow: hidden">
+<div class="s" style="width: 390px; height: 960px; background: var(--bg); display: flex; flex-direction: column; overflow: hidden">
 <div style="padding: 52px 16px 0">
 <a href="A01-Treneri.dc.html" style="height: 44px; display: inline-flex; align-items: center; color: var(--accent); text-decoration: none; font-size: 15px; font-weight: 700">Zrušit</a>
 </div>
@@ -31,19 +33,25 @@ body{margin:0;background:#F3F5F9;font-family:Manrope,"Segoe UI",system-ui,sans-s
 <h1 class="disp" style="margin: 0; padding: 0 4px; font-size: 36px; line-height: 40px; font-weight: 700">Nový trenér</h1>
 
 <div style="background: var(--surface); border-radius: 16px; padding: 16px; display: flex; flex-direction: column; gap: 18px">
-<div class="field"><label class="lbl" for="j">Jméno <i aria-hidden="true">*</i></label><input id="j" class="inp" value="Tomáš" required=""></div>
-<div class="field"><label class="lbl" for="p">Příjmení <i aria-hidden="true">*</i></label><input id="p" class="inp err" value="" required="" aria-invalid="true" aria-describedby="pe"><span id="pe" style="font-size: 13px; font-weight: 600; color: var(--danger)">Vyplňte příjmení.</span></div>
+<div class="field"><label class="lbl" for="j">Jméno <i aria-hidden="true">*</i></label><input id="j" class="inp" value="Tomáš" required></div>
+<div class="field"><label class="lbl" for="p">Příjmení <i aria-hidden="true">*</i></label><input id="p" class="inp" value="Říha" required></div>
 </div>
 
-<p style="margin: 0; padding: 0 4px; font-size: 14px; line-height: 20px; color: var(--muted)">Trenér bude hned k dispozici při výběru hlavního trenéra a asistentů. Pozvánku do aplikace e-mailem lze poslat později.</p>
+<h2 style="margin: 4px 0 0; padding: 0 4px; font-size: 12px; line-height: 16px; font-weight: 700; letter-spacing: .8px; text-transform: uppercase; color: var(--muted)">Kontakt</h2>
+<div style="background: var(--surface); border-radius: 16px; padding: 16px; display: flex; flex-direction: column; gap: 18px">
+<div class="field"><label class="lbl" for="e">E-mail <span>Pro přihlášení</span></label><input id="e" class="inp f" type="email" value="tomas.riha@email.cz" autocomplete="off"><span class="help">Pošleme sem pozvánku. Bez e-mailu se trenér do aplikace nepřihlásí.</span></div>
+<div class="field"><label class="lbl" for="t">Telefon <span>Nepovinné</span></label><input id="t" class="inp" type="tel" placeholder="+420 123 456 789"><span class="help">Rodiče ho uvidí, když trenér jejich dítě odhlásí z tréninku.</span></div>
+</div>
+
+<p style="margin: 0; padding: 0 4px; font-size: 14px; line-height: 20px; color: var(--muted)">Trenér bude hned k dispozici při výběru hlavního trenéra a asistentů, i když se ještě nepřihlásil.</p>
 </main>
 
 <footer style="padding: 12px 16px 28px; background: var(--surface); box-shadow: 0 -1px 0 var(--line)">
-<button class="btn">Přidat trenéra</button>
+<button class="btn">Přidat a poslat pozvánku</button>
 </footer>
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":960}}'>
 class Component extends DCLogic {
 renderVals() {
 return {};

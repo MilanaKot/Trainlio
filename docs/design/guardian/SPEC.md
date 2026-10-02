@@ -159,9 +159,9 @@ Tap card → G6 (marks change seen).
 - Muted card (`#F8F9FB` + 1 px line border), avatar/name/time/date muted, **no strike-through** (the session still takes place).
 - Badge **warning (orange)** `Odhlášeno trenérem` + chevron.
 - Meta `Odhlásil {coach name} · {d. m. HH:MM}`.
-- Footer: hint `Místo je volné, můžete přihlásit znovu.` + **secondary** 124 px `Přihlásit` → opens G2 with this athlete preselected. If the session is full/closed/past deadline: hint `Znovu přihlásit nelze — trénink je obsazený.` / `…přihlašování je uzavřené.` and disabled `Přihlásit`.
-- After re-booking, the removed booking disappears from Nadcházející (history keeps it; show in Minulé only if the athlete ends up not attending).
-- Guardian receives an e-mail: subject `Odhlášení z tréninku {Ne 4. 10.}`, body `Trenér {coach} odhlásil sportovce {athlete} z tréninku {Ne 4. 10. · 09:00–10:00, Příbram · MH}.` + coach message if present + link to G6d.
+- Footer (**v3, D-06 — the guardian cannot re-book**): no button. Info icon + muted text `Znovu přihlásit může jen trenér`. The card still opens G6d. Never render a `Přihlásit` button on this card.
+- The card moves to Minulé when the session **ends** (`end_at`), like every other booking (decision 31).
+- Guardian receives the e-mail `BOOKING_REMOVED_BY_COACH` (see `../shared/EMAILS.md`, E07).
 Empty: `Zatím nemáte žádný nadcházející trénink.` + button `Najít trénink` (→ G1).
 
 ### G5 · My trainings — past (`?tab=past`)
@@ -181,7 +181,7 @@ Sticky footer: deadline hint + outline lg `Odhlásit` — or, when locked (G6c),
 On mount: `update bookings set change_seen_at = now()` when a change is unseen (badge disappears in G4 afterwards).
 Cancelled-by-coach booking: header strike-through + danger Notice `Trénink byl zrušen trenérem.`; no footer.
 
-**G6d · Removed by coach:** header muted (no strike) + orange badge `Odhlášeno trenérem` next to the name. Warning Notice (person-minus icon): title `Trenér odhlásil sportovce z tréninku`, text `Trénink se koná, ale {athlete} na něm není přihlášen.`, meta `Odhlásil {coach} · {d. m.} v {HH:MM}`. If `coachMessage`: section caption `ZPRÁVA OD TRENÉRA` + text. DetailList (Místo, Šatna, Hlavní trenér, Obsazenost — no Asistenti row needed). Sticky footer: helper `Místo je volné, sportovce můžete přihlásit znovu.` + primary lg `Přihlásit znovu` (→ G2 with athlete preselected); when not possible → disabled + reason (as G4b). No "Odhlásit" action.
+**G6d · Removed by coach:** header muted (no strike) + orange badge `Odhlášeno trenérem` next to the name. Warning Notice (person-minus icon): title `Trenér odhlásil sportovce z tréninku`, text `Trénink se koná, ale {athlete} na něm není přihlášen.`, meta `Odhlásil {coach} · {d. m.} v {HH:MM}`. If `coachMessage`: section caption `ZPRÁVA OD TRENÉRA` + text. DetailList (Místo, Šatna, Hlavní trenér, Obsazenost — no Asistenti row needed). Sticky footer (**v3, D-06**) — contact block instead of an action: Avatar 40 (coach initials) + title 15/700 `Znovu přihlásit může jen trenér` + meta `{coach name} · {coach phone}`; below, two equal outline lg buttons (grid 1fr 1fr, gap 8): `Zavolat` (phone icon, `<a href="tel:…">`) and `Napsat SMS` (`<a href="sms:…">`). Coach = the one who removed the athlete (fallback: main coach). **Coach without phone** (`Coach.phone` is optional, admin A2/A3 or coach K0): show only the title + coach name, no buttons. No `Odhlásit` / `Přihlásit` action.
 Screen may exceed 844 px → page scrolls; footer stays fixed.
 
 ### G7 · Athletes (`/athletes`)
@@ -199,6 +199,7 @@ Text button `+ Přidat sport` (low emphasis; multi-sport must not be over-emphas
 ### G9 · Edit athlete (`/athletes/[id]/edit`) · G10 New athlete (`/athletes/new`)
 Top: text link `Zrušit`. Title `Upravit sportovce` / `Nový sportovec`.
 Photo row: avatar 72 (initials or empty silhouette for new) + text button `Přidat fotografii` (`Změnit fotografii` when set) + `Nepovinné`. Upload: image/*, client resize to 512 px, Supabase Storage; removal option `Odebrat fotografii`.
+**HEIC (v3, DR-13 — decided: accept and convert).** Accept `image/jpeg, image/png, image/webp, image/heic, image/heif` (+ `.heic/.heif` by extension, since some browsers report an empty MIME type). A HEIC file is converted in the browser to JPEG (lazy-load the converter, e.g. `heic2any`, only when needed) before the usual resize/upload. While it runs: the avatar shows a spinner overlay and the text button reads `Převádím fotku…` (disabled). Failure → field error `Fotku se nepodařilo převést. Zkuste ji nahrát jako JPG.` Limit stays 5 MB **before** conversion.
 Panel: `Jméno`, `Příjmení`, `Datum narození` (date input, display `d. m. rrrr`, placeholder `dd. mm. rrrr`, calendar icon).
 Caption `LEDNÍ HOKEJ`. Panel:
 - `Klub` (Nepovinné, placeholder `Např. název klubu`)
@@ -228,6 +229,7 @@ Radio list rows 60 px: `Čeština` (selected), `English` (sub `Angličtina`, `la
 ---
 
 ## 5. Notifications the guardian receives (for copy consistency)
+**v3:** all e-mails, subjects and copy are defined in `../shared/EMAILS.md` (E01–E08). The text below is kept for context; EMAILS.md wins.
 E-mail (not designed here): booking confirmation (optional), significant session change, session cancelled by coach, eligibility change affecting their athlete. In-app, changes show via `Změněno` badge + G6 notice; cancellations via cancelled card styling.
 
 ## 6. Acceptance tests (Playwright, mobile viewport 390×844)
@@ -238,7 +240,7 @@ E-mail (not designed here): booking confirmation (optional), significant session
 5. Coach changes time → G4 shows `Změněno`; after opening G6 and returning, badge gone; G6 notice still shows old/new time.
 6. Coach cancels session → card in G4/G5 struck through with `Zrušeno trenérem`; self-cancelled booking shows `Odhlášeno` without strike-through.
 7. Full session → `Obsazeno` disabled button, cobalt meter, no duplicate badge.
-7b. Coach removes a child → e-mail sent; G4 card shows orange `Odhlášeno trenérem`, no strike-through; `Přihlásit` re-opens G2 with that child preselected; after re-booking the card returns to the normal state.
+7b. Coach removes a child → e-mail E07 sent; G4 card shows orange `Odhlášeno trenérem`, no strike-through, **no button**, text `Znovu přihlásit může jen trenér`; G6d shows the coach contact with working `tel:` / `sms:` links; booking the same child again from G1 is refused (`REMOVED_BY_COACH`).
 8. All card buttons measure 124 × 44.
 9. Axe: no serious violations on G1, G2, G4, G6, G9.
 10. Org with logo → logo on G11 and G1 header; org without logo → monogram `HŠ` in the same size/position, no broken image.
@@ -247,5 +249,5 @@ E-mail (not designed here): booking confirmation (optional), significant session
 - OTP length 6, resend after 60 s.
 - Cancelled-by-coach upcoming sessions stay in "Nadcházející" until start.
 - `Hůl` option labels (`Levá/Pravá` vs brief `Levé/Pravé`).
-- Photo storage limits (5 MB, JPEG/PNG/HEIC → convert to JPEG/WebP).
+- ~~Photo storage limits~~ — decided in v3: 5 MB; JPG, PNG, WebP, HEIC (HEIC converted client-side).
 - Language screen hidden until a second locale ships.

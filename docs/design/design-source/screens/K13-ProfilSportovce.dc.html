@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<title>Sportovec — pohled trenéra</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@500;600;700&amp;family=Manrope:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0;background:#F3F5F9;font-family:Manrope,"Segoe UI",system-ui,sans-serif;color:#0E1726}
+.s{--bg:#F3F5F9;--surface:#FFFFFF;--ink:#0E1726;--muted:#55607A;--subtle:#8791A6;--line:#DFE4EE;--n50:#ECEFF5;--accent:#2B55E0;--accentsoft:#E5EBFD;--disp:"Barlow Semi Condensed","Arial Narrow",sans-serif}
+.disp{font-family:var(--disp)}
+.cap{margin:0;padding:0 4px;font-size:12px;line-height:16px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--muted)}
+.meta{font-size:14px;line-height:20px;color:var(--muted)}
+.av{width:40px;height:40px;border-radius:50%;background:var(--accentsoft);color:var(--accent);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;flex-shrink:0}
+.list{background:var(--surface);border-radius:16px;padding:0 12px 0 16px;display:flex;flex-direction:column}
+.item{display:flex;align-items:center;gap:12px;min-height:64px;color:inherit;text-decoration:none;box-shadow:0 1px 0 var(--line)}
+.item:last-child{box-shadow:none}
+.item .l{display:flex;flex-direction:column;flex-grow:1;min-width:0}
+.item b{font-size:16px;line-height:22px;font-weight:600}
+.item .m{font-size:13px;line-height:18px;color:var(--muted)}
+.item.off .av{background:var(--line);color:var(--muted)}
+.item.off b{color:var(--muted)}
+.gh{display:flex;align-items:baseline;justify-content:space-between;padding:0 4px}
+.gh h2{margin:0;font-size:17px;line-height:24px;font-weight:700;color:var(--accent)}
+.gh span{font-size:13px;color:var(--muted)}
+.chips{display:flex;gap:8px;overflow:hidden}
+.chip{height:36px;padding:0 14px;border-radius:18px;border:0;background:var(--surface);box-shadow:inset 0 0 0 1.5px var(--line);font:600 14px/1 Manrope,sans-serif;color:var(--ink);flex-shrink:0;display:flex;align-items:center}
+.chip.on{background:var(--ink);color:#fff;box-shadow:none}
+.panel{background:var(--surface);border-radius:16px;padding:4px 16px;margin:0}
+.row{display:grid;grid-template-columns:112px minmax(0,1fr);gap:12px;padding:12px 0;font-size:15px;line-height:22px;box-shadow:0 1px 0 var(--line)}
+.row:last-child{box-shadow:none}
+.row dt{color:var(--muted);font-size:14px}
+.row dd{margin:0;font-weight:600}
+.ib{width:44px;height:44px;border-radius:12px;border:0;background:var(--accentsoft);color:var(--accent);display:flex;align-items:center;justify-content:center;flex-shrink:0;text-decoration:none}
+.badge{display:inline-flex;align-items:center;height:22px;padding:0 7px;border-radius:6px;font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;background:var(--n50);color:var(--muted)}
+.link{border:0;background:transparent;color:var(--accent);font:700 15px/1 Manrope,sans-serif;padding:0 4px;height:44px;display:inline-flex;align-items:center;gap:6px;text-decoration:none}
+.nav{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));height:76px;padding-bottom:8px;box-sizing:border-box;background:var(--surface);box-shadow:0 -1px 0 var(--line)}
+.nav a{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font-size:11px;font-weight:600;color:var(--muted);text-decoration:none}
+.nav a.act{color:var(--accent)}
+</style>
+</helmet>
+<div class="s" style="width: 390px; height: 1080px; background: var(--bg); display: flex; flex-direction: column; overflow: hidden">
+<div style="padding: 52px 8px 0">
+<a href="K12-Sportovci.dc.html" style="height: 44px; display: inline-flex; align-items: center; gap: 4px; color: var(--muted); text-decoration: none; font-size: 15px; font-weight: 600"><span style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; color: var(--ink)"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m14.5 6-6 6 6 6"></path></svg></span>Sportovci</a>
+</div>
+<main style="flex-grow: 1; overflow: hidden; padding: 8px 16px 24px; display: flex; flex-direction: column; gap: 12px">
+<header style="display: flex; align-items: center; gap: 16px; padding: 0 4px 8px">
+<span class="av" style="width: 72px; height: 72px; font-size: 24px">TB</span>
+<div style="display: flex; flex-direction: column; gap: 2px">
+<h1 class="disp" style="margin: 0; font-size: 36px; line-height: 40px; font-weight: 700">Tomáš Bureš</h1>
+<span class="meta">Ročník 2017 · narozen 14. 3. 2017</span>
+</div>
+</header>
+
+<h2 class="cap">Lední hokej</h2>
+<dl class="panel">
+<div class="row"><dt>Pozice</dt><dd>Útočník</dd></div>
+<div class="row"><dt>Hůl</dt><dd>Pravá</dd></div>
+<div class="row"><dt>Číslo dresu</dt><dd>21</dd></div>
+<div class="row"><dt>Tým / kategorie</dt><dd style="color: var(--subtle); font-weight: 400">—</dd></div>
+</dl>
+
+<h2 class="cap" style="margin-top: 4px">Rodiče</h2>
+<div class="panel" style="padding: 0 12px 0 16px">
+<div style="display: flex; align-items: center; gap: 10px; min-height: 64px; box-shadow: 0 1px 0 var(--line)"><span style="display: flex; flex-direction: column; flex-grow: 1; min-width: 0"><b style="font-size: 15px; line-height: 22px">Petra Burešová</b><span class="meta" style="font-size: 13px">Matka · +420 731 228 914</span></span><a class="ib" href="tel:+420731228914" aria-label="Zavolat Petra Burešová"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h3.5l1.7 4.3-2.2 1.4a11 11 0 0 0 6.3 6.3l1.4-2.2L20 15.5V19a1.5 1.5 0 0 1-1.6 1.5C10.6 20 4 13.4 3.5 5.6A1.5 1.5 0 0 1 5 4z"></path></svg></a><a class="ib" href="sms:+420731228914" aria-label="Napsat SMS Petra Burešová"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5A1.5 1.5 0 0 1 5.5 4h13A1.5 1.5 0 0 1 20 5.5v9a1.5 1.5 0 0 1-1.5 1.5H10l-4.5 4v-4h0A1.5 1.5 0 0 1 4 14.5z"></path></svg></a></div>
+<div style="display: flex; align-items: center; gap: 10px; min-height: 64px"><span style="display: flex; flex-direction: column; flex-grow: 1; min-width: 0"><b style="font-size: 15px; line-height: 22px">Martin Bureš</b><span class="meta" style="font-size: 13px">Otec · telefon nevyplněn</span></span></div>
+</div>
+
+<section style="display: flex; flex-direction: column; gap: 6px; padding: 14px 16px; border-radius: 16px; background: #FBF7EC; box-shadow: inset 0 0 0 1.5px #E9D9A8">
+<h2 class="cap" style="padding: 0; display: flex; align-items: center; gap: 6px; color: #7A5A00"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="10.5" width="14" height="10" rx="2"></rect><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5"></path></svg>Interní poznámka · jen trenéři</h2>
+<p style="margin: 0; font-size: 15px; line-height: 22px">Po zranění kotníku zatím bez soubojů, do konce října.</p>
+<button class="link" style="height: 36px; padding: 0; color: #7A5A00; align-self: flex-start">Upravit poznámku</button>
+</section>
+
+<h2 class="cap" style="margin-top: 4px">Nadcházející tréninky · 3</h2>
+<nav class="list" aria-label="Nadcházející tréninky">
+<a class="item" href="K02-Detail.dc.html" style="min-height: 60px"><span class="l"><b class="disp" style="font-size: 20px; line-height: 24px; font-weight: 700">09:00–10:00</b><span class="m">Ne 4. 10. · MH</span></span><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8791A6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9.5 6 6 6-6 6"></path></svg></a>
+<a class="item" href="K02-Detail.dc.html" style="min-height: 60px"><span class="l"><b class="disp" style="font-size: 20px; line-height: 24px; font-weight: 700">17:30–18:30</b><span class="m">St 7. 10. · MH</span></span><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8791A6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9.5 6 6 6-6 6"></path></svg></a>
+<a class="item" href="K02-Detail.dc.html" style="min-height: 60px"><span class="l"><b class="disp" style="font-size: 20px; line-height: 24px; font-weight: 700">09:00–10:00</b><span class="m">Ne 11. 10. · VH</span></span><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8791A6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9.5 6 6 6-6 6"></path></svg></a>
+</nav>
+<a class="link" href="#" style="align-self: flex-start">Minulé tréninky (14)<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9.5 6 6 6-6 6"></path></svg></a>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":1080}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>
