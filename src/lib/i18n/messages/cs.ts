@@ -1140,7 +1140,7 @@ export const cs = {
       few: '{name} je hlavním trenérem {count} naplánovaných tréninků. Zůstane u nich uveden.',
       many: '{name} je hlavním trenérem {count} naplánovaných tréninků. Zůstane u nich uveden.',
     } satisfies PluralForms,
-    cannotDeactivateSelf: 'Nemůžete deaktivovat sám sebe.',
+    cannotDeactivateSelf: 'Sám sebe deaktivovat nemůžete.',
     saved: 'Uloženo',
     empty: 'Zatím není přidaný žádný trenér.',
     deactivate: 'Deaktivovat',

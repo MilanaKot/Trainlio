@@ -137,7 +137,7 @@ test.describe('a workspace administrator manages the coaching staff', () => {
     // the form offers.
     await page.goto(`/trener/vice/treneri/${await profileFor(admin)}`)
     await expect(page.getByRole('switch', { name: 'Aktivní trenér' })).toBeDisabled()
-    await expect(page.getByText('Nemůžete deaktivovat sám sebe.')).toBeVisible()
+    await expect(page.getByText('Sám sebe deaktivovat nemůžete.')).toBeVisible()
     await page.getByRole('button', { name: 'Zrušit' }).click()
 
     // AC-248: a coach the club employs but who has never signed in.
