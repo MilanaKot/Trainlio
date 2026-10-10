@@ -1,4 +1,5 @@
-import type { Page } from '@playwright/test'
+import AxeBuilder from '@axe-core/playwright'
+import { expect, type Page } from '@playwright/test'
 
 /**
  * Helpers for the signed-in end-to-end flows.
@@ -250,4 +251,37 @@ export async function resetOrganization(): Promise<void> {
 /** The public URL of a stored mark, for a test that wants the bytes. */
 export function storedLogoUrl(path: string): string {
   return `${STACK}/storage/v1/object/public/workspace-logos/${path}`
+}
+
+/**
+ * No serious or critical accessibility violation on the screen as rendered
+ * (AC-292).
+ *
+ * Called from the flow that already built the screen rather than from an
+ * accessibility suite of its own: every one of these screens costs a sign-in,
+ * a family and a training to reach, and a second suite would build all of it
+ * again to assert one more thing about the same page.
+ *
+ * `serious` and `critical` only. Axe's `minor` and `moderate` findings are
+ * largely advisory — a landmark it would have preferred, a heading order it
+ * reads as skipped — and a suite that fails on advice gets switched off. What
+ * is left is the set a person using a screen reader or a keyboard cannot work
+ * around: an unlabelled control, a name that is not announced, text under the
+ * contrast minimum.
+ */
+export async function expectAccessible(page: Page, where: string): Promise<void> {
+  const { violations } = await new AxeBuilder({ page })
+    .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
+    .analyze()
+
+  // Reported with the element that failed: "colour-contrast on 3 nodes" sends
+  // the next person back to the browser to find out which three.
+  const blocking = violations
+    .filter((one) => one.impact === 'serious' || one.impact === 'critical')
+    .map(
+      (one) =>
+        `${one.id} (${one.impact}): ${one.nodes.map((node) => node.target.join(' ')).join(', ')}`,
+    )
+
+  expect(blocking, `${where} has accessibility violations`).toEqual([])
 }

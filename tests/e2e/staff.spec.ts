@@ -1,5 +1,13 @@
 import { expect, test, type Page } from '@playwright/test'
-import { grantCoach, grantWorkspaceRole, profileFor, signIn, uniqueEmail, MAILPIT } from './helpers'
+import {
+  expectAccessible,
+  grantCoach,
+  grantWorkspaceRole,
+  profileFor,
+  signIn,
+  uniqueEmail,
+  MAILPIT,
+} from './helpers'
 
 /**
  * The Trenéři screen: who may add a coach and fill in their name, and who only
@@ -234,6 +242,9 @@ test.describe('a workspace administrator manages the coaching staff', () => {
     await page.getByRole('button', { name: 'Poslat pozvánku znovu' }).click()
     await expect(page.getByText('Pozvánku lze poslat znovu nejdřív za hodinu.')).toBeVisible()
 
+    // AC-292: the access panel and the refusal under it.
+    await expectAccessible(page, '§A3b an invited coach, with the refusal shown')
+
     // §A6: the message itself, with the link that prefills the address.
     const invitation = await readInvitation(coachEmail)
     expect(invitation).toContain('Pozvánka do aplikace')
@@ -257,6 +268,7 @@ test.describe('a workspace administrator manages the coaching staff', () => {
     // §K0, once: the coach lands on the welcome screen and not on the list.
     await expect(page).toHaveURL(/\/trener\/vitejte$/)
     await expect(page.getByRole('heading', { name: 'Vítejte v týmu' })).toBeVisible()
+    await expectAccessible(page, '§K0 the welcome screen') // AC-292
     // The profile they were attached to is the one the administrator named —
     // not a second one made by signing up.
     await expect(page.getByText(`Petr Pozvaný${run}`)).toBeVisible()
@@ -297,6 +309,11 @@ test.describe('a workspace administrator manages the coaching staff', () => {
 
     await page.getByRole('link', { name: new RegExp(`Jana Kolegová${run}`) }).click()
     await expect(page.getByRole('switch', { name: 'Administrátor' })).toBeChecked()
+
+    // AC-292: the ROLE panel the role arrived with. Its §A3d variant differs by
+    // one disabled switch and a Notice, which `tests/unit/ui.test.tsx` covers:
+    // the only administrator cannot be produced on a club every test shares.
+    await expectAccessible(page, '§A3 the role panel')
     // §A1: the meta line answers the question an administrator is actually
     // asking — can this person get in — so a coach with no address says so
     // rather than announcing a role they cannot yet use.

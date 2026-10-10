@@ -2,6 +2,7 @@ import { expect, test } from '@playwright/test'
 import {
   asUser,
   dateInput,
+  expectAccessible,
   grantCoach,
   signIn,
   tokenFor,
@@ -483,6 +484,9 @@ test.describe('a guardian, from first sign-in to a withdrawn booking', () => {
     )
     await expect(page.getByRole('button', { name: 'Odhlásit' })).toHaveCount(0)
     await expect(page.getByRole('button', { name: 'Přihlásit znovu' })).toHaveCount(0)
+
+    // AC-292: the footer that replaced the button, with the coach to ring.
+    await expectAccessible(page, '§G6d a booking the coach removed')
 
     // D-06: the training is open and has places, and this child still cannot go
     // back on it. The card says why rather than offering a button that fails.

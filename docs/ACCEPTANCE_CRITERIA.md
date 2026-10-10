@@ -836,3 +836,17 @@ that is not a digit, and submits on the sixth — a person who has entered the
 whole code has said everything they have to say. A picker sheet grows a search
 once the list is long enough to need one, keeps what is already chosen on screen
 when the query stops matching it, and says so when nothing matches.
+
+## The new screens are usable without sight or a mouse (handoff v3)
+
+AC-292  
+Every screen handoff v3 added is checked with axe as the flow that built it
+leaves it, and carries no serious or critical violation: the past-trainings tab,
+the athletes tab with its search filled, an athlete with the note saved and the
+family's numbers on it, the series list, the trainings of a series, an invited
+coach with the refusal shown, the welcome screen, the role panel, and the
+footer that replaced a parent's button when a coach removed their child. The two
+advisory impacts are not asserted, because a suite that fails on advice is a
+suite somebody switches off. §A3d, where the only administrator's switch is
+disabled, is checked as a component instead: it cannot be produced on a club
+every test shares.

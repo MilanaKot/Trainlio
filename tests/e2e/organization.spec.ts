@@ -1,6 +1,6 @@
 import { test, expect, type Page } from '@playwright/test'
-import AxeBuilder from '@axe-core/playwright'
 import {
+  expectAccessible,
   grantCoach,
   grantWorkspaceRole,
   organizationRow,
@@ -135,12 +135,7 @@ test('uploading a mark stores a 512px PNG and shows it everywhere (admin tests 6
   await expect(page.getByRole('heading', { name: 'Upravit logo' })).toBeVisible()
   await expect(page.getByLabel('Velikost')).toBeVisible()
 
-  const sheetViolations = await new AxeBuilder({ page })
-    .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
-    .analyze()
-  expect(
-    sheetViolations.violations.filter((v) => v.impact === 'serious' || v.impact === 'critical'),
-  ).toEqual([])
+  await expectAccessible(page, '§A5 the logo sheet')
 
   await page.getByRole('button', { name: 'Použít logo' }).click()
   await expect(page.getByRole('heading', { name: 'Upravit logo' })).toHaveCount(0)
@@ -161,12 +156,7 @@ test('uploading a mark stores a 512px PNG and shows it everywhere (admin tests 6
   await openOrganization(page)
   await expect(page.locator('main img')).toBeVisible()
 
-  const adminViolations = await new AxeBuilder({ page })
-    .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
-    .analyze()
-  expect(
-    adminViolations.violations.filter((v) => v.impact === 'serious' || v.impact === 'critical'),
-  ).toEqual([])
+  await expectAccessible(page, '§A4 Organizace, with the mark')
 
   // The parent's side, in a context of its own: a different person entirely.
   const guardian = await browser.newContext()
@@ -187,12 +177,7 @@ test('uploading a mark stores a 512px PNG and shows it everywhere (admin tests 6
   await expect(anonymous.getByText('Rezervace tréninků')).toBeVisible()
   await expect(anonymous.getByText('Běží na')).toBeVisible()
 
-  const loginViolations = await new AxeBuilder({ page: anonymous })
-    .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
-    .analyze()
-  expect(
-    loginViolations.violations.filter((v) => v.impact === 'serious' || v.impact === 'critical'),
-  ).toEqual([])
+  await expectAccessible(anonymous, '§G11 sign-in, with the mark')
   await visitor.close()
 })
 

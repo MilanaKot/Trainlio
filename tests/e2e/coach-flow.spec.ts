@@ -2,6 +2,7 @@ import { expect, test } from '@playwright/test'
 import {
   asUser,
   dateInput,
+  expectAccessible,
   grantCoach,
   profileFor,
   signIn,
@@ -232,6 +233,10 @@ test.describe('a coach publishes a training and runs its roster', () => {
     // Nothing is created from the past.
     await expect(page.getByRole('button', { name: 'Vytvořit', exact: true })).toHaveCount(0)
 
+    // AC-292: the tab and the card the design added, as a screen reader and a
+    // keyboard meet them.
+    await expectAccessible(page, '§K14 the past-trainings tab')
+
     await page.getByRole('tab', { name: 'Nadcházející' }).click()
     await expect(page.locator('main').getByText(room)).toHaveCount(0)
     await expect(page.getByRole('button', { name: 'Vytvořit', exact: true })).toBeVisible()
@@ -304,6 +309,9 @@ test.describe('a coach publishes a training and runs its roster', () => {
     await expect(row).toContainText('Brankář')
     await expect(row).toContainText('bez přihlášek')
 
+    // AC-292: with the search field filled, which is the state it is used in.
+    await expectAccessible(page, '§K12 the athletes tab')
+
     await row.getByRole('link').click()
     await expect(page.getByRole('heading', { name: `Eliška Dítě${run}` })).toBeVisible()
     await expect(page.getByText('Ročník 2017 · narozen 5. 5. 2017')).toBeVisible()
@@ -320,6 +328,9 @@ test.describe('a coach publishes a training and runs its roster', () => {
     await page.getByLabel('INTERNÍ POZNÁMKA · JEN TRENÉŘI').fill('Alergie na ořechy.')
     await page.getByRole('button', { name: 'Uložit' }).click()
     await expect(page.getByText('Alergie na ořechy.')).toBeVisible()
+
+    // AC-292: the family block, the note and the links that dial.
+    await expectAccessible(page, '§K13 an athlete, with the note saved')
 
     // Read back by the parent, through their own session: the athlete screen
     // they have, and the API besides. Neither carries it.

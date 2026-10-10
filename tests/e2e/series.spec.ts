@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { grantCoach, signIn, uniqueEmail } from './helpers'
+import { expectAccessible, grantCoach, signIn, uniqueEmail } from './helpers'
 
 /**
  * A season of trainings (coach/SPEC.md §K11, acceptance test 8).
@@ -81,6 +81,7 @@ test('a series opens its trainings and never an edit form (AC-288)', async ({ pa
   await page.getByRole('link', { name: /Série tréninků/ }).click()
   await expect(page).toHaveURL(/\/trener\/serie$/)
   await expect(page.getByRole('heading', { name: 'Série', level: 1 })).toBeVisible()
+  await expectAccessible(page, '§K15 the series list') // AC-292
 
   const card = page.locator('main li', { hasText: '07:00–08:00' }).first()
   await expect(card).toContainText('3 tréninků, zbývá 3')
@@ -95,6 +96,7 @@ test('a series opens its trainings and never an edit form (AC-288)', async ({ pa
   ).toBeVisible()
   await expect(page.getByRole('button', { name: /Upravit/ })).toHaveCount(0)
   await expect(page.getByRole('link', { name: /Upravit/ })).toHaveCount(0)
+  await expectAccessible(page, '§K16 the trainings of a series') // AC-292
 
   // One training edited on its own says so, and the others do not.
   const seriesUrl = page.url()
