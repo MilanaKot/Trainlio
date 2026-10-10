@@ -223,16 +223,50 @@ rebuilt against it one at a time rather than all at once.
   capacity override (K7b), closing registration (K5) and cancelling (K6)
   (AC-274 to AC-276)
 
-The club's own mark (migration 29, AC-277) was asked for after the handoff and
-is not in it; `docs/DESIGN_DEVIATIONS.md` records the three choices made here.
 The first-athlete form now also asks who the parent is (AC-278), in the words
 of §G16, because the coach's roster names whoever booked each child.
 
-Still to come: the editing screens (K3, K4), the sign-in screens (G11, G12),
-`Trenéři`, then dark mode as a single token pass. The coach group still
-carries its pre-design header; the spec replaces it with a three-item bottom
-navigation, which waits for `Sportovci` and `Více` to exist. §K4 gives
-duplicating a screen of its own; until then the action keeps its dialog.
+### Handoff v2 — the club's mark
+
+Asked for after the first handoff and then drawn into it: `DESIGN_SYSTEM.md`
+§6.23 `OrgLogo`, the admin screens A4/A4b/A5 with the row that reaches them
+from A0, and the mark in the two headers a parent sees, G11 and G1
+(migration 29, AC-277). `docs/DESIGN_DEVIATIONS.md` records the three choices
+made here.
+
+### Handoff v3 — the fourteen design requests
+
+Answered in `docs/design/DESIGN_REQUESTS_ANSWERS.md` and built in nine steps,
+a commit each (migrations 33 to 38, AC-280 to AC-291):
+
+- the removed-booking footers G4b and G6d, and the coach's telephone number in
+  a table of its own that no guardian may read (DR-04)
+- HEIC photographs, converted in the browser (DR-13)
+- the eight e-mails of `shared/EMAILS.md`: one layout, one event per save, and
+  E08 for a booking the coach made (DR-05, DR-12)
+- past trainings as a tab, counted rather than measured, because attendance is
+  not tracked (DR-02)
+- the club's athletes, K12 and K13, with the internal note (DR-01)
+- the series screens K15 and K16 (DR-03)
+- the coach invitation A1–A3c, A6 and K0, where the first sign-in attaches the
+  authentication record to the profile that already leads the trainings (DR-07)
+- the administrator role in A3, with A3d and A3e (DR-08)
+- the shared controls of §6.11 to §6.31 (DR-06)
+
+Everything the first handoff left over shipped with these two: the editing
+screens K3 and K4, the sign-in screens G11 and G12, `Trenéři`, and the
+three-item bottom navigation the coach area now carries instead of its
+pre-design header. §K4 has its own duplicate screen.
+
+### Still open
+
+Dark mode is the one thing drawn and not built: the accent and all six status
+colours land between 2.7:1 and 3.4:1 on a dark background, so it needs its own
+palette rather than a token pass (`DESIGN_DEVIATIONS.md`, DR-11). One question
+is the designer's — deactivating a coach who leads future trainings (DR-15) —
+and two are the product's: changing your e-mail address (DR-09) and a second
+sport (DR-10), both in `docs/design/DESIGN_REQUESTS.md`. The
+Content-Security-Policy of Phase 9 belongs to the same list.
 
 ## Review checkpoints
 
