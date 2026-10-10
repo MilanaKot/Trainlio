@@ -661,3 +661,68 @@ test('what v3 added (§K12–§K16, §A3b, §G6d)', async ({ page, browser }) =>
   await shoot(parent, 'G6d-detail-odhlasen')
   await parent.close()
 })
+
+/**
+ * §A3d: the own card of the only administrator there is.
+ *
+ * The state cannot be reached on the development club as it stands — every run
+ * grants itself the role and leaves the membership behind — so this takes the
+ * role off the other administrators for the length of one screenshot and puts
+ * it back, with what each of them had. Which is why it lives here, behind
+ * SCREENSHOTS=1 in a serial file that already rewrites the club, and not in a
+ * suite that runs beside other tests.
+ */
+test('the only administrator’s own card (§A3d)', async ({ page }) => {
+  const admin = uniqueEmail('spravce.jediny')
+  await signIn(page, admin)
+  const { workspaceId, profileId } = await grantWorkspaceRole(admin, 'WORKSPACE_ADMIN')
+
+  // A name and a number, because the card is mostly the person on it.
+  await page.goto(`/trener/vice/treneri/${profileId}`)
+  await page.getByLabel('Jméno').fill('Milana')
+  await page.getByLabel('Příjmení').fill('Kotová')
+  await page.getByLabel('Telefon').fill('777 123 456')
+  await page.getByRole('button', { name: 'Uložit změny' }).click()
+  await page.waitForURL(/\/trener\/vice\/treneri$/)
+
+  const service = {
+    apikey: SERVICE,
+    authorization: `Bearer ${SERVICE}`,
+    'content-type': 'application/json',
+  }
+  const others = `workspace_id=eq.${workspaceId}&role=eq.WORKSPACE_ADMIN&profile_id=neq.${profileId}`
+  const held = (await (
+    await fetch(`${STACK}/rest/v1/workspace_members?select=profile_id,is_active&${others}`, {
+      headers: service,
+    })
+  ).json()) as { profile_id: string; is_active: boolean }[]
+
+  await fetch(`${STACK}/rest/v1/workspace_members?${others}`, {
+    method: 'DELETE',
+    headers: service,
+  })
+
+  try {
+    await page.goto(`/trener/vice/treneri/${profileId}`)
+    // Both halves of §A3d: the role that cannot be given away, and the account
+    // that cannot switch itself off.
+    await expect(page.getByText('Jste jediný administrátor', { exact: false })).toBeVisible()
+    await expect(page.getByText('Sám sebe deaktivovat nemůžete.')).toBeVisible()
+    await shoot(page, 'A3d-jediny-administrator')
+  } finally {
+    if (held.length > 0) {
+      await fetch(`${STACK}/rest/v1/workspace_members`, {
+        method: 'POST',
+        headers: { ...service, prefer: 'resolution=ignore-duplicates' },
+        body: JSON.stringify(
+          held.map((one) => ({
+            workspace_id: workspaceId,
+            profile_id: one.profile_id,
+            role: 'WORKSPACE_ADMIN',
+            is_active: one.is_active,
+          })),
+        ),
+      })
+    }
+  }
+})
