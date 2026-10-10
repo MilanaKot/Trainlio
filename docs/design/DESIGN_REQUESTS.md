@@ -24,19 +24,6 @@ its tokens. An answer that needs no screen can be a line in `README.md` under
 
 ## Still open
 
-### DR-15 · Deactivating a coach who leads future trainings
-
-Carried over from v2 and still the only open question in `admin/SPEC.md` §5.
-
-**Today.** It is allowed, with a warning that names the count before the save:
-`{name} je hlavním trenérem {n} naplánovaných tréninků. Zůstane u nich uveden.`
-The coach stays on those trainings and a parent keeps reading their name, which
-is D-11. The alternative the spec floats is forcing a reassignment first.
-
-**Fixed:** nothing deletes a coach, and a training always has a main coach — so
-"reassign" means choosing another one per training, which is a screen that does
-not exist yet.
-
 ### DR-09 · Changing your e-mail address (§G14)
 
 Designed as `/account/email`; not built, by product decision. If it comes back,
@@ -59,6 +46,17 @@ for white. It needs its own palette or it stays off; the `dark:` variant is
 bound to nothing in the meantime.
 
 ---
+
+## Answered by the product, 10 October 2026
+
+**DR-15 · Deactivating a coach who leads future trainings.** The administrator
+is asked, with two answers: hand the future trainings to themselves, or leave
+them where they are (D-11). There is no club-level head coach to hand them to —
+`main_coach_profile_id` belongs to each training — so "whoever is deactivating"
+is who takes them over, and no new screen is needed: the question is a switch
+inside the confirmation that already named the count. Built as AC-293 and
+recorded as D-25. `admin/SPEC.md` §5 can be closed; the dialog it describes now
+carries one more line, `Převést tréninky na mě`.
 
 ## Answered in v3
 

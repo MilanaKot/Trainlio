@@ -799,7 +799,7 @@ operation and its own audit entry.
 Codes: `NOT_AUTHENTICATED`, `NOT_AUTHORIZED`, `NAME_REQUIRED`. Appends
 `MEMBER_ADDED`.
 
-### `set_member_active(p_workspace_id, p_profile_id, p_is_active, p_confirm) → jsonb`
+### `set_member_active(p_workspace_id, p_profile_id, p_is_active, p_confirm, p_reassign) → jsonb`
 
 A coach leaves, or comes back. Never a delete: `workspace_members.profile_id` is
 `on delete restrict` precisely so nobody can remove a coach from a training they
@@ -810,12 +810,23 @@ led.
 | `MEMBER_NOT_FOUND`      | not this workspace's staff, or erased                                                     |
 | `LAST_ADMIN`            | a workspace with no active administrator has nobody who can undo anything, including this |
 | `LEADS_FUTURE_SESSIONS` | returns `details.future_sessions`; repeat with `p_confirm`                                |
+| `REASSIGN_FAILED`       | a training refused the handover; nothing moved and nobody was deactivated                 |
 
 The confirmation is a server-side gate, not a dialog the client chooses to show
 — the same shape as the over-capacity booking warning (BR-033). It exists
 because `enforce_session_main_coach_is_staff` requires the main coach to be
 active staff, so deactivating one leaves their future trainings uneditable until
 someone else is named.
+
+`p_reassign` is the answer to that (D-25): with it, every future uncancelled
+training of theirs is handed to the caller before the membership changes, while
+both people are still staff. The handover is a call to
+`update_training_session` per training, not an `update` over the table, so each
+one stamps the significant change, carries the previous coach's name in it, is
+audited as `SESSION_MAIN_COACH_CHANGED`, and queues the e-mail its booked
+families would get from any other change of coach. The whole thing is one
+transaction: a training that refuses takes the deactivation down with it, and
+the response says `reassigned_sessions` either way.
 
 Repeating a call that changes nothing returns `{"ok": true, "unchanged": true}`
 and appends no audit entry. Otherwise appends `MEMBER_ACTIVATED` or

@@ -133,5 +133,7 @@ run_suite trainlio_contact supabase/tests/validation_contact.sql
 echo
 run_suite trainlio_staff_contact supabase/tests/validation_staff_contact.sql
 echo
+run_suite trainlio_handover supabase/tests/validation_handover.sql
+echo
 echo '── Concurrency ─────────────────────────────────────────────────────'
 bash supabase/tests/concurrency.sh

@@ -153,6 +153,10 @@ export function CoachForm({
   }>({})
   const [inviting, startInviting] = useTransition()
   const [confirmFuture, setConfirmFuture] = useState<number | null>(null)
+  // §A3 (DR-15): the handover is offered rather than assumed, and offered
+  // switched on — a training nobody leads cannot be edited until somebody
+  // does, which is the state the administrator is least likely to want.
+  const [reassignFuture, setReassignFuture] = useState(true)
   const [pending, startSaving] = useTransition()
 
   const name = [firstName, lastName].filter(Boolean).join(' ').trim()
@@ -279,6 +283,10 @@ export function CoachForm({
           member.profileId,
           isActive,
           confirmFutureSessions,
+          // Only ever true behind the confirmation: the first call is the one
+          // that asks, and it must not move anything on its way to the
+          // question.
+          confirmFutureSessions && reassignFuture,
         )
 
         if (!switched.ok) {
@@ -507,6 +515,17 @@ export function CoachForm({
         onConfirm={() => save(true)}
       >
         <p className="text-meta text-muted">{plural(confirmFuture ?? 0, t.leadsFutureSessions)}</p>
+        {/* DR-15: the two answers the product settled on. There is no head
+            coach in the club to hand the trainings to, so "yes" means the
+            administrator reading this. */}
+        <div className="rounded-control-lg bg-bg px-4 py-2">
+          <Switch
+            checked={reassignFuture}
+            onChange={setReassignFuture}
+            label={t.reassignSwitch}
+            hint={reassignFuture ? t.reassignHintOn : t.reassignHintOff}
+          />
+        </div>
       </ConfirmDialog>
     </div>
   )

@@ -1595,6 +1595,7 @@ export type Database = {
           p_confirm?: boolean
           p_is_active: boolean
           p_profile_id: string
+          p_reassign?: boolean
           p_workspace_id: string
         }
         Returns: Json

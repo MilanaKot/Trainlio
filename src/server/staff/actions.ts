@@ -152,6 +152,8 @@ export async function setMemberActive(
   profileId: string,
   isActive: boolean,
   confirm = false,
+  /** DR-15: the acting administrator takes the future trainings over. */
+  reassign = false,
 ): Promise<StaffResult> {
   const supabase = await createClient()
 
@@ -160,6 +162,7 @@ export async function setMemberActive(
     p_profile_id: profileId,
     p_is_active: isActive,
     p_confirm: confirm,
+    p_reassign: reassign,
   })
 
   if (error) return { ok: false, code: 'generic' }

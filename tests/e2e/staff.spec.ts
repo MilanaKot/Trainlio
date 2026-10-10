@@ -1,12 +1,17 @@
 import { expect, test, type Page } from '@playwright/test'
 import {
+  asUser,
+  dateInput,
   expectAccessible,
   grantCoach,
   grantWorkspaceRole,
   profileFor,
   signIn,
+  tokenFor,
   uniqueEmail,
   MAILPIT,
+  SERVICE,
+  STACK,
 } from './helpers'
 
 /**
@@ -348,6 +353,98 @@ test.describe('a workspace administrator manages the coaching staff', () => {
     await expect(page.getByRole('link', { name: /Trenéři/ })).toHaveCount(0)
     // Planning is every coach's, and stays.
     await expect(page.getByRole('link', { name: /Série tréninků/ })).toBeVisible()
+  })
+
+  /**
+   * Admin test 16 (§A3, DR-15). A coach who still leads trainings may leave,
+   * and the trainings cannot be left with nobody: a deactivated main coach is
+   * not staff, and a training whose coach is not staff cannot be edited at
+   * all. The administrator is asked, and the answer they are shown first is
+   * the one that keeps the trainings workable.
+   */
+  test('a leaving coach hands their trainings over (AC-293)', async ({ page }) => {
+    test.setTimeout(90_000)
+
+    const admin = uniqueEmail('spravce.predani')
+    await signIn(page, admin)
+    await grantWorkspaceRole(admin, 'WORKSPACE_ADMIN')
+
+    // The coach who is leaving opens a training of their own, through the same
+    // RPC the create screen calls.
+    const leaving = uniqueEmail('trener.odchazi')
+    const token = await tokenFor(leaving)
+    const { workspaceId, profileId } = await grantCoach(leaving)
+    const facilities = (await (
+      await fetch(`${STACK}/rest/v1/facilities?select=id,code`, { headers: asUser(token) })
+    ).json()) as { id: string; code: string }[]
+    const created = (await (
+      await fetch(`${STACK}/rest/v1/rpc/create_training_session`, {
+        method: 'POST',
+        headers: asUser(token),
+        body: JSON.stringify({
+          p_workspace_id: workspaceId,
+          p_local_date: dateInput(16),
+          p_local_start_time: '07:30',
+          p_local_end_time: '08:30',
+          p_facility_id: facilities.find((one) => one.code === 'MH')?.id,
+          p_capacity: 10,
+          p_eligibility_mode: 'ALL',
+          p_changing_room: `Šatna ${Date.now()}`,
+          p_main_coach_profile_id: profileId,
+        }),
+      })
+    ).json()) as { ok?: boolean; data?: { training_session_id?: string } }
+    expect(created.ok).toBe(true)
+    const sessionId = created.data?.training_session_id ?? ''
+
+    // §A3 requires both halves of a name before it saves anything, and this
+    // coach was granted the role rather than added on A2.
+    const run = Date.now()
+    await page.goto(`/trener/vice/treneri/${profileId}`)
+    await page.getByLabel('Jméno').fill('Jana')
+    await page.getByLabel('Příjmení').fill(`Odcházející${run}`)
+    await page.locator('label', { hasText: 'Aktivní trenér' }).click()
+    await page.getByRole('button', { name: 'Uložit změny' }).click()
+
+    // The question, with the server's own count in it and the handover offered
+    // switched on.
+    const confirm = page.getByRole('alertdialog')
+    await expect(confirm).toContainText('vede 1 nadcházející trénink')
+    const handover = confirm.getByRole('switch', { name: 'Převést tréninky na mě' })
+    await expect(handover).toBeChecked()
+    await expect(confirm).toContainText('Rodiče přihlášených dětí dostanou e-mail')
+
+    // The other answer says what it costs, and does not move anything by
+    // merely being read.
+    await confirm.locator('label', { hasText: 'Převést tréninky na mě' }).click()
+    await expect(confirm).toContainText('nepůjde je upravit')
+    await confirm.locator('label', { hasText: 'Převést tréninky na mě' }).click()
+    await expect(handover).toBeChecked()
+
+    await confirm.getByRole('button', { name: 'Deaktivovat' }).click()
+    await page.waitForURL(/\/trener\/vice\/treneri$/)
+
+    // The training is the administrator's now. Read from the database rather
+    // than from a screen, because this is the fact the whole question is
+    // about: the mirror column and the association table both moved
+    // (`validation_handover.sql` holds the rest).
+    const after = (await (
+      await fetch(
+        `${STACK}/rest/v1/training_sessions?select=main_coach_profile_id&id=eq.${sessionId}`,
+        {
+          headers: {
+            apikey: SERVICE,
+            authorization: `Bearer ${SERVICE}`,
+            'content-type': 'application/json',
+          },
+        },
+      )
+    ).json()) as { main_coach_profile_id: string }[]
+    expect(after[0]?.main_coach_profile_id).toBe(await profileFor(admin))
+
+    // And the coach is gone from the active list, not from the club.
+    const row = page.locator('li', { hasText: `Jana Odcházející${run}` })
+    await expect(row).toContainText('Neaktivní')
   })
 
   test('a guardian never reaches the staff screen (AC-241)', async ({ page }) => {

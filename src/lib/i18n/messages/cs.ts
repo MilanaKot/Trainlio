@@ -1148,10 +1148,16 @@ export const cs = {
     /* AC-251. The count comes from the server's refusal, so the warning never
        states a number the client made up. */
     leadsFutureSessions: {
-      one: 'Tento trenér vede {count} nadcházející trénink. Po deaktivaci ho nepůjde upravit, dokud u něj nezměníte hlavního trenéra.',
-      few: 'Tento trenér vede {count} nadcházející tréninky. Po deaktivaci je nepůjde upravit, dokud u nich nezměníte hlavního trenéra.',
-      many: 'Tento trenér vede {count} nadcházejících tréninků. Po deaktivaci je nepůjde upravit, dokud u nich nezměníte hlavního trenéra.',
+      one: 'Tento trenér vede {count} nadcházející trénink.',
+      few: 'Tento trenér vede {count} nadcházející tréninky.',
+      many: 'Tento trenér vede {count} nadcházejících tréninků.',
     } satisfies PluralForms,
+    /* AC-293 (DR-15). The club has no head coach to hand them to, so the
+       administrator doing the deactivation is who takes them over. */
+    reassignSwitch: 'Převést tréninky na mě',
+    reassignHintOn: 'Povedete je vy. Rodiče přihlášených dětí dostanou e-mail o změně trenéra.',
+    reassignHintOff:
+      'Zůstanou vedené na tomto trenérovi a nepůjde je upravit, dokud u nich nezměníte hlavního trenéra.',
     errors: {
       NOT_AUTHENTICATED: 'Přihlaste se prosím znovu.',
       NOT_AUTHORIZED: 'Na tuto změnu nemáte právo.',
@@ -1168,6 +1174,7 @@ export const cs = {
       ALREADY_SIGNED_IN: 'Trenér je už přihlášený, pozvánku nepotřebuje.',
       RATE_LIMITED: 'Pozvánku lze poslat znovu nejdřív za hodinu.',
       SEND_FAILED: 'Pozvánku se nepodařilo odeslat. Zkuste to prosím znovu.',
+      REASSIGN_FAILED: 'Tréninky se nepodařilo převést. Zkuste to prosím znovu.',
       NOT_STAFF: 'Telefon si může uložit jen trenér klubu.',
       generic: 'Uložení se nezdařilo. Zkuste to prosím znovu.',
     },

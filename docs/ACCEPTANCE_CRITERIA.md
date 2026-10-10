@@ -850,3 +850,21 @@ advisory impacts are not asserted, because a suite that fails on advice is a
 suite somebody switches off. §A3d, where the only administrator's switch is
 disabled, is checked as a component instead: it cannot be produced on a club
 every test shares.
+
+## A coach leaves, and their trainings go somewhere (DR-15, D-25)
+
+AC-293  
+Deactivating a coach who is still the main coach of trainings that have not
+happened asks one question with two answers, and moves nothing until it is
+answered. Answering yes hands every future, uncancelled training of theirs to
+the administrator doing the deactivation: the association table moves and the
+mirror column follows, the training keeps its capacity, room, notes, internal
+note and eligibility, the change is significant exactly as it is when a coach
+is changed one training at a time — stamped, naming the previous coach,
+audited, and queued as one e-mail per training for the families booked into it
+— and the departure records how many went with it. Answering no leaves every
+training on the coach's name, which is D-11 and was the only behaviour before.
+A training that has already happened and one that was cancelled never move
+either way. Only an administrator may do it, and the handover and the
+deactivation are one transaction: a refusal anywhere leaves the club exactly as
+it was.
