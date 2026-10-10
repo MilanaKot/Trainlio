@@ -2,7 +2,7 @@
   "name": "trainlio",
   "version": "0.1.0",
   "private": true,
-  "description": "Trainlio — Sports Training Booking Platform",
+  "description": "Trainlio \u2014 Sports Training Booking Platform",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -24,6 +24,7 @@
     "db:reset": "supabase db reset",
     "db:integration": "node supabase/tests/integration.mjs",
     "db:concurrency": "bash supabase/tests/concurrency.sh",
+    "demo": "node scripts/demo.mjs",
     "qa:coverage": "node scripts/ac-coverage.mjs",
     "qa:env": "node scripts/env-coverage.mjs"
   },

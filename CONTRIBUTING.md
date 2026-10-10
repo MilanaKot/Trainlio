@@ -20,7 +20,28 @@ a blank screen rather than as an error that names it. It refuses to overwrite an
 existing `.env.local`.
 
 Sign in with any e-mail address: nothing is sent out, and the one-time code
-arrives in Mailpit at `http://127.0.0.1:54324`.
+arrives in Mailpit at `http://127.0.0.1:54324`. The application's own e-mails
+land there too, because `.env.local` sets `EMAIL_TRANSPORT=mailpit`; in
+production the same messages go through Resend.
+
+### A club with something in it
+
+The fixtures hold one training, which is enough for the tests and not enough to
+look at. After signing in once, so the profile exists:
+
+```bash
+pnpm db:reset                 # optional, but a fresh club has no test residue
+pnpm demo vas@email.cz        # the address you just signed in with
+```
+
+That makes you the coach and administrator, gives you a telephone number, and
+adds five families, eight trainings across a fortnight — two of them already
+over, one full — and the bookings on them. Local stack only: the script refuses
+any host but `127.0.0.1`.
+
+To see the whole product rather than a test report, `WALKTHROUGH=1 npx
+playwright test tests/e2e/walkthrough.spec.ts --project=mobile` photographs one
+story end to end, screens and e-mails, into `./walkthrough`.
 
 `.env.example` documents every value, and is what a real deployment is filled in
 from (`docs/DEPLOYMENT.md`).
@@ -33,6 +54,7 @@ refuse to start with a missing or malformed value and name the offending key.
 | Command                             | Purpose                                                                                                        |
 | ----------------------------------- | -------------------------------------------------------------------------------------------------------------- |
 | `pnpm dev`                          | Development server                                                                                             |
+| `pnpm demo <email>`                 | Fill the local club with families, trainings and bookings, and make that address its coach                     |
 | `pnpm env:local`                    | Write `.env.local` from the running local stack                                                                |
 | `pnpm lint`                         | ESLint, including the architectural guard rules below                                                          |
 | `pnpm format` / `pnpm format:check` | Prettier. Both run in CI, so the repository stays clean rather than drifting                                   |

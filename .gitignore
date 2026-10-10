@@ -19,3 +19,6 @@ supabase/.branches
 
 # Design review screenshots (scripts/screenshots), regenerated on demand
 screenshots
+
+# The product walkthrough (tests/e2e/walkthrough.spec.ts), regenerated on demand
+walkthrough
