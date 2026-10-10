@@ -451,13 +451,12 @@ export function CoachForm({
           />
 
           <p className="rounded-control-lg bg-bg p-3 text-meta text-muted">
-            {t.deactivateInfo
-              .replace('{name}', member.displayName ?? t.noName)
-              .replace('{count}', String(member.futureSessions))}
+            {t.deactivateInfo.replace('{name}', member.displayName ?? t.noName)}
           </p>
 
-          {/* Stated before the save, not after it: the coach stays on those
-              trainings, which is the part an administrator needs to know. */}
+          {/* Stated before the save, not after it: what happens to the
+              trainings still to come is a question, and this is where an
+              administrator finds out it is coming. */}
           {!isActive && member.isActive && member.futureSessions > 0 ? (
             <Notice variant="warning">
               {plural(member.futureSessions, t.leadsFutureNotice).replace(

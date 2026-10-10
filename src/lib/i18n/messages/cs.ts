@@ -1133,12 +1133,14 @@ export const cs = {
     activeSwitchHint: 'Lze ho vybrat pro nové tréninky',
     /* The count is the coach's whole history, past and planned: what the
        administrator is deciding about is a name that stays on all of it. */
+    /* §A3's info box, without "i naplánovaných": since DR-15 the planned ones
+       are the administrator's answer to make, and the notice below says so. */
     deactivateInfo:
-      'Po deaktivaci zůstane {name} u všech minulých i naplánovaných tréninků (nyní {count}). Trenéra nelze smazat, jen deaktivovat.',
+      'Po deaktivaci zůstane {name} u všech minulých tréninků. Trenéra nelze smazat, jen deaktivovat.',
     leadsFutureNotice: {
-      one: '{name} je hlavním trenérem {count} naplánovaného tréninku. Zůstane u něj uveden.',
-      few: '{name} je hlavním trenérem {count} naplánovaných tréninků. Zůstane u nich uveden.',
-      many: '{name} je hlavním trenérem {count} naplánovaných tréninků. Zůstane u nich uveden.',
+      one: '{name} je hlavním trenérem {count} naplánovaného tréninku. Po uložení se zeptáme, jestli ho chcete převzít.',
+      few: '{name} je hlavním trenérem {count} naplánovaných tréninků. Po uložení se zeptáme, jestli je chcete převzít.',
+      many: '{name} je hlavním trenérem {count} naplánovaných tréninků. Po uložení se zeptáme, jestli je chcete převzít.',
     } satisfies PluralForms,
     cannotDeactivateSelf: 'Sám sebe deaktivovat nemůžete.',
     saved: 'Uloženo',

@@ -731,3 +731,50 @@ test('the only administrator’s own card (§A3d)', async ({ page }) => {
     }
   }
 })
+
+/**
+ * The question a leaving coach raises (§A3, DR-15).
+ *
+ * Nothing new was drawn for it: the confirmation that already named the count
+ * carries one more line. Shot so the designer can see the line in place.
+ */
+test('the handover question (§A3, DR-15)', async ({ page }) => {
+  test.setTimeout(90_000)
+
+  const admin = uniqueEmail('spravce.predani')
+  await signIn(page, admin)
+  await grantWorkspaceRole(admin, 'WORKSPACE_ADMIN')
+
+  // A coach with one training still to come, opened through the same RPC the
+  // create screen calls.
+  const leaving = uniqueEmail('trener.odchazi')
+  const token = await tokenFor(leaving)
+  const { workspaceId, profileId } = await grantCoach(leaving)
+  const facilities = (await (
+    await fetch(`${STACK}/rest/v1/facilities?select=id,code`, { headers: asUser(token) })
+  ).json()) as { id: string; code: string }[]
+  await fetch(`${STACK}/rest/v1/rpc/create_training_session`, {
+    method: 'POST',
+    headers: asUser(token),
+    body: JSON.stringify({
+      p_workspace_id: workspaceId,
+      p_local_date: dateInput(16),
+      p_local_start_time: '07:30',
+      p_local_end_time: '08:30',
+      p_facility_id: facilities.find((one) => one.code === 'MH')?.id,
+      p_capacity: 10,
+      p_eligibility_mode: 'ALL',
+      p_changing_room: `Šatna ${100 + Math.floor(Math.random() * 900)}`,
+      p_main_coach_profile_id: profileId,
+    }),
+  })
+
+  await page.goto(`/trener/vice/treneri/${profileId}`)
+  await page.getByLabel('Jméno').fill('Jana')
+  await page.getByLabel('Příjmení').fill('Odcházející')
+  await page.locator('label', { hasText: 'Aktivní trenér' }).click()
+  await page.getByRole('button', { name: 'Uložit změny' }).click()
+
+  await expect(page.getByRole('alertdialog')).toContainText('Převést tréninky na mě')
+  await shoot(page, 'A3f-predani-treninku', { full: false })
+})

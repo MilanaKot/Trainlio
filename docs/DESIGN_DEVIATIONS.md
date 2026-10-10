@@ -228,6 +228,17 @@ The third delivery answered every request in `DESIGN_REQUESTS.md`, and most of
 them are now simply built. These are the places where what shipped is not quite
 what is drawn, and the reasons.
 
+**§A3 says what happens to the trainings, because now it is a question.**
+The spec's info box reads `Po deaktivaci zůstane {name} u všech minulých i
+naplánovaných tréninků (nyní {count})`, and its warning Notice `Zůstane u nich
+uveden.` Both were true while there was nothing else that could happen — and
+§5 of the same spec flagged that as the open question (DR-15). The product
+answered it: the administrator is asked, so the box now promises only the past
+("u všech minulých tréninků", without the count the Notice already gives) and
+the Notice says the question is coming ("Po uložení se zeptáme, jestli je
+chcete převzít"). Promising in a panel what a dialog is about to ask would be
+the one copy a person reads twice.
+
 **The unselected weekday squares are `muted`, not `subtle` (§6.29).** `subtle`
 on `neutral-50` is 3.06:1, and the letters are 11px bold — small text, so the
 minimum that applies is 4.5:1. Axe reports it as a serious violation on §K15,
