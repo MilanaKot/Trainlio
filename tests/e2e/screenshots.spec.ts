@@ -506,10 +506,13 @@ test('what v3 added (§K12–§K16, §A3b, §G6d)', async ({ page, browser }) =>
 
   // A training with children on it, then a second one moved into the past. The
   // changing room is this test's own: the club is shared by every run, and the
-  // parent below has to book into this training and not somebody else's.
+  // parent below has to book into this training and not somebody else's. A
+  // room number rather than a timestamp, because this one is on the screenshot
+  // — `Šatna 1760074913148` is not what a club calls a room.
+  const room = `Šatna ${100 + Math.floor(Math.random() * 900)}`
   await page.goto('/trener/novy')
   await page.getByLabel('Datum').fill(dateInput(9))
-  await page.getByLabel('Šatna').fill('Šatna 12')
+  await page.getByLabel('Šatna').fill(room)
   await page.getByRole('button', { name: 'Vytvořit trénink' }).click()
   // The id is read off the URL, so the navigation has to have happened first.
   await expect(page.getByRole('heading', { name: /Sportovci/ })).toBeVisible()
@@ -596,9 +599,11 @@ test('what v3 added (§K12–§K16, §A3b, §G6d)', async ({ page, browser }) =>
   await expect(parent.getByText('Eliška Procházková')).toBeVisible()
 
   await parent.goto('/treninky')
-  // This test's own training, found by the date nothing else uses.
+  // This test's own training. Booking into another run's leftover is how this
+  // used to fail: the roster read back below is this training's, and Eliška
+  // was on a different one.
   await parent
-    .locator('li', { hasText: 'Šatna 12' })
+    .locator('li', { hasText: room })
     .first()
     .getByRole('button', { name: 'Přihlásit' })
     .click()
