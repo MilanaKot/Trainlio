@@ -30,9 +30,13 @@ The fixtures hold one training, which is enough for the tests and not enough to
 look at. After signing in once, so the profile exists:
 
 ```bash
-pnpm db:reset                 # optional, but a fresh club has no test residue
-pnpm demo vas@email.cz        # the address you just signed in with
+pnpm db:reset
+pnpm demo vas@email.cz
 ```
+
+`pnpm db:reset` is optional and worth it: a database that has had the test
+suites run against it is full of their leftovers. The address is the one you
+just signed in with.
 
 That makes you the coach and administrator, gives you a telephone number, and
 adds five families, eight trainings across a fortnight — two of them already
@@ -145,12 +149,16 @@ Realtime, PostgREST, Studio and Mailpit, applies every migration and seeds
 `supabase/tests/fixtures.sql`.
 
 ```bash
-pnpm db:start           # prints the local keys; copy them into .env.local
-pnpm db:types           # regenerate types from the running stack
-pnpm db:integration     # ANON=<anon key> pnpm db:integration
-pnpm db:reset           # reapply migrations and fixtures from scratch
+pnpm db:start
+pnpm db:types
+pnpm db:reset
 pnpm db:stop
 ```
+
+`db:start` prints the local keys, `db:types` regenerates
+`src/types/database.generated.ts` from the running stack, and `db:reset`
+reapplies every migration and the fixtures from scratch. The integration suite
+wants the anon key in its environment: `ANON=<anon key> pnpm db:integration`.
 
 OTP codes are not emailed anywhere locally: Mailpit catches them at
 http://127.0.0.1:54324.
