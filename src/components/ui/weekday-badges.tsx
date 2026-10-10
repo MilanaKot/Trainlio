@@ -27,7 +27,13 @@ export function WeekdayBadges({ weekdays, className }: { weekdays: number[]; cla
           aria-hidden="true"
           className={cn(
             'flex size-6 items-center justify-center rounded-chip text-[0.6875rem] font-bold',
-            selected.has(day) ? 'bg-primary text-white' : 'bg-neutral-50 text-subtle',
+            // §6.29 draws the unselected squares `subtle` on `neutral-50`. At
+            // 11px bold that is 3.06:1, under the 4.5:1 a person with low
+            // vision needs to read them at all — and they are what tells the
+            // eye which days are *not* in the series. `muted` is 5.98:1 on the
+            // same fill and still plainly the quieter of the two states
+            // (DESIGN_DEVIATIONS.md).
+            selected.has(day) ? 'bg-primary text-white' : 'bg-neutral-50 text-muted',
           )}
         >
           {t.weekdaysShort[String(day) as keyof typeof t.weekdaysShort]}

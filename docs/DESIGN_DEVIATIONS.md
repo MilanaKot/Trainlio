@@ -228,6 +228,16 @@ The third delivery answered every request in `DESIGN_REQUESTS.md`, and most of
 them are now simply built. These are the places where what shipped is not quite
 what is drawn, and the reasons.
 
+**The unselected weekday squares are `muted`, not `subtle` (§6.29).** `subtle`
+on `neutral-50` is 3.06:1, and the letters are 11px bold — small text, so the
+minimum that applies is 4.5:1. Axe reports it as a serious violation on §K15,
+which is how it was found (AC-292). The letters are not decoration for a
+sighted reader either: `Po Út St Čt Pá So Ne` with four of them filled is the
+whole pattern, and the four that are _not_ filled carry half of it. `muted` is
+5.98:1 on the same fill and still unmistakably the quieter state next to a
+primary square with white on it. The token's own comment agrees — `subtle` is
+for disabled text, chevrons and icons, never for text somebody has to read.
+
 **The invitation link prefills the address; it does not send the code.** §A6's
 copy said "Po kliknutí vám pošleme jednorázový kód", and a link that sends one
 when it is fetched is a link that spends the code on whoever fetched it first.
