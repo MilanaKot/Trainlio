@@ -5,6 +5,7 @@
   "description": "Trainlio \u2014 Sports Training Booking Platform",
   "scripts": {
     "dev": "next dev",
+    "local": "pnpm db:start && pnpm env:local --force && pnpm dev",
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",

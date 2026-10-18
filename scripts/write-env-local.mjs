@@ -11,16 +11,33 @@
  * Refuses to overwrite an existing file: a real `.env.local` may hold keys for
  * a hosted project, and losing those to a convenience script is not a trade
  * worth making.
+ *
+ * `--force` rewrites one that already points at the local stack. A stale file
+ * is its own kind of trouble — the keys change when the stack is recreated,
+ * and a wrong anon key fails as a blank screen — so the safety that matters is
+ * not "never overwrite" but "never overwrite somebody's production keys".
  */
 
 import { execFileSync } from 'node:child_process'
-import { existsSync, writeFileSync } from 'node:fs'
+import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 
 const TARGET = '.env.local'
+const force = process.argv.includes('--force')
 
 if (existsSync(TARGET)) {
-  console.error(`${TARGET} already exists. Delete it first if you want it rewritten.`)
-  process.exit(1)
+  const current = readFileSync(TARGET, 'utf8')
+  const local = /^NEXT_PUBLIC_SUPABASE_URL=https?:\/\/(127\.0\.0\.1|localhost)[:/]/m.test(current)
+
+  if (!force) {
+    console.error(`${TARGET} already exists. Delete it, or pass --force to rewrite it.`)
+    process.exit(1)
+  }
+  if (!local) {
+    console.error(
+      `${TARGET} points at a hosted project, not the local stack. Refusing to overwrite it.`,
+    )
+    process.exit(1)
+  }
 }
 
 let status
