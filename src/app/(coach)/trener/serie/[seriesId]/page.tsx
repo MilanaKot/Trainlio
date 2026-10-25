@@ -4,7 +4,7 @@ import { getCoachSeries, getCoachWorkspace, listSeriesSessions } from '@/server/
 import { CoachTrainingRow } from '@/components/session/coach-training-row'
 import { SeriesSessionsTabs } from '@/components/session/series-sessions-tabs'
 import { WeekdayBadges } from '@/components/ui/weekday-badges'
-import { eligibilityLabel } from '@/lib/domain/session'
+import { changingRoomLabel, eligibilityLabel } from '@/lib/domain/session'
 import { formatLocalDateShort } from '@/lib/time/workspace-time'
 import { messages } from '@/lib/i18n'
 
@@ -74,7 +74,11 @@ export default async function SeriesSessionsPage({
           {formatLocalDateShort(series.localDateFrom)} – {formatLocalDateShort(series.localDateTo)}
         </p>
         <p className="text-meta text-muted">
-          {[series.facilityName || series.facilityCode, series.changingRoom, years]
+          {[
+            series.facilityName || series.facilityCode,
+            changingRoomLabel(series.changingRoom, t.changingRoom),
+            years,
+          ]
             .filter(Boolean)
             .join(' · ')}
         </p>

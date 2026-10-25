@@ -6,7 +6,7 @@ import Link from 'next/link'
 import { messages, plural } from '@/lib/i18n'
 import { weeklyOccurrenceDates, formatLocalDateShort } from '@/lib/time/workspace-time'
 import { ISO_WEEKDAYS, MAX_SERIES_OCCURRENCES } from '@/lib/domain/series'
-import { defaultEndTime } from '@/lib/domain/session'
+import { changingRoomLabel, defaultEndTime } from '@/lib/domain/session'
 import { createSeries } from '@/server/sessions/actions'
 import { Button } from '@/components/ui/button'
 import { Field } from '@/components/ui/field'
@@ -155,7 +155,7 @@ export function SeriesForm({
   const hall = workspace.facilities.find((f) => f.id === values.facilityId)
   const summary = [
     hall?.code,
-    values.changingRoom,
+    changingRoomLabel(values.changingRoom, t.changingRoom),
     `${t.capacity} ${values.capacity}`,
     values.eligibilityMode === 'ALL'
       ? t.eligibilityAllShort
@@ -386,7 +386,12 @@ export function SeriesForm({
       <div className="fixed inset-x-0 bottom-0 z-30 mx-auto flex max-w-3xl flex-col gap-3 bg-bg/95 px-4 pb-5 pt-3 shadow-[0_-1px_0_var(--color-line)] backdrop-blur">
         {/* The footer counts what will be created, which is what is checked
             (coach/SPEC.md §K4b). Disabling is a courtesy — the server refuses
-            an empty or over-long series on its own (principle 5). */}
+            an empty or over-long series on its own (principle 5). The reason
+            for a disabled button stands beside it: the one under the date
+            list can be a hundred rows away. */}
+        {overLimit ? (
+          <p className="text-hint font-semibold text-danger">{t.errors.SERIES_TOO_LONG}</p>
+        ) : null}
         <Button
           type="submit"
           size="lg"

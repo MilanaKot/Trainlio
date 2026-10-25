@@ -15,6 +15,7 @@ import {
   type Template,
 } from '@/lib/notifications/layout'
 import type { EmailMessage } from '@/lib/email/types'
+import { changingRoomLabel } from '@/lib/domain/session'
 
 /**
  * The message a guardian receives (shared/EMAILS.md, E01–E08).
@@ -128,9 +129,14 @@ function whenValue(start: Date, end: Date, timezone: Timezone): string {
   return `${formatDateGroup(start, timezone)} · ${formatTimeRange(start, end, timezone)}`
 }
 
+/** `Šatna 4`, whether the coach typed `4` or `Šatna 4`. */
+function roomValue(session: ClaimedDelivery['session']): string | null {
+  return changingRoomLabel(session.changingRoom, messages.myTrainings.changingRoom)
+}
+
 /** `Příbram · Malá hala (MH) · Šatna 4` (BR-063). */
 function whereValue(session: ClaimedDelivery['session']): string {
-  return [session.locationName, facilityValue(session), session.changingRoom]
+  return [session.locationName, facilityValue(session), roomValue(session)]
     .filter((part): part is string => typeof part === 'string' && part.length > 0)
     .join(' · ')
 }
@@ -217,7 +223,7 @@ function template(delivery: ClaimedDelivery, event: NotificationEventType): Temp
   if (facilityOnly) {
     rows.push({
       label: t.rows.facility,
-      value: [facilityValue(session), session.changingRoom].filter(Boolean).join(' · '),
+      value: [facilityValue(session), roomValue(session)].filter(Boolean).join(' · '),
       changed: true,
       ...(previous.facility_name || previous.facility_code
         ? {

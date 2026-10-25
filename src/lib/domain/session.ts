@@ -178,3 +178,24 @@ export function eligibilityLabel(
   if (mode === 'ALL' || from === null || to === null) return allLabel
   return from === to ? String(from) : `${from}–${to}`
 }
+
+/**
+ * `Šatna 4` from what the coach typed (`4`), for the one-line place
+ * (`Příbram · MH · Šatna 4`, DS §7, BR-063). A bare number on that line reads
+ * as nothing in particular.
+ *
+ * The field is free text and was filled before this existed, so a value that
+ * already names the room (`Šatna 4`, `šatna 4`, `Satna 4`) is left as it is
+ * rather than becoming `Šatna Šatna 4`.
+ */
+export function changingRoomLabel(room: string | null | undefined, label: string): string | null {
+  const trimmed = (room ?? '').trim()
+  if (trimmed.length === 0) return null
+  const bare = (text: string) =>
+    text
+      .normalize('NFD')
+      .replace(/\p{Diacritic}/gu, '')
+      .toLowerCase()
+  if (bare(trimmed).startsWith(bare(label))) return trimmed
+  return `${label} ${trimmed}`
+}

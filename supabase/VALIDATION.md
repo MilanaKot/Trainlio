@@ -252,8 +252,8 @@ the row it describes.
 | An exclusion naming a date the pattern never produced    | changes nothing and is not recorded                          |
 | Unchecking every date                                    | `SERIES_EMPTY`, rather than an empty series                  |
 | `excluded_dates` and `generated_count` on the series row | the dates actually suppressed, and what was created          |
-| A range producing 53 occurrences                         | `SERIES_TOO_LONG`, and nothing created                       |
-| The same range with one date unchecked                   | created, 52 occurrences                                      |
+| A range producing 201 occurrences                        | `SERIES_TOO_LONG`, and nothing created                       |
+| The same range with one date unchecked                   | created, 200 occurrences                                     |
 | A range longer than a year                               | refused before it is expanded                                |
 | `create_session_series`' parameter list                  | a pattern and exclusions; nothing that names dates to create |
 

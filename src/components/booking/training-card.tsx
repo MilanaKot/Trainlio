@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { messages, plural } from '@/lib/i18n'
-import { eligibilityLabel } from '@/lib/domain/session'
+import { changingRoomLabel, eligibilityLabel } from '@/lib/domain/session'
 import { sessionAvailability } from '@/lib/domain/booking'
 import { capacityState, remainingPlaces } from '@/lib/domain/capacity'
 import { bookedNames, cardFooter, type BlockedReason } from '@/lib/domain/session-list'
@@ -64,7 +64,11 @@ export function TrainingCard({
   const chips = bookedNames(athletes)
   const blockedHint = footer.kind === 'blocked' ? blockedText(footer.reason) : null
 
-  const venue = [session.locationName, session.facilityCode, session.changingRoom]
+  const venue = [
+    session.locationName,
+    session.facilityCode,
+    changingRoomLabel(session.changingRoom, messages.myTrainings.changingRoom),
+  ]
     .filter(Boolean)
     .join(' · ')
 

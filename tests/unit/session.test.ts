@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
+  changingRoomLabel,
   defaultEndTime,
   eligibilityLabel,
   validateSession,
@@ -129,5 +130,23 @@ describe('the default end of a training', () => {
   it('is not offered for a start that is not a time yet', () => {
     expect(defaultEndTime('')).toBeNull()
     expect(defaultEndTime('9')).toBeNull()
+  })
+})
+
+describe('the changing room on the place line', () => {
+  it('names the room when the coach typed only its number', () => {
+    expect(changingRoomLabel('4', 'Šatna')).toBe('Šatna 4')
+    expect(changingRoomLabel(' 12 ', 'Šatna')).toBe('Šatna 12')
+  })
+
+  it('leaves a value that already names it, with or without the háček', () => {
+    expect(changingRoomLabel('Šatna 4', 'Šatna')).toBe('Šatna 4')
+    expect(changingRoomLabel('šatna 4', 'Šatna')).toBe('šatna 4')
+    expect(changingRoomLabel('Satna 4', 'Šatna')).toBe('Satna 4')
+  })
+
+  it('is absent when there is no room', () => {
+    expect(changingRoomLabel(null, 'Šatna')).toBeNull()
+    expect(changingRoomLabel('  ', 'Šatna')).toBeNull()
   })
 })
