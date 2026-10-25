@@ -112,6 +112,11 @@ jobs:
       RESEND_API_KEY: ci-resend-key
       AUTH_SENDER_EMAIL: trainlio@example.test
       CRON_SECRET: ci-cron-secret-at-least-16
+      # The application's own e-mails (the coach invitation, the drain) go to
+      # the stack's Mailpit, where the suite reads them back. Without this they
+      # went to Resend with the key above, which is not a key: every invitation
+      # failed to send, and AC-289 failed on the toast that says it was sent.
+      EMAIL_TRANSPORT: mailpit
     steps:
       - uses: actions/checkout@v5
       - uses: pnpm/action-setup@v4
