@@ -76,5 +76,6 @@ still needs answered — those questions, plus anything that shipped without a
 design — is collected in `DESIGN_REQUESTS.md`.
 
 ## Changelog
+- **v3.1** — K2 place line becomes a PlaceChip (DS §6.33): cobalt text on light-cobalt background, no icon.
 - **v3 — design requests DR-01…DR-14.** New coach screens K0, K12–K16 (+ K1 segmented control); admin A1/A2/A3 updated, A3b–A3e, A6; guardian G4b/G6d footers (no re-booking); DS §6.11/6.13/6.17 updated, §6.24–6.32 new; `shared/EMAILS.md` + `emails/`; decisions 23–32. See `DESIGN_REQUESTS_ANSWERS.md` and `CLAUDE_CODE_TASK_v3.md`.
 - **v2 — organization logo.** New: DS §6.23 OrgLogo; admin A4/A4b/A5 + A0 row `Organizace`; guardian G11 header (G11b/G11c) and G1 header (G1b/G1c); decisions 20–22. See `CLAUDE_CODE_TASK_logo.md` for the implementation prompt.

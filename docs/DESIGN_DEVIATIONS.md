@@ -302,3 +302,19 @@ to nothing.
 One question is still open, and it is the designer's: **deactivating a coach who
 is the main coach of future trainings** warns and allows, as it always has.
 Whether it should instead force a reassignment is in `DESIGN_REQUESTS.md`.
+
+## After handoff v3.1: the place chip names the hall by its code
+
+`shared/DESIGN_SYSTEM.md` §6.33 gives the K2 place chip as
+`{town} · {hall full name} ({code}) · Šatna {n} · Ročníky {from}–{to}` and lets
+it wrap on narrow screens. The club asked for it on one line. Measured in the
+browser at 15 px bold, the full line `Příbram · Velká hala (VH) · Šatna 7 ·
+Ročníky 2015–2023` is 390 px, and a 390 px phone leaves 330 px inside the
+chip; it does not fit even at 13 px. With the hall as its code it is 301 px
+(308 px with a two-digit changing room), so the chip shows
+`Příbram · VH · Šatna 7 · Ročníky 2015–2023`.
+
+The code is what the club calls the halls (MH, VH), and the full name is still
+on the edit form and in every e-mail. The chip keeps the design's size, weight
+and colours. On a screen narrower than about 360 px it still wraps, between
+the parts and never inside one.

@@ -132,7 +132,7 @@ BottomSheet title `Vytvořit`; two option rows (72 px, icon tile 44 primary-100,
 
 ### K2 · Session detail + roster (`/coach/trainings/[id]`)
 Back `‹ Tréninky`. Page scrolls (tall).
-1. Header: date (20/28/700 primary) + TodayChip; time `text-hero`; meta `Příbram · Malá hala (MH) · Šatna 4 · Ročníky 2017–2018`. Closed → neutral chip with lock `Přihlašování uzavřeno`.
+1. Header: date (20/28/700 primary) + TodayChip; time `text-hero`; **place chip** (v3.1) `Příbram · Malá hala (MH) · Šatna 4 · Ročníky 2017–2018` — see DS §6.33 (no icon, `align-self: flex-start`, 6 px above). Closed → neutral chip with lock `Přihlašování uzavřeno`.
 2. Capacity panel: caption `OBSAZENOST`, meter (9 × 16), count Barlow 32.
 3. Coaches DetailList: `Hlavní trenér`, `Asistenti` (names stacked; `—` if none).
 4. Public note panel: caption with globe icon `INFORMACE PRO SPORTOVCE · VIDÍ RODIČE`, text.
