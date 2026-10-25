@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test'
 import {
+  apiUser,
   asUser,
   dateInput,
   expectAccessible,
@@ -7,7 +8,6 @@ import {
   grantWorkspaceRole,
   profileFor,
   signIn,
-  tokenFor,
   uniqueEmail,
   SERVICE,
   STACK,
@@ -51,8 +51,9 @@ async function facility(token: string, code: string): Promise<string> {
 async function club(run: number) {
   const adminEmail = uniqueEmail('spravce.opravneni')
   const viewerEmail = uniqueEmail('asistent.opravneni')
-  const adminToken = await tokenFor(adminEmail)
-  const viewerToken = await tokenFor(viewerEmail)
+  // API users: only the browser signs in through a code (see apiUser).
+  const adminToken = await apiUser(adminEmail)
+  const viewerToken = await apiUser(viewerEmail)
 
   const { workspaceId, profileId: adminId } = await grantWorkspaceRole(
     adminEmail,
@@ -134,7 +135,7 @@ async function club(run: number) {
 /** A child with a parent who has a phone, booked onto the training. */
 async function bookedChild(sessionId: string, run: number): Promise<string> {
   const parentEmail = uniqueEmail('rodic.opravneni')
-  const token = await tokenFor(parentEmail)
+  const token = await apiUser(parentEmail)
   await fetch(`${STACK}/rest/v1/app_profiles?id=eq.${await profileFor(parentEmail)}`, {
     method: 'PATCH',
     headers: {
@@ -385,7 +386,7 @@ test.describe('an administrator sets the permission', () => {
     await expect(permission).toBeChecked()
     await expect(permission).toBeDisabled()
 
-    const refused = await rpc(await tokenFor(adminEmail), 'set_member_can_edit_trainings', {
+    const refused = await rpc(await apiUser(adminEmail), 'set_member_can_edit_trainings', {
       p_workspace_id: workspaceId,
       p_profile_id: profileId,
       p_value: false,

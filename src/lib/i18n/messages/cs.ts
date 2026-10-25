@@ -1144,7 +1144,6 @@ export const cs = {
       'Bez tohoto oprávnění upravuje jen tréninky, které vede jako hlavní trenér. Ostatní jen prohlíží — vhodné pro asistenty.',
     editAllOffNotice:
       'Upravuje jen tréninky, které vede jako hlavní trenér. Ostatní tréninky jen prohlíží: vidí sestavu a kontakty na rodiče. Nové tréninky nevytváří.',
-    editAllAdminHint: 'Administrátor může upravovat vždy',
     viewOnlyMeta: 'Jen prohlížení',
     lastAdminNotice:
       'Jste jediný administrátor. Práva si můžete odebrat, až je udělíte jinému trenérovi.',

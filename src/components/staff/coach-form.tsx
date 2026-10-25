@@ -470,7 +470,6 @@ export function CoachForm({
             label={t.editAllSwitch}
             hint={t.editAllSwitchHint}
             disabled={isAdmin}
-            disabledHint={t.editAllAdminHint}
           />
           {!isAdmin && !canEditAll ? <Notice variant="neutral">{t.editAllOffNotice}</Notice> : null}
         </Panel>
