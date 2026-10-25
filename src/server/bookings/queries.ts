@@ -2,6 +2,7 @@ import 'server-only'
 
 import { createClient } from '@/lib/supabase/server'
 import { maybeRow, rows } from '@/server/query-result'
+import { guardedAthleteIds } from '@/server/athletes/queries'
 import { splitByTime } from '@/lib/domain/booking'
 import type { EligibilityMode, SessionStatus, BookingStatus } from '@/types/database'
 
@@ -270,7 +271,18 @@ export async function listMyBookings(): Promise<{ upcoming: MyBooking[]; past: M
   const supabase = await createClient()
   const now = new Date()
 
-  const result = await supabase.from('training_sessions').select(SESSION_COLUMNS).order('start_at')
+  // AC-294: the caller's own children, not everyone the row policy admits. A
+  // coach may read any booking of their club — that is what the roster needs —
+  // and without this clause their own "Moje tréninky" would list other
+  // people's children.
+  const mine = await guardedAthleteIds(supabase)
+  if (mine.length === 0) return { upcoming: [], past: [] }
+
+  const result = await supabase
+    .from('training_sessions')
+    .select(SESSION_COLUMNS)
+    .in('bookings.athlete_id', mine)
+    .order('start_at')
 
   const all: MyBooking[] = []
 

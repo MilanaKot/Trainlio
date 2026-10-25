@@ -393,6 +393,7 @@ export const cs = {
       PHOTO_TYPE_NOT_ALLOWED: 'Podporujeme JPG, PNG, WebP a HEIC.',
       PHOTO_CONVERT_FAILED: 'Fotku se nepodařilo převést. Zkuste ji nahrát jako JPG.',
       PHOTO_EMPTY: 'Soubor je prázdný.',
+      PHOTO_UPLOAD_FAILED: 'Fotografii se nepodařilo nahrát. Zkuste to prosím znovu.',
       NOT_AUTHENTICATED: 'Nejste přihlášeni.',
       NOT_AUTHORIZED_FOR_ATHLETE: 'K tomuto sportovci nemáte přístup.',
       SPORT_NOT_FOUND: 'Sport není k dispozici.',

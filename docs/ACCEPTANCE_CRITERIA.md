@@ -868,3 +868,19 @@ A training that has already happened and one that was cancelled never move
 either way. Only an administrator may do it, and the handover and the
 deactivation are one transaction: a refusal anywhere leaves the club exactly as
 it was.
+
+## The parent's area is one family's, even for a coach
+
+AC-294  
+A coach may have a child in the club like anybody else, so the guardian screens
+stay open to staff — and show them their own family only. `Moji sportovci`,
+the athlete a parent opens from it, and `Moje tréninky` are filtered to the
+athletes the caller actually guards, not to everything the row policy admits:
+`athletes`, `bookings` and `guardian_athlete_access` are all readable by a
+coach of a club the child trains at, because that is what the roster, the
+booking list and the parent's name beside each child are built on. The club's
+athletes have a screen of their own (§K12), and that is the only place a coach
+sees them. Nothing here is a privilege a coach did not already have — every
+write still goes through the domain functions, which ask about guardianship —
+but a parent's screen that lists other people's children is wrong whatever it
+would let you do with them.

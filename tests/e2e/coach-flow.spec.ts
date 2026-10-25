@@ -341,6 +341,54 @@ test.describe('a coach publishes a training and runs its roster', () => {
     expect(await noteForParent.json()).toEqual([])
   })
 
+  /**
+   * AC-294. The parent's area is reachable by staff, and should be: a coach
+   * may have a child in the club like anybody else. What it must not do is
+   * hand them the club.
+   *
+   * The hole this closed was found by somebody using the application: a coach
+   * opened `Moji sportovci` and saw every child in the club, because the
+   * screen leaned on the row policy, and that policy admits coaches so the
+   * roster can exist.
+   */
+  test('the parent screens show a coach their own children only (AC-294)', async ({ page }) => {
+    test.setTimeout(90_000)
+
+    const coach = uniqueEmail('trener.bezdeti')
+    await signIn(page, coach)
+    await grantCoach(coach)
+
+    const room = `Šatna ${Date.now()}`
+    await page.goto('/trener/novy')
+    await page.getByLabel('Datum').fill(dateInput(6))
+    await page.getByLabel('Šatna').fill(room)
+    await page.getByRole('button', { name: 'Vytvořit trénink' }).click()
+    await expect(page.getByText(room)).toBeVisible()
+    const sessionId = page.url().split('/trener/')[1]?.split('/')[0] ?? ''
+
+    // Somebody else's child, booked by their own parent.
+    await family('Bohumil', { bookInto: sessionId })
+    await page.reload()
+    await expect(page.getByText(/Bohumil/)).toBeVisible()
+
+    // The club's athletes are the coach's business on the coach's own screen.
+    await page.goto('/trener/sportovci')
+    await expect(page.getByRole('searchbox')).toBeVisible()
+    await page.getByRole('searchbox').fill('Bohumil')
+    await expect(page.locator('main li', { hasText: 'Bohumil' }).first()).toBeVisible()
+
+    // And nobody's business on the parent's.
+    await page.goto('/moji-sportovci')
+    await expect(
+      page.getByText('Přidejte prvního sportovce a můžete začít rezervovat tréninky.'),
+    ).toBeVisible()
+    await expect(page.getByText(/Bohumil/)).toHaveCount(0)
+
+    await page.goto('/moje-treninky')
+    await expect(page.getByText(/Bohumil/)).toHaveCount(0)
+    await expect(page.locator('main li')).toHaveCount(0)
+  })
+
   test('a guardian cannot reach the coach area by URL', async ({ page }) => {
     await signIn(page, uniqueEmail('rodic'))
 

@@ -2,7 +2,7 @@
   "name": "trainlio",
   "version": "0.1.0",
   "private": true,
-  "description": "Trainlio \u2014 Sports Training Booking Platform",
+  "description": "Trainlio — Sports Training Booking Platform",
   "scripts": {
     "dev": "next dev",
     "local": "pnpm db:start && pnpm env:local --force && pnpm dev",
@@ -36,13 +36,13 @@
     "clsx": "^2.1.1",
     "heic2any": "^0.0.4",
     "lucide-react": "^1.55.0",
-    "next": "^16.4.0",
+    "next": "^16.4.3",
     "radix-ui": "^1.7.0",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
     "server-only": "^0.0.1",
     "tailwind-merge": "^3.7.0",
-    "zod": "^4.6.5"
+    "zod": "^4.6.7"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.13.0",
@@ -59,7 +59,7 @@
     "@vitejs/plugin-react": "^5.2.0",
     "axe-core": "^4.14.0",
     "eslint": "^9.39.5",
-    "eslint-config-next": "^16.4.0",
+    "eslint-config-next": "^16.4.3",
     "eslint-config-prettier": "^10.1.8",
     "jsdom": "^28.1.0",
     "prettier": "^3.9.10",

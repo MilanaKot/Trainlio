@@ -103,14 +103,45 @@ export async function signAthletePhoto(path: string | null): Promise<string | nu
 }
 
 /**
+ * The athletes this person actually guards (AC-294).
+ *
+ * Asked for explicitly rather than left to the row policy. `athletes` is
+ * readable by a guardian **or** by a coach of a club the child trains at —
+ * that is what the roster is built on — so a coach reading the guardian area
+ * through the same policy sees every child in the club as if they were their
+ * own. The parent's screens are about one family, and this is the clause that
+ * says so.
+ *
+ * `guardian_athlete_access` is readable by coaches for the same reason, so the
+ * filter is on the profile and not on the table's own policy.
+ */
+export async function guardedAthleteIds(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+): Promise<string[]> {
+  const { data: profileId } = await supabase.rpc('current_profile_id')
+  if (!profileId) return []
+
+  const { data } = await supabase
+    .from('guardian_athlete_access')
+    .select('athlete_id')
+    .eq('profile_id', profileId)
+    .eq('status', 'ACTIVE')
+
+  return (data ?? []).map((row) => row.athlete_id)
+}
+
+/**
  * Every athlete the signed-in guardian has active access to.
  *
- * No workspace or guardian filter is written here: the `athletes` row policy
- * already restricts this to athletes the caller guards, so a missing clause
- * cannot widen the result (AC-091).
+ * Filtered to the caller's own children (AC-294). The row policy is the floor,
+ * not the whole rule: it also admits coaches, who have a screen of their own
+ * for the club's athletes (§K12).
  */
 export async function listGuardianAthletes(): Promise<GuardianAthlete[]> {
   const supabase = await createClient()
+
+  const mine = await guardedAthleteIds(supabase)
+  if (mine.length === 0) return []
 
   const result = await supabase
     .from('athletes')
@@ -119,6 +150,7 @@ export async function listGuardianAthletes(): Promise<GuardianAthlete[]> {
        athlete_sport_profiles ( id, club_name, team_or_category, jersey_number,
                                 attributes, is_active, sports ( code ) )`,
     )
+    .in('id', mine)
     .order('first_name', { ascending: true })
 
   const data = rows('listGuardianAthletes', result)

@@ -211,6 +211,23 @@ export async function setAthleteActive(
   return { ok: true, athleteId }
 }
 
+/**
+ * What a refused upload actually was.
+ *
+ * Storage says no for more reasons than access — the bucket caps the object at
+ * 5 MB and accepts three content types — and reporting all of them as "you
+ * have no access to this athlete" sends a parent to argue with the wrong
+ * thing. Only 401 and 403 are about who you are; everything else is the
+ * upload failing, and the reason goes to the server log where it can be read.
+ */
+function storageFailure(error: { message: string; statusCode?: string | undefined }): string {
+  const status = Number(error.statusCode ?? 0)
+  if (status === 401 || status === 403) return 'NOT_AUTHORIZED_FOR_ATHLETE'
+
+  console.error('athlete photo upload refused by storage:', error.message)
+  return 'PHOTO_UPLOAD_FAILED'
+}
+
 export async function uploadAthletePhoto(athleteId: string, form: FormData): Promise<ActionResult> {
   const file = form.get('photo')
   if (!(file instanceof File)) return { ok: false, code: 'PHOTO_EMPTY' }
@@ -229,7 +246,7 @@ export async function uploadAthletePhoto(athleteId: string, form: FormData): Pro
     .from(PHOTO_BUCKET)
     .upload(path, file, { contentType: file.type, upsert: false })
 
-  if (uploadError) return { ok: false, code: 'NOT_AUTHORIZED_FOR_ATHLETE' }
+  if (uploadError) return { ok: false, code: storageFailure(uploadError) }
 
   const { data: previous } = await supabase
     .from('athletes')
