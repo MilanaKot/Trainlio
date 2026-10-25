@@ -340,3 +340,29 @@ export async function setMemberRole(
   refresh()
   return { ok: true }
 }
+
+/**
+ * §A2/§A3 `Může upravovat všechny tréninky` (decision 33). The database
+ * decides who may set it and refuses to take it from an administrator.
+ */
+export async function setMemberCanEditTrainings(
+  workspaceId: string,
+  profileId: string,
+  value: boolean,
+): Promise<StaffResult> {
+  const supabase = await createClient()
+
+  const { data, error } = await supabase.rpc('set_member_can_edit_trainings', {
+    p_workspace_id: workspaceId,
+    p_profile_id: profileId,
+    p_value: value,
+  })
+
+  if (error) return { ok: false, code: 'generic' }
+
+  const result = readRpc(data)
+  if (!result.ok) return { ok: false, code: result.code ?? 'generic' }
+
+  refresh()
+  return { ok: true }
+}

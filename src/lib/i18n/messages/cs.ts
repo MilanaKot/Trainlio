@@ -814,6 +814,7 @@ export const cs = {
     errors: {
       NOT_AUTHENTICATED: 'Nejste přihlášeni.',
       NOT_AUTHORIZED: 'Nemáte oprávnění.',
+      FORBIDDEN_EDIT: 'Tento trénink může upravit jen hlavní trenér nebo administrátor.',
       SESSION_NOT_FOUND: 'Trénink nebyl nalezen.',
       SESSION_CANCELLED: 'Trénink je zrušen a nelze jej změnit.',
       SESSION_FINISHED: 'Trénink už proběhl a nelze jej změnit.',
@@ -1122,6 +1123,17 @@ export const cs = {
     roleCaption: 'ROLE',
     adminSwitch: 'Administrátor',
     adminSwitchHint: 'Spravuje trenéry, pozvánky a organizaci',
+    /* §A2/§A3 OPRÁVNĚNÍ (v3.2, decision 33). */
+    permissionCaption: 'OPRÁVNĚNÍ',
+    rolePermissionCaption: 'ROLE A OPRÁVNĚNÍ',
+    editAllSwitch: 'Může upravovat všechny tréninky',
+    editAllSwitchHint: 'Vytvářet nové a upravovat i tréninky jiných trenérů',
+    editAllHelper:
+      'Bez tohoto oprávnění upravuje jen tréninky, které vede jako hlavní trenér. Ostatní jen prohlíží — vhodné pro asistenty.',
+    editAllOffNotice:
+      'Upravuje jen tréninky, které vede jako hlavní trenér. Ostatní tréninky jen prohlíží: vidí sestavu a kontakty na rodiče. Nové tréninky nevytváří.',
+    editAllAdminHint: 'Administrátor může upravovat vždy',
+    viewOnlyMeta: 'Jen prohlížení',
     lastAdminNotice:
       'Jste jediný administrátor. Práva si můžete odebrat, až je udělíte jinému trenérovi.',
     removeOwnAdminTitle: 'Odebrat si práva administrátora?',
@@ -1170,6 +1182,7 @@ export const cs = {
       FIRST_NAME_REQUIRED: 'Vyplňte jméno.',
       LAST_NAME_REQUIRED: 'Vyplňte příjmení.',
       LAST_ADMIN: 'Klub musí mít aspoň jednoho aktivního administrátora.',
+      ADMIN_ALWAYS_EDITS: 'Administrátor může upravovat tréninky vždy.',
       CONFIRM_SELF: 'Potvrďte prosím odebrání vlastních práv.',
       PHONE_MALFORMED: 'Zadejte platné telefonní číslo.',
       EMAIL_MALFORMED: 'Zadejte platný e-mail.',

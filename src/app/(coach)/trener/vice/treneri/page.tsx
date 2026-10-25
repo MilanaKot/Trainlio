@@ -35,7 +35,10 @@ function Row({ member, canEdit }: { member: StaffMember; canEdit: boolean }) {
         ? t.accessNoEmailMeta
         : member.roles.includes('WORKSPACE_ADMIN')
           ? t.roleWORKSPACE_ADMIN
-          : null
+          : // §A1 v3.2: a coach who may only view the trainings they do not lead.
+            !member.canEditTrainings
+            ? t.viewOnlyMeta
+            : null
     : t.inactiveMeta
 
   const inside = (
