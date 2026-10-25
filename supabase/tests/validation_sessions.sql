@@ -1,5 +1,13 @@
 -- Trainlio — coach session operations validation
 -- Run after the migrations and fixtures, on its own freshly created database.
+
+-- The dates below are in 2037 and 2038 on purpose. They were 2026 and 2027 until
+-- migration 41 made a finished training read-only, which made every check that
+-- edits a training dated in the past fail once that date went by. +11 years is
+-- the shift that keeps the calendar exactly: 2037 is laid out like 2026 and 2038
+-- like 2027, so every weekday is the same and Czech DST still ends on 25 October
+-- and starts on 28 March, which the series and duplicate checks depend on.
+
 \set QUIET 1
 \pset format unaligned
 \pset tuples_only on
@@ -47,7 +55,7 @@ create temp table t_ids (k text primary key, v uuid);
 \echo '── Creation ────────────────────────────────────────────────────────'
 insert into t_ids (k, v)
 select 's1', (pg_temp.as_user(:COACH, format($$select (public.create_training_session(
-    %L::uuid, date '2026-10-04', time '09:00', time '10:00', %L::uuid,
+    %L::uuid, date '2037-10-04', time '09:00', time '10:00', %L::uuid,
     10, 'BIRTH_YEAR_RANGE', 2016, 2018, 'Šatna 4', 'Vezměte si chrániče.', 'Interní.')
     -> 'data' ->> 'training_session_id')$$, pg_temp.ws(), pg_temp.fac('MH'))))::uuid;
 
@@ -58,7 +66,7 @@ select pg_temp.check((select (v is not null)::text from t_ids where k='s1'),
   'true', 'a coach can create a session');
 select pg_temp.check(
   (select to_char(start_at at time zone 'Europe/Prague', 'YYYY-MM-DD HH24:MI') from public.training_sessions where id=pg_temp.s1()),
-  '2026-10-04 09:00', 'local wall-clock time is stored as the right instant');
+  '2037-10-04 09:00', 'local wall-clock time is stored as the right instant');
 select pg_temp.check(
   (select count(*)::text from public.training_session_coaches where training_session_id=pg_temp.s1() and role='MAIN'),
   '1', 'the MAIN coach row is created');
@@ -73,17 +81,17 @@ select pg_temp.check(
   'Interní.', 'internal notes are stored separately (D-13)');
 select pg_temp.check(
   pg_temp.as_user(:A, format($$select (public.create_training_session(
-    %L::uuid, date '2026-10-11', time '09:00', time '10:00', %L::uuid) ->> 'code')$$,
+    %L::uuid, date '2037-10-11', time '09:00', time '10:00', %L::uuid) ->> 'code')$$,
     pg_temp.ws(), pg_temp.fac('MH'))),
   'NOT_AUTHORIZED', 'a guardian cannot create a session');
 select pg_temp.check(
   pg_temp.as_user(:WSADMIN, format($$select (public.create_training_session(
-    %L::uuid, date '2026-10-11', time '09:00', time '10:00', %L::uuid) ->> 'ok')$$,
+    %L::uuid, date '2037-10-11', time '09:00', time '10:00', %L::uuid) ->> 'ok')$$,
     pg_temp.ws(), pg_temp.fac('VH'))),
   'true', 'a workspace admin can (D-17, AC-210)');
 select pg_temp.check(
   pg_temp.as_user(:COACH, format($$select (public.create_training_session(
-    %L::uuid, date '2026-10-11', time '10:00', time '09:00', %L::uuid) ->> 'code')$$,
+    %L::uuid, date '2037-10-11', time '10:00', time '09:00', %L::uuid) ->> 'code')$$,
     pg_temp.ws(), pg_temp.fac('MH'))),
   'INVALID_TIME_RANGE', 'an end before the start is refused');
 
@@ -91,7 +99,7 @@ select pg_temp.check(
 \echo '── Change classification (D-11) ────────────────────────────────────'
 select pg_temp.check(
   pg_temp.as_user(:COACH, format($$select (public.update_training_session(
-    %L::uuid, date '2026-10-04', time '09:00', time '10:00', %L::uuid,
+    %L::uuid, date '2037-10-04', time '09:00', time '10:00', %L::uuid,
     10, 'BIRTH_YEAR_RANGE', 2016, 2018, 'Šatna 7', 'Jiná poznámka.', 'Jiná interní.')
     -> 'data' ->> 'significant')$$, pg_temp.s1(), pg_temp.fac('MH'))),
   'false', 'changing room and notes are NOT significant (D-12, D-13, AC-191)');
@@ -105,7 +113,7 @@ select pg_temp.check((select count(*)::text from public.notification_events wher
 
 select pg_temp.check(
   pg_temp.as_user(:COACH, format($$select (public.update_training_session(
-    %L::uuid, date '2026-10-04', time '09:00', time '10:00', %L::uuid, 16, 'BIRTH_YEAR_RANGE', 2016, 2018)
+    %L::uuid, date '2037-10-04', time '09:00', time '10:00', %L::uuid, 16, 'BIRTH_YEAR_RANGE', 2016, 2018)
     -> 'data' ->> 'significant')$$, pg_temp.s1(), pg_temp.fac('MH'))),
   'false', 'a capacity-only change is not significant (BR-064)');
 select pg_temp.check((select count(*)::text from public.notification_events where training_session_id=pg_temp.s1()), '0', 'and queues no email');
@@ -115,7 +123,7 @@ select pg_temp.check(
 
 select pg_temp.check(
   pg_temp.as_user(:COACH, format($$select (public.update_training_session(
-    %L::uuid, date '2026-10-04', time '08:00', time '09:00', %L::uuid, 16, 'BIRTH_YEAR_RANGE', 2016, 2018)
+    %L::uuid, date '2037-10-04', time '08:00', time '09:00', %L::uuid, 16, 'BIRTH_YEAR_RANGE', 2016, 2018)
     -> 'data' -> 'events' ->> 0)$$, pg_temp.s1(), pg_temp.fac('MH'))),
   'SESSION_SCHEDULE_CHANGED', 'a time change is significant (AC-190)');
 select pg_temp.check(
@@ -128,7 +136,7 @@ select pg_temp.check(
   (select to_char((significant_change -> 'previous' ->> 'start_at')::timestamptz
                     at time zone 'Europe/Prague', 'YYYY-MM-DD HH24:MI')
      from public.training_sessions where id=pg_temp.s1()),
-  '2026-10-04 09:00', 'and carries the wall clock it used to be (AC-269)');
+  '2037-10-04 09:00', 'and carries the wall clock it used to be (AC-269)');
 select pg_temp.check(
   (select ((significant_change ->> 'changed_at')::timestamptz = significant_changed_at)::text
      from public.training_sessions where id=pg_temp.s1()),
@@ -136,7 +144,7 @@ select pg_temp.check(
 
 select pg_temp.check(
   pg_temp.as_user(:COACH, format($$select (public.update_training_session(
-    %L::uuid, date '2026-10-04', time '08:00', time '09:00', %L::uuid, 16, 'BIRTH_YEAR_RANGE', 2016, 2018)
+    %L::uuid, date '2037-10-04', time '08:00', time '09:00', %L::uuid, 16, 'BIRTH_YEAR_RANGE', 2016, 2018)
     -> 'data' -> 'events' ->> 0)$$, pg_temp.s1(), pg_temp.fac('VH'))),
   'SESSION_FACILITY_CHANGED', 'MH to VH is significant (AC-190)');
 -- Replaced, not accumulated: only the latest change is drawn, and the earlier
@@ -153,7 +161,7 @@ select pg_temp.check(
 
 select pg_temp.check(
   pg_temp.as_user(:COACH, format($$select (public.update_training_session(
-    %L::uuid, date '2026-10-04', time '08:00', time '09:00', %L::uuid, 16, 'BIRTH_YEAR_RANGE', 2016, 2018,
+    %L::uuid, date '2037-10-04', time '08:00', time '09:00', %L::uuid, 16, 'BIRTH_YEAR_RANGE', 2016, 2018,
     null, null, null, %L::uuid) -> 'data' -> 'events' ->> 0)$$,
     pg_temp.s1(), pg_temp.fac('VH'), '00000000-0000-0000-0000-00000000c0ad')),
   'SESSION_MAIN_COACH_CHANGED', 'a main-coach change is significant (AC-190, AC-194)');
@@ -183,17 +191,17 @@ select pg_temp.check(
   '2', 'two athletes are booked');
 select pg_temp.check(
   pg_temp.as_user(:COACH, format($$select (public.update_training_session(
-    %L::uuid, date '2026-10-04', time '08:00', time '09:00', %L::uuid, 1, 'BIRTH_YEAR_RANGE', 2016, 2018,
+    %L::uuid, date '2037-10-04', time '08:00', time '09:00', %L::uuid, 1, 'BIRTH_YEAR_RANGE', 2016, 2018,
     null, null, null, %L::uuid) ->> 'code')$$, pg_temp.s1(), pg_temp.fac('VH'), '00000000-0000-0000-0000-00000000c0ad')),
   'CAPACITY_BELOW_OCCUPANCY', 'reducing capacity below occupancy is refused without confirmation');
 select pg_temp.check(
   pg_temp.as_user(:COACH, format($$select (public.update_training_session(
-    %L::uuid, date '2026-10-04', time '08:00', time '09:00', %L::uuid, 1, 'BIRTH_YEAR_RANGE', 2016, 2018,
+    %L::uuid, date '2037-10-04', time '08:00', time '09:00', %L::uuid, 1, 'BIRTH_YEAR_RANGE', 2016, 2018,
     null, null, null, %L::uuid) -> 'details' ->> 'confirmed_count')$$, pg_temp.s1(), pg_temp.fac('VH'), '00000000-0000-0000-0000-00000000c0ad')),
   '2', 'and reports how many are already booked');
 select pg_temp.check(
   pg_temp.as_user(:COACH, format($$select (public.update_training_session(
-    %L::uuid, date '2026-10-04', time '08:00', time '09:00', %L::uuid, 1, 'BIRTH_YEAR_RANGE', 2016, 2018,
+    %L::uuid, date '2037-10-04', time '08:00', time '09:00', %L::uuid, 1, 'BIRTH_YEAR_RANGE', 2016, 2018,
     null, null, null, %L::uuid, true) ->> 'ok')$$, pg_temp.s1(), pg_temp.fac('VH'), '00000000-0000-0000-0000-00000000c0ad')),
   'true', 'with confirmation it is applied');
 select pg_temp.check(
@@ -204,17 +212,17 @@ select pg_temp.check(
 \echo '── Eligibility narrowing (D-08, AC-170..175) ───────────────────────'
 select pg_temp.check(
   pg_temp.as_user(:COACH, format($$select (public.update_training_session(
-    %L::uuid, date '2026-10-04', time '08:00', time '09:00', %L::uuid, 16, 'BIRTH_YEAR_RANGE', 2017, 2018,
+    %L::uuid, date '2037-10-04', time '08:00', time '09:00', %L::uuid, 16, 'BIRTH_YEAR_RANGE', 2017, 2018,
     null, null, null, %L::uuid, true) ->> 'code')$$, pg_temp.s1(), pg_temp.fac('VH'), '00000000-0000-0000-0000-00000000c0ad')),
   'BOOKINGS_WOULD_BECOME_INELIGIBLE', 'narrowing past a booked athlete is refused without confirmation');
 select pg_temp.check(
   pg_temp.as_user(:COACH, format($$select (public.update_training_session(
-    %L::uuid, date '2026-10-04', time '08:00', time '09:00', %L::uuid, 16, 'BIRTH_YEAR_RANGE', 2017, 2018,
+    %L::uuid, date '2037-10-04', time '08:00', time '09:00', %L::uuid, 16, 'BIRTH_YEAR_RANGE', 2017, 2018,
     null, null, null, %L::uuid, true) -> 'details' ->> 'affected_count')$$, pg_temp.s1(), pg_temp.fac('VH'), '00000000-0000-0000-0000-00000000c0ad')),
   '1', 'and names how many would fall outside');
 select pg_temp.check(
   pg_temp.as_user(:COACH, format($$select (public.update_training_session(
-    %L::uuid, date '2026-10-04', time '08:00', time '09:00', %L::uuid, 16, 'BIRTH_YEAR_RANGE', 2017, 2018,
+    %L::uuid, date '2037-10-04', time '08:00', time '09:00', %L::uuid, 16, 'BIRTH_YEAR_RANGE', 2017, 2018,
     null, null, null, %L::uuid, true, true) ->> 'ok')$$, pg_temp.s1(), pg_temp.fac('VH'), '00000000-0000-0000-0000-00000000c0ad')),
   'true', 'with confirmation it is applied');
 select pg_temp.check(
@@ -250,7 +258,7 @@ select pg_temp.check(
 \echo ''
 \echo '── Duplicate ───────────────────────────────────────────────────────'
 insert into t_ids (k, v)
-select 'dup', (pg_temp.as_user(:COACH, format($$select (public.duplicate_training_session(%L::uuid, date '2026-11-01')
+select 'dup', (pg_temp.as_user(:COACH, format($$select (public.duplicate_training_session(%L::uuid, date '2037-11-01')
   -> 'data' ->> 'training_session_id')$$, pg_temp.s1())))::uuid;
 
 create or replace function pg_temp.dup() returns uuid language sql stable as
@@ -260,7 +268,7 @@ select pg_temp.check((select (v is not null)::text from t_ids where k='dup'),
   'true', 'a session can be duplicated');
 select pg_temp.check(
   (select to_char(start_at at time zone 'Europe/Prague','YYYY-MM-DD HH24:MI') from public.training_sessions where id=pg_temp.dup()),
-  '2026-11-01 08:00', 'onto a new date, keeping the local time across the DST boundary');
+  '2037-11-01 08:00', 'onto a new date, keeping the local time across the DST boundary');
 select pg_temp.check(
   (select count(*)::text from public.bookings where training_session_id=pg_temp.dup()),
   '0', 'bookings are never copied');
@@ -293,13 +301,13 @@ select pg_temp.check(
   'SESSION_CANCELLED', 'it cannot be reopened (AC-160)');
 select pg_temp.check(
   pg_temp.as_user(:COACH, format($$select (public.update_training_session(
-    %L::uuid, date '2026-10-04', time '08:00', time '09:00', %L::uuid, 16, 'ALL') ->> 'code')$$, pg_temp.s1(), pg_temp.fac('VH'))),
+    %L::uuid, date '2037-10-04', time '08:00', time '09:00', %L::uuid, 16, 'ALL') ->> 'code')$$, pg_temp.s1(), pg_temp.fac('VH'))),
   'SESSION_CANCELLED', 'nor edited');
 select pg_temp.check(
   pg_temp.as_user(:COACH, format($$select (public.cancel_training_session(%L::uuid) ->> 'code')$$, pg_temp.s1())),
   'SESSION_CANCELLED', 'nor cancelled twice');
 select pg_temp.check(
-  pg_temp.as_user(:COACH, format($$select (public.duplicate_training_session(%L::uuid, date '2026-11-08') ->> 'ok')$$, pg_temp.s1())),
+  pg_temp.as_user(:COACH, format($$select (public.duplicate_training_session(%L::uuid, date '2037-11-08') ->> 'ok')$$, pg_temp.s1())),
   'true', 'but it can be duplicated, which is the recovery path (AC-164)');
 
 \echo ''
@@ -310,7 +318,7 @@ select pg_temp.check(
 -- makes that terminal, so every call below would refuse for the wrong reason.
 insert into t_ids (k, v)
 select 'sa', (pg_temp.as_user(:COACH, format($$select (public.create_training_session(
-    %L::uuid, date '2026-11-08', time '09:00', time '10:00', %L::uuid, 10, 'ALL')
+    %L::uuid, date '2037-11-08', time '09:00', time '10:00', %L::uuid, 10, 'ALL')
     -> 'data' ->> 'training_session_id')$$, pg_temp.ws(), pg_temp.fac('MH'))))::uuid;
 create or replace function pg_temp.sa() returns uuid language sql stable as
   $$ select v from t_ids where k = 'sa' $$;
@@ -376,7 +384,7 @@ select pg_temp.check(pg_temp.assistants(pg_temp.sa()), 'Trenér Dvořák',
   'the assistant is in place before the promotion (AC-262)');
 select pg_temp.check(
   pg_temp.as_user(:COACH, format($$select (public.update_training_session(
-    %L::uuid, date '2026-11-08', time '09:00', time '10:00', %L::uuid,
+    %L::uuid, date '2037-11-08', time '09:00', time '10:00', %L::uuid,
     10, 'ALL', null, null, null, null, null, %L::uuid) ->> 'ok')$$,
     pg_temp.sa(), pg_temp.fac('MH'), :COACH2)),
   'true', 'promoting them to main coach succeeds (AC-262)');
@@ -443,7 +451,7 @@ select pg_temp.check(
 \echo '── One change that moves several things (AC-269) ───────────────────'
 insert into t_ids (k, v)
 select 'sc', (pg_temp.as_user(:COACH, format($$select (public.create_training_session(
-  %L::uuid, date '2027-03-07', time '09:00', time '10:00', %L::uuid, 10, 'ALL')
+  %L::uuid, date '2038-03-07', time '09:00', time '10:00', %L::uuid, 10, 'ALL')
   -> 'data' ->> 'training_session_id')$$, pg_temp.ws(), pg_temp.fac('MH'))))::uuid;
 
 create or replace function pg_temp.sc() returns uuid language sql stable as
@@ -457,7 +465,7 @@ select pg_temp.check(
 -- two statements, one change.
 select pg_temp.check(
   pg_temp.as_user(:COACH, format($$select (public.update_training_session(
-    %L::uuid, date '2027-03-14', time '17:30', time '18:30', %L::uuid, 10, 'ALL',
+    %L::uuid, date '2038-03-14', time '17:30', time '18:30', %L::uuid, 10, 'ALL',
     null, null, null, null, null, %L::uuid) ->> 'ok')$$,
     pg_temp.sc(), pg_temp.fac('VH'), '00000000-0000-0000-0000-00000000c0ad')),
   'true', 'a coach moves the date, the time, the hall and themselves at once');
@@ -469,7 +477,7 @@ select pg_temp.check(
   (select to_char((significant_change -> 'previous' ->> 'start_at')::timestamptz
                     at time zone 'Europe/Prague', 'YYYY-MM-DD HH24:MI')
      from public.training_sessions where id=pg_temp.sc()),
-  '2027-03-07 09:00', 'with the wall clock it used to be (AC-269)');
+  '2038-03-07 09:00', 'with the wall clock it used to be (AC-269)');
 select pg_temp.check(
   (select to_char((significant_change -> 'previous' ->> 'end_at')::timestamptz
                     at time zone 'Europe/Prague', 'HH24:MI')
@@ -496,7 +504,7 @@ select pg_temp.check(
 -- clearing what the parent has not seen yet.
 select pg_temp.check(
   pg_temp.as_user(:COACH, format($$select (public.update_training_session(
-    %L::uuid, date '2027-03-14', time '17:30', time '18:30', %L::uuid, 20, 'ALL',
+    %L::uuid, date '2038-03-14', time '17:30', time '18:30', %L::uuid, 20, 'ALL',
     null, null, 'Šatna 9', null, null, %L::uuid) -> 'data' ->> 'significant')$$,
     pg_temp.sc(), pg_temp.fac('VH'), '00000000-0000-0000-0000-00000000c0ad')),
   'false', 'a capacity and changing-room change is not significant');
@@ -504,6 +512,72 @@ select pg_temp.check(
   (select significant_change ->> 'fields' from public.training_sessions where id=pg_temp.sc()),
   '["DATE", "FACILITY", "MAIN_COACH", "TIME"]',
   'and leaves the record a parent has not read yet alone (AC-269)');
+
+\echo ''
+\echo '── A finished training is read-only (migration 41) ─────────────────'
+-- Inserted directly, because no domain function creates a training in the
+-- past. One that ended an hour ago, with one athlete on it, and one that is
+-- under way right now.
+insert into t_ids (k, v) values
+  ('past', '00000000-0000-0000-0000-0000000e0f01'),
+  ('live', '00000000-0000-0000-0000-0000000e0f02');
+insert into public.training_sessions(id,workspace_id,sport_id,location_id,facility_id,main_coach_profile_id,
+  start_at,end_at,capacity,status,created_by,eligibility_mode)
+select v.id, w.id, w.primary_sport_id, l.id, f.id, :COACH, v.s, v.e, 10, 'OPEN', :COACH, 'ALL'
+from (values
+  ('00000000-0000-0000-0000-0000000e0f01'::uuid, now() - interval '2 hours', now() - interval '1 hour'),
+  ('00000000-0000-0000-0000-0000000e0f02'::uuid, now() - interval '30 minutes', now() + interval '30 minutes')
+) v(id, s, e)
+join public.workspaces w on w.id = pg_temp.ws()
+join public.locations l on l.workspace_id = w.id
+join public.facilities f on f.location_id = l.id and f.code = 'MH';
+insert into public.training_session_coaches(training_session_id,profile_id,role)
+select v, :COACH, 'MAIN' from t_ids where k in ('past', 'live');
+insert into public.bookings(training_session_id,athlete_id,created_by,created_by_role)
+values ((select v from t_ids where k='past'), '00000000-0000-0000-0000-0000000a0001', :COACH, 'COACH');
+
+create or replace function pg_temp.past() returns uuid language sql stable as
+  $$ select v from t_ids where k = 'past' $$;
+
+select pg_temp.check(
+  pg_temp.as_user(:COACH, format($$select (public.update_training_session(
+    %L::uuid, (now() - interval '2 hours')::date, time '06:00', time '07:00', %L::uuid, 12, 'ALL') ->> 'code')$$,
+    pg_temp.past(), pg_temp.fac('MH'))),
+  'SESSION_FINISHED', 'a finished training cannot be edited');
+select pg_temp.check(
+  pg_temp.as_user(:COACH, format($$select (public.set_session_booking_state(%L::uuid, false) ->> 'code')$$,
+    pg_temp.past())),
+  'SESSION_FINISHED', 'nor its registration closed');
+select pg_temp.check(
+  pg_temp.as_user(:COACH, format($$select (public.cancel_training_session(%L::uuid) ->> 'code')$$,
+    pg_temp.past())),
+  'SESSION_FINISHED', 'nor cancelled after the fact');
+select pg_temp.check(
+  pg_temp.as_user(:COACH, format($$select (public.book_athlete_as_coach(
+    %L::uuid, '00000000-0000-0000-0000-0000000a0002'::uuid) ->> 'code')$$, pg_temp.past())),
+  'SESSION_FINISHED', 'nobody is added to it');
+select pg_temp.check(
+  pg_temp.as_user(:COACH, format($$select (public.cancel_booking_as_coach(
+    (select id from public.bookings where training_session_id = %L::uuid), null) ->> 'code')$$, pg_temp.past())),
+  'SESSION_FINISHED', 'and nobody is taken off it');
+select pg_temp.check(
+  (select status::text || ' ' || capacity || ' ' ||
+          (select count(*) from public.bookings b where b.training_session_id = s.id and b.status = 'CONFIRMED')
+     from public.training_sessions s where s.id = pg_temp.past()),
+  'OPEN 10 1', 'none of those refusals changed anything');
+select pg_temp.check(
+  (select count(*)::text from public.audit_log where entity_id = pg_temp.past()),
+  '0', 'or wrote to the audit log');
+select pg_temp.check(
+  pg_temp.as_user(:COACH, format($$select (public.duplicate_training_session(
+    %L::uuid, (now() + interval '7 days')::date) ->> 'ok')$$, pg_temp.past())),
+  'true', 'but it can still be copied as a new training (§K6b)');
+-- In progress is not finished: the athlete who turns up late can be added.
+select pg_temp.check(
+  pg_temp.as_user(:COACH, format($$select (public.book_athlete_as_coach(
+    %L::uuid, '00000000-0000-0000-0000-0000000a0002'::uuid) ->> 'ok')$$,
+    (select v from t_ids where k = 'live'))),
+  'true', 'a training under way still takes an athlete');
 
 drop function pg_temp.as_user(text,text);
 drop function pg_temp.check(text,text,text);

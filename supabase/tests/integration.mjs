@@ -12,6 +12,14 @@
  * Requires the local stack's fixed development keys; it never runs against a
  * real project.
  */
+
+// The dates below are in 2037 and 2038 on purpose. They were 2026 and 2027 until
+// migration 41 made a finished training read-only, which made every check that
+// edits a training dated in the past fail once that date went by. +11 years is
+// the shift that keeps the calendar exactly: 2037 is laid out like 2026 and 2038
+// like 2027, so every weekday is the same and Czech DST still ends on 25 October
+// and starts on 28 March, which the series and duplicate checks depend on.
+
 const API = process.env.SUPABASE_URL ?? 'http://127.0.0.1:54321'
 const MAIL = process.env.MAILPIT_URL ?? 'http://127.0.0.1:54324'
 const ANON = process.env.ANON
@@ -248,7 +256,7 @@ if (!SERVICE) {
   // Local wall clock in, correct instant out.
   let res = await rpc('create_training_session', {
     p_workspace_id: ws.id,
-    p_local_date: '2026-10-04',
+    p_local_date: '2037-10-04',
     p_local_start_time: '09:00',
     p_local_end_time: '10:00',
     p_facility_id: mh.id,
@@ -273,7 +281,7 @@ if (!SERVICE) {
 
   // A guardian must not be able to reach any of it.
   res = await rpc('create_training_session', {
-    p_workspace_id: ws.id, p_local_date: '2026-10-11', p_local_start_time: '09:00',
+    p_workspace_id: ws.id, p_local_date: '2037-10-11', p_local_start_time: '09:00',
     p_local_end_time: '10:00', p_facility_id: mh.id,
   }, auth)
   ok('a guardian cannot create a session', res.code === 'NOT_AUTHORIZED', res.code ?? '')
@@ -298,7 +306,7 @@ if (!SERVICE) {
   // D-11: what counts as significant.
   const edit = (extra) => rpc('update_training_session', {
     p_training_session_id: sessionId,
-    p_local_date: '2026-10-04', p_local_start_time: '09:00', p_local_end_time: '10:00',
+    p_local_date: '2037-10-04', p_local_start_time: '09:00', p_local_end_time: '10:00',
     p_facility_id: mh.id, p_capacity: 10,
     p_eligibility_mode: 'BIRTH_YEAR_RANGE', p_birth_year_from: 2016, p_birth_year_to: 2018,
     ...extra,
@@ -323,7 +331,7 @@ if (!SERVICE) {
   ok('the session can be cancelled', res.ok === true, res.code ?? '')
   res = await rpc('set_session_booking_state', { p_training_session_id: sessionId, p_open: true })
   ok('and cannot be reopened (AC-160)', res.code === 'SESSION_CANCELLED', res.code ?? '')
-  res = await rpc('duplicate_training_session', { p_training_session_id: sessionId, p_local_date: '2026-11-01' })
+  res = await rpc('duplicate_training_session', { p_training_session_id: sessionId, p_local_date: '2037-11-01' })
   ok('but can be duplicated, which is the recovery path (AC-164)', res.ok === true, res.code ?? '')
 
   // The outbox and audit trail were written, and stay out of reach.
@@ -344,13 +352,13 @@ if (!SERVICE) {
   console.log('')
   console.log('── Recurring series across a daylight-saving change ────────────────')
 
-  // The PRD's own example. Czech DST ends on 25 October 2026, which is itself
+  // The PRD's own example. Czech DST ends on 25 October 2037, which is itself
   // an occurrence date.
   res = await rpc('create_session_series', {
     p_workspace_id: ws.id,
     p_by_weekdays: [7],
-    p_local_date_from: '2026-10-04',
-    p_local_date_to: '2026-11-29',
+    p_local_date_from: '2037-10-04',
+    p_local_date_to: '2037-11-29',
     p_local_start_time: '09:00',
     p_local_end_time: '10:00',
     p_facility_id: mh.id,
@@ -393,9 +401,9 @@ if (!SERVICE) {
   res = await rpc('create_session_series', {
     p_workspace_id: ws.id,
     p_by_weekdays: [3, 1, 1],
-    p_excluded_dates: ['2026-10-07', '2026-12-25'],
-    p_local_date_from: '2026-10-05',
-    p_local_date_to: '2026-10-18',
+    p_excluded_dates: ['2037-10-07', '2037-12-25'],
+    p_local_date_from: '2037-10-05',
+    p_local_date_to: '2037-10-18',
     p_local_start_time: '17:00',
     p_local_end_time: '18:00',
     p_facility_id: mh.id,
@@ -415,14 +423,14 @@ if (!SERVICE) {
   ok('the stored pattern comes back canonical (AC-263)',
      JSON.stringify(multi[0]?.by_weekdays) === '[1,3]', JSON.stringify(multi[0]?.by_weekdays))
   ok('alongside the dates it actually suppressed (AC-263)',
-     JSON.stringify(multi[0]?.excluded_dates) === '["2026-10-07"]',
+     JSON.stringify(multi[0]?.excluded_dates) === '["2037-10-07"]',
      JSON.stringify(multi[0]?.excluded_dates))
 
   res = await rpc('create_session_series', {
     p_workspace_id: ws.id,
     p_by_weekdays: [1, 2, 3, 4],
-    p_local_date_from: '2026-10-05',
-    p_local_date_to: '2027-09-20',
+    p_local_date_from: '2037-10-05',
+    p_local_date_to: '2038-09-20',
     p_local_start_time: '06:00',
     p_local_end_time: '07:00',
     p_facility_id: mh.id,
