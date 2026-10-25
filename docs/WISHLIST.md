@@ -89,3 +89,50 @@ for. The current rule is that only a cancellation and a significant change send
 an e-mail at all, and push makes that rule matter much more: a product that
 buzzes for every booking gets its notifications turned off, and then the
 cancellation does not arrive either.
+
+---
+
+## 3. The coach's own words in a cancellation e-mail
+
+**What.** When a coach cancels a training, the e-mail the families get should
+be able to say why, in the coach's words — "led je po poruše rolby", "trenér
+je nemocný, náhradní termín v sobotu" — and the other coaches of that training
+should hear about it too. Asked for by the club in October 2026, after the
+first real cancellations.
+
+Two parts, worth doing in this order:
+
+- **A message to the parents.** An optional text field in the cancel dialog
+  (§K6), shown in the e-mail as the coach's note. The rest of the e-mail stays
+  the template it is now: what was cancelled, when, where, and the button.
+- **Telling the staff.** The assistants and the main coach of the cancelled
+  training, when somebody else cancelled it. Today nobody on the staff side is
+  told anything.
+
+Editing the whole e-mail (subject, body, layout) is deliberately not on the
+list: the template is what makes every cancellation read the same and carry
+the facts, and a free-form e-mail is how a parent ends up without the date.
+
+**What exists already.** Most of the first part, unused.
+`cancel_training_session` takes `p_reason` (migration 13) and stores it in the
+event payload; `cancelSession(sessionId, reason)` passes it through; and
+`composeNotificationEmail` already renders `session.reason` as a message block
+in both the text and the HTML version. The dialog in
+`src/components/session/session-controls.tsx` calls `cancelSession(session.id,
+'')`, so the field is the missing piece. `TextareaWithCounter` (field.tsx) is
+the control the rest of the forms use for notes.
+
+The second part has nothing yet. `notification_event_recipients` (migration 17)
+expands an event to guardians only (BR-072).
+
+**What it would take.** For the message: the textarea in the dialog, a length
+limit agreed with the SQL side, and an e-mail test that the note arrives
+escaped. Small. For the staff: a staff branch in recipient expansion, a
+template that addresses a colleague rather than a parent, and a rule that the
+coach who cancelled is not told about their own action.
+
+**What has to be decided first.** Whether the note is also shown in the app on
+the cancelled training (§G6 for the parent, §K6b for the coach) or lives only
+in the e-mail; whether a series-wide cancellation, if it ever exists, takes one
+note for all of them; and whether staff are told about every cancellation or
+only about ones somebody else made.
