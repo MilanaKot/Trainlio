@@ -1,3 +1,4 @@
+import { Fragment } from 'react'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { getCoachSession, getCoachWorkspace, getSessionCoaches } from '@/server/sessions/queries'
@@ -81,6 +82,16 @@ export default async function SessionDetailPage({
   const { confirmed } = splitRoster(entries)
   const assistants = coaches.filter((c) => c.role === 'ASSISTANT')
 
+  // `Ročníky 2017–2018`, as §K2 has it: the range alone is a pair of numbers
+  // with no subject. `Všichni sportovci` needs no label.
+  const years = eligibilityLabel(
+    session.eligibilityMode,
+    session.birthYearFrom,
+    session.birthYearTo,
+    t.eligibilityAll,
+  )
+  const eligibility = years === t.eligibilityAll ? years : `${messages.session.years} ${years}`
+
   const venue = [
     session.locationName,
     // `Malá hala (MH)`, as §K2 has it: the code alone is shorthand for the
@@ -89,15 +100,8 @@ export default async function SessionDetailPage({
       ? `${session.facilityName} (${session.facilityCode})`
       : session.facilityCode,
     changingRoomLabel(session.changingRoom, t.changingRoom),
-    eligibilityLabel(
-      session.eligibilityMode,
-      session.birthYearFrom,
-      session.birthYearTo,
-      t.eligibilityAll,
-    ),
-  ]
-    .filter(Boolean)
-    .join(' · ')
+    eligibility,
+  ].filter((part): part is string => Boolean(part))
 
   const sessionLabel = `${formatDateShort(start, workspace.timezone)} · ${formatTime(start, workspace.timezone)}`
 
@@ -129,7 +133,18 @@ export default async function SessionDetailPage({
         >
           {formatTimeRange(start, end, workspace.timezone)}
         </p>
-        <p className="text-meta text-muted">{venue}</p>
+        {/* §K2 sets this line at 15 px, a step up from the 14 px meta on the
+            list rows: it is the place and the group, read once, standing.
+            On a phone it wraps, so it wraps between the parts and never inside
+            one — `Ročníky 2015–` above `2023` reads as two things. */}
+        <p className="text-row/5 font-normal text-muted">
+          {venue.map((part, index) => (
+            <Fragment key={part}>
+              {index > 0 ? ' · ' : null}
+              <span className="whitespace-nowrap">{part}</span>
+            </Fragment>
+          ))}
+        </p>
         {session.status === 'CLOSED' ? (
           <span className="flex w-fit items-center gap-1 rounded-badge bg-neutral-50 px-2 py-1 text-hint font-semibold text-muted">
             <LockIcon />
