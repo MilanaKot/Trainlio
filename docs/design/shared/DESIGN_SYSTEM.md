@@ -228,6 +228,9 @@ Notice-like row inside a panel: radius 12, padding 12/14, icon 20 + title 15/700
 ### 6.31 ContactActions (v3)
 For calling a person from a screen: either two equal outline lg buttons with icon (`Zavolat` / `Napsat SMS`, G6d footer) or two 44 × 44 icon buttons (primary-100 bg, primary icon) at the end of a person row (K13). Always real `<a href="tel:+420…">` / `sms:` links (number without spaces), `aria-label` includes the person's name. Hidden entirely when there is no phone — never a disabled call button.
 
+### 6.33 PlaceChip (v3.1)
+Highlights where and for whom a training is, right under the time in the coach session detail (K2). Inline block that hugs its text (`align-self: flex-start`, wraps to more lines on narrow screens), padding 10/14, radius 12, bg `primary-100` (#E5EBFD), text `primary` (#2B55E0) 15/22 **700**. **No icon.** Content: `{town} · {hall full name} ({code}) · Šatna {n} · Ročníky {from}–{to}` (`Všichni` when no year limit; omit `Šatna` when empty). Contrast #2B55E0 on #E5EBFD ≈ 4.6:1 (AA for 15 px bold). Not interactive — no hover/focus styles.
+
 ### 6.32 E-mail layout (v3)
 Defined in `EMAILS.md` — system fonts only, 520 px card, works with images blocked.
 
