@@ -318,3 +318,18 @@ The code is what the club calls the halls (MH, VH), and the full name is still
 on the edit form and in every e-mail. The chip keeps the design's size, weight
 and colours. On a screen narrower than about 360 px it still wraps, between
 the parts and never inside one.
+
+## G10 names the child's panel when the parent's is above it
+
+G10 has no caption over the child's first panel: under the title `Nový
+sportovec`, with the photo row above it, there is nothing else it could be.
+The first registration also asks the parent who they are (`Vaše údaje`,
+since 28 September — otherwise the coach's roster shows a dash where the
+parent's name and number belong). Then the screen held two `Jméno` /
+`Příjmení` pairs one after the other, and a parent could not tell which was
+the child's. While the parent's panel is there, the child's is captioned
+`SPORTOVEC`, in the same style as `VAŠE ÚDAJE` and `LEDNÍ HOKEJ`. A second
+child meets the design's screen unchanged.
+
+Still missing against G10: the photo row. A photograph is uploaded to the
+athlete's own folder, so it is offered from G9 once the athlete exists.

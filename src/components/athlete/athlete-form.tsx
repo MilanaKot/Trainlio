@@ -3,12 +3,7 @@
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { messages } from '@/lib/i18n'
-import {
-  HOCKEY_POSITIONS,
-  HOCKEY_POSITION_LABELS,
-  STICK_SIDES,
-  STICK_SIDE_LABELS,
-} from '@/lib/enums/hockey'
+import { HOCKEY_POSITION_LABELS, STICK_SIDES, STICK_SIDE_LABELS } from '@/lib/enums/hockey'
 import { createAthlete, updateAthlete } from '@/server/athletes/actions'
 import { Button } from '@/components/ui/button'
 import { Field } from '@/components/ui/field'
@@ -31,6 +26,20 @@ type Props = {
 }
 
 const t = messages.athlete
+
+/**
+ * §G9/§G10 lay the pills out two to a row as Brankář · Obránce, Centr ·
+ * Univerzál, Levé křídlo · Pravé křídlo: the wings side by side. The enum's
+ * own order is the database's and stays as it is.
+ */
+const POSITION_ORDER: readonly HockeyPosition[] = [
+  'GOALIE',
+  'DEFENSE',
+  'CENTER',
+  'UTILITY',
+  'LEFT_WING',
+  'RIGHT_WING',
+]
 
 function Panel({ caption, children }: { caption?: string; children: React.ReactNode }) {
   return (
@@ -144,7 +153,10 @@ export function AthleteForm({
         </Panel>
       ) : null}
 
-      <Panel>
+      {/* With the parent's own panel above it, this one says whose it is: two
+          `Jméno` / `Příjmení` pairs in a row with nothing between them read as
+          the same thing asked twice. G10 alone has the title for that. */}
+      <Panel {...(askGuardianDetails ? { caption: t.athleteSection } : {})}>
         <Field
           label={t.firstName}
           required
@@ -237,7 +249,7 @@ export function AthleteForm({
             label={t.position}
             value={position}
             onChange={setPosition}
-            options={HOCKEY_POSITIONS.map((code) => ({
+            options={POSITION_ORDER.map((code) => ({
               value: code,
               label: HOCKEY_POSITION_LABELS[code],
             }))}
