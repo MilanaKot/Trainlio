@@ -62,6 +62,12 @@ const supabaseIsLocal = ['127.0.0.1', '::1', 'localhost'].includes(supabase.host
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
+  // `next dev` serves its scripts to localhost only, and refuses them to any
+  // other origin. The local stack is addressed as 127.0.0.1 throughout —
+  // NEXT_PUBLIC_SITE_URL, so every link in an e-mail, and CONTRIBUTING — and a
+  // page opened there rendered but never ran: the sign-in button did nothing.
+  // Development only; a production build does not read this.
+  allowedDevOrigins: ['127.0.0.1'],
   images: {
     dangerouslyAllowLocalIP: supabaseIsLocal,
     remotePatterns: [
