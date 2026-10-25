@@ -1,4 +1,3 @@
-import { Fragment } from 'react'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { getCoachSession, getCoachWorkspace, getSessionCoaches } from '@/server/sessions/queries'
@@ -10,8 +9,8 @@ import { buttonVariants } from '@/components/ui/button'
 import { CapacityMeter } from '@/components/ui/capacity-meter'
 import { DetailList } from '@/components/ui/detail-list'
 import { Notice } from '@/components/ui/notice'
+import { PlaceChip } from '@/components/ui/place-chip'
 import { splitRoster } from '@/lib/domain/roster'
-import { changingRoomLabel, eligibilityLabel } from '@/lib/domain/session'
 import {
   formatDateGroup,
   formatDateShort,
@@ -82,27 +81,6 @@ export default async function SessionDetailPage({
   const { confirmed } = splitRoster(entries)
   const assistants = coaches.filter((c) => c.role === 'ASSISTANT')
 
-  // `Ročníky 2017–2018`, as §K2 has it: the range alone is a pair of numbers
-  // with no subject. `Všichni sportovci` needs no label.
-  const years = eligibilityLabel(
-    session.eligibilityMode,
-    session.birthYearFrom,
-    session.birthYearTo,
-    t.eligibilityAll,
-  )
-  const eligibility = years === t.eligibilityAll ? years : `${messages.session.years} ${years}`
-
-  const venue = [
-    session.locationName,
-    // `Malá hala (MH)`, as §K2 has it: the code alone is shorthand for the
-    // people who already know it.
-    session.facilityName
-      ? `${session.facilityName} (${session.facilityCode})`
-      : session.facilityCode,
-    changingRoomLabel(session.changingRoom, t.changingRoom),
-    eligibility,
-  ].filter((part): part is string => Boolean(part))
-
   const sessionLabel = `${formatDateShort(start, workspace.timezone)} · ${formatTime(start, workspace.timezone)}`
 
   return (
@@ -133,18 +111,14 @@ export default async function SessionDetailPage({
         >
           {formatTimeRange(start, end, workspace.timezone)}
         </p>
-        {/* §K2 sets this line at 15 px, a step up from the 14 px meta on the
-            list rows: it is the place and the group, read once, standing.
-            On a phone it wraps, so it wraps between the parts and never inside
-            one — `Ročníky 2015–` above `2023` reads as two things. */}
-        <p className="text-row/5 font-normal text-muted">
-          {venue.map((part, index) => (
-            <Fragment key={part}>
-              {index > 0 ? ' · ' : null}
-              <span className="whitespace-nowrap">{part}</span>
-            </Fragment>
-          ))}
-        </p>
+        <PlaceChip
+          town={session.locationName}
+          facilityCode={session.facilityCode}
+          changingRoom={session.changingRoom}
+          eligibilityMode={session.eligibilityMode}
+          birthYearFrom={session.birthYearFrom}
+          birthYearTo={session.birthYearTo}
+        />
         {session.status === 'CLOSED' ? (
           <span className="flex w-fit items-center gap-1 rounded-badge bg-neutral-50 px-2 py-1 text-hint font-semibold text-muted">
             <LockIcon />
