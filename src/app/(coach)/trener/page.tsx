@@ -55,7 +55,15 @@ export default async function CoachSessionsPage({
   const now = new Date()
 
   const sports = messages.sports as Record<string, string>
-  const meta = [sports[workspace.sportCode], sessions[0]?.locationName].filter(Boolean)
+
+  // The club's own location, not whichever training happens to be first in the
+  // list. On the day the club is handed over there are no trainings at all,
+  // and a header that only names the town once somebody creates one reads as a
+  // half-loaded screen. Named only while the club has a single location: with
+  // two, picking one of them would be a guess. (The parent's §G1 header has
+  // taken it from the workspace since migration 29.)
+  const towns = [...new Set(workspace.facilities.map((one) => one.locationName))]
+  const meta = [sports[workspace.sportCode], towns.length === 1 ? towns[0] : null].filter(Boolean)
 
   const days = groupByLocalDay(sessions, (session) =>
     localDateKey(new Date(session.startAt), workspace.timezone),

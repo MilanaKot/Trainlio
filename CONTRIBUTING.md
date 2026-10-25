@@ -52,6 +52,22 @@ pnpm demo vas@email.cz
 suites run against it is full of their leftovers. The address is the one you
 just signed in with.
 
+### The club on its first day
+
+The other state worth looking at is the one the club is handed over in: no
+trainings, no families, every screen an empty state. The fixtures are in the
+way of that, so the reset skips them:
+
+```bash
+pnpm exec supabase db reset --no-seed
+pnpm demo vas@email.cz --empty
+```
+
+Sign in again in between — the reset takes the accounts with it. `--empty`
+makes that address the coach and administrator and creates nothing else, which
+leaves the first training, the first family and the first booking to be made
+by hand, in the order a real club makes them.
+
 That makes you the coach and administrator, gives you a telephone number, and
 adds five families, eight trainings across a fortnight — two of them already
 over, one full — and the bookings on them. Local stack only: the script refuses

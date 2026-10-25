@@ -8,6 +8,10 @@
  * it adds families, children, a fortnight of trainings and the bookings on
  * them, so every screen has real rows in it instead of an empty state.
  *
+ * `--empty` stops after the role. That is the other thing worth looking at:
+ * the club on the day it is handed over, where every screen is an empty state
+ * and the first training has to be created before anything else exists.
+ *
  * Local stack only. It writes with the service-role key, which bypasses row
  * level security entirely, and it refuses to run against anything that is not
  * 127.0.0.1 — that key belongs in Vercel's environment and nowhere near a
@@ -23,8 +27,11 @@ const DEFAULT_SERVICE =
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImV4cCI6MTk4MzgxMjk5Nn0.EGIM96RAZx35lJzdJsyH-qQwv8Hdp7fsn3W0YpN81IU'
 
 const email = process.argv[2]
-if (!email) {
-  console.error('usage: pnpm demo <your-email>   (the address you signed in with)')
+const staffOnly = process.argv.includes('--empty')
+if (!email || email.startsWith('--')) {
+  console.error('usage: pnpm demo <your-email> [--empty]')
+  console.error('  <your-email>  the address you signed in with')
+  console.error('  --empty       make them staff and create nothing else')
   process.exit(1)
 }
 
@@ -158,6 +165,18 @@ await fetch(`${STACK}/rest/v1/staff_contacts`, {
   headers: { ...headers, prefer: 'resolution=merge-duplicates' },
   body: JSON.stringify({ profile_id: me.id, phone: '777 654 321' }),
 })
+
+if (staffOnly) {
+  console.log(`
+${email} is now the coach and administrator of ${workspace.name}, and the club
+is empty — no families, no trainings, nothing booked. This is the club on the
+day it is handed over.
+
+  application  http://127.0.0.1:3000
+  inbox        http://127.0.0.1:54324
+`)
+  process.exit(0)
+}
 
 // ── The families ───────────────────────────────────────────────────────────
 const FAMILIES = [
