@@ -29,7 +29,7 @@ body{margin:0;background:#F3F5F9;font-family:Manrope,"Segoe UI",system-ui,sans-s
 .btn{height:52px;width:100%;border-radius:12px;border:0;font:700 16px/1 Manrope,system-ui,sans-serif;background:var(--accent);color:#fff}
 </style>
 </helmet>
-<div class="s" style="width: 390px; height: 1120px; background: var(--bg); display: flex; flex-direction: column; overflow: hidden">
+<div class="s" style="width: 390px; height: 1260px; background: var(--bg); display: flex; flex-direction: column; overflow: hidden">
 <div style="padding: 52px 16px 0">
 <a href="A01-Treneri.dc.html" style="height: 44px; display: inline-flex; align-items: center; color: var(--accent); text-decoration: none; font-size: 15px; font-weight: 700">Zrušit</a>
 </div>
@@ -48,12 +48,18 @@ body{margin:0;background:#F3F5F9;font-family:Manrope,"Segoe UI",system-ui,sans-s
 <div class="field"><label class="lbl" for="e">E-mail <span>Pro přihlášení</span></label><input id="e" class="inp" type="email" value="jan.novak@email.cz" placeholder="jmeno@email.cz"></div>
 </div>
 
-<h2 class="cap" style="margin-top: 4px">Role</h2>
+<h2 class="cap" style="margin-top: 4px">Role a oprávnění</h2>
 <div style="background: var(--surface); border-radius: 16px; padding: 16px; display: flex; flex-direction: column; gap: 12px">
 <label style="display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 44px">
 <span style="display: flex; flex-direction: column"><b style="font-size: 16px; font-weight: 600">Administrátor</b><span style="font-size: 13px; line-height: 18px; color: var(--muted)">Spravuje trenéry, pozvánky a organizaci</span></span>
 <input type="checkbox" role="switch" style="position: absolute; opacity: 0; width: 1px; height: 1px"><span class="sw off" aria-hidden="true"></span>
 </label>
+<div style="height: 1px; background: var(--line)"></div>
+<label style="display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 44px">
+<span style="display: flex; flex-direction: column"><b style="font-size: 16px; font-weight: 600">Může upravovat všechny tréninky</b><span style="font-size: 13px; line-height: 18px; color: var(--muted)">Vytvářet nové a upravovat i tréninky jiných trenérů</span></span>
+<input type="checkbox" role="switch" style="position: absolute; opacity: 0; width: 1px; height: 1px"><span class="sw off" aria-hidden="true"></span>
+</label>
+<div style="padding: 12px 14px; border-radius: 12px; background: var(--bg); font-size: 14px; line-height: 20px; color: var(--muted)">Upravuje jen tréninky, které vede jako hlavní trenér. Ostatní tréninky jen prohlíží: vidí sestavu a kontakty na rodiče. Nové tréninky nevytváří.</div>
 </div>
 
 <h2 class="cap" style="margin-top: 4px">Stav</h2>
@@ -71,7 +77,7 @@ body{margin:0;background:#F3F5F9;font-family:Manrope,"Segoe UI",system-ui,sans-s
 </footer>
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":1120}}'>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":1260}}'>
 class Component extends DCLogic {
 renderVals() {
 return {};

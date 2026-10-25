@@ -55,6 +55,7 @@ interface RosterEntry {
   guardian: { firstName: string; lastName: string; phone: string | null }; // coaches may see the phone (decided)
 }
 interface Coach { id: string; firstName: string; lastName: string; active: boolean; isAdmin: boolean;
+                 canEditTrainings: boolean;   // v3.2: may edit ALL trainings + create; false → edits only own (main coach) trainings; admins always true
                  phone: string | null }   // v3: optional; shown to guardians only in G6d (removed-by-coach footer)
 interface CoachAthleteRow {             // K12
   id: string; firstName: string; lastName: string; birthYear: number;
@@ -81,7 +82,21 @@ Day groups (heading `text-date` primary; today + TodayChip `Dnes`). Rows = Coach
 - right: count (Barlow 22/700) + mini meter (6 × 12 segments) — colors per CapacityMeter rules (full = cobalt, over = neutral `+N` pill);
 - cancelled: muted card, struck time, danger badge `Zrušeno` instead of meter.
 Below the header a **SegmentedControl** (`role="tablist"`) `Nadcházející` / `Minulé` (v3, DR-02) — same component as guardian G4/G5. `Minulé` → K14.
+**v3.2 — "Moje" filter + role label.** Under the segmented control: FilterChips (DS §6.28) `Všechny` / `Moje` (single select, `aria-pressed`). `Moje` = sessions where the signed-in coach is main coach **or** assistant. The choice is remembered per user (localStorage, fallback `Všechny`; a coach with `canEditTrainings = false` defaults to `Moje`). Applies to K14 too.
+On every row where the signed-in coach takes part, a RoleLabel (DS §6.34) under the meta: `Hlavní trenér` (primary-100 / primary) or `Asistent` (neutral-50 / muted). No label on sessions without the coach.
+**K1b** = `Moje` selected, coach without the permission: no FAB; rows labelled `Asistent` open K2b, rows labelled `Hlavní trenér` open the full K2.
 FAB `+ Vytvořit` → K10 (only on `Nadcházející`). Empty: `Zatím nemáte žádné tréninky.` + `Vytvořit trénink`.
+
+### K2b · Session detail — read-only (v3.2)
+**Edit rule (v3.2, binding):** `canEdit(session) = isAdmin || canEditTrainings || session.mainCoachId === me.id`. A coach without the permission **always edits the trainings they lead as main coach**, and only views the rest.
+K2b is shown when `canEdit(session)` is false (the coach is an assistant or not on the session). On their own trainings (main coach) such a coach sees the normal K2 with all actions. Same as K2 with:
+- Notice under the header (white, inset 1.5 px line, eye icon): title `Jen pro čtení`, text `Tento trénink vede {main coach}. Upravit ho může hlavní trenér nebo administrátor.`
+- **Hidden** (not disabled): `Přidat sportovce`, the whole `AKCE` section (Upravit, Duplikovat, Zavřít/Otevřít přihlašování), `Zrušit trénink`, removing an athlete from the roster, editing notes.
+- Still visible: capacity, coaches, both notes (incl. internal note), the roster with guardians' phones (call/SMS).
+`/edit` of a session where `canEdit` is false → server redirect to K2b; every mutation on such a session returns `FORBIDDEN_EDIT` (server + RLS); the UI hiding is only convenience.
+**Creating** (FAB, `/new`, duplicate `?from=`, series `?mode=series`) requires `isAdmin || canEditTrainings` — a coach without the permission cannot create trainings, not even as main coach (no FAB, no `Duplikovat` in K2 of own trainings, no `+ Nová série`).
+**Main-coach field:** a coach without the permission editing their own training cannot change `Hlavní trenér` (K3 row disabled, helper `Hlavního trenéra může změnit administrátor.`) — otherwise they would lock themselves out. Assistants can be changed.
+Other: K13 `Upravit poznámku` only with `isAdmin || canEditTrainings`.
 
 ### K14 · Past trainings (`?tab=past`) — v3, DR-02
 Same header + segmented control (`Minulé` active). Day groups **descending** (newest first), same heading style. No FAB.
@@ -246,6 +261,9 @@ The UI must always state the notification consequence **before** the coach confi
 13. K15 lists running and ended series; K16 shows only that series' trainings; there is no edit-series action anywhere.
 14. Coach adds an athlete in K7 → guardians receive E08 with the cancellation deadline.
 15. First sign-in of an invited coach → K0 once; second sign-in → K1 directly.
+16. `Moje` shows only sessions where I am main coach or assistant; each shows the correct RoleLabel; choice survives reload.
+17. Coach without the permission: no FAB; on a session where they are assistant → K2b with `Jen pro čtení`, no actions, direct POST returns `FORBIDDEN_EDIT`, `/edit` redirects; on a session where they are **main coach** → full K2, can edit/close/cancel/add/remove, but `Duplikovat` is hidden and the `Hlavní trenér` field is locked; creating via API returns `FORBIDDEN_EDIT`.
+18. View-only coach can still call a guardian from the roster and read the internal note.
 
 ## 6. Assumptions & open questions
 - Reopening closed registration is allowed (`Otevřít přihlašování`) — confirmed v3.
