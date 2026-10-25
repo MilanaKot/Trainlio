@@ -86,7 +86,7 @@ export function CoachTrainingRow({
         <span className="flex min-w-0 flex-col gap-0.5">
           <span
             className={cn(
-              'nums text-sheet-title font-bold',
+              'nums whitespace-nowrap text-[1.625rem]/[1.875rem] font-bold',
               cancelled ? 'text-muted line-through' : 'text-ink',
             )}
           >
