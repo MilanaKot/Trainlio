@@ -811,6 +811,14 @@ export const cs = {
     cancelConfirm: 'Zrušit trénink',
     cancelledNotice: 'Trénink je zrušen. Nelze jej upravit ani znovu otevřít.',
     reasonOptional: 'Důvod (nepovinné)',
+    /* §K1 v3.2: the filter and the coach's part in a training (DS §6.34). */
+    filterLabel: 'Zobrazit',
+    filterAll: 'Všechny',
+    filterMine: 'Moje',
+    noSessionsMine: 'Na žádném nadcházejícím tréninku nejste.',
+    noPastSessionsMine: 'Na žádném odehraném tréninku jste nebyli.',
+    roleMain: 'Hlavní trenér',
+    roleAssistant: 'Asistent',
     errors: {
       NOT_AUTHENTICATED: 'Nejste přihlášeni.',
       NOT_AUTHORIZED: 'Nemáte oprávnění.',

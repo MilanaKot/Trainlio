@@ -25,6 +25,7 @@ const session = (over: Partial<CoachSession> = {}): CoachSession => ({
   mainCoachName: 'Jan Novák',
   significantChangedAt: null,
   editedSinceCreated: false,
+  coachRoles: [{ profileId: 'c1', role: 'MAIN' }],
   ...over,
 })
 
