@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { WeekdayBadges } from '@/components/ui/weekday-badges'
-import { eligibilityLabel } from '@/lib/domain/session'
+import { changingRoomLabel, eligibilityLabel } from '@/lib/domain/session'
 import { formatLocalDateShort } from '@/lib/time/workspace-time'
 import { messages } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
@@ -23,7 +23,9 @@ export function SeriesCard({ series, ended = false }: { series: CoachSeries; end
     t.eligibilityAllShort,
   )
 
-  const place = [series.facilityCode, series.changingRoom, years].filter(Boolean).join(' · ')
+  const place = [series.facilityCode, changingRoomLabel(series.changingRoom, t.changingRoom), years]
+    .filter(Boolean)
+    .join(' · ')
 
   const range = `${formatLocalDateShort(series.localDateFrom)} – ${formatLocalDateShort(series.localDateTo)}`
   const counts = ended

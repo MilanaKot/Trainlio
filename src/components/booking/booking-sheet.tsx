@@ -3,6 +3,7 @@
 import { useMemo, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { messages, plural } from '@/lib/i18n'
+import { changingRoomLabel } from '@/lib/domain/session'
 import { remainingPlaces } from '@/lib/domain/capacity'
 import {
   birthYear,
@@ -73,7 +74,11 @@ export function BookingSheet({
 
   const start = new Date(session.startAt)
   const deadlineAt = new Date(start.getTime() - deadlineHours * 60 * 60 * 1000)
-  const venue = [session.locationName, session.facilityCode, session.changingRoom]
+  const venue = [
+    session.locationName,
+    session.facilityCode,
+    changingRoomLabel(session.changingRoom, messages.myTrainings.changingRoom),
+  ]
     .filter(Boolean)
     .join(' · ')
 

@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { messages } from '@/lib/i18n'
+import { changingRoomLabel } from '@/lib/domain/session'
 import { canCancel, showsChangedBadge } from '@/lib/domain/booking'
 import { bookingCardVariant, changeRows } from '@/lib/domain/booking-card'
 import {
@@ -92,7 +93,11 @@ export function BookingCard({
   const deadlineAt = new Date(start.getTime() - deadlineHours * 60 * 60 * 1000)
   const relative = relativeDayLabel(start, now, timezone)
 
-  const venue = [session.locationName, session.facilityCode, session.changingRoom]
+  const venue = [
+    session.locationName,
+    session.facilityCode,
+    changingRoomLabel(session.changingRoom, t.changingRoom),
+  ]
     .filter(Boolean)
     .join(' · ')
 

@@ -6,7 +6,7 @@ import Link from 'next/link'
 import { messages, plural } from '@/lib/i18n'
 import { weeklyOccurrenceDates, formatLocalDateShort } from '@/lib/time/workspace-time'
 import { ISO_WEEKDAYS, MAX_SERIES_OCCURRENCES } from '@/lib/domain/series'
-import { defaultEndTime } from '@/lib/domain/session'
+import { changingRoomLabel, defaultEndTime } from '@/lib/domain/session'
 import { createSeries } from '@/server/sessions/actions'
 import { Button } from '@/components/ui/button'
 import { Field } from '@/components/ui/field'
@@ -155,7 +155,7 @@ export function SeriesForm({
   const hall = workspace.facilities.find((f) => f.id === values.facilityId)
   const summary = [
     hall?.code,
-    values.changingRoom,
+    changingRoomLabel(values.changingRoom, t.changingRoom),
     `${t.capacity} ${values.capacity}`,
     values.eligibilityMode === 'ALL'
       ? t.eligibilityAllShort

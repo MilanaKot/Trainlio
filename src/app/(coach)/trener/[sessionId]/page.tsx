@@ -10,7 +10,7 @@ import { CapacityMeter } from '@/components/ui/capacity-meter'
 import { DetailList } from '@/components/ui/detail-list'
 import { Notice } from '@/components/ui/notice'
 import { splitRoster } from '@/lib/domain/roster'
-import { eligibilityLabel } from '@/lib/domain/session'
+import { changingRoomLabel, eligibilityLabel } from '@/lib/domain/session'
 import {
   formatDateGroup,
   formatDateShort,
@@ -84,7 +84,7 @@ export default async function SessionDetailPage({
     session.facilityName
       ? `${session.facilityName} (${session.facilityCode})`
       : session.facilityCode,
-    session.changingRoom,
+    changingRoomLabel(session.changingRoom, t.changingRoom),
     eligibilityLabel(
       session.eligibilityMode,
       session.birthYearFrom,

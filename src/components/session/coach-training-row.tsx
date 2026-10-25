@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { messages, plural } from '@/lib/i18n'
-import { eligibilityLabel } from '@/lib/domain/session'
+import { changingRoomLabel, eligibilityLabel } from '@/lib/domain/session'
 import { capacityState } from '@/lib/domain/capacity'
 import { formatTimeRange } from '@/lib/time/workspace-time'
 import { Badge } from '@/components/ui/badge'
@@ -55,7 +55,7 @@ export function CoachTrainingRow({
 
   const meta = [
     session.facilityCode,
-    session.changingRoom,
+    changingRoomLabel(session.changingRoom, t.changingRoom),
     eligibilityLabel(
       session.eligibilityMode,
       session.birthYearFrom,
