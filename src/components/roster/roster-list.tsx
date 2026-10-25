@@ -31,6 +31,7 @@ export function RosterList({
   confirmedCount,
   timezone,
   addable,
+  removable,
 }: {
   sessionId: string
   sessionLabel: string
@@ -40,6 +41,8 @@ export function RosterList({
   confirmedCount: number
   timezone: string
   addable: boolean
+  /** Whether a booked athlete can still be taken off (not once it is over). */
+  removable: boolean
 }) {
   const [open, setOpen] = useState<RosterEntry | null>(null)
   const [guardians, setGuardians] = useState<BookingGuardian[] | null>(null)
@@ -137,6 +140,7 @@ export function RosterList({
         sessionId={sessionId}
         sessionLabel={sessionLabel}
         timezone={timezone}
+        removable={removable}
         onClose={() => setOpen(null)}
       />
 

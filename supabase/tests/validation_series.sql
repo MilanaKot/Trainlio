@@ -1,5 +1,13 @@
 -- Trainlio — recurring series validation
 -- Run after the migrations and fixtures, on its own freshly created database.
+
+-- The dates below are in 2037 and 2038 on purpose. They were 2026 and 2027 until
+-- migration 41 made a finished training read-only, which made every check that
+-- edits a training dated in the past fail once that date went by. +11 years is
+-- the shift that keeps the calendar exactly: 2037 is laid out like 2026 and 2038
+-- like 2027, so every weekday is the same and Czech DST still ends on 25 October
+-- and starts on 28 March, which the series and duplicate checks depend on.
+
 \set QUIET 1
 \pset format unaligned
 \pset tuples_only on
@@ -40,26 +48,26 @@ create temp table t_ids (k text primary key, v uuid);
 
 \echo '── Occurrence dates are local calendar dates ───────────────────────'
 select pg_temp.check(
-  (select count(*)::text from public.weekly_occurrence_dates(date '2026-10-04', date '2026-11-29', array[7])),
+  (select count(*)::text from public.weekly_occurrence_dates(date '2037-10-04', date '2037-11-29', array[7])),
   '9', 'the PRD example generates nine Sundays');
 select pg_temp.check(
-  (select string_agg(to_char(d,'Dy'), ',') from public.weekly_occurrence_dates(date '2026-10-04', date '2026-11-29', array[7]) d),
+  (select string_agg(to_char(d,'Dy'), ',') from public.weekly_occurrence_dates(date '2037-10-04', date '2037-11-29', array[7]) d),
   'Sun,Sun,Sun,Sun,Sun,Sun,Sun,Sun,Sun', 'every one falls on the requested weekday');
 select pg_temp.check(
-  (select min(d)::text from public.weekly_occurrence_dates(date '2026-10-01', date '2026-10-31', array[7]) d),
-  '2026-10-04', 'generation starts at the first matching weekday on or after the start');
+  (select min(d)::text from public.weekly_occurrence_dates(date '2037-10-01', date '2037-10-31', array[7]) d),
+  '2037-10-04', 'generation starts at the first matching weekday on or after the start');
 select pg_temp.check(
-  (select count(*)::text from public.weekly_occurrence_dates(date '2026-10-05', date '2026-10-09', array[7])),
+  (select count(*)::text from public.weekly_occurrence_dates(date '2037-10-05', date '2037-10-09', array[7])),
   '0', 'a range containing no matching weekday yields nothing');
 select pg_temp.check(
-  (select count(*)::text from public.weekly_occurrence_dates(date '2026-11-29', date '2026-10-04', array[7])),
+  (select count(*)::text from public.weekly_occurrence_dates(date '2037-11-29', date '2037-10-04', array[7])),
   '0', 'an inverted range yields nothing');
 
 \echo ''
 \echo '── Generation (AC-080, AC-080a) ────────────────────────────────────'
 insert into t_ids (k, v)
 select 's', (pg_temp.as_user(:COACH, format($$select (public.create_session_series(
-  %L::uuid, array[7], date '2026-10-04', date '2026-11-29', time '09:00', time '10:00', %L::uuid,
+  %L::uuid, array[7], date '2037-10-04', date '2037-11-29', time '09:00', time '10:00', %L::uuid,
   null, 10, 'BIRTH_YEAR_RANGE', 2017, 2018, 'Šatna 4', 'Vezměte si chrániče.', 'Interní.')
   -> 'data' ->> 'session_series_id')$$, pg_temp.ws(), pg_temp.fac('MH'))))::uuid;
 
@@ -75,7 +83,7 @@ select pg_temp.check(
   (select generated_count::text from public.session_series where id = pg_temp.s()),
   '9', 'and the series records how many');
 
--- The case this whole migration exists for. Czech DST ends 25 October 2026,
+-- The case this whole migration exists for. Czech DST ends 25 October 2037,
 -- itself an occurrence date; a fixed seven-day interval would put the last six
 -- occurrences at 08:00.
 select pg_temp.check(
@@ -97,11 +105,11 @@ select pg_temp.check(
 select pg_temp.check(
   (select to_char(start_at at time zone 'Europe/Prague', 'YYYY-MM-DD HH24:MI')
    from public.training_sessions where series_id = pg_temp.s() order by start_at limit 1),
-  '2026-10-04 09:00', 'the first occurrence is on the start date');
+  '2037-10-04 09:00', 'the first occurrence is on the start date');
 select pg_temp.check(
   (select to_char(start_at at time zone 'Europe/Prague', 'YYYY-MM-DD HH24:MI')
    from public.training_sessions where series_id = pg_temp.s() order by start_at desc limit 1),
-  '2026-11-29 09:00', 'the last is on or before the end date');
+  '2037-11-29 09:00', 'the last is on or before the end date');
 
 \echo ''
 \echo '── Provenance (AC-080c) ────────────────────────────────────────────'
@@ -114,7 +122,7 @@ select pg_temp.check(
 select pg_temp.check(
   (select by_weekdays::text || ' ' || local_start_time::text || ' ' || local_date_from::text
    from public.session_series where id = pg_temp.s()),
-  '{7} 09:00:00 2026-10-04', 'and the pattern as local wall clock');
+  '{7} 09:00:00 2037-10-04', 'and the pattern as local wall clock');
 select pg_temp.check(
   (select excluded_dates::text from public.session_series where id = pg_temp.s()),
   '{}', 'a series created without exclusions records none');
@@ -152,7 +160,7 @@ select pg_temp.check(
 select pg_temp.check(
   pg_temp.as_user(:COACH, format($$select (public.update_training_session(
     (select id from public.training_sessions where series_id=%L::uuid and status='OPEN' order by start_at limit 1),
-    date '2026-10-11', time '07:30', time '08:30', %L::uuid, 20, 'ALL') ->> 'ok')$$,
+    date '2037-10-11', time '07:30', time '08:30', %L::uuid, 20, 'ALL') ->> 'ok')$$,
     pg_temp.s(), pg_temp.fac('VH'))),
   'true', 'one occurrence can be edited');
 select pg_temp.check(
@@ -169,27 +177,27 @@ select pg_temp.check(
 \echo '── Refusals ────────────────────────────────────────────────────────'
 select pg_temp.check(
   pg_temp.as_user(:A, format($$select (public.create_session_series(
-    %L::uuid, array[7], date '2026-10-04', date '2026-10-11', time '09:00', time '10:00', %L::uuid) ->> 'code')$$,
+    %L::uuid, array[7], date '2037-10-04', date '2037-10-11', time '09:00', time '10:00', %L::uuid) ->> 'code')$$,
     pg_temp.ws(), pg_temp.fac('MH'))),
   'NOT_AUTHORIZED', 'a guardian cannot create a series');
 select pg_temp.check(
   pg_temp.as_user(:COACH, format($$select (public.create_session_series(
-    %L::uuid, array[7], date '2026-10-05', date '2026-10-09', time '09:00', time '10:00', %L::uuid) ->> 'code')$$,
+    %L::uuid, array[7], date '2037-10-05', date '2037-10-09', time '09:00', time '10:00', %L::uuid) ->> 'code')$$,
     pg_temp.ws(), pg_temp.fac('MH'))),
   'SERIES_EMPTY', 'a pattern matching no date is refused');
 select pg_temp.check(
   pg_temp.as_user(:COACH, format($$select (public.create_session_series(
-    %L::uuid, array[9], date '2026-10-04', date '2026-10-11', time '09:00', time '10:00', %L::uuid) ->> 'code')$$,
+    %L::uuid, array[9], date '2037-10-04', date '2037-10-11', time '09:00', time '10:00', %L::uuid) ->> 'code')$$,
     pg_temp.ws(), pg_temp.fac('MH'))),
   'INVALID_WEEKDAY', 'an out-of-range weekday is refused');
 select pg_temp.check(
   pg_temp.as_user(:COACH, format($$select (public.create_session_series(
-    %L::uuid, array[7], date '2026-11-29', date '2026-10-04', time '09:00', time '10:00', %L::uuid) ->> 'code')$$,
+    %L::uuid, array[7], date '2037-11-29', date '2037-10-04', time '09:00', time '10:00', %L::uuid) ->> 'code')$$,
     pg_temp.ws(), pg_temp.fac('MH'))),
   'INVALID_DATE_RANGE', 'an inverted date range is refused');
 select pg_temp.check(
   pg_temp.as_user(:COACH, format($$select (public.create_session_series(
-    %L::uuid, array[7], date '2026-10-04', date '2026-10-11', time '10:00', time '09:00', %L::uuid) ->> 'code')$$,
+    %L::uuid, array[7], date '2037-10-04', date '2037-10-11', time '10:00', time '09:00', %L::uuid) ->> 'code')$$,
     pg_temp.ws(), pg_temp.fac('MH'))),
   'INVALID_TIME_RANGE', 'an end before the start is refused');
 
@@ -199,37 +207,37 @@ select pg_temp.check(
 -- MAIN coach row, after the series row and that session are already inserted.
 select pg_temp.check(
   pg_temp.as_user(:COACH, format($$select (public.create_session_series(
-    %L::uuid, array[7], date '2027-01-03', date '2027-02-07', time '09:00', time '10:00', %L::uuid,
+    %L::uuid, array[7], date '2038-01-03', date '2038-02-07', time '09:00', time '10:00', %L::uuid,
     null, 10, 'ALL', null, null, null, null, null, %L::uuid) ->> 'code')$$,
     pg_temp.ws(), pg_temp.fac('MH'), '00000000-0000-0000-0000-0000000fa000')),
   'COACH_NOT_WORKSPACE_STAFF', 'a coach who is not workspace staff is refused');
 select pg_temp.check(
-  (select count(*)::text from public.session_series where local_date_from = date '2027-01-03'),
+  (select count(*)::text from public.session_series where local_date_from = date '2038-01-03'),
   '0', 'and no series row is left behind');
 select pg_temp.check(
-  (select count(*)::text from public.training_sessions where start_at >= timestamptz '2027-01-01'),
+  (select count(*)::text from public.training_sessions where start_at >= timestamptz '2038-01-01'),
   '0', 'nor any occurrence');
 
 \echo ''
 \echo '── Several weekdays in one pattern (coach/SPEC.md §K4b, §K11) ──────'
 select pg_temp.check(
   (select string_agg(to_char(d,'Dy DD'), ', ' order by d)
-   from public.weekly_occurrence_dates(date '2026-10-05', date '2026-10-18', array[1,3]) d),
+   from public.weekly_occurrence_dates(date '2037-10-05', date '2037-10-18', array[1,3]) d),
   'Mon 05, Wed 07, Mon 12, Wed 14', 'a two-weekday pattern interleaves both weekdays in date order (AC-263)');
 select pg_temp.check(
-  (select count(*)::text from public.weekly_occurrence_dates(date '2026-10-05', date '2026-10-18', array[1,2,3,4,5,6,7])),
+  (select count(*)::text from public.weekly_occurrence_dates(date '2037-10-05', date '2037-10-18', array[1,2,3,4,5,6,7])),
   '14', 'all seven weekdays give every day in the range');
 select pg_temp.check(
   (select string_agg(to_char(d,'Dy'), ',' order by d)
-   from public.weekly_occurrence_dates(date '2026-10-05', date '2026-10-18', array[3,1,1]) d),
+   from public.weekly_occurrence_dates(date '2037-10-05', date '2037-10-18', array[3,1,1]) d),
   'Mon,Wed,Mon,Wed', 'a duplicated, unsorted weekday set means what it says');
 select pg_temp.check(
-  (select count(*)::text from public.weekly_occurrence_dates(date '2026-10-05', date '2026-10-18', array[]::integer[])),
+  (select count(*)::text from public.weekly_occurrence_dates(date '2037-10-05', date '2037-10-18', array[]::integer[])),
   '0', 'an empty weekday set yields nothing');
 
 insert into t_ids (k, v)
 select 'm', (pg_temp.as_user(:COACH, format($$select (public.create_session_series(
-  %L::uuid, array[3,1,1], date '2026-10-05', date '2026-10-18', time '17:00', time '18:00', %L::uuid)
+  %L::uuid, array[3,1,1], date '2037-10-05', date '2037-10-18', time '17:00', time '18:00', %L::uuid)
   -> 'data' ->> 'session_series_id')$$, pg_temp.ws(), pg_temp.fac('VH'))))::uuid;
 
 create or replace function pg_temp.m() returns uuid language sql stable as
@@ -250,24 +258,24 @@ select pg_temp.check(
 \echo '── Per-date opt-out (coach/SPEC.md §K4b checklist) ─────────────────'
 select pg_temp.check(
   (select string_agg(to_char(d,'DD'), ',' order by d)
-   from public.weekly_occurrence_dates(date '2026-10-05', date '2026-10-18', array[1,3],
-     array[date '2026-10-07', date '2026-10-12']) d),
+   from public.weekly_occurrence_dates(date '2037-10-05', date '2037-10-18', array[1,3],
+     array[date '2037-10-07', date '2037-10-12']) d),
   '05,14', 'excluded dates are subtracted from the pattern (AC-263)');
 select pg_temp.check(
-  (select count(*)::text from public.weekly_occurrence_dates(date '2026-10-05', date '2026-10-18', array[1,3],
-     array[date '2026-10-06', date '2026-12-25'])),
+  (select count(*)::text from public.weekly_occurrence_dates(date '2037-10-05', date '2037-10-18', array[1,3],
+     array[date '2037-10-06', date '2037-12-25'])),
   '4', 'an exclusion naming a date the pattern never produced changes nothing (AC-263)');
 -- Regression: `x = any (array[..., null])` is null for a non-match, so a bare
 -- coalesce would negate to null and suppress every date instead of none.
 select pg_temp.check(
-  (select count(*)::text from public.weekly_occurrence_dates(date '2026-10-05', date '2026-10-18', array[1,3],
-     array[null, date '2026-10-07']::date[])),
+  (select count(*)::text from public.weekly_occurrence_dates(date '2037-10-05', date '2037-10-18', array[1,3],
+     array[null, date '2037-10-07']::date[])),
   '3', 'a null element in the exclusion list suppresses nothing by itself');
 
 insert into t_ids (k, v)
 select 'x', (pg_temp.as_user(:COACH, format($$select (public.create_session_series(
-  %L::uuid, array[1,3], date '2026-10-05', date '2026-10-18', time '19:00', time '20:00', %L::uuid,
-  array[date '2026-10-07', date '2026-10-12', date '2026-10-06'])
+  %L::uuid, array[1,3], date '2037-10-05', date '2037-10-18', time '19:00', time '20:00', %L::uuid,
+  array[date '2037-10-07', date '2037-10-12', date '2037-10-06'])
   -> 'data' ->> 'session_series_id')$$, pg_temp.ws(), pg_temp.fac('VH'))))::uuid;
 
 create or replace function pg_temp.x() returns uuid language sql stable as
@@ -284,48 +292,48 @@ select pg_temp.check(
 -- gaps in the generated sessions need not be re-derived by a reader.
 select pg_temp.check(
   (select excluded_dates::text from public.session_series where id = pg_temp.x()),
-  '{2026-10-07,2026-10-12}', 'the series records the suppressed pattern dates, and only those (AC-263)');
+  '{2037-10-07,2037-10-12}', 'the series records the suppressed pattern dates, and only those (AC-263)');
 select pg_temp.check(
   (select generated_count::text from public.session_series where id = pg_temp.x()),
   '2', 'generated_count counts what was created, not what the pattern produced (AC-263)');
 select pg_temp.check(
   (select (after ->> 'excluded_dates') from public.audit_log
    where action='SESSION_SERIES_CREATED' and entity_id = pg_temp.x()),
-  '["2026-10-07", "2026-10-12"]', 'and the audit entry carries them too');
+  '["2037-10-07", "2037-10-12"]', 'and the audit entry carries them too');
 select pg_temp.check(
   (select (after ->> 'by_weekdays') from public.audit_log
    where action='SESSION_SERIES_CREATED' and entity_id = pg_temp.x()),
   '[1, 3]', 'together with the weekday set');
 select pg_temp.check(
   pg_temp.as_user(:COACH, format($$select (public.create_session_series(
-    %L::uuid, array[1,3], date '2026-10-05', date '2026-10-18', time '19:00', time '20:00', %L::uuid,
-    array[date '2026-10-05', date '2026-10-07', date '2026-10-12', date '2026-10-14']) ->> 'code')$$,
+    %L::uuid, array[1,3], date '2037-10-05', date '2037-10-18', time '19:00', time '20:00', %L::uuid,
+    array[date '2037-10-05', date '2037-10-07', date '2037-10-12', date '2037-10-14']) ->> 'code')$$,
     pg_temp.ws(), pg_temp.fac('VH'))),
   'SERIES_EMPTY', 'unchecking every date is refused rather than creating an empty series (AC-263)');
 
 \echo ''
 \echo '── The 200-occurrence ceiling (coach/SPEC.md §K4b, migration 40) ───'
--- Monday to Thursday from 2026-10-05 (a Monday) to 2027-09-20 (also a Monday)
+-- Monday to Thursday from 2037-10-05 (a Monday) to 2038-09-20 (also a Monday)
 -- holds 201 dates while staying inside the 366-day span guard.
 select pg_temp.check(
   (select count(*)::text from public.weekly_occurrence_dates(
-     date '2026-10-05', date '2027-09-20', array[1,2,3,4])),
+     date '2037-10-05', date '2038-09-20', array[1,2,3,4])),
   '201', 'the range under test really does produce 201 occurrences');
 select pg_temp.check(
   pg_temp.as_user(:COACH, format($$select (public.create_session_series(
-    %L::uuid, array[1,2,3,4], date '2026-10-05', date '2027-09-20', time '06:00', time '07:00', %L::uuid) ->> 'code')$$,
+    %L::uuid, array[1,2,3,4], date '2037-10-05', date '2038-09-20', time '06:00', time '07:00', %L::uuid) ->> 'code')$$,
     pg_temp.ws(), pg_temp.fac('MH'))),
   'SERIES_TOO_LONG', '201 occurrences are refused (AC-264)');
 select pg_temp.check(
   (select count(*)::text from public.training_sessions
-   where start_at >= timestamptz '2027-01-01' and series_id is not null),
+   where start_at >= timestamptz '2038-01-01' and series_id is not null),
   '0', 'and nothing is created when the ceiling is hit (AC-264)');
 -- The ceiling counts what gets created, which is what the coach's footer says
 -- ("Vytvořit {n} tréninků", n = checked), so unchecking one date makes it fit.
 insert into t_ids (k, v)
 select 'c', (pg_temp.as_user(:COACH, format($$select (public.create_session_series(
-  %L::uuid, array[1,2,3,4], date '2026-10-05', date '2027-09-20', time '06:00', time '07:00', %L::uuid,
-  array[date '2027-09-20']) -> 'data' ->> 'session_series_id')$$, pg_temp.ws(), pg_temp.fac('MH'))))::uuid;
+  %L::uuid, array[1,2,3,4], date '2037-10-05', date '2038-09-20', time '06:00', time '07:00', %L::uuid,
+  array[date '2038-09-20']) -> 'data' ->> 'session_series_id')$$, pg_temp.ws(), pg_temp.fac('MH'))))::uuid;
 select pg_temp.check(
   (select count(*)::text from public.training_sessions
    where series_id = (select v from t_ids where k='c')),
@@ -336,13 +344,13 @@ select pg_temp.check(
   '200', 'and the series records all 200 (the check constraint allows it)');
 select pg_temp.check(
   pg_temp.as_user(:COACH, format($$select (public.create_session_series(
-    %L::uuid, array[1,2,3,4,5,6,7], date '2026-10-05', date '2027-04-30', time '06:00', time '07:00', %L::uuid) ->> 'code')$$,
+    %L::uuid, array[1,2,3,4,5,6,7], date '2037-10-05', date '2038-04-30', time '06:00', time '07:00', %L::uuid) ->> 'code')$$,
     pg_temp.ws(), pg_temp.fac('MH'))),
   'SERIES_TOO_LONG', 'seven weekdays over seven months exceed the ceiling too (AC-264)');
 -- Refused before generating, so an absurd range is never expanded.
 select pg_temp.check(
   pg_temp.as_user(:COACH, format($$select (public.create_session_series(
-    %L::uuid, array[1], date '2026-10-05', date '2030-10-05', time '06:00', time '07:00', %L::uuid) ->> 'code')$$,
+    %L::uuid, array[1], date '2037-10-05', date '2041-10-05', time '06:00', time '07:00', %L::uuid) ->> 'code')$$,
     pg_temp.ws(), pg_temp.fac('MH'))),
   'SERIES_TOO_LONG', 'a range longer than a year is refused outright (AC-264)');
 
@@ -350,24 +358,24 @@ select pg_temp.check(
 \echo '── Weekday sets that have no honest reading ────────────────────────'
 select pg_temp.check(
   pg_temp.as_user(:COACH, format($$select (public.create_session_series(
-    %L::uuid, array[]::integer[], date '2026-10-05', date '2026-10-18', time '09:00', time '10:00', %L::uuid) ->> 'code')$$,
+    %L::uuid, array[]::integer[], date '2037-10-05', date '2037-10-18', time '09:00', time '10:00', %L::uuid) ->> 'code')$$,
     pg_temp.ws(), pg_temp.fac('MH'))),
   'INVALID_WEEKDAY', 'an empty weekday set is refused (AC-263)');
 select pg_temp.check(
   pg_temp.as_user(:COACH, format($$select (public.create_session_series(
-    %L::uuid, null::integer[], date '2026-10-05', date '2026-10-18', time '09:00', time '10:00', %L::uuid) ->> 'code')$$,
+    %L::uuid, null::integer[], date '2037-10-05', date '2037-10-18', time '09:00', time '10:00', %L::uuid) ->> 'code')$$,
     pg_temp.ws(), pg_temp.fac('MH'))),
   'INVALID_WEEKDAY', 'a null weekday set is refused');
 select pg_temp.check(
   pg_temp.as_user(:COACH, format($$select (public.create_session_series(
-    %L::uuid, array[0,3], date '2026-10-05', date '2026-10-18', time '09:00', time '10:00', %L::uuid) ->> 'code')$$,
+    %L::uuid, array[0,3], date '2037-10-05', date '2037-10-18', time '09:00', time '10:00', %L::uuid) ->> 'code')$$,
     pg_temp.ws(), pg_temp.fac('MH'))),
   'INVALID_WEEKDAY', 'a set containing an out-of-range weekday is refused whole (AC-263)');
 -- Dropping the null and creating a shorter series than the coach asked for
 -- would be worse than refusing.
 select pg_temp.check(
   pg_temp.as_user(:COACH, format($$select (public.create_session_series(
-    %L::uuid, array[3,null]::integer[], date '2026-10-05', date '2026-10-18', time '09:00', time '10:00', %L::uuid) ->> 'code')$$,
+    %L::uuid, array[3,null]::integer[], date '2037-10-05', date '2037-10-18', time '09:00', time '10:00', %L::uuid) ->> 'code')$$,
     pg_temp.ws(), pg_temp.fac('MH'))),
   'INVALID_WEEKDAY', 'a set containing a null element is refused, not silently narrowed (AC-263)');
 
@@ -401,13 +409,13 @@ select pg_temp.check(
 -- The behavioural half of the same claim: an exclusion for a date outside the
 -- pattern adds nothing, and the range still decides the outer bounds.
 select pg_temp.check(
-  (select count(*)::text from public.weekly_occurrence_dates(date '2026-10-05', date '2026-10-11', array[1],
-     array[date '2026-10-19'])),
+  (select count(*)::text from public.weekly_occurrence_dates(date '2037-10-05', date '2037-10-11', array[1],
+     array[date '2037-10-19'])),
   '1', 'an exclusion cannot extend the series past its range (AC-265)');
 select pg_temp.check(
-  (select max(d)::text from public.weekly_occurrence_dates(date '2026-10-05', date '2026-10-11', array[1],
-     array[date '2026-10-19']) d),
-  '2026-10-05', 'and the only date produced is the one inside it (AC-265)');
+  (select max(d)::text from public.weekly_occurrence_dates(date '2037-10-05', date '2037-10-11', array[1],
+     array[date '2037-10-19']) d),
+  '2037-10-05', 'and the only date produced is the one inside it (AC-265)');
 
 drop function pg_temp.as_user(text,text);
 drop function pg_temp.check(text,text,text);

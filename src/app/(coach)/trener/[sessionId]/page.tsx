@@ -1,3 +1,4 @@
+import { Fragment } from 'react'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { getCoachSession, getCoachWorkspace, getSessionCoaches } from '@/server/sessions/queries'
@@ -74,8 +75,22 @@ export default async function SessionDetailPage({
   const end = new Date(session.endAt)
   const now = new Date()
   const cancelled = session.status === 'CANCELLED'
+  // Over by the same rule that puts it under `Minulé` (end_at before now). A
+  // finished training is a record: what was booked stays readable, and the
+  // only thing left to do with it is the same copy a cancelled one offers.
+  const finished = end.getTime() < now.getTime()
   const { confirmed } = splitRoster(entries)
   const assistants = coaches.filter((c) => c.role === 'ASSISTANT')
+
+  // `Ročníky 2017–2018`, as §K2 has it: the range alone is a pair of numbers
+  // with no subject. `Všichni sportovci` needs no label.
+  const years = eligibilityLabel(
+    session.eligibilityMode,
+    session.birthYearFrom,
+    session.birthYearTo,
+    t.eligibilityAll,
+  )
+  const eligibility = years === t.eligibilityAll ? years : `${messages.session.years} ${years}`
 
   const venue = [
     session.locationName,
@@ -85,15 +100,8 @@ export default async function SessionDetailPage({
       ? `${session.facilityName} (${session.facilityCode})`
       : session.facilityCode,
     changingRoomLabel(session.changingRoom, t.changingRoom),
-    eligibilityLabel(
-      session.eligibilityMode,
-      session.birthYearFrom,
-      session.birthYearTo,
-      t.eligibilityAll,
-    ),
-  ]
-    .filter(Boolean)
-    .join(' · ')
+    eligibility,
+  ].filter((part): part is string => Boolean(part))
 
   const sessionLabel = `${formatDateShort(start, workspace.timezone)} · ${formatTime(start, workspace.timezone)}`
 
@@ -125,7 +133,18 @@ export default async function SessionDetailPage({
         >
           {formatTimeRange(start, end, workspace.timezone)}
         </p>
-        <p className="text-meta text-muted">{venue}</p>
+        {/* §K2 sets this line at 15 px, a step up from the 14 px meta on the
+            list rows: it is the place and the group, read once, standing.
+            On a phone it wraps, so it wraps between the parts and never inside
+            one — `Ročníky 2015–` above `2023` reads as two things. */}
+        <p className="text-row/5 font-normal text-muted">
+          {venue.map((part, index) => (
+            <Fragment key={part}>
+              {index > 0 ? ' · ' : null}
+              <span className="whitespace-nowrap">{part}</span>
+            </Fragment>
+          ))}
+        </p>
         {session.status === 'CLOSED' ? (
           <span className="flex w-fit items-center gap-1 rounded-badge bg-neutral-50 px-2 py-1 text-hint font-semibold text-muted">
             <LockIcon />
@@ -201,12 +220,16 @@ export default async function SessionDetailPage({
         capacity={session.capacity}
         confirmedCount={session.confirmedCount}
         timezone={workspace.timezone}
-        addable={!cancelled}
+        addable={!cancelled && !finished}
+        removable={!finished}
       />
 
       {/* §K6b: a cancelled training has one thing left to do — the same
-          copy as §K4, which brings everything but the date and the athletes. */}
-      {cancelled ? (
+          copy as §K4, which brings everything but the date and the athletes.
+          A finished one is in the same position: editing it, closing or
+          reopening registration, or cancelling it after the fact would rewrite
+          what happened. */}
+      {cancelled || finished ? (
         <Link
           href={{ pathname: '/trener/novy', query: { from: session.id } }}
           className={buttonVariants({ variant: 'outline', size: 'lg' })}

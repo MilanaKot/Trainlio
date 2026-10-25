@@ -44,6 +44,7 @@ Czech message. Constraint violations still raise — those are bugs, not user er
 | `SESSION_NOT_OPEN`                 | Status is not `OPEN` (`BR-030`)                                                                                                |
 | `SESSION_ALREADY_STARTED`          | `now() >= start_at`                                                                                                            |
 | `SESSION_CANCELLED`                | D-07: the session is terminal and accepts no booking or edit                                                                   |
+| `SESSION_FINISHED`                 | BR-025d: `end_at < now()`; staff may no longer edit, cancel, book or remove on it                                              |
 | `NOT_ELIGIBLE`                     | Per-athlete reason in `details`                                                                                                |
 | `ALREADY_BOOKED`                   | A `CONFIRMED` booking exists (`BR-031`)                                                                                        |
 | `REMOVED_BY_COACH`                 | D-06: the coach removed this athlete from this session                                                                         |
