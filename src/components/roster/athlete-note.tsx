@@ -33,10 +33,13 @@ export function AthleteNote({
   workspaceId,
   athleteId,
   note,
+  editable,
 }: {
   workspaceId: string
   athleteId: string
   note: string | null
+  /** §K13 v3.2: `Upravit poznámku` needs the permission (decision 33). */
+  editable: boolean
 }) {
   const router = useRouter()
   const [editing, setEditing] = useState(false)
@@ -102,13 +105,15 @@ export function AthleteNote({
           <p className="whitespace-pre-line text-body text-ink">
             {note ?? <span className="text-muted">{t.athleteNoteEmpty}</span>}
           </p>
-          <button
-            type="button"
-            onClick={() => setEditing(true)}
-            className="flex min-h-11 items-center text-row font-semibold text-primary"
-          >
-            {t.athleteNoteEdit}
-          </button>
+          {editable ? (
+            <button
+              type="button"
+              onClick={() => setEditing(true)}
+              className="flex min-h-11 items-center text-row font-semibold text-primary"
+            >
+              {t.athleteNoteEdit}
+            </button>
+          ) : null}
         </div>
       )}
     </section>

@@ -1,3 +1,4 @@
+import { createHmac } from 'node:crypto'
 import AxeBuilder from '@axe-core/playwright'
 import { expect, type Page } from '@playwright/test'
 
@@ -24,6 +25,54 @@ const admin = {
   apikey: SERVICE,
   authorization: `Bearer ${SERVICE}`,
   'content-type': 'application/json',
+}
+
+/**
+ * The local stack's published JWT secret, the one ANON and SERVICE above are
+ * signed with. Like them it authenticates nothing outside a local stack.
+ */
+const JWT_SECRET =
+  process.env.JWT_SECRET ?? 'super-secret-jwt-token-with-at-least-32-characters-long'
+
+/**
+ * A signed-in person for API calls only, without the sign-in.
+ *
+ * tokenFor() goes through GoTrue's OTP, which allows 30 sign-ins per five
+ * minutes from one address; a suite that sets up an administrator, a coach and
+ * a parent per test spends that in a minute, and then every browser sign-in
+ * waits for a code that never comes. This creates the account through the
+ * admin API, as the trigger expects, and signs the token itself. Keep
+ * signIn() for what the browser does.
+ */
+export async function apiUser(email: string): Promise<string> {
+  const created = await fetch(`${STACK}/auth/v1/admin/users`, {
+    method: 'POST',
+    headers: admin,
+    body: JSON.stringify({ email, email_confirm: true }),
+  })
+  // 422: already there, from an earlier sign-in in the same test.
+  if (!created.ok && created.status !== 422) {
+    throw new Error(`Could not create ${email}: ${created.status}`)
+  }
+
+  const users = (await (
+    await fetch(`${STACK}/auth/v1/admin/users?page=1&per_page=1000`, { headers: admin })
+  ).json()) as { users?: { id: string; email: string }[] }
+  const id = users.users?.find((user) => user.email === email)?.id
+  if (!id) throw new Error(`No account for ${email}`)
+
+  const encode = (part: object) => Buffer.from(JSON.stringify(part)).toString('base64url')
+  const now = Math.floor(Date.now() / 1000)
+  const unsigned = `${encode({ alg: 'HS256', typ: 'JWT' })}.${encode({
+    sub: id,
+    email,
+    role: 'authenticated',
+    aud: 'authenticated',
+    iat: now,
+    exp: now + 3600,
+  })}`
+  const signature = createHmac('sha256', JWT_SECRET).update(unsigned).digest('base64url')
+  return `${unsigned}.${signature}`
 }
 
 export function uniqueEmail(prefix: string): string {

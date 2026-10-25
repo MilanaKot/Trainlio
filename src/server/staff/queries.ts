@@ -2,6 +2,7 @@ import 'server-only'
 
 import { createClient } from '@/lib/supabase/server'
 import { rows } from '@/server/query-result'
+import type { CoachRights } from '@/lib/domain/coach-rights'
 import type { WorkspaceRole } from '@/types/database'
 
 export type StaffMember = {
@@ -27,6 +28,11 @@ export type StaffMember = {
   lastSeenAt: string | null
   /** Derived, never stored (§A2 data). */
   access: CoachAccess
+  /**
+   * Decision 33, the coach's own value. An administrator can always edit
+   * whatever this says; it is what comes back if the role is taken away.
+   */
+  canEditTrainings: boolean
 }
 
 /** §A2: `Bez přístupu` · `Pozván` · `Přihlášen`. */
@@ -81,6 +87,7 @@ export async function getWorkspaceStaff(workspaceId: string): Promise<StaffMembe
       email: member.email,
       firstSignInAt: member.first_sign_in_at,
     }),
+    canEditTrainings: member.can_edit_trainings,
   }))
 }
 
@@ -92,6 +99,8 @@ export type OwnStaffState = {
   email: string | null
   firstSignInAt: string | null
   welcomedAt: string | null
+  /** Decision 33: may create trainings and edit every one (admin or permission). */
+  canEditAll: boolean
 }
 
 /**
@@ -114,5 +123,16 @@ export async function getOwnStaffState(): Promise<OwnStaffState | null> {
     email: state.email,
     firstSignInAt: state.first_sign_in_at,
     welcomedAt: state.welcomed_at,
+    canEditAll: state.can_edit_all,
   }
+}
+
+/**
+ * What the signed-in coach may do to trainings (decision 33), for the screens
+ * that offer it. The database decides what is allowed; this decides what is
+ * shown, and anything missing reads as the least.
+ */
+export async function getCoachRights(): Promise<CoachRights> {
+  const state = await getOwnStaffState()
+  return { me: state?.profileId ?? '', canEditAll: state?.canEditAll ?? false }
 }

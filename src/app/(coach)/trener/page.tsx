@@ -2,14 +2,12 @@ import { notFound, redirect } from 'next/navigation'
 import { getCoachWorkspace, listCoachSessions } from '@/server/sessions/queries'
 import { getOwnStaffState } from '@/server/staff/queries'
 import { touchStaffSeen } from '@/server/staff/actions'
-import { CoachTrainingRow } from '@/components/session/coach-training-row'
+import { CoachSessionList } from '@/components/session/coach-session-list'
 import { CoachTrainingsTabs } from '@/components/session/coach-trainings-tabs'
 import { CreateSheet } from '@/components/session/create-sheet'
-import { TodayChip } from '@/components/ui/badge'
 import { OrgLogo } from '@/components/ui/org-logo'
 import { EmptyState } from '@/components/ui/empty-state'
-import { groupByLocalDay } from '@/lib/domain/session-list'
-import { formatDateGroup, localDateKey, relativeDayLabel } from '@/lib/time/workspace-time'
+import { canCreateSessions } from '@/lib/domain/coach-rights'
 import { messages } from '@/lib/i18n'
 
 const t = messages.coach
@@ -47,6 +45,10 @@ export default async function CoachSessionsPage({
   // §A3's `Naposledy v aplikaci`. The database writes at most hourly.
   await touchStaffSeen()
 
+  // Decision 33. The database refuses what this hides (FORBIDDEN_EDIT).
+  const rights = { me: state?.profileId ?? '', canEditAll: state?.canEditAll ?? false }
+  const canCreate = canCreateSessions(rights)
+
   const { upcoming, past } = await listCoachSessions()
   const showingPast = tab === 'minule'
   const sessions = showingPast ? past : upcoming
@@ -63,10 +65,6 @@ export default async function CoachSessionsPage({
   const towns = [...new Set(workspace.facilities.map((one) => one.locationName))]
   const meta = [sports[workspace.sportCode], towns.length === 1 ? towns[0] : null].filter(Boolean)
 
-  const days = groupByLocalDay(sessions, (session) =>
-    localDateKey(new Date(session.startAt), workspace.timezone),
-  )
-
   return (
     <main className="flex flex-col gap-5 pb-24">
       <header className="flex items-center gap-3">
@@ -80,40 +78,26 @@ export default async function CoachSessionsPage({
       <CoachTrainingsTabs value={showingPast ? 'past' : 'upcoming'} />
 
       {sessions.length === 0 ? (
-        <EmptyState {...(showingPast ? {} : { action: <CreateSheet variant="inline" /> })}>
+        <EmptyState
+          {...(showingPast || !canCreate ? {} : { action: <CreateSheet variant="inline" /> })}
+        >
           {showingPast ? t.noPastSessions : t.noSessions}
         </EmptyState>
       ) : (
-        days.map((day) => {
-          const at = new Date(day.items[0]!.startAt)
-
-          return (
-            <section key={day.key} className="flex flex-col gap-3">
-              <h2 className="flex items-center gap-2 text-date font-bold text-primary">
-                {formatDateGroup(at, workspace.timezone)}
-                {relativeDayLabel(at, now, workspace.timezone) === 'TODAY' ? (
-                  <TodayChip>{messages.session.today}</TodayChip>
-                ) : null}
-              </h2>
-
-              <ul className="flex flex-col gap-3">
-                {day.items.map((session) => (
-                  <CoachTrainingRow
-                    key={session.id}
-                    session={session}
-                    timezone={workspace.timezone}
-                    variant={showingPast ? 'past' : 'upcoming'}
-                  />
-                ))}
-              </ul>
-            </section>
-          )
-        })
+        <CoachSessionList
+          sessions={sessions}
+          me={rights.me}
+          defaultFilter={canCreate ? 'all' : 'mine'}
+          timezone={workspace.timezone}
+          variant={showingPast ? 'past' : 'upcoming'}
+          now={now.toISOString()}
+        />
       )}
 
       {/* §K14: nothing is created from the past. An empty list creates from
-          its own empty state, so it has no FAB as well. */}
-      {showingPast || sessions.length === 0 ? null : <CreateSheet />}
+          its own empty state, so it has no FAB as well. §K1b (v3.2): a coach
+          without the permission creates nothing at all. */}
+      {showingPast || sessions.length === 0 || !canCreate ? null : <CreateSheet />}
     </main>
   )
 }

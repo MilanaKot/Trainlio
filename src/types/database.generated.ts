@@ -1079,6 +1079,7 @@ export type Database = {
       }
       workspace_members: {
         Row: {
+          can_edit_trainings: boolean
           created_at: string
           id: string
           is_active: boolean
@@ -1088,6 +1089,7 @@ export type Database = {
           workspace_id: string
         }
         Insert: {
+          can_edit_trainings?: boolean
           created_at?: string
           id?: string
           is_active?: boolean
@@ -1097,6 +1099,7 @@ export type Database = {
           workspace_id: string
         }
         Update: {
+          can_edit_trainings?: boolean
           created_at?: string
           id?: string
           is_active?: boolean
@@ -1236,6 +1239,14 @@ export type Database = {
           p_training_session_id: string
         }
         Returns: string[]
+      }
+      can_edit_all_trainings: {
+        Args: { p_workspace_id: string }
+        Returns: boolean
+      }
+      can_edit_session: {
+        Args: { p_main_coach_profile_id: string; p_workspace_id: string }
+        Returns: boolean
       }
       cancel_booking_as_coach: {
         Args: { p_booking_id: string; p_reason?: string }
@@ -1509,6 +1520,7 @@ export type Database = {
       own_staff_state: {
         Args: never
         Returns: {
+          can_edit_all: boolean
           email: string
           first_sign_in_at: string
           is_admin: boolean
@@ -1598,6 +1610,10 @@ export type Database = {
           p_reassign?: boolean
           p_workspace_id: string
         }
+        Returns: Json
+      }
+      set_member_can_edit_trainings: {
+        Args: { p_profile_id: string; p_value: boolean; p_workspace_id: string }
         Returns: Json
       }
       set_member_email: {
@@ -1692,6 +1708,7 @@ export type Database = {
       workspace_staff: {
         Args: { p_workspace_id: string }
         Returns: {
+          can_edit_trainings: boolean
           display_name: string
           email: string
           first_name: string

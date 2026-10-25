@@ -9,6 +9,7 @@ import {
 } from '@/server/roster/queries'
 import { signAthletePhoto } from '@/server/athletes/queries'
 import { AthleteNote } from '@/components/roster/athlete-note'
+import { getCoachRights } from '@/server/staff/queries'
 import { Avatar } from '@/components/ui/avatar'
 import { ContactActions } from '@/components/ui/contact-actions'
 import { DetailList } from '@/components/ui/detail-list'
@@ -148,7 +149,12 @@ export default async function CoachAthletePage({
         </ul>
       </section>
 
-      <AthleteNote workspaceId={workspace.id} athleteId={athleteId} note={note} />
+      <AthleteNote
+        workspaceId={workspace.id}
+        athleteId={athleteId}
+        note={note}
+        editable={(await getCoachRights()).canEditAll}
+      />
 
       <section className="flex flex-col gap-2">
         <h2 className="text-caption font-bold uppercase tracking-[0.05em] text-muted">

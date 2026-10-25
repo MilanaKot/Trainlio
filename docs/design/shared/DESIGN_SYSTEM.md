@@ -231,6 +231,9 @@ For calling a person from a screen: either two equal outline lg buttons with ico
 ### 6.33 PlaceChip (v3.1)
 Highlights where and for whom a training is, right under the time in the coach session detail (K2). Inline block that hugs its text (`align-self: flex-start`, wraps to more lines on narrow screens), padding 10/14, radius 12, bg `primary-100` (#E5EBFD), text `primary` (#2B55E0) 15/22 **700**. **No icon.** Content: `{town} · {hall full name} ({code}) · Šatna {n} · Ročníky {from}–{to}` (`Všichni` when no year limit; omit `Šatna` when empty). Contrast #2B55E0 on #E5EBFD ≈ 4.6:1 (AA for 15 px bold). Not interactive — no hover/focus styles.
 
+### 6.34 RoleLabel (v3.2)
+Small label on a coach's training row showing the signed-in coach's role in that session. Height 22, padding 0 7, radius 6, 11/700, sentence case (not uppercase — differs from status badges). `Hlavní trenér` = primary-100 bg + primary text; `Asistent` = neutral-50 bg + muted text. Placed under the meta line, `align-self: flex-start`, 4 px above. Not interactive.
+
 ### 6.32 E-mail layout (v3)
 Defined in `EMAILS.md` — system fonts only, 520 px card, works with images blocked.
 

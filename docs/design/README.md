@@ -70,12 +70,14 @@ The prototypes are visual references with sample data (names like Jan Novák, El
 30. Parents **are** e-mailed when a coach books their child (E08, DR-12).
 31. HEIC photos are accepted and converted in the browser (`Převádím fotku…`) (DR-13).
 32. Confirmed as built (DR-14): org logo also in the coach header; public note only on the detail; `Od ročníku / Do ročníku` labels; parent surname optional; all active guardians on the roster; Czech routes; reopening registration allowed; out-of-range athletes cannot be added manually; removed/cancelled bookings move to Minulé at `end_at`.
+33. Editing rights: `canEdit(session) = isAdmin || canEditTrainings || session.mainCoachId === me`. Permission `Může upravovat všechny tréninky` (default on). Without it a coach **always edits the trainings he leads as main coach**, only views the others (assistant), and cannot create trainings or change the main coach of his own training. Enforced on the server and RLS; the UI hides — not disables — edit actions.
 
 Open questions are listed at the end of each SPEC.md. What the implementation
 still needs answered — those questions, plus anything that shipped without a
 design — is collected in `DESIGN_REQUESTS.md`.
 
 ## Changelog
+- **v3.2 — assistants & view-only coaches.** Coach permission `Může upravovat tréninky` (A2/A3, default on, forced on for admins); coach without it sees K1b (no FAB) and K2b (`Jen pro čtení`) on trainings he does not lead — his own trainings (main coach) stay fully editable; K1 filter `Všechny / Moje` + RoleLabel `Hlavní trenér / Asistent` (DS §6.34). Decision 33. Task: `CLAUDE_CODE_TASK_assistants.md`.
 - **v3.1** — K2 place line becomes a PlaceChip (DS §6.33): cobalt text on light-cobalt background, no icon.
 - **v3 — design requests DR-01…DR-14.** New coach screens K0, K12–K16 (+ K1 segmented control); admin A1/A2/A3 updated, A3b–A3e, A6; guardian G4b/G6d footers (no re-booking); DS §6.11/6.13/6.17 updated, §6.24–6.32 new; `shared/EMAILS.md` + `emails/`; decisions 23–32. See `DESIGN_REQUESTS_ANSWERS.md` and `CLAUDE_CODE_TASK_v3.md`.
 - **v2 — organization logo.** New: DS §6.23 OrgLogo; admin A4/A4b/A5 + A0 row `Organizace`; guardian G11 header (G11b/G11c) and G1 header (G1b/G1c); decisions 20–22. See `CLAUDE_CODE_TASK_logo.md` for the implementation prompt.

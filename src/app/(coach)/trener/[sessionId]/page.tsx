@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { getCoachSession, getCoachWorkspace, getSessionCoaches } from '@/server/sessions/queries'
 import { getSessionRoster, listCandidates } from '@/server/roster/queries'
+import { getCoachRights } from '@/server/staff/queries'
 import { RosterList } from '@/components/roster/roster-list'
 import { SessionControls } from '@/components/session/session-controls'
 import { Badge, TodayChip } from '@/components/ui/badge'
@@ -18,6 +19,7 @@ import {
   formatTimeRange,
   relativeDayLabel,
 } from '@/lib/time/workspace-time'
+import { canCreateSessions, canEditSession } from '@/lib/domain/coach-rights'
 import { messages } from '@/lib/i18n'
 
 const t = messages.coach
@@ -32,6 +34,21 @@ function GlobeIcon() {
         stroke="currentColor"
         strokeWidth="1.5"
       />
+    </svg>
+  )
+}
+
+function EyeIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className="size-5 text-muted" aria-hidden="true">
+      <path
+        d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="1.8" />
     </svg>
   )
 }
@@ -64,11 +81,17 @@ export default async function SessionDetailPage({
   const session = await getCoachSession(sessionId)
   if (!session) notFound()
 
-  const [entries, candidates, coaches] = await Promise.all([
+  const [entries, candidates, coaches, rights] = await Promise.all([
     getSessionRoster(sessionId),
     listCandidates(sessionId),
     getSessionCoaches(sessionId),
+    getCoachRights(),
   ])
+
+  // §K2b (decision 33): what this coach may do here. The database refuses the
+  // rest with FORBIDDEN_EDIT; the screen hides it rather than disabling it.
+  const editable = canEditSession(rights, session)
+  const canCreate = canCreateSessions(rights)
 
   const start = new Date(session.startAt)
   const end = new Date(session.endAt)
@@ -132,6 +155,15 @@ export default async function SessionDetailPage({
         ) : null}
       </header>
 
+      {/* §K2b: says why nothing here can be changed, and who can change it. */}
+      {!editable && !cancelled ? (
+        <Notice variant="plain" icon={<EyeIcon />} title={t.readOnlyTitle}>
+          <span className="text-muted">
+            {t.readOnlyBody.replace('{coach}', session.mainCoachName ?? t.none)}
+          </span>
+        </Notice>
+      ) : null}
+
       <section className="flex items-center justify-between gap-3 rounded-card bg-surface p-4 shadow-card">
         <h2 className="text-caption font-bold uppercase tracking-[0.05em] text-muted">
           {t.occupancyCaption}
@@ -194,8 +226,8 @@ export default async function SessionDetailPage({
         capacity={session.capacity}
         confirmedCount={session.confirmedCount}
         timezone={workspace.timezone}
-        addable={!cancelled && !finished}
-        removable={!finished}
+        addable={editable && !cancelled && !finished}
+        removable={editable && !finished}
       />
 
       {/* §K6b: a cancelled training has one thing left to do — the same
@@ -204,15 +236,21 @@ export default async function SessionDetailPage({
           reopening registration, or cancelling it after the fact would rewrite
           what happened. */}
       {cancelled || finished ? (
-        <Link
-          href={{ pathname: '/trener/novy', query: { from: session.id } }}
-          className={buttonVariants({ variant: 'outline', size: 'lg' })}
-        >
-          {t.duplicateAsNew}
-        </Link>
-      ) : (
-        <SessionControls session={session} confirmedCount={confirmed.length} />
-      )}
+        canCreate ? (
+          <Link
+            href={{ pathname: '/trener/novy', query: { from: session.id } }}
+            className={buttonVariants({ variant: 'outline', size: 'lg' })}
+          >
+            {t.duplicateAsNew}
+          </Link>
+        ) : null
+      ) : editable ? (
+        <SessionControls
+          session={session}
+          confirmedCount={confirmed.length}
+          canDuplicate={canCreate}
+        />
+      ) : null}
     </main>
   )
 }

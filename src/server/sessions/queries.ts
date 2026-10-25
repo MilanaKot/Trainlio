@@ -37,6 +37,8 @@ export type CoachSession = {
   internalNotes: string | null
   mainCoachId: string
   mainCoachName: string | null
+  /** Every coach on the training with their part (§K1 v3.2 `Moje`, RoleLabel). */
+  coachRoles: { profileId: string; role: 'MAIN' | 'ASSISTANT' }[]
   significantChangedAt: string | null
   /**
    * §K16: a training the coach has touched since it was created. For one made
@@ -128,7 +130,8 @@ const SESSION_COLUMNS = `
   locations ( name ),
   app_profiles!training_sessions_main_coach_profile_id_fkey ( display_name ),
   training_session_occupancy ( confirmed_count ),
-  training_session_internal_notes ( notes )
+  training_session_internal_notes ( notes ),
+  training_session_coaches ( profile_id, role )
 `
 
 type Row = {
@@ -151,6 +154,7 @@ type Row = {
   app_profiles: { display_name: string | null } | null
   training_session_occupancy: { confirmed_count: number } | null
   training_session_internal_notes: { notes: string | null } | null
+  training_session_coaches: { profile_id: string; role: 'MAIN' | 'ASSISTANT' }[] | null
 }
 
 function toSession(row: Row): CoachSession {
@@ -175,6 +179,10 @@ function toSession(row: Row): CoachSession {
     internalNotes: row.training_session_internal_notes?.notes ?? null,
     mainCoachId: row.main_coach_profile_id,
     mainCoachName: row.app_profiles?.display_name ?? null,
+    coachRoles: (row.training_session_coaches ?? []).map((coach) => ({
+      profileId: coach.profile_id,
+      role: coach.role,
+    })),
     significantChangedAt: row.significant_changed_at,
     // Both are set in the same statement when the row is written, so an equal
     // pair means nothing has touched it since.

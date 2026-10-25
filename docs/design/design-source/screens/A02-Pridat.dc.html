@@ -21,10 +21,14 @@ body{margin:0;background:#F3F5F9;font-family:Manrope,"Segoe UI",system-ui,sans-s
 .inp.err{box-shadow:inset 0 0 0 2px var(--danger)}
 .help{font-size:13px;line-height:18px;color:var(--muted)}
 .lbl span{font-weight:400;font-size:13px;color:var(--muted);float:right}
+.sw{position:relative;width:52px;height:32px;border-radius:16px;background:#13795B;flex-shrink:0}
+.sw::after{content:"";position:absolute;top:3px;left:23px;width:26px;height:26px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.sw.off{background:#DCE2EC}
+.sw.off::after{left:3px}
 .btn{height:52px;width:100%;border-radius:12px;border:0;font:700 16px/1 Manrope,system-ui,sans-serif;background:var(--accent);color:#fff}
 </style>
 </helmet>
-<div class="s" style="width: 390px; height: 960px; background: var(--bg); display: flex; flex-direction: column; overflow: hidden">
+<div class="s" style="width: 390px; height: 1120px; background: var(--bg); display: flex; flex-direction: column; overflow: hidden">
 <div style="padding: 52px 16px 0">
 <a href="A01-Treneri.dc.html" style="height: 44px; display: inline-flex; align-items: center; color: var(--accent); text-decoration: none; font-size: 15px; font-weight: 700">Zrušit</a>
 </div>
@@ -43,6 +47,15 @@ body{margin:0;background:#F3F5F9;font-family:Manrope,"Segoe UI",system-ui,sans-s
 <div class="field"><label class="lbl" for="t">Telefon <span>Nepovinné</span></label><input id="t" class="inp" type="tel" placeholder="+420 123 456 789"><span class="help">Rodiče ho uvidí, když trenér jejich dítě odhlásí z tréninku.</span></div>
 </div>
 
+<h2 style="margin: 4px 0 0; padding: 0 4px; font-size: 12px; line-height: 16px; font-weight: 700; letter-spacing: .8px; text-transform: uppercase; color: var(--muted)">Oprávnění</h2>
+<div style="background: var(--surface); border-radius: 16px; padding: 16px; display: flex; flex-direction: column; gap: 12px">
+<label style="display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 44px">
+<span style="display: flex; flex-direction: column"><b style="font-size: 16px; font-weight: 600">Může upravovat všechny tréninky</b><span style="font-size: 13px; line-height: 18px; color: var(--muted)">Vytvářet nové a upravovat i tréninky jiných trenérů</span></span>
+<input type="checkbox" role="switch" checked style="position: absolute; opacity: 0; width: 1px; height: 1px"><span class="sw" aria-hidden="true"></span>
+</label>
+<span style="font-size: 13px; line-height: 18px; color: var(--muted)">Bez tohoto oprávnění upravuje jen tréninky, které vede jako hlavní trenér. Ostatní jen prohlíží — vhodné pro asistenty.</span>
+</div>
+
 <p style="margin: 0; padding: 0 4px; font-size: 14px; line-height: 20px; color: var(--muted)">Trenér bude hned k dispozici při výběru hlavního trenéra a asistentů, i když se ještě nepřihlásil.</p>
 </main>
 
@@ -51,7 +64,7 @@ body{margin:0;background:#F3F5F9;font-family:Manrope,"Segoe UI",system-ui,sans-s
 </footer>
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":960}}'>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":1120}}'>
 class Component extends DCLogic {
 renderVals() {
 return {};

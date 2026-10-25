@@ -24,6 +24,7 @@ interface Coach {
   lastName: string;           // required
   active: boolean;
   isAdmin: boolean;           // = workspace_role WORKSPACE_ADMIN (v3: editable in A3)
+  canEditTrainings: boolean;  // v3.2: default true; false = edits only trainings they lead as main coach, views the rest, cannot create. Forced true while isAdmin
   userId: string | null;      // linked auth account, set on first sign-in
   email: string | null;       // v3: sign-in e-mail; null → "Bez přístupu"
   phone: string | null;       // v3: optional; shown to guardians only in G6d
@@ -67,7 +68,7 @@ Bottom nav: `Tréninky`, `Sportovci`, `Více` (active).
 ### A1 · Coach list (`/coach/more/coaches`)
 Back `‹ Více`. Header row: H1 `Trenéři` + primary md button `+ Přidat trenéra` (→ A2).
 Caption `AKTIVNÍ · {n}` → list rows (64 px, avatar 40, name 16/600, meta, optional badge, chevron) → A3. Meta/badge by access state (v3):
-- `signed_in` → meta `Administrátor` (if admin) or none, no badge;
+- `signed_in` → meta `Administrátor` (if admin), `Jen prohlížení` (if `canEditTrainings = false`), or none, no badge;
 - `invited` → meta `Ještě se nepřihlásil` + warning badge `Pozván`;
 - `no_email` → meta `Chybí e-mail` + neutral badge `Bez přístupu`.
 Badges `white-space: nowrap`, never wrap.
@@ -78,6 +79,7 @@ Empty: EmptyState `Zatím není přidaný žádný trenér.` + `Přidat trenéra
 ### A2 · Add coach (`/new`)
 Top `Zrušit`; title `Nový trenér`. Panel: `Jméno *`, `Příjmení *` (required marker in danger; `required`, `aria-required`). Errors: `Vyplňte příjmení.` / `Vyplňte jméno.`
 **v3:** caption `KONTAKT` → panel: `E-mail` (label suffix `Pro přihlášení`, type email, helper `Pošleme sem pozvánku. Bez e-mailu se trenér do aplikace nepřihlásí.`) and `Telefon` (suffix `Nepovinné`, type tel, helper `Rodiče ho uvidí, když trenér jejich dítě odhlásí z tréninku.`). E-mail is optional but recommended; invalid → `Zadejte platný e-mail.`; already used by another coach/guardian → `Tento e-mail už v aplikaci používá někdo jiný.`
+**v3.2:** caption `OPRÁVNĚNÍ` → panel: Switch row `Může upravovat všechny tréninky` / sub `Vytvářet nové a upravovat i tréninky jiných trenérů` (default **on**) + helper `Bez tohoto oprávnění upravuje jen tréninky, které vede jako hlavní trenér. Ostatní jen prohlíží — vhodné pro asistenty.`
 Helper below: `Trenér bude hned k dispozici při výběru hlavního trenéra a asistentů, i když se ještě nepřihlásil.`
 Footer primary lg: `Přidat a poslat pozvánku` when e-mail is filled, otherwise `Přidat trenéra` → create (active = true; send invitation A6 if e-mail) → A1 + toast `Trenér přidán` / `Trenér přidán, pozvánka odeslána`.
 Validation (Zod): trimmed 1–50 chars each; warn (not block) on exact duplicate name: inline notice `Trenér se stejným jménem už existuje.`
@@ -89,6 +91,7 @@ Top `Zrušit`; title `Upravit trenéra`. Panel: `Jméno *`, `Příjmení *`.
 - **A3b · `invited`:** warning-soft status, clock icon, `Čeká na první přihlášení` + `Pozvánka odeslána {d. m.} v {HH:MM}`. Outline md button `Poslat pozvánku znovu` (mail icon) + helper `Znovu lze poslat nejdřív za hodinu. Změníte-li e-mail, pošle se nová pozvánka po uložení.` Rate limit 1/h per coach (button disabled with that helper while limited). Toast `Pozvánka odeslána`.
 - **A3c · `no_email`:** neutral status, lock icon, `Bez přístupu` + `Bez e-mailu se trenér nemůže přihlásit. U tréninků ho přesto můžete uvádět.` E-mail field empty (focused in the design); `Poslat pozvánku` disabled until a valid e-mail is typed; saving with an e-mail sends the invitation.
 Invitations **do not expire** — sign-in is always a 6-digit code to the e-mail (no passwords), so the invitation is only a convenience link; an invited coach can sign in whenever. Unaccepted invitations simply stay `Pozván`.
+**v3.2 — the section is renamed `ROLE A OPRÁVNĚNÍ`** and gets a second Switch row under a divider: `Může upravovat všechny tréninky` / `Vytvářet nové a upravovat i tréninky jiných trenérů`. When off, an info box (bg) below: `Upravuje jen tréninky, které vede jako hlavní trenér. Ostatní tréninky jen prohlíží: vidí sestavu a kontakty na rodiče. Nové tréninky nevytváří.` When `Administrátor` is on, this switch is on + disabled (admins can always edit). Turning `Administrátor` off keeps the previous value of this switch. Changes take effect on the coach's next request (no re-login).
 **v3 — caption `ROLE`** (DR-08) → panel: Switch row `Administrátor` / sub `Spravuje trenéry, pozvánky a organizaci`. Rules (enforced server-side, the UI explains them):
 - Any admin can grant/revoke admin to another coach (also to an `invited` coach — it applies after first sign-in).
 - **The last admin cannot lose the role** — on own card when you are the only admin: switch on + disabled, Notice `Jste jediný administrátor. Práva si můžete odebrat, až je udělíte jinému trenérovi.` (A3d). Server returns `LAST_ADMIN` otherwise.
@@ -147,6 +150,8 @@ File rules (validate client-side **and** in the server action with Zod):
 13. `Poslat pozvánku znovu` twice within an hour → second attempt disabled/refused.
 14. Only admin opens own A3 → admin switch disabled with the explanation; API call to revoke returns `LAST_ADMIN`.
 15. With two admins, revoking own role → confirmation sheet → after save the `Správa` section is gone from A0.
+16. A2 default `Může upravovat všechny tréninky` = on; turning it off in A3 → A1 meta `Jen prohlížení`; that coach immediately loses the FAB and sees K2b on others' trainings, but still edits trainings where he is main coach.
+17. Admin's own `Může upravovat všechny tréninky` is on + disabled; API refuses `canEditTrainings = false` for an admin.
 
 ## 5. Open questions
 - ~~E-mail invitation flow~~ → designed v3 (A2, A3–A3c, A6, coach K0).

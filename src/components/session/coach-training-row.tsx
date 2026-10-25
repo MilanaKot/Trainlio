@@ -5,6 +5,7 @@ import { capacityState } from '@/lib/domain/capacity'
 import { formatTimeRange } from '@/lib/time/workspace-time'
 import { Badge } from '@/components/ui/badge'
 import { CapacityMeter } from '@/components/ui/capacity-meter'
+import { RoleLabel, type SessionRole } from '@/components/ui/role-label'
 import { cn } from '@/lib/utils'
 import type { CoachSession } from '@/server/sessions/queries'
 
@@ -31,6 +32,7 @@ export function CoachTrainingRow({
   timezone,
   variant = 'upcoming',
   showEdited = false,
+  role = null,
 }: {
   session: CoachSession
   timezone: string
@@ -47,6 +49,8 @@ export function CoachTrainingRow({
    * touched would carry it.
    */
   showEdited?: boolean
+  /** §K1 v3.2: the signed-in coach's part in it, when they have one (DS §6.34). */
+  role?: SessionRole | null
 }) {
   const start = new Date(session.startAt)
   const end = new Date(session.endAt)
@@ -82,13 +86,14 @@ export function CoachTrainingRow({
         <span className="flex min-w-0 flex-col gap-0.5">
           <span
             className={cn(
-              'nums text-sheet-title font-bold',
+              'nums whitespace-nowrap text-[1.625rem]/[1.875rem] font-bold',
               cancelled ? 'text-muted line-through' : 'text-ink',
             )}
           >
             {formatTimeRange(start, end, timezone)}
           </span>
           <span className="truncate text-meta text-muted">{meta}</span>
+          {role ? <RoleLabel role={role} /> : null}
 
           {/* One status line at most, and only when there is something to say:
               a row that always carries a line reads as an alert that never

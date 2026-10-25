@@ -34,7 +34,11 @@ export default defineConfig({
       // one row shared by the whole run, and it renames it and takes its mark
       // away. Serial within a project is not enough when a second project is
       // running the same file at the same time.
-      testIgnore: /(mobile|organization)\.spec\.ts/,
+      //
+      // The permissions spec is specified at 390 × 844 and sets its own
+      // viewport, so a desktop run would repeat it at the same size — and
+      // double the sign-ins it spends against GoTrue's rate limit.
+      testIgnore: /(mobile|organization|permissions)\.spec\.ts/,
     },
   ],
   webServer: {

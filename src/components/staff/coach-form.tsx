@@ -12,6 +12,7 @@ import {
   setMemberEmail,
   setMemberName,
   setMemberPhone,
+  setMemberCanEditTrainings,
   setMemberRole,
 } from '@/server/staff/actions'
 import { Button } from '@/components/ui/button'
@@ -141,6 +142,9 @@ export function CoachForm({
   const [lastName, setLastName] = useState(member?.lastName ?? '')
   const [isActive, setIsActive] = useState(member?.isActive ?? true)
   const [isAdmin, setIsAdmin] = useState(member?.roles.includes('WORKSPACE_ADMIN') ?? false)
+  // Decision 33. The coach's own value, kept while they are an administrator,
+  // which is why the switch shows `isAdmin || canEditAll` and not this alone.
+  const [canEditAll, setCanEditAll] = useState(member?.canEditTrainings ?? true)
   const [confirmOwnRole, setConfirmOwnRole] = useState(false)
   const [phone, setPhone] = useState(member?.phone ? formatPhone(member.phone) : '')
   const [email, setEmail] = useState(member?.email ?? '')
@@ -198,6 +202,17 @@ export function CoachForm({
           return
         }
 
+        // §A2 OPRÁVNĚNÍ. On by default, so only an administrator who switched it
+        // off needs the second call; it goes before the invitation, so a coach
+        // never signs in with more than they were given.
+        if (!canEditAll && created.profileId) {
+          const restricted = await setMemberCanEditTrainings(workspaceId, created.profileId, false)
+          if (!restricted.ok) {
+            setErrors({ form: errorText(restricted.code) })
+            return
+          }
+        }
+
         // §A2: the invitation is the point of the address, so it goes with the
         // save rather than waiting for somebody to open A3b and ask for it.
         if (email.trim() && created.profileId) {
@@ -233,6 +248,17 @@ export function CoachForm({
             return
           }
           setErrors({ form: errorText(changed.code) })
+          return
+        }
+      }
+
+      // §A3 decision 33. Only when the switch was free to move: under the
+      // administrator role it is on and disabled, and the value underneath is
+      // left as it was so that it comes back with the role (A3).
+      if (!isAdmin && canEditAll !== member.canEditTrainings) {
+        const permitted = await setMemberCanEditTrainings(workspaceId, member.profileId, canEditAll)
+        if (!permitted.ok) {
+          setErrors({ form: errorText(permitted.code) })
           return
         }
       }
@@ -425,9 +451,10 @@ export function CoachForm({
         />
       </Panel>
 
-      {/* §A3 ROLE (v3, DR-08). The rules are the server's; this explains them. */}
+      {/* §A3 ROLE A OPRÁVNĚNÍ (v3, DR-08; v3.2). The rules are the server's;
+          this explains them. */}
       {member ? (
-        <Panel caption={t.roleCaption}>
+        <Panel caption={t.rolePermissionCaption}>
           <Switch
             checked={isAdmin}
             onChange={setIsAdmin}
@@ -436,8 +463,28 @@ export function CoachForm({
             disabled={isLastAdmin}
           />
           {isLastAdmin ? <Notice variant="neutral">{t.lastAdminNotice}</Notice> : null}
+          <hr className="border-line" />
+          <Switch
+            checked={isAdmin || canEditAll}
+            onChange={setCanEditAll}
+            label={t.editAllSwitch}
+            hint={t.editAllSwitchHint}
+            disabled={isAdmin}
+          />
+          {!isAdmin && !canEditAll ? <Notice variant="neutral">{t.editAllOffNotice}</Notice> : null}
         </Panel>
-      ) : null}
+      ) : (
+        // §A2 OPRÁVNĚNÍ: a new coach is never an administrator here.
+        <Panel caption={t.permissionCaption}>
+          <Switch
+            checked={canEditAll}
+            onChange={setCanEditAll}
+            label={t.editAllSwitch}
+            hint={t.editAllSwitchHint}
+          />
+          <p className="text-hint text-muted">{t.editAllHelper}</p>
+        </Panel>
+      )}
 
       {member ? (
         <Panel caption={t.stateCaption}>
