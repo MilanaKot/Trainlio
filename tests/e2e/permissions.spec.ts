@@ -289,11 +289,8 @@ test.describe('a coach without `Může upravovat všechny tréninky`', () => {
     await expect(page.getByText('0 / 12')).toBeVisible()
 
     // Closing registration on their own training works.
-    await page.getByRole('button', { name: /Zavřít přihlašování/ }).click()
-    await page
-      .getByRole('alertdialog')
-      .getByRole('button', { name: /Zavřít/ })
-      .click()
+    await page.getByRole('button', { name: 'Zavřít přihlašování' }).click()
+    await page.getByRole('dialog').getByRole('button', { name: 'Zavřít přihlašování' }).click()
     await expect(page.getByText('Přihlašování uzavřeno').first()).toBeVisible()
   })
 
@@ -307,7 +304,10 @@ test.describe('a coach without `Může upravovat všechny tréninky`', () => {
     await expect(page.getByText(`Interní pro asistenta ${run}`)).toBeVisible()
 
     await page.getByRole('button', { name: new RegExp(child) }).click()
-    await expect(page.getByRole('link', { name: `Zavolat Eva Rodič${run}` })).toHaveAttribute(
+    const sheet = page.getByRole('dialog', { name: child })
+    await expect(sheet.getByText(`Eva Rodič${run}`)).toBeVisible()
+    // The roster sheet names the link by the number (§K5); K13 by the parent.
+    await expect(sheet.getByRole('link', { name: 'Zavolat 777 333 444' })).toHaveAttribute(
       'href',
       'tel:777333444',
     )
