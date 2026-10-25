@@ -420,14 +420,14 @@ if (!SERVICE) {
 
   res = await rpc('create_session_series', {
     p_workspace_id: ws.id,
-    p_by_weekdays: [1],
+    p_by_weekdays: [1, 2, 3, 4],
     p_local_date_from: '2026-10-05',
-    p_local_date_to: '2027-10-04',
+    p_local_date_to: '2027-09-20',
     p_local_start_time: '06:00',
     p_local_end_time: '07:00',
     p_facility_id: mh.id,
   })
-  ok('53 occurrences are refused (AC-264)', res.ok === false && res.code === 'SERIES_TOO_LONG',
+  ok('201 occurrences are refused (AC-264)', res.ok === false && res.code === 'SERIES_TOO_LONG',
      res.code ?? 'ok')
 
   // BR-081: independent from creation onward.

@@ -304,17 +304,18 @@ select pg_temp.check(
   'SERIES_EMPTY', 'unchecking every date is refused rather than creating an empty series (AC-263)');
 
 \echo ''
-\echo '── The 52-occurrence ceiling (coach/SPEC.md §K4b) ──────────────────'
--- 2026-10-05 is a Monday; + 364 days is 2027-10-04, also a Monday, so the range
--- holds 53 Mondays while staying inside the 366-day span guard.
+\echo '── The 200-occurrence ceiling (coach/SPEC.md §K4b, migration 40) ───'
+-- Monday to Thursday from 2026-10-05 (a Monday) to 2027-09-20 (also a Monday)
+-- holds 201 dates while staying inside the 366-day span guard.
 select pg_temp.check(
-  (select count(*)::text from public.weekly_occurrence_dates(date '2026-10-05', date '2027-10-04', array[1])),
-  '53', 'the range under test really does produce 53 occurrences');
+  (select count(*)::text from public.weekly_occurrence_dates(
+     date '2026-10-05', date '2027-09-20', array[1,2,3,4])),
+  '201', 'the range under test really does produce 201 occurrences');
 select pg_temp.check(
   pg_temp.as_user(:COACH, format($$select (public.create_session_series(
-    %L::uuid, array[1], date '2026-10-05', date '2027-10-04', time '06:00', time '07:00', %L::uuid) ->> 'code')$$,
+    %L::uuid, array[1,2,3,4], date '2026-10-05', date '2027-09-20', time '06:00', time '07:00', %L::uuid) ->> 'code')$$,
     pg_temp.ws(), pg_temp.fac('MH'))),
-  'SERIES_TOO_LONG', '53 occurrences are refused (AC-264)');
+  'SERIES_TOO_LONG', '201 occurrences are refused (AC-264)');
 select pg_temp.check(
   (select count(*)::text from public.training_sessions
    where start_at >= timestamptz '2027-01-01' and series_id is not null),
@@ -323,19 +324,22 @@ select pg_temp.check(
 -- ("Vytvořit {n} tréninků", n = checked), so unchecking one date makes it fit.
 insert into t_ids (k, v)
 select 'c', (pg_temp.as_user(:COACH, format($$select (public.create_session_series(
-  %L::uuid, array[1], date '2026-10-05', date '2027-10-04', time '06:00', time '07:00', %L::uuid,
-  array[date '2027-10-04']) -> 'data' ->> 'session_series_id')$$, pg_temp.ws(), pg_temp.fac('MH'))))::uuid;
+  %L::uuid, array[1,2,3,4], date '2026-10-05', date '2027-09-20', time '06:00', time '07:00', %L::uuid,
+  array[date '2027-09-20']) -> 'data' ->> 'session_series_id')$$, pg_temp.ws(), pg_temp.fac('MH'))))::uuid;
 select pg_temp.check(
   (select count(*)::text from public.training_sessions
    where series_id = (select v from t_ids where k='c')),
-  '52', 'unchecking one date brings the same range down to the 52 that are allowed (AC-264)');
+  '200', 'unchecking one date brings the same range down to the 200 that are allowed (AC-264)');
+-- 52 was the ceiling before migration 40: a season of three a week is past it.
+select pg_temp.check(
+  (select generated_count::text from public.session_series where id = (select v from t_ids where k='c')),
+  '200', 'and the series records all 200 (the check constraint allows it)');
 select pg_temp.check(
   pg_temp.as_user(:COACH, format($$select (public.create_session_series(
-    %L::uuid, array[1,2,3,4,5,6,7], date '2026-10-05', date '2026-12-31', time '06:00', time '07:00', %L::uuid) ->> 'code')$$,
+    %L::uuid, array[1,2,3,4,5,6,7], date '2026-10-05', date '2027-04-30', time '06:00', time '07:00', %L::uuid) ->> 'code')$$,
     pg_temp.ws(), pg_temp.fac('MH'))),
-  'SERIES_TOO_LONG', 'seven weekdays over three months exceed the ceiling too (AC-264)');
--- Refused before generating, so an absurd range is never expanded. No series
--- the ceiling allows can reach this bound: 52 weekly occurrences span 357 days.
+  'SERIES_TOO_LONG', 'seven weekdays over seven months exceed the ceiling too (AC-264)');
+-- Refused before generating, so an absurd range is never expanded.
 select pg_temp.check(
   pg_temp.as_user(:COACH, format($$select (public.create_session_series(
     %L::uuid, array[1], date '2026-10-05', date '2030-10-05', time '06:00', time '07:00', %L::uuid) ->> 'code')$$,

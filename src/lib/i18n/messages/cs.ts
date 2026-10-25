@@ -756,7 +756,7 @@ export const cs = {
       many: 'Vytvoří se {count} tréninků',
     },
     previewUncheck: 'Zrušte zaškrtnutí u dnů, kdy se netrénuje',
-    seriesLimit: 'Série může mít nejvýše 52 tréninků.',
+    seriesLimit: 'Série může mít nejvýše 200 tréninků.',
     seriesSkipped: {
       one: '{count} termín vynechán',
       few: '{count} termíny vynechány',
@@ -824,7 +824,7 @@ export const cs = {
       INVALID_BIRTH_YEAR_RANGE: 'Zkontrolujte rozsah ročníků.',
       SERIES_EMPTY: 'Zadanému nastavení neodpovídá žádný termín.',
       SERIES_TOO_LONG:
-        'Série může mít nejvýše 52 tréninků. Zkraťte období nebo zrušte zaškrtnutí u některých termínů.',
+        'Série může mít nejvýše 200 tréninků. Zkraťte období nebo zrušte zaškrtnutí u některých termínů.',
       INVALID_WEEKDAY: 'Vyberte alespoň jeden den v týdnu.',
       INVALID_DATE_RANGE: 'Datum do musí být po datu od.',
       ALREADY_BOOKED: 'Sportovec už je na tento trénink přihlášen.',

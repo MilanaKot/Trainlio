@@ -386,7 +386,12 @@ export function SeriesForm({
       <div className="fixed inset-x-0 bottom-0 z-30 mx-auto flex max-w-3xl flex-col gap-3 bg-bg/95 px-4 pb-5 pt-3 shadow-[0_-1px_0_var(--color-line)] backdrop-blur">
         {/* The footer counts what will be created, which is what is checked
             (coach/SPEC.md §K4b). Disabling is a courtesy — the server refuses
-            an empty or over-long series on its own (principle 5). */}
+            an empty or over-long series on its own (principle 5). The reason
+            for a disabled button stands beside it: the one under the date
+            list can be a hundred rows away. */}
+        {overLimit ? (
+          <p className="text-hint font-semibold text-danger">{t.errors.SERIES_TOO_LONG}</p>
+        ) : null}
         <Button
           type="submit"
           size="lg"

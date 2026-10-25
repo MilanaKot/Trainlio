@@ -473,15 +473,15 @@ refused — they change nothing either way — and `excluded_dates` records only
 those that actually suppressed a date, so the row explains the gaps in the
 generated sessions without a reader re-deriving them.
 
-A series holds **at most 52 occurrences** (`coach/SPEC.md` §K4b). The ceiling
-counts what gets created, which is what the coach's footer counts, so
-unchecking dates can bring an over-long range inside it. It is enforced in the
-function (`SERIES_TOO_LONG`), by a check constraint on
-`session_series.generated_count`, and mirrored on the client as
-`MAX_SERIES_OCCURRENCES` for the preview only. The 366-day span guard at step 3
-exists so an absurd range is refused before it is expanded; 52 weekly
-occurrences of one weekday span 357 days, so no series the ceiling allows can
-reach it.
+A series holds **at most 200 occurrences** (`coach/SPEC.md` §K4b; 52 until
+migration 40, which raised it once a series could repeat on several weekdays
+and a season of three trainings a week outgrew it). The ceiling counts what
+gets created, which is what the coach's footer counts, so unchecking dates can
+bring an over-long range inside it. It is enforced in the function
+(`SERIES_TOO_LONG`), by a check constraint on `session_series.generated_count`,
+and mirrored on the client as `MAX_SERIES_OCCURRENCES` for the preview only.
+The 366-day span guard at step 3 exists so an absurd range is refused before
+it is expanded; with one to three weekdays it is reached before the ceiling.
 
 Generated sessions are fully independent from creation onward (`BR-081`,
 `AC-081`, `AC-082`). There is no "this and all following" editing in MVP; the
