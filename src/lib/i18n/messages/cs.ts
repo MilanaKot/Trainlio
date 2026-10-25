@@ -321,6 +321,8 @@ export const cs = {
     coreSection: 'Sportovec',
     /* The sport's own name, as §G9 captions it — the panel uppercases it. */
     hockeySection: 'Lední hokej',
+    /* G10 caption over the child's own panel, shown under the parent's. */
+    athleteSection: 'Sportovec',
     firstName: 'Jméno',
     lastName: 'Příjmení',
     dateOfBirth: 'Datum narození',
