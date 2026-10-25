@@ -1,8 +1,10 @@
 import { notFound, redirect } from 'next/navigation'
 import { getCoachSession, getCoachWorkspace, getSessionCoaches } from '@/server/sessions/queries'
 import { getSessionRoster } from '@/server/roster/queries'
+import { getCoachRights } from '@/server/staff/queries'
 import { SessionForm } from '@/components/session/session-form'
 import { formatTime, localDateKey } from '@/lib/time/workspace-time'
+import { canEditSession } from '@/lib/domain/coach-rights'
 import { messages } from '@/lib/i18n'
 
 const t = messages.coach
@@ -42,6 +44,10 @@ export default async function EditSessionPage({
   // copy, and a link to this screen kept from before it ended goes back there.
   if (new Date(session.endAt) < new Date()) redirect(`/trener/${session.id}`)
 
+  // §K2b (decision 33): a coach who may not edit this training reads it there.
+  const rights = await getCoachRights()
+  if (!canEditSession(rights, session)) redirect(`/trener/${session.id}`)
+
   const [roster, coaches] = await Promise.all([
     getSessionRoster(sessionId),
     getSessionCoaches(sessionId),
@@ -57,6 +63,7 @@ export default async function EditSessionPage({
       <SessionForm
         workspace={workspace}
         session={session}
+        mainCoachLocked={!rights.canEditAll}
         bookedCount={booked.length}
         bookedAthletes={booked
           .filter((entry) => entry.birthYear !== null)

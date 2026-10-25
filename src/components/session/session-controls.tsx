@@ -127,9 +127,12 @@ const MailIcon = (
 export function SessionControls({
   session,
   confirmedCount,
+  canDuplicate,
 }: {
   session: CoachSession
   confirmedCount: number
+  /** §K2b: a copy is a new training, which needs the permission (decision 33). */
+  canDuplicate: boolean
 }) {
   const router = useRouter()
   const toast = useToast()
@@ -167,9 +170,11 @@ export function SessionControls({
         {/* §K4: a copy is a screen, not a dialog. Everything about the
             training comes with it except the date, which is the one thing a
             copy cannot supply. */}
-        <Row href={{ pathname: '/trener/novy', query: { from: session.id } }} icon={CopyIcon}>
-          {t.duplicate}
-        </Row>
+        {canDuplicate ? (
+          <Row href={{ pathname: '/trener/novy', query: { from: session.id } }} icon={CopyIcon}>
+            {t.duplicate}
+          </Row>
+        ) : null}
         {open ? (
           <Row onClick={() => setClosing(true)} icon={LockIcon}>
             {t.closeBooking}

@@ -2,6 +2,7 @@ import 'server-only'
 
 import { createClient } from '@/lib/supabase/server'
 import { rows } from '@/server/query-result'
+import type { CoachRights } from '@/lib/domain/coach-rights'
 import type { WorkspaceRole } from '@/types/database'
 
 export type StaffMember = {
@@ -124,4 +125,14 @@ export async function getOwnStaffState(): Promise<OwnStaffState | null> {
     welcomedAt: state.welcomed_at,
     canEditAll: state.can_edit_all,
   }
+}
+
+/**
+ * What the signed-in coach may do to trainings (decision 33), for the screens
+ * that offer it. The database decides what is allowed; this decides what is
+ * shown, and anything missing reads as the least.
+ */
+export async function getCoachRights(): Promise<CoachRights> {
+  const state = await getOwnStaffState()
+  return { me: state?.profileId ?? '', canEditAll: state?.canEditAll ?? false }
 }

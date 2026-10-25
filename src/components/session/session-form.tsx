@@ -60,6 +60,7 @@ export function SessionForm({
   /** §K4: a duplicate opens with no date and cannot be created without one. */
   requireDate = false,
   notice,
+  mainCoachLocked = false,
 }: {
   workspace: CoachWorkspace
   session?: CoachSession | undefined
@@ -69,6 +70,8 @@ export function SessionForm({
   submitLabel?: string
   requireDate?: boolean
   notice?: React.ReactNode
+  /** §K3 v3.2, passed through to the coaches panel. */
+  mainCoachLocked?: boolean
 }) {
   const router = useRouter()
   const [values, setValues] = useState<SessionFormValues>(initial)
@@ -288,6 +291,7 @@ export function SessionForm({
         fieldError={fieldError}
         bookedCount={session ? bookedCount : 0}
         notesAreDefault={!session}
+        mainCoachLocked={mainCoachLocked}
       />
 
       {formError ? (

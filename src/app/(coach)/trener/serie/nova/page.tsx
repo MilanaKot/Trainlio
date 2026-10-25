@@ -1,8 +1,10 @@
-import { notFound } from 'next/navigation'
+import { notFound, redirect } from 'next/navigation'
 import { getCoachSession, getCoachWorkspace, getSessionCoaches } from '@/server/sessions/queries'
+import { getCoachRights } from '@/server/staff/queries'
 import { SeriesForm } from '@/components/session/series-form'
 import type { SessionFormValues } from '@/components/session/training-fields'
 import { formatDateShort, formatTime, localDateKey } from '@/lib/time/workspace-time'
+import { canCreateSessions } from '@/lib/domain/coach-rights'
 import { messages } from '@/lib/i18n'
 
 const t = messages.coach
@@ -20,6 +22,10 @@ export default async function NewSeriesPage({
   const { from } = await searchParams
   const workspace = await getCoachWorkspace()
   if (!workspace) notFound()
+
+  // §K1b (decision 33): creating — new, a copy (`?from=`) or a series — needs
+  // the permission. The database refuses it too (FORBIDDEN_EDIT).
+  if (!canCreateSessions(await getCoachRights())) redirect('/trener')
 
   const today = localDateKey(new Date(), workspace.timezone)
   const facility = workspace.facilities[0]

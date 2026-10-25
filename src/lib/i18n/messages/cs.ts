@@ -819,6 +819,10 @@ export const cs = {
     noPastSessionsMine: 'Na žádném odehraném tréninku jste nebyli.',
     roleMain: 'Hlavní trenér',
     roleAssistant: 'Asistent',
+    /* §K2b v3.2. */
+    readOnlyTitle: 'Jen pro čtení',
+    readOnlyBody: 'Tento trénink vede {coach}. Upravit ho může hlavní trenér nebo administrátor.',
+    mainCoachLockedHint: 'Hlavního trenéra může změnit administrátor.',
     errors: {
       NOT_AUTHENTICATED: 'Nejste přihlášeni.',
       NOT_AUTHORIZED: 'Nemáte oprávnění.',

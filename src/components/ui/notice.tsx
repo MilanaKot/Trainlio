@@ -18,6 +18,8 @@ const notice = cva('flex gap-3 rounded-control-lg p-3.5', {
       info: 'bg-primary-100 text-primary',
       danger: 'bg-danger-soft text-danger',
       neutral: 'bg-bg text-muted',
+      // §K2b (v3.2): a statement about the page, not a warning.
+      plain: 'bg-surface text-ink shadow-[inset_0_0_0_1.5px_var(--color-line)]',
     },
   },
   defaultVariants: { variant: 'warning' },

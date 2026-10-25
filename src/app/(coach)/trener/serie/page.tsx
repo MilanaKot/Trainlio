@@ -1,9 +1,11 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { getCoachWorkspace, listCoachSeries } from '@/server/sessions/queries'
+import { getCoachRights } from '@/server/staff/queries'
 import { SeriesCard } from '@/components/session/series-card'
 import { buttonVariants } from '@/components/ui/button'
 import { EmptyState } from '@/components/ui/empty-state'
+import { canCreateSessions } from '@/lib/domain/coach-rights'
 import { messages } from '@/lib/i18n'
 
 const t = messages.coach
@@ -23,7 +25,9 @@ export default async function SeriesListPage() {
   const workspace = await getCoachWorkspace()
   if (!workspace) notFound()
 
-  const series = await listCoachSeries()
+  // §K15 v3.2: a series is a set of new trainings, which needs the permission.
+  const [series, rights] = await Promise.all([listCoachSeries(), getCoachRights()])
+  const canCreate = canCreateSessions(rights)
   const running = series.filter((s) => s.remainingCount > 0)
   const ended = series.filter((s) => s.remainingCount === 0)
 
@@ -35,22 +39,28 @@ export default async function SeriesListPage() {
 
       <div className="flex items-center justify-between gap-3">
         <h1 className="font-display text-page font-bold text-ink">{t.seriesTitle}</h1>
-        <Link
-          href="/trener/serie/nova"
-          className={`${buttonVariants({ size: 'md' })} whitespace-nowrap`}
-        >
-          {t.newSeries}
-        </Link>
+        {canCreate ? (
+          <Link
+            href="/trener/serie/nova"
+            className={`${buttonVariants({ size: 'md' })} whitespace-nowrap`}
+          >
+            {t.newSeries}
+          </Link>
+        ) : null}
       </div>
 
       {series.length === 0 ? (
         <EmptyState
           body={t.seriesEmptyBody}
-          action={
-            <Link href="/trener/serie/nova" className={buttonVariants({ size: 'md' })}>
-              {t.newSeries}
-            </Link>
-          }
+          {...(canCreate
+            ? {
+                action: (
+                  <Link href="/trener/serie/nova" className={buttonVariants({ size: 'md' })}>
+                    {t.newSeries}
+                  </Link>
+                ),
+              }
+            : {})}
         >
           {t.noSeries}
         </EmptyState>

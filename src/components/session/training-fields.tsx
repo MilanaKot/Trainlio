@@ -117,6 +117,7 @@ export function TrainingFields({
   bookedCount = 0,
   /** Whether the notes panel says its text is a starting point (§K3, create). */
   notesAreDefault = false,
+  mainCoachLocked = false,
 }: {
   workspace: CoachWorkspace
   values: SessionFormValues
@@ -125,6 +126,12 @@ export function TrainingFields({
   fieldError: (name: string) => string | undefined
   bookedCount?: number
   notesAreDefault?: boolean
+  /**
+   * §K3 v3.2: a coach without the permission edits their own training but
+   * cannot hand it on — they would lock themselves out of it. The server
+   * refuses it too (FORBIDDEN_EDIT).
+   */
+  mainCoachLocked?: boolean
 }) {
   const [picker, setPicker] = useState<'main' | 'assistants' | null>(null)
 
@@ -322,13 +329,22 @@ export function TrainingFields({
           <button
             type="button"
             onClick={() => setPicker('main')}
-            className="flex h-btn-block items-center justify-between rounded-control px-4 text-left text-body text-ink shadow-[inset_0_0_0_1.5px_var(--color-line)]"
+            disabled={mainCoachLocked}
+            {...(mainCoachLocked ? { 'aria-describedby': 'main-coach-locked' } : {})}
+            className="flex h-btn-block items-center justify-between rounded-control px-4 text-left text-body text-ink shadow-[inset_0_0_0_1.5px_var(--color-line)] disabled:bg-neutral-50 disabled:text-muted"
           >
             {coachName(values.mainCoachId)}
-            <span aria-hidden="true" className="text-subtle">
-              ›
-            </span>
+            {mainCoachLocked ? null : (
+              <span aria-hidden="true" className="text-subtle">
+                ›
+              </span>
+            )}
           </button>
+          {mainCoachLocked ? (
+            <p id="main-coach-locked" className="text-hint text-muted">
+              {t.mainCoachLockedHint}
+            </p>
+          ) : null}
           {initial && values.mainCoachId !== initial.mainCoachId ? (
             <p className="text-hint font-semibold text-warning">
               {t.previously.replace('{value}', coachName(initial.mainCoachId))}
