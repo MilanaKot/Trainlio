@@ -9,6 +9,7 @@ import { ConfirmDialog } from '@/components/ui/dialog'
 import { Field } from '@/components/ui/field'
 import { Notice } from '@/components/ui/notice'
 import { Panel, TrainingFields } from '@/components/session/training-fields'
+import { defaultEndTime } from '@/lib/domain/session'
 import type { BookedAthlete, SessionFormValues } from '@/components/session/training-fields'
 import type { CoachSession, CoachWorkspace } from '@/server/sessions/queries'
 
@@ -79,6 +80,23 @@ export function SessionForm({
 
   const set = <K extends keyof SessionFormValues>(key: K, value: SessionFormValues[K]) =>
     setValues((current) => ({ ...current, [key]: value }))
+
+  // The end follows the start, an hour on, until the coach types an end of
+  // their own. A form that opens on a training of another length (a copy of a
+  // 90-minute one, say) keeps that end: it was chosen, just not here.
+  const [endFollowsStart, setEndFollowsStart] = useState(
+    defaultEndTime(initial.start) === initial.end,
+  )
+
+  function setStart(start: string) {
+    const end = endFollowsStart ? defaultEndTime(start) : null
+    setValues((current) => ({ ...current, start, ...(end ? { end } : {}) }))
+  }
+
+  function setEnd(end: string) {
+    setEndFollowsStart(false)
+    set('end', end)
+  }
 
   const dirty = useMemo(() => JSON.stringify(values) !== JSON.stringify(initial), [values, initial])
 
@@ -240,7 +258,7 @@ export function SessionForm({
                 {...props}
                 type="time"
                 value={values.start}
-                onChange={(event) => set('start', event.target.value)}
+                onChange={(event) => setStart(event.target.value)}
               />
             )}
           </Field>
@@ -255,7 +273,7 @@ export function SessionForm({
                 {...props}
                 type="time"
                 value={values.end}
-                onChange={(event) => set('end', event.target.value)}
+                onChange={(event) => setEnd(event.target.value)}
               />
             )}
           </Field>

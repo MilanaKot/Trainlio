@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { messages, plural } from '@/lib/i18n'
 import { weeklyOccurrenceDates, formatLocalDateShort } from '@/lib/time/workspace-time'
 import { ISO_WEEKDAYS, MAX_SERIES_OCCURRENCES } from '@/lib/domain/series'
+import { defaultEndTime } from '@/lib/domain/session'
 import { createSeries } from '@/server/sessions/actions'
 import { Button } from '@/components/ui/button'
 import { Field } from '@/components/ui/field'
@@ -72,6 +73,22 @@ export function SeriesForm({
 
   const selected = useMemo(() => preview.filter((d) => !excluded.has(d)), [preview, excluded])
   const overLimit = selected.length > MAX_SERIES_OCCURRENCES
+
+  // As in the single form: the end follows the start, an hour on, until the
+  // coach types an end of their own.
+  const [endFollowsStart, setEndFollowsStart] = useState(
+    defaultEndTime(initial.start) === initial.end,
+  )
+
+  function setStart(start: string) {
+    const end = endFollowsStart ? defaultEndTime(start) : null
+    setValues((v) => ({ ...v, start, ...(end ? { end } : {}) }))
+  }
+
+  function setEnd(end: string) {
+    setEndFollowsStart(false)
+    setValues((v) => ({ ...v, end }))
+  }
 
   function toggleWeekday(day: number) {
     setByWeekdays((current) =>
@@ -265,7 +282,7 @@ export function SeriesForm({
                 {...props}
                 type="time"
                 value={values.start}
-                onChange={(event) => setValues((v) => ({ ...v, start: event.target.value }))}
+                onChange={(event) => setStart(event.target.value)}
               />
             )}
           </Field>
@@ -279,7 +296,7 @@ export function SeriesForm({
                 {...props}
                 type="time"
                 value={values.end}
-                onChange={(event) => setValues((v) => ({ ...v, end: event.target.value }))}
+                onChange={(event) => setEnd(event.target.value)}
               />
             )}
           </Field>

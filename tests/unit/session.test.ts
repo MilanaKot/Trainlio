@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest'
-import { eligibilityLabel, validateSession, type SessionInput } from '@/lib/domain/session'
+import {
+  defaultEndTime,
+  eligibilityLabel,
+  validateSession,
+  type SessionInput,
+} from '@/lib/domain/session'
 
 function input(overrides: Partial<SessionInput> = {}): SessionInput {
   return {
@@ -106,5 +111,23 @@ describe('eligibility label', () => {
     expect(eligibilityLabel('ALL', null, null, 'Všichni')).toBe('Všichni')
     // A range mode with missing years must not render "null–null".
     expect(eligibilityLabel('BIRTH_YEAR_RANGE', null, null, 'Všichni')).toBe('Všichni')
+  })
+})
+
+describe('the default end of a training', () => {
+  it('is an hour after the start', () => {
+    expect(defaultEndTime('09:00')).toBe('10:00')
+    expect(defaultEndTime('16:45')).toBe('17:45')
+    expect(defaultEndTime('22:59')).toBe('23:59')
+  })
+
+  it('is not offered past midnight, which a training cannot cross', () => {
+    expect(defaultEndTime('23:00')).toBeNull()
+    expect(defaultEndTime('23:30')).toBeNull()
+  })
+
+  it('is not offered for a start that is not a time yet', () => {
+    expect(defaultEndTime('')).toBeNull()
+    expect(defaultEndTime('9')).toBeNull()
   })
 })

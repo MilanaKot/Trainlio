@@ -57,6 +57,27 @@ export type SessionValidation =
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/
 const TIME = /^\d{2}:\d{2}(:\d{2})?$/
 
+/** What the end field offers while the coach has not set it themselves. */
+export const DEFAULT_DURATION_MINUTES = 60
+
+/**
+ * The end a training gets by default: an hour after `start`, as a wall-clock
+ * `HH:MM`.
+ *
+ * `null` when there is no such time on the same day. A training does not cross
+ * midnight (`validateSession` refuses an end at or before the start), so a
+ * 23:30 start leaves the end for the coach to choose rather than offering
+ * 00:30, which would be refused on save.
+ */
+export function defaultEndTime(start: string): string | null {
+  if (!TIME.test(start)) return null
+  const [hours, minutes] = start.split(':').map(Number) as [number, number]
+  const end = hours * 60 + minutes + DEFAULT_DURATION_MINUTES
+  if (end >= 24 * 60) return null
+  const pad = (n: number) => String(n).padStart(2, '0')
+  return `${pad(Math.floor(end / 60))}:${pad(end % 60)}`
+}
+
 function blankToNull(value: string | undefined): string | null {
   const trimmed = (value ?? '').trim()
   return trimmed.length > 0 ? trimmed : null

@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useState } from 'react'
 import { messages } from '@/lib/i18n'
 import { BottomSheet } from '@/components/ui/bottom-sheet'
+import { buttonVariants } from '@/components/ui/button'
 
 const t = messages.coach
 
@@ -49,8 +50,13 @@ function RepeatIcon() {
  * inside it: a coach creating a season of Sunday trainings and a coach adding
  * one extra session are doing different things, and the series form asks four
  * questions the single one does not.
+ *
+ * `inline` is the same sheet behind the empty state's button (AC-273). A list
+ * with no trainings shows that button and no FAB: two buttons that create the
+ * same thing, one of them floating over the other, read as two different
+ * actions.
  */
-export function CreateSheet() {
+export function CreateSheet({ variant = 'fab' }: { variant?: 'fab' | 'inline' }) {
   const [open, setOpen] = useState(false)
 
   const options = [
@@ -70,13 +76,23 @@ export function CreateSheet() {
 
   return (
     <>
-      <button
-        type="button"
-        onClick={() => setOpen(true)}
-        className="fixed right-4 z-20 flex h-14 [bottom:calc(var(--spacing-nav)+1rem+env(safe-area-inset-bottom))] items-center gap-2 rounded-full bg-primary px-5 text-body font-bold text-white shadow-[0_8px_24px_rgb(43_85_224/.35)] active:bg-primary-600"
-      >
-        <span aria-hidden="true">+</span> {t.create}
-      </button>
+      {variant === 'inline' ? (
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          className={buttonVariants({ size: 'md' })}
+        >
+          {t.noSessionsAction}
+        </button>
+      ) : (
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          className="fixed right-4 z-20 flex h-14 [bottom:calc(var(--spacing-nav)+1rem+env(safe-area-inset-bottom))] items-center gap-2 rounded-full bg-primary px-5 text-body font-bold text-white shadow-[0_8px_24px_rgb(43_85_224/.35)] active:bg-primary-600"
+        >
+          <span aria-hidden="true">+</span> {t.create}
+        </button>
+      )}
 
       <BottomSheet open={open} onOpenChange={setOpen} title={t.create}>
         <ul className="flex flex-col gap-2">

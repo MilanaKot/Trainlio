@@ -5,7 +5,7 @@ import { getSessionRoster, listCandidates } from '@/server/roster/queries'
 import { RosterList } from '@/components/roster/roster-list'
 import { SessionControls } from '@/components/session/session-controls'
 import { Badge, TodayChip } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
+import { buttonVariants } from '@/components/ui/button'
 import { CapacityMeter } from '@/components/ui/capacity-meter'
 import { DetailList } from '@/components/ui/detail-list'
 import { Notice } from '@/components/ui/notice'
@@ -204,10 +204,15 @@ export default async function SessionDetailPage({
         addable={!cancelled}
       />
 
+      {/* §K6b: a cancelled training has one thing left to do — the same
+          copy as §K4, which brings everything but the date and the athletes. */}
       {cancelled ? (
-        <Button variant="outline" size="lg" disabled>
+        <Link
+          href={{ pathname: '/trener/novy', query: { from: session.id } }}
+          className={buttonVariants({ variant: 'outline', size: 'lg' })}
+        >
           {t.duplicateAsNew}
-        </Button>
+        </Link>
       ) : (
         <SessionControls session={session} confirmedCount={confirmed.length} />
       )}

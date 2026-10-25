@@ -108,6 +108,20 @@ export function controlClass({
 }
 
 /**
+ * What a select adds to `controlClass`: its own chevron, in place of the
+ * browser's.
+ *
+ * The native arrow is drawn wherever the platform likes, and on iOS Safari
+ * that is against the control's right edge, inside the 14 px padding meant
+ * for text. Drawing it here puts it 14 px in on every platform, in the
+ * design's chevron colour, and `pr-10` keeps a long option clear of it.
+ */
+export const selectClass = cn(
+  'select-chevron appearance-none bg-no-repeat pr-10',
+  'bg-[length:1rem] bg-[position:right_0.875rem_center]',
+)
+
+/**
  * A note with a limit (§6.10).
  *
  * The limit is enforced by the control rather than reported after the fact:

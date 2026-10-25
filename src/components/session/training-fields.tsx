@@ -2,8 +2,9 @@
 
 import { useMemo, useState } from 'react'
 import { messages } from '@/lib/i18n'
+import { cn } from '@/lib/utils'
 import { Chip, AddChip } from '@/components/ui/chip'
-import { Field, TextareaWithCounter } from '@/components/ui/field'
+import { Field, TextareaWithCounter, selectClass } from '@/components/ui/field'
 import { SegmentedControl } from '@/components/ui/segmented-control'
 import { Stepper } from '@/components/ui/stepper'
 import { CoachPickerSheet } from '@/components/session/coach-picker-sheet'
@@ -85,10 +86,25 @@ export function Panel({
   )
 }
 
-/** The years a club's athletes are plausibly born in, newest first. */
-export function birthYears(): number[] {
+/** Nobody younger than this trains: a club has no use for a toddler's year. */
+export const YOUNGEST_ATHLETE_AGE = 3
+
+/**
+ * The years a club's athletes are plausibly born in, newest first: from three
+ * years ago back to 24 years ago, where the list has always ended.
+ *
+ * `keep` is the training's own years. One saved before this limit, or a copy
+ * of one, may name a year the list no longer offers, and a select whose value
+ * is not among its options silently shows a different one.
+ */
+export function birthYears(keep: string[] = []): number[] {
   const thisYear = new Date().getFullYear()
-  return Array.from({ length: 25 }, (_, index) => thisYear - index)
+  const offered = Array.from(
+    { length: 25 - YOUNGEST_ATHLETE_AGE },
+    (_, index) => thisYear - YOUNGEST_ATHLETE_AGE - index,
+  )
+  const extra = keep.map(Number).filter((year) => year > 0 && !offered.includes(year))
+  return [...new Set([...extra, ...offered])].sort((a, b) => b - a)
 }
 
 export function TrainingFields({
@@ -120,6 +136,7 @@ export function TrainingFields({
     [workspace.facilities],
   )
   const halls = workspace.facilities.filter((f) => f.locationName === values.locationName)
+  const years = birthYears([values.birthYearFrom, values.birthYearTo])
   const coachName = (id: string) =>
     workspace.coaches.find((coach) => coach.id === id)?.displayName ?? t.none
 
@@ -140,6 +157,7 @@ export function TrainingFields({
           {(props) => (
             <select
               {...props}
+              className={cn(props.className, selectClass)}
               value={values.locationName}
               onChange={(event) => {
                 const locationName = event.target.value
@@ -228,7 +246,21 @@ export function TrainingFields({
           <SegmentedControl
             label={t.eligibilityQuestion}
             value={values.eligibilityMode}
-            onChange={(mode) => set('eligibilityMode', mode)}
+            onChange={(mode) =>
+              // A select with no value still shows its first option, so an
+              // unset year is filled with the one on screen: otherwise the
+              // coach sees a year and is told on save that none was chosen.
+              setValues((current) => ({
+                ...current,
+                eligibilityMode: mode,
+                ...(mode === 'BIRTH_YEAR_RANGE'
+                  ? {
+                      birthYearFrom: current.birthYearFrom || String(years[0]),
+                      birthYearTo: current.birthYearTo || String(years[0]),
+                    }
+                  : {}),
+              }))
+            }
             options={[
               { value: 'ALL', label: t.eligibilityAll },
               { value: 'BIRTH_YEAR_RANGE', label: t.eligibilityRange },
@@ -249,10 +281,11 @@ export function TrainingFields({
               {(props) => (
                 <select
                   {...props}
+                  className={cn(props.className, selectClass)}
                   value={values.birthYearFrom}
                   onChange={(event) => set('birthYearFrom', event.target.value)}
                 >
-                  {birthYears().map((year) => (
+                  {years.map((year) => (
                     <option key={year} value={year}>
                       {year}
                     </option>
@@ -267,10 +300,11 @@ export function TrainingFields({
               {(props) => (
                 <select
                   {...props}
+                  className={cn(props.className, selectClass)}
                   value={values.birthYearTo}
                   onChange={(event) => set('birthYearTo', event.target.value)}
                 >
-                  {birthYears().map((year) => (
+                  {years.map((year) => (
                     <option key={year} value={year}>
                       {year}
                     </option>
