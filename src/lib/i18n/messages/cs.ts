@@ -816,6 +816,7 @@ export const cs = {
       NOT_AUTHORIZED: 'Nemáte oprávnění.',
       SESSION_NOT_FOUND: 'Trénink nebyl nalezen.',
       SESSION_CANCELLED: 'Trénink je zrušen a nelze jej změnit.',
+      SESSION_FINISHED: 'Trénink už proběhl a nelze jej změnit.',
       FACILITY_NOT_IN_WORKSPACE: 'Vybraná hala není k dispozici.',
       INVALID_TIME_RANGE: 'Konec musí být po začátku.',
       INVALID_SESSION_DATA: 'Zkontrolujte zadané údaje.',

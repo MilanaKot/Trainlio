@@ -61,6 +61,11 @@ BR-025c **(new — D-07)**
 
 Reason: cancellation notifications may already have been sent, and reopening the same record would create ambiguous communication and history. A coach who cancelled by mistake uses Duplicate Session. The cancelled session is preserved as historical evidence.
 
+BR-025d **(new — migration 41)**  
+A finished session — `end_at` before the current time, the same rule as BR-025a — is read-only for staff as well as guardians. It cannot be edited, have its registration closed or reopened, be cancelled, or have an athlete added or removed (`SESSION_FINISHED`). It can be copied as a new session.
+
+Reason: the session is a record of what happened; changing it afterwards rewrites that record, and most of those changes would e-mail families about a training that is already over. A session in progress is not finished: a coach may still add an athlete who arrives late.
+
 BR-025a **(new — D-04)**  
 `Upcoming` and `Past` are derived from `end_at` relative to the current time, not from the `COMPLETED` status. No scheduled job is required for the user interface to be correct.
 

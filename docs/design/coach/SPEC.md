@@ -87,7 +87,7 @@ FAB `+ Vytvořit` → K10 (only on `Nadcházející`). Empty: `Zatím nemáte ž
 Same header + segmented control (`Minulé` active). Day groups **descending** (newest first), same heading style. No FAB.
 Row = CoachTrainingRow variant `past`: left time + meta as K1; right **count only** — Barlow 22/700 number + 12 px muted label below, Czech plural: `1 přihlášený`, `2–4 přihlášení`, `5+ přihlášených`, `0 přihlášených`. **No meter** (free places no longer matter; there is no attendance tracking — never imply who came).
 Cancelled session: as in K1 (muted, struck time, danger `Zrušeno`) → K6b.
-Row → K2 (read-only roster; all edit actions hidden for past sessions).
+Row → K2 (read-only roster; all edit actions hidden for past sessions — the only action left is `Duplikovat jako nový trénink`, as on K6b; the server refuses the rest with `SESSION_FINISHED`, BR-025d).
 Paging: load 20 days at a time, infinite scroll; empty `Zatím žádné odehrané tréninky.`
 
 ### K12 · Athletes (`/coach/athletes`) — v3, DR-01

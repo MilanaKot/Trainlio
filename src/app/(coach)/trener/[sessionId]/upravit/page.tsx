@@ -1,4 +1,4 @@
-import { notFound } from 'next/navigation'
+import { notFound, redirect } from 'next/navigation'
 import { getCoachSession, getCoachWorkspace, getSessionCoaches } from '@/server/sessions/queries'
 import { getSessionRoster } from '@/server/roster/queries'
 import { SessionForm } from '@/components/session/session-form'
@@ -37,6 +37,10 @@ export default async function EditSessionPage({
       </main>
     )
   }
+
+  // A finished training is a record, not a form: its page offers only the
+  // copy, and a link to this screen kept from before it ended goes back there.
+  if (new Date(session.endAt) < new Date()) redirect(`/trener/${session.id}`)
 
   const [roster, coaches] = await Promise.all([
     getSessionRoster(sessionId),

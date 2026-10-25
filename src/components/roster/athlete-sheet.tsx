@@ -64,6 +64,7 @@ export function AthleteSheet({
   sessionId,
   sessionLabel,
   timezone,
+  removable,
   onClose,
 }: {
   entry: RosterEntry | null
@@ -73,6 +74,8 @@ export function AthleteSheet({
   /** `Ne 4. 10. · 09:00`, so the confirmation names the training it is about. */
   sessionLabel: string
   timezone: string
+  /** False once the training is over: nobody is removed from the past. */
+  removable: boolean
   onClose: () => void
 }) {
   const router = useRouter()
@@ -165,7 +168,7 @@ export function AthleteSheet({
             </div>
           ) : null}
 
-          {entry.status === 'CONFIRMED' ? (
+          {removable && entry.status === 'CONFIRMED' ? (
             <Button
               variant="danger-outline"
               size="lg"

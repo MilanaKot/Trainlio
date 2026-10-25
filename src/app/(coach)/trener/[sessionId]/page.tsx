@@ -74,6 +74,10 @@ export default async function SessionDetailPage({
   const end = new Date(session.endAt)
   const now = new Date()
   const cancelled = session.status === 'CANCELLED'
+  // Over by the same rule that puts it under `Minulé` (end_at before now). A
+  // finished training is a record: what was booked stays readable, and the
+  // only thing left to do with it is the same copy a cancelled one offers.
+  const finished = end.getTime() < now.getTime()
   const { confirmed } = splitRoster(entries)
   const assistants = coaches.filter((c) => c.role === 'ASSISTANT')
 
@@ -201,12 +205,16 @@ export default async function SessionDetailPage({
         capacity={session.capacity}
         confirmedCount={session.confirmedCount}
         timezone={workspace.timezone}
-        addable={!cancelled}
+        addable={!cancelled && !finished}
+        removable={!finished}
       />
 
       {/* §K6b: a cancelled training has one thing left to do — the same
-          copy as §K4, which brings everything but the date and the athletes. */}
-      {cancelled ? (
+          copy as §K4, which brings everything but the date and the athletes.
+          A finished one is in the same position: editing it, closing or
+          reopening registration, or cancelling it after the fact would rewrite
+          what happened. */}
+      {cancelled || finished ? (
         <Link
           href={{ pathname: '/trener/novy', query: { from: session.id } }}
           className={buttonVariants({ variant: 'outline', size: 'lg' })}
