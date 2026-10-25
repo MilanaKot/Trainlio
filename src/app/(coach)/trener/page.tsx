@@ -1,4 +1,3 @@
-import Link from 'next/link'
 import { notFound, redirect } from 'next/navigation'
 import { getCoachWorkspace, listCoachSessions } from '@/server/sessions/queries'
 import { getOwnStaffState } from '@/server/staff/queries'
@@ -8,7 +7,6 @@ import { CoachTrainingsTabs } from '@/components/session/coach-trainings-tabs'
 import { CreateSheet } from '@/components/session/create-sheet'
 import { TodayChip } from '@/components/ui/badge'
 import { OrgLogo } from '@/components/ui/org-logo'
-import { buttonVariants } from '@/components/ui/button'
 import { EmptyState } from '@/components/ui/empty-state'
 import { groupByLocalDay } from '@/lib/domain/session-list'
 import { formatDateGroup, localDateKey, relativeDayLabel } from '@/lib/time/workspace-time'
@@ -82,17 +80,7 @@ export default async function CoachSessionsPage({
       <CoachTrainingsTabs value={showingPast ? 'past' : 'upcoming'} />
 
       {sessions.length === 0 ? (
-        <EmptyState
-          {...(showingPast
-            ? {}
-            : {
-                action: (
-                  <Link href="/trener/novy" className={buttonVariants({ size: 'md' })}>
-                    {t.noSessionsAction}
-                  </Link>
-                ),
-              })}
-        >
+        <EmptyState {...(showingPast ? {} : { action: <CreateSheet variant="inline" /> })}>
           {showingPast ? t.noPastSessions : t.noSessions}
         </EmptyState>
       ) : (
@@ -123,8 +111,9 @@ export default async function CoachSessionsPage({
         })
       )}
 
-      {/* §K14: nothing is created from the past. */}
-      {showingPast ? null : <CreateSheet />}
+      {/* §K14: nothing is created from the past. An empty list creates from
+          its own empty state, so it has no FAB as well. */}
+      {showingPast || sessions.length === 0 ? null : <CreateSheet />}
     </main>
   )
 }
