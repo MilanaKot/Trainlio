@@ -106,7 +106,10 @@ May:
 - manually book workspace athletes;
 - intentionally override capacity;
 - cancel bookings at any time;
-- see created_by user for bookings.
+- see created_by user for bookings;
+- mark a booking paid, keep a note for it and message its guardians, where
+  `canEdit(session)` allows (BR-175) — and read all three on any training of
+  the workspace.
 
 May not:
 

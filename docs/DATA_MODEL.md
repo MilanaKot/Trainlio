@@ -430,6 +430,9 @@ Main coach may be mirrored in training_sessions for simple querying, but associa
 - created_at
 - cancelled_at nullable
 - cancelled_by nullable
+- paid_at, paid_by nullable — `Zaplaceno`, both or neither (BR-170)
+- parent_message (≤500), parent_message_sent_at, parent_message_sent_by
+  nullable — the coach's message, all three or none (BR-174)
 
 Statuses:
 
@@ -455,6 +458,19 @@ narrowed birth-year range (D-08). A session-level marker cannot express this: it
 would show `Změněno` to every booked guardian when only the affected families are
 notified. The booking stays CONFIRMED and valid; the column records that the rule
 moved under it.
+
+## booking_coach_notes
+
+The coach's note about one athlete at one training (BR-173, migration 43).
+
+- booking_id (primary key, references bookings)
+- workspace_id — copied from the booking's training, for the row policy
+- note (≤200, never blank)
+- updated_at, updated_by
+
+A table rather than a column on `bookings`, because a guardian reads their own
+bookings and Postgres has no row policy per column. Select is granted to the
+workspace's staff; there is no write grant — `set_booking_coach_note` writes it.
 
 ## notification_events
 
@@ -522,8 +538,8 @@ that a thing happened and is retained.
 
 Not required for MVP:
 
-- attendance
-- payments
+- attendance (parked; WISHLIST §4)
+- payments (online; `bookings.paid_at` is a manual flag only)
 - waiting_list
 - athlete_performance
 - push_subscriptions

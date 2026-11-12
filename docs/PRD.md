@@ -25,9 +25,25 @@ The system must be architected for later expansion into a commercial multi-sport
 - Support future multiple coaches and assistant coaches.
 - Provide an architecture suitable for later SaaS commercialization.
 
+### Added with handoff v3.3 (12 November 2026)
+
+For each booked athlete a coach records three things (decisions 34–36,
+BR-170 to BR-176):
+
+- **`Zaplaceno`** — a manual flag with who and when, for clubs where a
+  training is paid for separately. No amount, no method: Trainlio takes no
+  payments. The parent sees `Zaplaceno` in the booking detail.
+- **A note for this training**, for the staff only.
+- **A message to the parent**, shown in the booking detail and e-mailed (E09);
+  editable and re-sendable.
+
+Attendance (who actually came) was asked for at the same time and is
+deliberately left out until it is designed — see `WISHLIST.md` §4.
+
 ### Non-goals for MVP
 
-- Payments
+- Payments (taking or processing them; the manual `Zaplaceno` flag above is not
+  a payment)
 - Waiting list
 - Attendance / no-show tracking
 - Athlete performance history

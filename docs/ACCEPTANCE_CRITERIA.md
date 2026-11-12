@@ -884,3 +884,30 @@ sees them. Nothing here is a privilege a coach did not already have — every
 write still goes through the domain functions, which ask about guardianship —
 but a parent's screen that lists other people's children is wrong whatever it
 would let you do with them.
+
+## Payment, the note and the message (handoff v3.3)
+
+AC-295  
+Tapping `Zaplaceno` in K17 saves it with nothing else pressed; the K2 row shows
+`✓ Zaplaceno`, the bar counts one more, and the parent's G6 shows `Zaplaceno`
+(coach test 19).
+
+AC-296  
+`Zaplatili všichni` with three unpaid lists exactly those three in K2c;
+confirming leaves the bar at `Zaplaceno n z n` with the static `Zaplatili
+všichni ✓`, and a booking paid earlier keeps its own who and when (coach test
+20).
+
+AC-297  
+The coach's note for a booking is never returned to a guardian session — not
+from its table, not through the roster — and the K2 row shows the lock
+indicator (coach test 21).
+
+AC-298  
+`Odeslat rodiči` delivers E09 to every guardian of the athlete, G6 shows the
+message, and `Upravit a poslat znovu` replaces it and sends again (coach test
+22).
+
+AC-299  
+A coach without edit rights on the training sees K17 read-only, no `Zaplatili
+všichni`, and the API refuses them with `FORBIDDEN_EDIT` (coach test 23).

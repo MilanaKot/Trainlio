@@ -413,3 +413,46 @@ Each audit entry records the acting user where available, the workspace, the ent
 
 BR-132 **(new)**  
 The notification outbox is not an audit log and does not substitute for one.
+
+## Payment, the coach's note and the message per booking
+
+Handoff v3.3, decisions 34–36, 12 November 2026. Migration 43.
+
+BR-170 **(new — v3.3)**  
+A coach may mark a confirmed booking `Zaplaceno`. The mark records who and
+when, and nothing else — no amount, no method. Unmarking clears both. Marking a
+booking that is already paid keeps who marked it first.
+
+BR-171 **(new — v3.3)**  
+`Zaplatili všichni` marks, in one transaction, every confirmed booking of the
+training that is not yet paid, with one timestamp. Bookings already paid keep
+their own who and when.
+
+BR-172 **(new — v3.3)**  
+A guardian sees whether their own child's booking is paid — `Zaplaceno` in the
+booking detail, nothing when it is not — and never who marked it. A payment
+change sends no e-mail.
+
+BR-173 **(new — v3.3)**  
+A coach may keep a note of up to 200 characters about one athlete at one
+training. It is staff-only: kept in its own table with a staff-only row policy,
+never in a guardian-facing query. The audit records that it changed, never its
+text.
+
+BR-174 **(new — v3.3)**  
+A coach may send the athlete's guardians one message of up to 500 characters
+about one booking. It is saved on the booking, shown in the guardian's booking
+detail (upcoming or past), and e-mailed to every active guardian of the athlete
+(E09) in the same transaction. Sending again replaces the text and e-mails
+again. There are no replies in the app.
+
+BR-175 **(new — v3.3)**  
+Payment, the note and the message follow `canEdit(session)` (decision 33): an
+administrator, a coach with `Může upravovat všechny tréninky`, or the
+training's main coach. A coach who can only view sees all three read-only.
+Unlike the rest of a finished training they stay open after it ends; a
+cancelled training and a cancelled booking accept none of them.
+
+BR-176 **(new — v3.3)**  
+Anonymising an athlete erases the coach's notes and the messages about them;
+the paid flags stay, since they say nothing about who the child was.
