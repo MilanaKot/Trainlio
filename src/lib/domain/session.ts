@@ -199,3 +199,9 @@ export function changingRoomLabel(room: string | null | undefined, label: string
   if (bare(trimmed).startsWith(bare(label))) return trimmed
   return `${label} ${trimmed}`
 }
+
+/**
+ * The form's value for `Bez trenéra` (migration 46): a training planned with
+ * nobody leading it yet, or one whose main coach was deactivated (K2e).
+ */
+export const NO_MAIN_COACH = 'none'

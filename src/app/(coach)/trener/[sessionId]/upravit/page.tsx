@@ -5,6 +5,7 @@ import { getCoachRights } from '@/server/staff/queries'
 import { SessionForm } from '@/components/session/session-form'
 import { formatTime, localDateKey } from '@/lib/time/workspace-time'
 import { canEditSession } from '@/lib/domain/coach-rights'
+import { NO_MAIN_COACH } from '@/lib/domain/session'
 import { messages } from '@/lib/i18n'
 
 const t = messages.coach
@@ -85,7 +86,7 @@ export default async function EditSessionPage({
           eligibilityMode: session.eligibilityMode,
           birthYearFrom: session.birthYearFrom ? String(session.birthYearFrom) : '',
           birthYearTo: session.birthYearTo ? String(session.birthYearTo) : '',
-          mainCoachId: session.mainCoachId,
+          mainCoachId: session.mainCoachId ?? NO_MAIN_COACH,
           assistantIds: coaches
             .filter((coach) => coach.role === 'ASSISTANT')
             .map((coach) => coach.profileId),

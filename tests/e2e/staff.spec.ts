@@ -356,13 +356,11 @@ test.describe('a workspace administrator manages the coaching staff', () => {
   })
 
   /**
-   * Admin test 16 (§A3, DR-15). A coach who still leads trainings may leave,
-   * and the trainings cannot be left with nobody: a deactivated main coach is
-   * not staff, and a training whose coach is not staff cannot be edited at
-   * all. The administrator is asked, and the answer they are shown first is
-   * the one that keeps the trainings workable.
+   * Admin test 16 (§A3f, decision 46). A coach who still leads trainings may
+   * leave; the administrator is warned with the trainings listed, and those
+   * trainings are left without a main coach until somebody is assigned.
    */
-  test('a leaving coach hands their trainings over (AC-293)', async ({ page }) => {
+  test('a leaving coach leaves their trainings without a main coach (A3f)', async ({ page }) => {
     test.setTimeout(90_000)
 
     const admin = uniqueEmail('spravce.predani')
@@ -406,28 +404,16 @@ test.describe('a workspace administrator manages the coaching staff', () => {
     await page.locator('label', { hasText: 'Aktivní trenér' }).click()
     await page.getByRole('button', { name: 'Uložit změny' }).click()
 
-    // The question, with the server's own count in it and the handover offered
-    // switched on.
-    const confirm = page.getByRole('alertdialog')
-    await expect(confirm).toContainText('vede 1 nadcházející trénink')
-    const handover = confirm.getByRole('switch', { name: 'Převést tréninky na mě' })
-    await expect(handover).toBeChecked()
-    await expect(confirm).toContainText('Rodiče přihlášených dětí dostanou e-mail')
-
-    // The other answer says what it costs, and does not move anything by
-    // merely being read.
-    await confirm.locator('label', { hasText: 'Převést tréninky na mě' }).click()
-    await expect(confirm).toContainText('nepůjde je upravit')
-    await confirm.locator('label', { hasText: 'Převést tréninky na mě' }).click()
-    await expect(handover).toBeChecked()
-
-    await confirm.getByRole('button', { name: 'Deaktivovat' }).click()
+    // A3f: the warning, with the server's own list in it.
+    const sheet = page.getByRole('dialog', { name: 'Deaktivovat trenéra?' })
+    await expect(sheet).toContainText('je hlavním trenérem 1 naplánovaného tréninku')
+    await expect(sheet).toContainText('Trenér bude upřesněn')
+    await expect(sheet.getByRole('listitem')).toHaveCount(1)
+    await sheet.getByRole('button', { name: 'Deaktivovat' }).click()
     await page.waitForURL(/\/trener\/vice\/treneri$/)
 
-    // The training is the administrator's now. Read from the database rather
-    // than from a screen, because this is the fact the whole question is
-    // about: the mirror column and the association table both moved
-    // (`validation_handover.sql` holds the rest).
+    // The training has no main coach now (validation_handover.sql holds the
+    // rest: the association table, who left and when, nobody e-mailed).
     const after = (await (
       await fetch(
         `${STACK}/rest/v1/training_sessions?select=main_coach_profile_id&id=eq.${sessionId}`,
@@ -439,8 +425,8 @@ test.describe('a workspace administrator manages the coaching staff', () => {
           },
         },
       )
-    ).json()) as { main_coach_profile_id: string }[]
-    expect(after[0]?.main_coach_profile_id).toBe(await profileFor(admin))
+    ).json()) as { main_coach_profile_id: string | null }[]
+    expect(after[0]?.main_coach_profile_id).toBeNull()
 
     // And the coach is gone from the active list, not from the club.
     const row = page.locator('li', { hasText: `Jana Odcházející${run}` })

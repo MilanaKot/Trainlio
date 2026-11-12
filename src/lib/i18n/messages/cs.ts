@@ -135,13 +135,6 @@ export const cs = {
     athletesDeactivated: 'Ročník {year} · deaktivoval rodič',
     athletesEmpty: 'Zatím tu nejsou žádní sportovci. Přidávají je rodiče ve své aplikaci.',
     athletesNoMatch: 'Nikoho takového nenacházíme.',
-    athleteBorn: 'Ročník {year} · narozen {date}',
-    athleteGuardians: 'RODIČE',
-    athleteGuardianRole: 'Rodič',
-    athleteNoPhone: 'telefon nevyplněn',
-    athleteUpcomingCaption: 'NADCHÁZEJÍCÍ TRÉNINKY · {count}',
-    athletePastLink: 'Minulé tréninky ({count})',
-    athletePastCaption: 'MINULÉ TRÉNINKY · {count}',
     athleteNoUpcoming: 'Nemá přihlášku na žádný nadcházející trénink.',
     athleteNote: 'INTERNÍ POZNÁMKA · JEN TRENÉŘI',
     athleteNoteEdit: 'Upravit poznámku',
@@ -183,6 +176,8 @@ export const cs = {
 
   /** "Moje tréninky" (guardian/SPEC.md §G4, §G4b, §G5, §G6). */
   myTrainings: {
+    /* G6 (v3.4): the training has no main coach (coach K2e). */
+    coachTbd: 'Trenér bude upřesněn',
     title: 'Moje tréninky',
     tabs: 'Nadcházející nebo minulé tréninky',
     upcoming: 'Nadcházející',
@@ -228,6 +223,11 @@ export const cs = {
     occupancy: 'Obsazenost',
     athleteInfo: 'INFORMACE PRO SPORTOVCE',
     coachMessage: 'Zpráva od trenéra',
+    /* G6e (handoff v3.3). Only the paid state exists for a parent: nothing is
+       shown when it is not paid. */
+    paidBadge: 'Zaplaceno',
+    parentMessageCaption: 'ZPRÁVA OD TRENÉRA · {athlete}',
+    parentMessageMeta: '{coach} · {when}',
     /* §G6: a training the coach called off, and a child the coach took off it.
        Each says who acted and what it means for this family. */
     sessionCancelledNotice: 'Trénink byl zrušen trenérem.',
@@ -312,6 +312,18 @@ export const cs = {
   },
 
   athlete: {
+    /* G8b (v3.4): attendance, Byl / Nebyl only. */
+    attendance: {
+      caption: 'DOCHÁZKA · {sport}',
+      summary: {
+        one: 'Byl na {present} z {count} tréninku',
+        few: 'Byl na {present} z {count} tréninků',
+        many: 'Byl na {present} z {count} tréninků',
+      } satisfies PluralForms,
+      present: 'Byl',
+      absent: 'Nebyl',
+      none: 'V tomto období žádný trénink neproběhl.',
+    },
     listTitle: 'Moji sportovci',
     add: 'Přidat sportovce',
     addFirst: 'Zatím nemáte žádného sportovce.',
@@ -424,13 +436,6 @@ export const cs = {
     pastSessions: 'Minulé tréninky',
     upcomingSessions: 'Nadcházející tréninky',
     noPastSessions: 'Zatím žádné odehrané tréninky.',
-    /* K14: a finished training reports who was booked and nothing more —
-       attendance is not tracked, so the row must never imply who came. */
-    bookedLabel: {
-      one: 'přihlášený',
-      few: 'přihlášení',
-      many: 'přihlášených',
-    } satisfies PluralForms,
     noSessionsAction: 'Vytvořit trénink',
     /* K10, the sheet behind the FAB. */
     create: 'Vytvořit',
@@ -488,13 +493,6 @@ export const cs = {
     athletesDeactivated: 'Ročník {year} · deaktivoval rodič',
     athletesEmpty: 'Zatím tu nejsou žádní sportovci. Přidávají je rodiče ve své aplikaci.',
     athletesNoMatch: 'Nikoho takového nenacházíme.',
-    athleteBorn: 'Ročník {year} · narozen {date}',
-    athleteGuardians: 'RODIČE',
-    athleteGuardianRole: 'Rodič',
-    athleteNoPhone: 'telefon nevyplněn',
-    athleteUpcomingCaption: 'NADCHÁZEJÍCÍ TRÉNINKY · {count}',
-    athletePastLink: 'Minulé tréninky ({count})',
-    athletePastCaption: 'MINULÉ TRÉNINKY · {count}',
     athleteNoUpcoming: 'Nemá přihlášku na žádný nadcházející trénink.',
     athleteNote: 'INTERNÍ POZNÁMKA · JEN TRENÉŘI',
     athleteNoteEdit: 'Upravit poznámku',
@@ -616,6 +614,102 @@ export const cs = {
     duplicateAsNew: 'Duplikovat jako nový trénink',
     /* The roster (UI_SPEC, BR-092, AC-090). */
     rosterTitle: 'Sportovci {count}',
+    /* Handoff v3.3: payment, the coach's note and the message per booking
+       (K2, K17, K2c). */
+    paid: 'Zaplaceno',
+    unpaid: 'Nezaplaceno',
+    markAllPaid: 'Zaplatili všichni',
+    allPaid: 'Zaplatili všichni ✓',
+    hasCoachNote: 'Má poznámku trenéra',
+    messageSentIndicator: 'Zpráva rodiči odeslána',
+    /* v3.4 · K13, the player card with four tabs (decision 43). */
+    card: {
+      back: 'Zpět',
+      meta: 'Ročník {year}',
+      tabs: 'Karta hráče',
+      tabTrainings: 'Tréninky',
+      tabPlayer: 'Hráč',
+      tabParents: 'Rodiče',
+      tabMessages: 'Zprávy',
+      period: 'Období',
+      month: 'Měsíc',
+      year: 'Rok',
+      previous: 'Předchozí období',
+      next: 'Další období',
+      attendanceTile: 'Docházka · byl {present} z {total}',
+      attendanceNone: 'Docházka · zatím nic',
+      paidTile: 'Zaplaceno',
+      upcoming: 'NADCHÁZEJÍCÍ · {count}',
+      past: 'PROBĚHLÉ · {period}',
+      pastNone: 'V tomto období žádný trénink neproběhl.',
+      upcomingNone: 'Nemá přihlášku na žádný nadcházející trénink.',
+      remove: 'Odhlásit z tréninku',
+      showMore: 'Zobrazit další ({count})',
+      footnote: 'Platbu lze označit i předem, docházku od začátku tréninku.',
+      born: 'Narozen',
+      filledByParent: 'Údaje vyplňuje rodič ve své aplikaci.',
+      playerNote: 'POZNÁMKA O HRÁČI · JEN TRENÉŘI',
+      parentRole: 'Rodič',
+      books: 'přihlašuje na tréninky',
+      noPhone: 'Telefon nevyplněn',
+      noGuardians: 'Sportovec nemá žádného aktivního rodiče.',
+      messagesIntro:
+        'Poznámky a zprávy k jednotlivým tréninkům. Zprávu rodiče uvidí v aplikaci a dostanou e-mail.',
+      messagesNone: 'Zatím není přihlášen na žádný trénink.',
+      noteCaption: 'Poznámka · jen trenéři',
+      addNote: 'Přidat poznámku',
+      notePlaceholder: 'Např. jak se mu dnes dařilo',
+      messageCaption: 'Zpráva rodičům · odesláno {when}',
+      writeMessage: 'Napsat rodičům',
+      messagePlaceholder: 'Napište zprávu rodičům',
+      messageHelper: 'Rodiče ji uvidí v aplikaci a dostanou e-mail.',
+      send: 'Odeslat',
+      save: 'Uložit',
+      edit: 'Upravit',
+    },
+    /* v3.4 · K14 counters and K2e. */
+    pastPresent: 'Byli',
+    pastPaid: 'Zaplatili',
+    pastLegendMissing: 'oranžově = někdo chybí',
+    noMainCoach: 'Bez hlavního trenéra',
+    noMainCoachTitle: 'Trénink nemá hlavního trenéra',
+    /* `{date}` is `26. 9.`, whose last dot ends the sentence. */
+    noMainCoachBody: '{coach} byl deaktivován {date} Rodiče vidí „Trenér bude upřesněn“.',
+    noMainCoachBodyUnknown: 'Rodiče vidí „Trenér bude upřesněn“.',
+    noMainCoachValue: 'Bez trenéra',
+    noMainCoachHint: 'Trenéra přiřadíte později.',
+    assignCoach: 'Přiřadit trenéra',
+    /* v3.4 · DS §6.36 StatusToggle. */
+    toggle: {
+      attendance: 'Docházka {athlete}: {state}',
+      payment: 'Platba {athlete}: {state}',
+      present: 'Byl',
+      absent: 'Nebyl',
+      unmarked: 'nezapsáno',
+      paid: 'zaplaceno',
+      unpaid: 'nezaplaceno',
+    },
+    /* v3.4 · K2 roster. */
+    rosterColumnAthlete: 'SPORTOVEC',
+    rosterColumnPresent: 'Byl',
+    rosterColumnPaid: 'Platba',
+    othersPresent: 'Ostatní byli',
+    attendanceFootnote:
+      'Docházku lze zapsat od začátku tréninku; nezapsaní se po skončení počítají jako „Nebyl“.',
+    /* DS §6.16, the one toast with an action. */
+    paymentCancelled: 'Platba zrušena · {athlete}',
+    undoPayment: 'Vrátit',
+    messageSentToast: 'Zpráva odeslána',
+    /* K2c. `sportovce` for 1–4, `sportovců` for 5 and more — the accusative. */
+    markAllTitle: {
+      one: 'Označit {count} sportovce jako zaplacené?',
+      few: 'Označit {count} sportovce jako zaplacené?',
+      many: 'Označit {count} sportovců jako zaplacené?',
+    } satisfies PluralForms,
+    markAllBody: 'Ostatní už zaplaceno mají. Rodiče uvidí v aplikaci „Zaplaceno“.',
+    markAllBodyNonePaid: 'Rodiče uvidí v aplikaci „Zaplaceno“.',
+    markAllConfirm: 'Označit {count} jako zaplacené',
+    markedAllToast: 'Označeno jako zaplacené',
     roster: 'Přihlášení sportovci',
     rosterEmpty: 'Zatím není přihlášen nikdo.',
     rosterRemoved: 'Odebraní a odhlášení',
@@ -826,7 +920,9 @@ export const cs = {
     roleAssistant: 'Asistent',
     /* §K2b v3.2. */
     readOnlyTitle: 'Jen pro čtení',
-    readOnlyBody: 'Tento trénink vede {coach}. Upravit ho může hlavní trenér nebo administrátor.',
+    /* v3.4: says what the static toggles below are. */
+    readOnlyBody:
+      'Tento trénink vede {coach}. Docházku, platby a sestavu může měnit hlavní trenér nebo administrátor.',
     mainCoachLockedHint: 'Hlavního trenéra může změnit administrátor.',
     errors: {
       NOT_AUTHENTICATED: 'Nejste přihlášeni.',
@@ -851,6 +947,12 @@ export const cs = {
       ATHLETE_NOT_FOUND: 'Sportovec nebyl nalezen.',
       BOOKING_NOT_FOUND: 'Přihláška nebyla nalezena.',
       BOOKING_NOT_CONFIRMED: 'Přihláška už není aktivní.',
+      NOTE_TOO_LONG: 'Poznámka může mít nejvýše 200 znaků.',
+      MESSAGE_EMPTY: 'Napište zprávu.',
+      MESSAGE_TOO_LONG: 'Zpráva může mít nejvýše 500 znaků.',
+      /* v3.4, decision 40. */
+      SESSION_NOT_STARTED: 'Docházku lze zapsat až od začátku tréninku.',
+      UNDO_EXPIRED: 'Platbu už nelze vrátit. Označte ji znovu.',
       WOULD_EXCEED_CAPACITY: 'Trénink je plný. Potvrďte překročení kapacity.',
       /* coach/SPEC.md §K3b. One person, one role on one training. */
       MAIN_COACH_AS_ASSISTANT: 'Hlavní trenér nemůže být zároveň asistent.',
@@ -862,7 +964,7 @@ export const cs = {
    * Transactional email (BR-061, BR-072). Czech, like every other user-facing
    * string; the event types and codes around them stay English.
    */
-  /* The e-mails a parent receives (shared/EMAILS.md, E01–E08). The subjects
+  /* The e-mails a parent receives (shared/EMAILS.md, E01–E09). The subjects
      always carry the date, because a parent searching their inbox searches for
      the training, not for the word "změna". */
   email: {
@@ -877,7 +979,8 @@ export const cs = {
       BOOKING_REMOVED_BY_COACH: 'Odhlášeno trenérem',
       BOOKING_ADDED_BY_COACH: 'Nová přihláška',
       SESSION_CHANGED: 'Změna tréninku',
-    },
+      COACH_MESSAGE_TO_GUARDIAN: 'Zpráva od trenéra',
+    } as Record<string, string>,
     subjects: {
       SESSION_CANCELLED: 'Zrušeno: trénink {day} v {time}',
       SESSION_SCHEDULE_CHANGED: 'Změna času: trénink {day} — nově {time}',
@@ -889,7 +992,8 @@ export const cs = {
       BOOKING_REMOVED_BY_COACH: 'Odhlášení z tréninku {day} v {time}',
       BOOKING_ADDED_BY_COACH: 'Přihláška na trénink {day} v {time}',
       SESSION_CHANGED: 'Změna tréninku: trénink {day}',
-    },
+      COACH_MESSAGE_TO_GUARDIAN: 'Zpráva od trenéra: {athletes} · trénink {day}',
+    } as Record<string, string>,
     titles: {
       SESSION_CANCELLED: 'Trénink byl zrušen',
       SESSION_SCHEDULE_CHANGED: 'Trénink začíná v jiný čas',
@@ -901,7 +1005,8 @@ export const cs = {
       BOOKING_REMOVED_BY_COACH: 'Trenér odhlásil sportovce z tréninku',
       BOOKING_ADDED_BY_COACH: 'Trenér přihlásil sportovce na trénink',
       SESSION_CHANGED: 'Trénink se změnil',
-    },
+      COACH_MESSAGE_TO_GUARDIAN: 'Trenér vám poslal zprávu',
+    } as Record<string, string>,
     bodies: {
       SESSION_CANCELLED:
         'Trenér zrušil trénink, na který je přihlášen sportovec. Přihláška se tím ruší, nic dalšího dělat nemusíte.',
@@ -919,7 +1024,8 @@ export const cs = {
       BOOKING_ADDED_BY_COACH:
         '{coach} přihlásil sportovce na trénink. Najdete ho v aplikaci v Moje tréninky.',
       SESSION_CHANGED: 'Trenér upravil trénink. Přihláška platí dál, se změnami níže.',
-    },
+      COACH_MESSAGE_TO_GUARDIAN: '{coach} vám poslal zprávu ke sportovci z tréninku.',
+    } as Record<string, string>,
     /* `Trénink se přesouvá do Malé haly`: the hall's name has to decline, and
        only these two exist in the MVP. Anything else gets the sentence that
        needs no case at all. */
@@ -946,6 +1052,7 @@ export const cs = {
       years: 'Ročníky',
       coach: 'Trenér',
       deadline: 'Odhlásit lze',
+      training: 'Trénink',
     },
     deadlineValue: 'do {day} v {time}',
     allYears: 'Všichni sportovci',
@@ -953,6 +1060,10 @@ export const cs = {
     /* The caption above what the coach wrote for this one parent. Never the
        internal note, which no parent ever sees (D-13). */
     coachMessage: 'Zpráva od trenéra',
+    /* E09: the e-mail comes from noreply, so a reply would go nowhere. */
+    messageHelper: 'Na zprávu nelze odpovědět e-mailem.',
+    messageHelperPhone:
+      'Na zprávu nelze odpovědět e-mailem. Trenéra kontaktujte telefonicky: {phone}.',
     helpers: {
       SESSION_SCHEDULE_CHANGED:
         'Nový čas vám nevyhovuje? Sportovce můžete v aplikaci odhlásit do uvedeného termínu.',
@@ -1163,33 +1274,25 @@ export const cs = {
     activeSwitchHint: 'Lze ho vybrat pro nové tréninky',
     /* The count is the coach's whole history, past and planned: what the
        administrator is deciding about is a name that stays on all of it. */
-    /* §A3's info box, without "i naplánovaných": since DR-15 the planned ones
-       are the administrator's answer to make, and the notice below says so. */
+    /* §A3's info box, without "i naplánovaných": since decision 46 the planned
+       ones are left without a coach, and the A3f sheet says so. */
     deactivateInfo:
       'Po deaktivaci zůstane {name} u všech minulých tréninků. Trenéra nelze smazat, jen deaktivovat.',
-    leadsFutureNotice: {
-      one: '{name} je hlavním trenérem {count} naplánovaného tréninku. Po uložení se zeptáme, jestli ho chcete převzít.',
-      few: '{name} je hlavním trenérem {count} naplánovaných tréninků. Po uložení se zeptáme, jestli je chcete převzít.',
-      many: '{name} je hlavním trenérem {count} naplánovaných tréninků. Po uložení se zeptáme, jestli je chcete převzít.',
-    } satisfies PluralForms,
     cannotDeactivateSelf: 'Sám sebe deaktivovat nemůžete.',
     saved: 'Uloženo',
     empty: 'Zatím není přidaný žádný trenér.',
     deactivate: 'Deaktivovat',
     activate: 'Znovu aktivovat',
-    /* AC-251. The count comes from the server's refusal, so the warning never
-       states a number the client made up. */
-    leadsFutureSessions: {
-      one: 'Tento trenér vede {count} nadcházející trénink.',
-      few: 'Tento trenér vede {count} nadcházející tréninky.',
-      many: 'Tento trenér vede {count} nadcházejících tréninků.',
+    /* A3f (decision 46). The trainings come from the server's refusal, so the
+       sheet never lists a training the client made up (AC-251). `{without}`
+       is the bold `bez trenéra`. */
+    vacateTitle: 'Deaktivovat trenéra?',
+    vacateBody: {
+      one: '{name} je hlavním trenérem {count} naplánovaného tréninku. Po deaktivaci zůstane {without}, dokud mu nepřiřadíte nového. Rodiče uvidí „Trenér bude upřesněn“.',
+      few: '{name} je hlavním trenérem {count} naplánovaných tréninků. Po deaktivaci zůstanou {without}, dokud jim nepřiřadíte nového. Rodiče uvidí „Trenér bude upřesněn“.',
+      many: '{name} je hlavním trenérem {count} naplánovaných tréninků. Po deaktivaci zůstanou {without}, dokud jim nepřiřadíte nového. Rodiče uvidí „Trenér bude upřesněn“.',
     } satisfies PluralForms,
-    /* AC-293 (DR-15). The club has no head coach to hand them to, so the
-       administrator doing the deactivation is who takes them over. */
-    reassignSwitch: 'Převést tréninky na mě',
-    reassignHintOn: 'Povedete je vy. Rodiče přihlášených dětí dostanou e-mail o změně trenéra.',
-    reassignHintOff:
-      'Zůstanou vedené na tomto trenérovi a nepůjde je upravit, dokud u nich nezměníte hlavního trenéra.',
+    vacateWithout: 'bez trenéra',
     errors: {
       NOT_AUTHENTICATED: 'Přihlaste se prosím znovu.',
       NOT_AUTHORIZED: 'Na tuto změnu nemáte právo.',

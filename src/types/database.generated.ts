@@ -232,9 +232,58 @@ export type Database = {
           },
         ]
       }
+      booking_coach_notes: {
+        Row: {
+          booking_id: string
+          note: string
+          updated_at: string
+          updated_by: string | null
+          workspace_id: string
+        }
+        Insert: {
+          booking_id: string
+          note: string
+          updated_at?: string
+          updated_by?: string | null
+          workspace_id: string
+        }
+        Update: {
+          booking_id?: string
+          note?: string
+          updated_at?: string
+          updated_by?: string | null
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "booking_coach_notes_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: true
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "booking_coach_notes_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "app_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "booking_coach_notes_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       bookings: {
         Row: {
           athlete_id: string
+          attendance: Database["public"]["Enums"]["attendance_status"] | null
+          attendance_at: string | null
+          attendance_by: string | null
           cancellation_reason: string | null
           cancelled_at: string | null
           cancelled_by: string | null
@@ -245,12 +294,20 @@ export type Database = {
           created_by_role: Database["public"]["Enums"]["booking_creator_role"]
           eligibility_narrowed_at: string | null
           id: string
+          paid_at: string | null
+          paid_by: string | null
+          parent_message: string | null
+          parent_message_sent_at: string | null
+          parent_message_sent_by: string | null
           status: Database["public"]["Enums"]["booking_status"]
           training_session_id: string
           updated_at: string
         }
         Insert: {
           athlete_id: string
+          attendance?: Database["public"]["Enums"]["attendance_status"] | null
+          attendance_at?: string | null
+          attendance_by?: string | null
           cancellation_reason?: string | null
           cancelled_at?: string | null
           cancelled_by?: string | null
@@ -261,12 +318,20 @@ export type Database = {
           created_by_role: Database["public"]["Enums"]["booking_creator_role"]
           eligibility_narrowed_at?: string | null
           id?: string
+          paid_at?: string | null
+          paid_by?: string | null
+          parent_message?: string | null
+          parent_message_sent_at?: string | null
+          parent_message_sent_by?: string | null
           status?: Database["public"]["Enums"]["booking_status"]
           training_session_id: string
           updated_at?: string
         }
         Update: {
           athlete_id?: string
+          attendance?: Database["public"]["Enums"]["attendance_status"] | null
+          attendance_at?: string | null
+          attendance_by?: string | null
           cancellation_reason?: string | null
           cancelled_at?: string | null
           cancelled_by?: string | null
@@ -277,11 +342,37 @@ export type Database = {
           created_by_role?: Database["public"]["Enums"]["booking_creator_role"]
           eligibility_narrowed_at?: string | null
           id?: string
+          paid_at?: string | null
+          paid_by?: string | null
+          parent_message?: string | null
+          parent_message_sent_at?: string | null
+          parent_message_sent_by?: string | null
           status?: Database["public"]["Enums"]["booking_status"]
           training_session_id?: string
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "bookings_attendance_by_fkey"
+            columns: ["attendance_by"]
+            isOneToOne: false
+            referencedRelation: "app_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bookings_paid_by_fkey"
+            columns: ["paid_by"]
+            isOneToOne: false
+            referencedRelation: "app_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bookings_parent_message_sent_by_fkey"
+            columns: ["parent_message_sent_by"]
+            isOneToOne: false
+            referencedRelation: "app_profiles"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "bookings_athlete_id_fkey"
             columns: ["athlete_id"]
@@ -895,7 +986,9 @@ export type Database = {
           facility_id: string
           id: string
           location_id: string
-          main_coach_profile_id: string
+          main_coach_profile_id: string | null
+          main_coach_vacated_at: string | null
+          main_coach_vacated_from: string | null
           public_notes: string | null
           series_id: string | null
           significant_change: Json | null
@@ -920,7 +1013,9 @@ export type Database = {
           facility_id: string
           id?: string
           location_id: string
-          main_coach_profile_id: string
+          main_coach_profile_id?: string | null
+          main_coach_vacated_at?: string | null
+          main_coach_vacated_from?: string | null
           public_notes?: string | null
           series_id?: string | null
           significant_change?: Json | null
@@ -945,7 +1040,9 @@ export type Database = {
           facility_id?: string
           id?: string
           location_id?: string
-          main_coach_profile_id?: string
+          main_coach_profile_id?: string | null
+          main_coach_vacated_at?: string | null
+          main_coach_vacated_from?: string | null
           public_notes?: string | null
           series_id?: string | null
           significant_change?: Json | null
@@ -988,6 +1085,13 @@ export type Database = {
           {
             foreignKeyName: "training_sessions_main_coach_profile_id_fkey"
             columns: ["main_coach_profile_id"]
+            isOneToOne: false
+            referencedRelation: "app_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "training_sessions_main_coach_vacated_from_fkey"
+            columns: ["main_coach_vacated_from"]
             isOneToOne: false
             referencedRelation: "app_profiles"
             referencedColumns: ["id"]
@@ -1206,7 +1310,9 @@ export type Database = {
       athlete_guardians: {
         Args: { p_athlete_id: string }
         Returns: {
+          books: boolean
           display_name: string
+          email: string
           phone: string
           profile_id: string
           relationship_code: string
@@ -1283,9 +1389,17 @@ export type Database = {
       coach_athlete_sessions: {
         Args: { p_athlete_id: string; p_workspace_id: string }
         Returns: {
+          attendance: Database["public"]["Enums"]["attendance_status"]
+          booking_id: string
           booking_status: Database["public"]["Enums"]["booking_status"]
+          changing_room: string
+          coach_note: string
           end_at: string
           facility_code: string
+          main_coach_profile_id: string
+          paid_at: string
+          parent_message: string
+          parent_message_sent_at: string
           start_at: string
           status: Database["public"]["Enums"]["session_status"]
           training_session_id: string
@@ -1486,6 +1600,14 @@ export type Database = {
         Args: { p_booking_id: string }
         Returns: Json
       }
+      mark_session_present: {
+        Args: { p_training_session_id: string }
+        Returns: Json
+      }
+      mark_session_paid: {
+        Args: { p_training_session_id: string }
+        Returns: Json
+      }
       notification_event_recipients: {
         Args: { p_event_id: string }
         Returns: {
@@ -1580,6 +1702,9 @@ export type Database = {
         Args: { p_training_session_id: string }
         Returns: {
           athlete_id: string
+          attendance: Database["public"]["Enums"]["attendance_status"]
+          attendance_at: string
+          attendance_by_name: string
           birth_year: number
           booked_at: string
           booked_by_name: string
@@ -1588,18 +1713,40 @@ export type Database = {
           cancelled_at: string
           capacity_override: boolean
           club_name: string
+          coach_note: string
           created_by_role: Database["public"]["Enums"]["booking_creator_role"]
           first_name: string
           jersey_number: string
           last_name: string
+          paid_at: string
+          paid_by_name: string
+          parent_message: string
+          parent_message_sent_at: string
+          parent_message_sent_by_name: string
           position_code: string
           status: Database["public"]["Enums"]["booking_status"]
           stick_side_code: string
         }[]
       }
       sessions_without_occupancy: { Args: never; Returns: string[] }
+      send_parent_message: {
+        Args: { p_booking_id: string; p_message: string }
+        Returns: Json
+      }
       set_athlete_internal_note: {
         Args: { p_athlete_id: string; p_notes: string; p_workspace_id: string }
+        Returns: Json
+      }
+      set_booking_coach_note: {
+        Args: { p_booking_id: string; p_note: string }
+        Returns: Json
+      }
+      set_booking_attendance: {
+        Args: { p_attendance: Database["public"]["Enums"]["attendance_status"]; p_booking_id: string }
+        Returns: Json
+      }
+      set_booking_paid: {
+        Args: { p_booking_id: string; p_paid: boolean }
         Returns: Json
       }
       set_member_active: {
@@ -1607,7 +1754,6 @@ export type Database = {
           p_confirm?: boolean
           p_is_active: boolean
           p_profile_id: string
-          p_reassign?: boolean
           p_workspace_id: string
         }
         Returns: Json
@@ -1664,6 +1810,7 @@ export type Database = {
         Returns: Json
       }
       touch_staff_seen: { Args: never; Returns: undefined }
+      undo_booking_unpaid: { Args: { p_booking_id: string }; Returns: Json }
       update_training_session: {
         Args: {
           p_birth_year_from?: number
@@ -1729,6 +1876,7 @@ export type Database = {
     Enums: {
       access_permission_level: "MANAGE" | "VIEW"
       access_status: "ACTIVE" | "INVITED" | "REVOKED"
+      attendance_status: "PRESENT" | "ABSENT"
       booking_creator_role:
         | "USER"
         | "COACH"
@@ -1879,6 +2027,7 @@ export const Constants = {
     Enums: {
       access_permission_level: ["MANAGE", "VIEW"],
       access_status: ["ACTIVE", "INVITED", "REVOKED"],
+      attendance_status: ["PRESENT", "ABSENT"],
       booking_creator_role: [
         "USER",
         "COACH",

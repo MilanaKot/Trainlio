@@ -341,3 +341,49 @@ Every photograph is resized in the browser before it is sent (§G9: client
 resize), to a JPEG with a 1024 px long edge when the file is over 900 KB.
 Without it a phone's 3 MB JPEG never reached the 5 MB check: the upload is a
 Server Action, and Next refuses an action body over 1 MB.
+
+## After handoff v3.3: payment, the note and the message
+
+- **`Nezaplaceno` is `muted`, not `subtle`** (DS §6.35). Subtle measures 3.17:1
+  on white, under WCAG AA for 12 px text, and axe — which the task asks to pass
+  on K2 — reports it as serious. The design system reserves subtle for chevrons
+  and disabled text (§10).
+- **`Přihlásil {d. m. HH:MM}` is on the first guardian row only** in K17. The
+  booking time belongs to the booking, not to each parent; repeating it on a
+  second guardian's row would say they booked too.
+- **K2c leaves out `Ostatní už zaplaceno mají`** when nobody has paid yet, so
+  the sheet never says something untrue. `Rodiče uvidí v aplikaci „Zaplaceno“`
+  stays.
+- **The coach's note lives in its own table** (`booking_coach_notes`) rather
+  than a column on `bookings` with a column privilege. The task allows either;
+  the table is how this project already keeps the session's and the athlete's
+  staff notes, and a column one `select *` away from a parent's screen is the
+  mistake decision 35 exists to prevent. `paid_by` stays readable on the
+  parent's own booking row, like `cancelled_by` always has been; the parent's
+  screen reads only whether it is paid.
+- **The manifest is excluded from the auth proxy**, so a browser fetching it
+  without a session is not sent to sign in.
+
+## After handoff v3.4: attendance, the roster and the player card
+
+- **The toggles' hit areas are 58 px, not 62 px.** The 8 px between them is
+  the toggle zone's own gap and does nothing, which is what coach test 19
+  asks; 62 + 62 would have had to include it.
+- **K13's period buttons and tabs are 44 px tall, not 36 / 38 px**, like every
+  other control (DS §10, the mobile tap-size review).
+- **K13's toggles are named by the training** (`Docházka Út 17. 11. 14:15:
+Byl`), not by the athlete: on the player card every row is the same athlete,
+  and two controls with one name are one control to a screen reader.
+- **`Rodič · přihlašuje na tréninky`** in K13r: the app does not ask whether a
+  guardian is the mother or the father, so the relation is `Rodič`, and
+  `přihlašuje na tréninky` marks a guardian who has booked this child.
+- **K13 `Zprávy` puts an `Upravit` link** under a note or a sent message, so
+  editing one (and re-sending E09) has a visible control.
+- **`Telefon nevyplněn` is `muted`**, not `subtle`, for contrast (as v3.3).
+- **K2 no longer shows who booked a child and when** (BR-092's line), because
+  the v3.4 card has no room for it; the parent who books is named in K13
+  `Rodiče`.
+- **G8b opens on the year**, as the design draws it; K13 opens on the month.
+- **A training planned without a coach** (BR-186) is not designed; it uses
+  K2e's notice without the `{coach} byl deaktivován` sentence, and the K3c
+  sheet gains a `Bez trenéra` row.

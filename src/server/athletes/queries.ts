@@ -251,3 +251,34 @@ export async function getOwnProfile(): Promise<OwnProfile | null> {
     phone: row.phone ?? '',
   }
 }
+
+/** One booking as G8b counts it: a confirmed one, and when its training ran. */
+export type AttendanceRecord = {
+  startAt: string
+  endAt: string
+  mark: 'PRESENT' | 'ABSENT' | null
+  sessionCancelled: boolean
+}
+
+/**
+ * G8b (handoff v3.4, decision 45): what the parent may know about attendance —
+ * Byl or Nebyl per training, nothing about who marked it and nothing about
+ * payment. The row policies already limit both tables to this family's
+ * bookings and the trainings their club shows them.
+ */
+export async function getAthleteAttendance(athleteId: string): Promise<AttendanceRecord[]> {
+  const supabase = await createClient()
+
+  const result = await supabase
+    .from('bookings')
+    .select('attendance, training_sessions!inner ( start_at, end_at, status )')
+    .eq('athlete_id', athleteId)
+    .eq('status', 'CONFIRMED')
+
+  return rows('getAthleteAttendance', result).map((row) => ({
+    startAt: row.training_sessions.start_at,
+    endAt: row.training_sessions.end_at,
+    mark: row.attendance,
+    sessionCancelled: row.training_sessions.status === 'CANCELLED',
+  }))
+}

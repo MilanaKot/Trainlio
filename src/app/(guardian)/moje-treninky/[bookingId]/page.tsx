@@ -18,6 +18,7 @@ import { bookingCardVariant, changeRows } from '@/lib/domain/booking-card'
 import { eligibilityLabel } from '@/lib/domain/session'
 import {
   DEFAULT_TIMEZONE,
+  formatDateAtTime,
   formatDateGroup,
   formatDateTime,
   formatTimeRange,
@@ -91,6 +92,21 @@ export default async function BookingDetailPage({
             <Badge variant="danger">{t.badgeSessionCancelled}</Badge>
           ) : null}
           {variant === 'selfCancelled' ? <Badge>{t.badgeSelfCancelled}</Badge> : null}
+          {/* G6e: only when paid — a parent is never shown "unpaid". */}
+          {booking.paid ? (
+            <Badge variant="success" className="ml-auto gap-1">
+              <svg viewBox="0 0 12 12" fill="none" className="size-3" aria-hidden="true">
+                <path
+                  d="M2.5 6.2l2.3 2.3 4.7-5"
+                  stroke="currentColor"
+                  strokeWidth="1.8"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+              {t.paidBadge}
+            </Badge>
+          ) : null}
         </span>
         <p
           className={cn(
@@ -160,6 +176,35 @@ export default async function BookingDetailPage({
         </Notice>
       ) : null}
 
+      {/* G6e: what the coach wrote about this child at this training — on a
+          past booking too, because that is usually when it is written. */}
+      {booking.parentMessage ? (
+        <section className="flex flex-col gap-1.5 rounded-card bg-primary-100 px-4 py-3.5">
+          <h2 className="flex items-center gap-1.5 text-caption font-bold uppercase tracking-[0.05em] text-primary">
+            <svg viewBox="0 0 16 16" fill="none" className="size-3.5 shrink-0" aria-hidden="true">
+              <path
+                d="M3 3.5h10a1 1 0 011 1v6a1 1 0 01-1 1H7l-3 2.5v-2.5H3a1 1 0 01-1-1v-6a1 1 0 011-1z"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinejoin="round"
+              />
+            </svg>
+            {t.parentMessageCaption.replace('{athlete}', booking.athleteName)}
+          </h2>
+          <p className="text-[0.9375rem]/[1.375rem] whitespace-pre-line text-ink">
+            {booking.parentMessage.text}
+          </p>
+          <p className="text-hint text-muted">
+            {t.parentMessageMeta
+              .replace('{coach}', booking.parentMessage.senderName ?? t.none)
+              .replace(
+                '{when}',
+                formatDateAtTime(new Date(booking.parentMessage.sentAt), timezone),
+              )}
+          </p>
+        </section>
+      ) : null}
+
       <DetailList
         items={[
           {
@@ -172,7 +217,11 @@ export default async function BookingDetailPage({
           { term: t.years, value: years },
           {
             term: t.mainCoach,
-            value: coaches.find((c) => c.role === 'MAIN')?.displayName ?? t.none,
+            // K2e (decision 46): a deactivated main coach leaves the training
+            // without one until somebody is assigned.
+            value: coaches.find((c) => c.role === 'MAIN')?.displayName ?? (
+              <span className="text-muted">{t.coachTbd}</span>
+            ),
           },
           {
             term: t.assistants,

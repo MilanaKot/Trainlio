@@ -853,21 +853,15 @@ every test shares.
 
 ## A coach leaves, and their trainings go somewhere (DR-15, D-25)
 
-AC-293  
+AC-293 **(rewritten for decision 46, v3.4)**  
 Deactivating a coach who is still the main coach of trainings that have not
-happened asks one question with two answers, and moves nothing until it is
-answered. Answering yes hands every future, uncancelled training of theirs to
-the administrator doing the deactivation: the association table moves and the
-mirror column follows, the training keeps its capacity, room, notes, internal
-note and eligibility, the change is significant exactly as it is when a coach
-is changed one training at a time — stamped, naming the previous coach,
-audited, and queued as one e-mail per training for the families booked into it
-— and the departure records how many went with it. Answering no leaves every
-training on the coach's name, which is D-11 and was the only behaviour before.
-A training that has already happened and one that was cancelled never move
-either way. Only an administrator may do it, and the handover and the
-deactivation are one transaction: a refusal anywhere leaves the club exactly as
-it was.
+happened is refused until confirmed, with those trainings listed (A3f), and
+moves nothing until then. Confirmed, every future, uncancelled training of
+theirs is left without a main coach — the association table and the mirror
+column both — recording who left and when; they stop assisting on future
+trainings; the training keeps its capacity, room, notes, internal note and
+eligibility; nobody is e-mailed. A training that has happened and one that was
+cancelled keep them. Only an administrator may do it, in one transaction.
 
 ## The parent's area is one family's, even for a coach
 
@@ -884,3 +878,81 @@ sees them. Nothing here is a privilege a coach did not already have — every
 write still goes through the domain functions, which ask about guardianship —
 but a parent's screen that lists other people's children is wrong whatever it
 would let you do with them.
+
+## Payment, the note and the message (handoff v3.3)
+
+AC-295  
+Tapping `Zaplaceno` in K17 saves it with nothing else pressed; the K2 row shows
+`✓ Zaplaceno`, the bar counts one more, and the parent's G6 shows `Zaplaceno`
+(coach test 19).
+
+AC-296  
+`Zaplatili všichni` with three unpaid lists exactly those three in K2c;
+confirming leaves the bar at `Zaplaceno n z n` with the static `Zaplatili
+všichni ✓`, and a booking paid earlier keeps its own who and when (coach test
+20).
+
+AC-297  
+The coach's note for a booking is never returned to a guardian session — not
+from its table, not through the roster — and the K2 row shows the lock
+indicator (coach test 21).
+
+AC-298  
+`Odeslat rodiči` delivers E09 to every guardian of the athlete, G6 shows the
+message, and `Upravit a poslat znovu` replaces it and sends again (coach test
+22).
+
+AC-299  
+A coach without edit rights on the training sees K17 read-only, no `Zaplatili
+všichni`, and the API refuses them with `FORBIDDEN_EDIT` (coach test 23).
+
+## Attendance, the roster and the player card (handoff v3.4)
+
+AC-295 to AC-299 described the v3.3 screens (K17) and are replaced by these;
+the database half of them still holds.
+
+AC-300  
+On K2 the $ toggle marks paid without opening K13, the name opens K13, the gap
+between the toggles does nothing, and a vertical drag over a toggle scrolls and
+changes nothing (coach test 19).
+
+AC-301  
+Turning a payment off shows `Platba zrušena · {athlete}` with `Vrátit` for four
+seconds; `Vrátit` restores the original who and when (coach test 20).
+
+AC-302  
+The attendance toggle is disabled before the start, cycles Byl / Nebyl after
+it, an unmarked booking counts as Nebyl in K13 once the training is over, and a
+three-month-old training takes a correction (coach test 21).
+
+AC-303  
+`Ostatní byli` marks only the unmarked, without a dialog; `Zaplatili všichni`
+lists only the unpaid in K2c; when everyone has paid the static `Zaplatili
+všichni ✓` appears (coach test 22).
+
+AC-304  
+The K2 header counters and the K14 counters follow every change, and payment
+and attendance never change each other (coach test 23).
+
+AC-305  
+K13: `Tréninky` shows Byl / (Byl + Nebyl) for the selected month or year;
+`Hráč` the general note; `Rodiče` call and SMS; `Zprávy` notes that are never
+returned to a guardian session, and messages that send E09 (coach test 24).
+
+AC-306  
+Deactivating a main coach with future trainings (A3f) lists them; afterwards
+they show `Bez hlavního trenéra` on K1 and K2e, parents read `Trenér bude
+upřesněn`, and assigning a coach sends E05 (coach test 25).
+
+AC-307  
+A coach who can only view sees the K2b and K13 toggles as pictures, no
+`Ostatní byli` or `Zaplatili všichni`, and the API refuses them with
+`FORBIDDEN_EDIT` (coach test 26).
+
+AC-308  
+A parent's G8b shows the child's attendance for a month or a year, with no
+payment (decision 45).
+
+AC-309  
+A training or a series can be created with `Bez trenéra`; it reads as K2e, and
+assigning a coach later sends E05 (BR-186).

@@ -136,3 +136,21 @@ the cancelled training (§G6 for the parent, §K6b for the coach) or lives only
 in the e-mail; whether a series-wide cancellation, if it ever exists, takes one
 note for all of them; and whether staff are told about every cancellation or
 only about ones somebody else made.
+
+## 4. Cancellations in an athlete's record for the coach
+
+**Done with v3.4:** attendance itself (`Byl` / `Nebyl`) and the per-athlete
+percentage in K13 (D-29). What is still wished for is below.
+
+**What.** Per athlete, how many trainings they cancelled — and, one level
+down, the reason a parent gave for each cancellation (a reason that would
+become required when a parent cancels). Asked for by the product owner on
+12 November 2026.
+
+**Why it waits.** It needs its own design: the required reason when a parent
+cancels (guardian G6), and where K13 would show the count and the reasons.
+
+**What exists already.** `bookings.cancellation_reason` holds the parent's
+reason; K13 already lists each athlete's trainings. The parked branch
+`session-attendance` (commit `c2dd58b`, local only) is superseded by v3.4 and
+can be deleted.

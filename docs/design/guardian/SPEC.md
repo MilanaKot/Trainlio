@@ -181,6 +181,11 @@ Sticky footer: deadline hint + outline lg `Odhlásit` — or, when locked (G6c),
 On mount: `update bookings set change_seen_at = now()` when a change is unseen (badge disappears in G4 afterwards).
 Cancelled-by-coach booking: header strike-through + danger Notice `Trénink byl zrušen trenérem.`; no footer.
 
+**G6e · Paid + message from the coach (v3.3):**
+- Header: next to the athlete name, right-aligned, success badge with check `Zaplaceno` (uppercase badge style, success-soft/success) when `paid`. Nothing is shown when not paid (no "Nezaplaceno" for parents).
+- If the coach sent a message for this booking: section above the DetailList, bg primary-100, radius 16, padding 14/16: caption (bubble icon, primary) `ZPRÁVA OD TRENÉRA · {athlete}`, text 15/22, meta 12 muted `{coach} · {d. m.} v {HH:MM}`. Also shown in G5 (past) bookings. The coach's internal note for the booking is **never** shown or fetched.
+- The same `Zaplaceno` badge is not added to the G4 cards (keep them calm); only the detail shows it.
+
 **G6d · Removed by coach:** header muted (no strike) + orange badge `Odhlášeno trenérem` next to the name. Warning Notice (person-minus icon): title `Trenér odhlásil sportovce z tréninku`, text `Trénink se koná, ale {athlete} na něm není přihlášen.`, meta `Odhlásil {coach} · {d. m.} v {HH:MM}`. If `coachMessage`: section caption `ZPRÁVA OD TRENÉRA` + text. DetailList (Místo, Šatna, Hlavní trenér, Obsazenost — no Asistenti row needed). Sticky footer (**v3, D-06**) — contact block instead of an action: Avatar 40 (coach initials) + title 15/700 `Znovu přihlásit může jen trenér` + meta `{coach name} · {coach phone}`; below, two equal outline lg buttons (grid 1fr 1fr, gap 8): `Zavolat` (phone icon, `<a href="tel:…">`) and `Napsat SMS` (`<a href="sms:…">`). Coach = the one who removed the athlete (fallback: main coach). **Coach without phone** (`Coach.phone` is optional, admin A2/A3 or coach K0): show only the title + coach name, no buttons. No `Odhlásit` / `Přihlásit` action.
 Screen may exceed 844 px → page scrolls; footer stays fixed.
 
@@ -188,6 +193,10 @@ Screen may exceed 844 px → page scrolls; footer stays fixed.
 H1 `Moji sportovci`. Cards (link, chevron): avatar 56 (photo or initials), name 17/700, birth date `8. 6. 2017`, sport chips (neutral-50, 13/600): `Lední hokej · Centr` (position appended when set), `Fotbal`.
 Below list: block button (primary-100 bg, primary text, 52 px) `+ Přidat sportovce` → G10.
 Empty: EmptyState `Přidejte prvního sportovce a můžete začít rezervovat tréninky.` + `Přidat sportovce`.
+
+### G8b · Athlete profile — attendance block (v3.4)
+Under the sport panel: caption `DOCHÁZKA · LEDNÍ HOKEJ` → white panel: period control `Měsíc / Rok` + prev/next + label; big `{pct} %` (Barlow 44) + `Byl na {b} z {b+n} tréninků` + strip of squares for the period's sessions (green = Byl, red = Nebyl); counters `Byl {b} · Nebyl {n}`. Read-only, no list, no payment info. Percent = Byl / (Byl + Nebyl); cancelled sessions excluded; sessions without a mark are shown as Nebyl only after they end. Statuses are only Byl / Nebyl (no „Omluven“).
+G6 `Hlavní trenér` row shows `Trenér bude upřesněn` (muted) when the session has no main coach (coach K2e).
 
 ### G8 · Athlete profile (`/athletes/[id]`)
 Top row: `‹ Moji sportovci` and text button `Upravit` (→ G9).

@@ -2,8 +2,12 @@
 
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
-import { getBookingGuardians, type BookingGuardian } from '@/server/roster/queries'
+import { z } from 'zod'
 import { sequenceAdditions, type SequencedAdditions } from '@/lib/domain/roster'
+import { canEditSession } from '@/lib/domain/coach-rights'
+import { COACH_NOTE_LIMIT, PARENT_MESSAGE_LIMIT } from '@/lib/domain/booking-notes'
+import { getCoachSession } from '@/server/sessions/queries'
+import { getCoachRights } from '@/server/staff/queries'
 
 /**
  * Coach roster operations.
@@ -43,6 +47,9 @@ function refresh(sessionId: string) {
   // The guardian views read the same occupancy projection.
   revalidatePath('/treninky')
   revalidatePath('/moje-treninky')
+  // v3.4: K13 and G8b draw attendance and payment per session.
+  revalidatePath('/trener/sportovci', 'layout')
+  revalidatePath('/moji-sportovci', 'layout')
 }
 
 /**
@@ -126,19 +133,6 @@ export async function addAthletesToSession(
 }
 
 /**
- * The guardians of one booking, fetched when the coach opens that athlete
- * (coach/SPEC.md §K2).
- *
- * On demand rather than with the roster: a training of twenty would otherwise
- * cost twenty extra round trips on every page load, to show a telephone number
- * the coach looks at once. Reading through an action because the query is
- * `server-only` and the sheet is a Client Component.
- */
-export async function loadBookingGuardians(bookingId: string): Promise<BookingGuardian[]> {
-  return getBookingGuardians(bookingId)
-}
-
-/**
  * The staff's note about an athlete (§K13, D-13).
  *
  * Through a domain function, not a table write: the check is "this athlete
@@ -165,4 +159,166 @@ export async function saveAthleteNote(
 
   revalidatePath(`/trener/sportovci/${athleteId}`)
   return { ok: true }
+}
+
+/**
+ * What a coach records against one booking (handoff v3.3, decisions 34–36):
+ * paid, the note for this training, the message to the parent.
+ *
+ * Each is checked twice. Here, so a coach who can only view the training is
+ * refused before a round trip and a malformed value never reaches the
+ * database; and in the domain function, which is the one that decides
+ * (FORBIDDEN_EDIT, migration 43) — the check here could be skipped by anyone
+ * calling the function directly, so it is a courtesy, not the guard.
+ */
+export type BookingResult = { ok: true } | { ok: false; code: string }
+
+const id = z.uuid()
+const paidSchema = z.object({ sessionId: id, bookingId: id, paid: z.boolean() })
+const allPaidSchema = z.object({ sessionId: id })
+const attendanceSchema = z.object({
+  sessionId: id,
+  bookingId: id,
+  attendance: z.enum(['PRESENT', 'ABSENT']),
+})
+const undoSchema = z.object({ sessionId: id, bookingId: id })
+const noteSchema = z.object({
+  sessionId: id,
+  bookingId: id,
+  note: z.string().trim().max(COACH_NOTE_LIMIT),
+})
+const messageSchema = z.object({
+  sessionId: id,
+  bookingId: id,
+  message: z.string().trim().min(1).max(PARENT_MESSAGE_LIMIT),
+})
+
+/** canEdit(session), decision 33. */
+async function assertCanEditSession(sessionId: string): Promise<BookingResult> {
+  const [session, rights] = await Promise.all([getCoachSession(sessionId), getCoachRights()])
+  if (!session) return { ok: false, code: 'SESSION_NOT_FOUND' }
+  if (!canEditSession(rights, session)) return { ok: false, code: 'FORBIDDEN_EDIT' }
+  return { ok: true }
+}
+
+async function record(
+  sessionId: string,
+  call: () => PromiseLike<{ data: unknown; error: unknown }>,
+): Promise<BookingResult> {
+  const allowed = await assertCanEditSession(sessionId)
+  if (!allowed.ok) return allowed
+
+  const { data, error } = await call()
+  if (error) return { ok: false, code: 'generic' }
+
+  const result = readRpc(data)
+  if (!result.ok) return { ok: false, code: result.code ?? 'generic' }
+
+  refresh(sessionId)
+  return { ok: true }
+}
+
+/**
+ * K2 / K13 attendance toggle (decision 40): `Byl` or `Nebyl`, from the start
+ * of the training and at any time after. Never back to unmarked.
+ */
+export async function setAttendance(
+  sessionId: string,
+  bookingId: string,
+  attendance: 'PRESENT' | 'ABSENT',
+): Promise<BookingResult> {
+  const input = attendanceSchema.safeParse({ sessionId, bookingId, attendance })
+  if (!input.success) return { ok: false, code: 'VALIDATION' }
+
+  const supabase = await createClient()
+  return record(sessionId, () =>
+    supabase.rpc('set_booking_attendance', {
+      p_booking_id: bookingId,
+      p_attendance: input.data.attendance,
+    }),
+  )
+}
+
+/** K2 `Ostatní byli` (decision 42): the unmarked only, no confirmation. */
+export async function markAllPresent(sessionId: string): Promise<BookingResult> {
+  const input = allPaidSchema.safeParse({ sessionId })
+  if (!input.success) return { ok: false, code: 'VALIDATION' }
+
+  const supabase = await createClient()
+  return record(sessionId, () =>
+    supabase.rpc('mark_session_present', { p_training_session_id: sessionId }),
+  )
+}
+
+/**
+ * `Vrátit` on the `Platba zrušena` toast (DS §6.16): puts back who marked the
+ * payment and when, which the server read from its own audit.
+ */
+export async function undoUnpaid(sessionId: string, bookingId: string): Promise<BookingResult> {
+  const input = undoSchema.safeParse({ sessionId, bookingId })
+  if (!input.success) return { ok: false, code: 'VALIDATION' }
+
+  const supabase = await createClient()
+  return record(sessionId, () => supabase.rpc('undo_booking_unpaid', { p_booking_id: bookingId }))
+}
+
+/** K2 / K13 payment toggle, saved on tap. */
+export async function setBookingPaid(
+  sessionId: string,
+  bookingId: string,
+  paid: boolean,
+): Promise<BookingResult> {
+  const input = paidSchema.safeParse({ sessionId, bookingId, paid })
+  if (!input.success) return { ok: false, code: 'VALIDATION' }
+
+  const supabase = await createClient()
+  return record(sessionId, () =>
+    supabase.rpc('set_booking_paid', { p_booking_id: bookingId, p_paid: paid }),
+  )
+}
+
+/** K2c `Zaplatili všichni`: the unpaid confirmed bookings, in one request. */
+export async function markAllPaid(sessionId: string): Promise<BookingResult> {
+  const input = allPaidSchema.safeParse({ sessionId })
+  if (!input.success) return { ok: false, code: 'VALIDATION' }
+
+  const supabase = await createClient()
+  return record(sessionId, () =>
+    supabase.rpc('mark_session_paid', { p_training_session_id: sessionId }),
+  )
+}
+
+/** K13 `Zprávy` · the coach's note for one training. Blank clears it. */
+export async function setCoachNote(
+  sessionId: string,
+  bookingId: string,
+  note: string,
+): Promise<BookingResult> {
+  const input = noteSchema.safeParse({ sessionId, bookingId, note })
+  if (!input.success) return { ok: false, code: 'NOTE_TOO_LONG' }
+
+  const supabase = await createClient()
+  return record(sessionId, () =>
+    supabase.rpc('set_booking_coach_note', { p_booking_id: bookingId, p_note: input.data.note }),
+  )
+}
+
+/** K13 `Zprávy` · `Odeslat`: saved on the booking and e-mailed (E09). */
+export async function sendParentMessage(
+  sessionId: string,
+  bookingId: string,
+  message: string,
+): Promise<BookingResult> {
+  const input = messageSchema.safeParse({ sessionId, bookingId, message })
+  if (!input.success) {
+    return { ok: false, code: message.trim() === '' ? 'MESSAGE_EMPTY' : 'MESSAGE_TOO_LONG' }
+  }
+
+  const supabase = await createClient()
+  return record(sessionId, () =>
+    supabase.rpc('send_parent_message', {
+      p_booking_id: bookingId,
+      p_message: input.data.message,
+    }),
+  )
 }

@@ -112,6 +112,7 @@ function toClaimedDelivery(row: ClaimRow): ClaimedDelivery {
       locationName: text(session.location_name),
       changingRoom: text(session.changing_room),
       reason: text(session.reason),
+      message: text(session.message),
       birthYearFrom: count(session.birth_year_from),
       birthYearTo: count(session.birth_year_to),
       previousBirthYearFrom: count(session.previous_birth_year_from),

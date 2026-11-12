@@ -5,6 +5,7 @@ import { SeriesForm } from '@/components/session/series-form'
 import type { SessionFormValues } from '@/components/session/training-fields'
 import { formatDateShort, formatTime, localDateKey } from '@/lib/time/workspace-time'
 import { canCreateSessions } from '@/lib/domain/coach-rights'
+import { NO_MAIN_COACH } from '@/lib/domain/session'
 import { messages } from '@/lib/i18n'
 
 const t = messages.coach
@@ -87,7 +88,7 @@ export default async function NewSeriesPage({
           eligibilityMode: source.eligibilityMode,
           birthYearFrom: source.birthYearFrom ? String(source.birthYearFrom) : '',
           birthYearTo: source.birthYearTo ? String(source.birthYearTo) : '',
-          mainCoachId: source.mainCoachId,
+          mainCoachId: source.mainCoachId ?? NO_MAIN_COACH,
           assistantIds: coaches
             .filter((coach) => coach.role === 'ASSISTANT')
             .map((coach) => coach.profileId),

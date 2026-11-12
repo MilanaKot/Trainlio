@@ -8,6 +8,7 @@ import { Field, TextareaWithCounter, selectClass } from '@/components/ui/field'
 import { SegmentedControl } from '@/components/ui/segmented-control'
 import { Stepper } from '@/components/ui/stepper'
 import { CoachPickerSheet } from '@/components/session/coach-picker-sheet'
+import { NO_MAIN_COACH } from '@/lib/domain/session'
 import type { CoachWorkspace } from '@/server/sessions/queries'
 
 const t = messages.coach
@@ -145,7 +146,12 @@ export function TrainingFields({
   const halls = workspace.facilities.filter((f) => f.locationName === values.locationName)
   const years = birthYears([values.birthYearFrom, values.birthYearTo])
   const coachName = (id: string) =>
-    workspace.coaches.find((coach) => coach.id === id)?.displayName ?? t.none
+    id === NO_MAIN_COACH
+      ? t.noMainCoachValue
+      : (workspace.coaches.find((coach) => coach.id === id)?.displayName ?? t.none)
+  // `Bez trenéra` is offered when planning, and kept on a training that has
+  // nobody yet; taking the coach off a training that has one is not offered.
+  const allowNone = !initial || initial.mainCoachId === NO_MAIN_COACH
 
   const was = (key: keyof SessionFormValues) => {
     if (!initial) return undefined
@@ -424,6 +430,7 @@ export function TrainingFields({
           mode={picker}
           coaches={workspace.coaches}
           mainCoachId={values.mainCoachId}
+          allowNone={allowNone}
           assistantIds={values.assistantIds}
           selected={picker === 'main' ? [values.mainCoachId] : values.assistantIds}
           bookedCount={bookedCount}

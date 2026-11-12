@@ -1,15 +1,17 @@
--- Trainlio — a coach leaves, and their trainings go somewhere (DR-15, D-25)
--- Run after the migrations and fixtures, on its own freshly created database.
+-- Trainlio — a coach leaves, and their future trainings wait for a new one
+-- (A3f, K2e, decision 46). Run after the migrations and fixtures, on its own
+-- freshly created database.
 --
--- Until now deactivating a coach who still led trainings only warned about it
--- and left their name on them (D-11). The answer the product gave is a
--- question with two answers: the administrator doing the deactivation takes
--- the trainings over, or nothing moves. These cases are about what each answer
--- does, and about what never moves either way.
+-- Until v3.4 the administrator either took the trainings over or left the
+-- departed coach's name on them (DR-15, D-25). The design settled it the
+-- other way: after a warning, the trainings that are still to come are left
+-- without a main coach until somebody is assigned, and parents read `Trenér
+-- bude upřesněn`. These cases are about what that does, what never moves, and
+-- who may edit a training nobody leads (AC-293, AC-306, AC-309).
 --
 -- Its own database rather than a section of validation_staff.sql: that suite
 -- deactivates the administrator halfway through to prove the club keeps one
--- (AC-250), and a handover needs an administrator who is still there.
+-- (AC-250), and this needs an administrator who is still there.
 \set QUIET 1
 \pset format unaligned
 \pset tuples_only on
@@ -70,131 +72,235 @@ insert into public.training_sessions(id,workspace_id,sport_id,location_id,facili
 insert into public.training_session_coaches(training_session_id,profile_id,role)
  values ('00000000-0000-0000-0000-0000000e0902','00000000-0000-0000-0000-00000000c0ac','MAIN');
 
+-- A future training the administrator leads and Novák assists on: he leaves
+-- that one too.
+insert into public.training_sessions(id,workspace_id,sport_id,location_id,facility_id,
+  main_coach_profile_id,start_at,end_at,capacity,status,created_by,eligibility_mode,changing_room)
+ select '00000000-0000-0000-0000-0000000e0903', w.id, w.primary_sport_id, l.id, f.id,
+   '00000000-0000-0000-0000-00000000ad11', now()+interval '12 days', now()+interval '12 days 1 hour',
+   10,'OPEN','00000000-0000-0000-0000-00000000ad11','ALL','Šatna 3'
+ from public.workspaces w join public.locations l on l.workspace_id=w.id
+   join public.facilities f on f.location_id=l.id and f.code='MH';
+insert into public.training_session_coaches(training_session_id,profile_id,role)
+ values ('00000000-0000-0000-0000-0000000e0903','00000000-0000-0000-0000-00000000ad11','MAIN'),
+        ('00000000-0000-0000-0000-0000000e0903','00000000-0000-0000-0000-00000000c0ac','ASSISTANT');
+
+-- K3c on a training without a main coach: everything as it is, the coach new.
+create or replace function pg_temp.assign_sql(p_session uuid, p_coach uuid)
+returns text language sql stable as $f$
+  select format(
+    'select public.update_training_session(%L::uuid, %L::date, %L::time, %L::time, %L::uuid, %s, %L, %L, %L, %L, %L, null, %L::uuid, true, true)',
+    s.id, (s.start_at at time zone 'Europe/Prague')::date,
+    (s.start_at at time zone 'Europe/Prague')::time, (s.end_at at time zone 'Europe/Prague')::time,
+    s.facility_id, s.capacity, s.eligibility_mode, s.birth_year_from, s.birth_year_to,
+    s.changing_room, s.public_notes, p_coach)
+  from public.training_sessions s where s.id = p_session
+$f$;
+
 \echo ''
-\echo '── Leaving the trainings where they are (AC-293) ────────────────────'
--- The count still comes from the server, and nothing moves until it is
--- answered: the question is which of the two answers was given, not whether
--- one was.
+\echo '── The warning comes first (A3f, AC-251) ────────────────────────────'
 select pg_temp.check(
   pg_temp.as_user(:ADMIN, $$select public.set_member_active(pg_temp.ws(),
     '00000000-0000-0000-0000-00000000c0ac'::uuid, false) ->> 'code'$$),
-  'LEADS_FUTURE_SESSIONS', 'the question is asked before anything happens (AC-251)');
+  'LEADS_FUTURE_SESSIONS', 'the administrator is warned before anything happens (A3f)');
 select pg_temp.check(
   pg_temp.as_user(:ADMIN, $$select public.set_member_active(pg_temp.ws(),
     '00000000-0000-0000-0000-00000000c0ac'::uuid, false) -> 'details' ->> 'future_sessions'$$),
-  '1', 'and it counts only the trainings that are still to come (AC-293)');
+  '1', 'it counts only the trainings he leads that are still to come (A3f)');
 select pg_temp.check(
-  pg_temp.as_user(:ADMIN, $$select (public.set_member_active(pg_temp.ws(),
-    '00000000-0000-0000-0000-00000000c0ac'::uuid, false, true, false)) ->> 'reassigned_sessions'$$),
-  '0', 'answering "no" moves nothing (AC-293, D-11)');
+  pg_temp.as_user(:ADMIN, $$select public.set_member_active(pg_temp.ws(),
+    '00000000-0000-0000-0000-00000000c0ac'::uuid, false) -> 'details' -> 'sessions' -> 0 ->> 'id'$$),
+  '00000000-0000-0000-0000-0000000e0001', 'and lists them for the sheet (A3f)');
+select pg_temp.check(
+  pg_temp.as_user(:ADMIN, $$select public.set_member_active(pg_temp.ws(),
+    '00000000-0000-0000-0000-00000000c0ac'::uuid, false) -> 'details' -> 'sessions' -> 0 ->> 'facility_code'$$),
+  'MH', 'with the hall the sheet prints (A3f)');
 select pg_temp.check(
   (select main_coach_profile_id::text from public.training_sessions
     where id = '00000000-0000-0000-0000-0000000e0001'),
-  '00000000-0000-0000-0000-00000000c0ac',
-  'the training keeps the coach a parent already read there (AC-293, D-11)');
+  '00000000-0000-0000-0000-00000000c0ac', 'nothing moved while the warning stood (A3f)');
+
+\echo ''
+\echo '── Deactivating leaves them without a main coach (A3f, K2e) ─────────'
+select pg_temp.check(
+  pg_temp.as_user(:ADMIN, $$select public.set_member_active(pg_temp.ws(),
+    '00000000-0000-0000-0000-00000000c0ac'::uuid, false, true) ->> 'vacated_sessions'$$),
+  '1', 'confirming leaves the future training without a main coach (A3f)');
+select pg_temp.check(
+  (select (main_coach_profile_id is null)::text from public.training_sessions
+    where id = '00000000-0000-0000-0000-0000000e0001'),
+  'true', 'the mirror column is empty (K2e)');
+select pg_temp.check(
+  (select count(*)::text from public.training_session_coaches
+    where training_session_id = '00000000-0000-0000-0000-0000000e0001' and role = 'MAIN'),
+  '0', 'and so is the association table (K2e)');
+select pg_temp.check(
+  (select main_coach_vacated_from::text || ' · ' || (main_coach_vacated_at is not null)::text
+     from public.training_sessions where id = '00000000-0000-0000-0000-0000000e0001'),
+  '00000000-0000-0000-0000-00000000c0ac · true', 'K2e can say who left and when (K2e)');
+select pg_temp.check(
+  (select count(*)::text from public.training_session_coaches
+    where training_session_id = '00000000-0000-0000-0000-0000000e0903'
+      and profile_id = '00000000-0000-0000-0000-00000000c0ac'),
+  '0', 'he also stops assisting on future trainings (A3f)');
 select pg_temp.check(
   (select (significant_changed_at is null)::text from public.training_sessions
     where id = '00000000-0000-0000-0000-0000000e0001'),
-  'true', 'and nobody is told a change happened, because none did (AC-293)');
+  'true', 'and nobody is told a change happened yet (A3f)');
 select pg_temp.check(
-  (select count(*)::text from public.audit_log
-    where action = 'SESSION_MAIN_COACH_CHANGED'),
-  '0', 'nothing to audit either (AC-293)');
+  (select count(*)::text from public.notification_events),
+  '0', 'no e-mail when it becomes empty (K2e)');
 select pg_temp.check(
-  (select is_active::text from public.workspace_members
-    where profile_id = '00000000-0000-0000-0000-00000000c0ac'),
-  'false', 'the coach is deactivated all the same (AC-293)');
+  (select after ->> 'vacated_sessions' from public.audit_log
+    where action = 'MEMBER_DEACTIVATED' order by id desc limit 1),
+  '1', 'the departure records how many were left behind (A3f)');
+select pg_temp.check(
+  pg_temp.as_user(:A, $$select (main_coach_profile_id is null)::text from public.training_sessions
+    where id = '00000000-0000-0000-0000-0000000e0001'$$),
+  'true', 'a parent reads a training with no main coach — `Trenér bude upřesněn` (G6)');
 
-\echo ''
-\echo '── Taking them over (AC-293) ────────────────────────────────────────'
-select pg_temp.check(
-  pg_temp.as_user(:ADMIN, $$select public.set_member_active(pg_temp.ws(),
-    '00000000-0000-0000-0000-00000000c0ac'::uuid, true) ->> 'ok'$$),
-  'true', 'the coach is brought back, to leave again differently (AC-293)');
-select pg_temp.check(
-  pg_temp.as_user(:ADMIN, $$select (public.set_member_active(pg_temp.ws(),
-    '00000000-0000-0000-0000-00000000c0ac'::uuid, false, true, true)) ->> 'reassigned_sessions'$$),
-  '1', 'answering "yes" moves the trainings that are still to come (AC-293)');
-select pg_temp.check(
-  (select main_coach_profile_id::text from public.training_sessions
-    where id = '00000000-0000-0000-0000-0000000e0001'),
-  '00000000-0000-0000-0000-00000000ad11',
-  'to whoever did the deactivating — there is no other head coach (AC-293)');
-select pg_temp.check(
-  (select profile_id::text from public.training_session_coaches
-    where training_session_id = '00000000-0000-0000-0000-0000000e0001' and role = 'MAIN'),
-  '00000000-0000-0000-0000-00000000ad11',
-  'the association table is the one that moved, not only the mirror (AC-293)');
-
--- Everything else about the training is untouched. This is the half that an
--- UPDATE over the table would have got right and a careless call to the domain
--- function would not: the internal note is passed back in, or it is deleted.
+-- Everything else about the training is untouched.
 select pg_temp.check(
   (select notes from public.training_session_internal_notes
     where training_session_id = '00000000-0000-0000-0000-0000000e0001'),
-  'Interní: rodič dluží platbu.', 'the internal note survives the handover (AC-293, D-13)');
+  'Interní: rodič dluží platbu.', 'the internal note stays (A3f, D-13)');
 select pg_temp.check(
   (select capacity || ' · ' || changing_room || ' · ' || public_notes || ' · ' ||
           birth_year_from || '–' || birth_year_to
      from public.training_sessions where id = '00000000-0000-0000-0000-0000000e0001'),
   '3 · Šatna 4 · Vezměte si chrániče. · 2016–2018',
-  'and so does everything else on it (AC-293)');
+  'and so does everything else on it (A3f)');
 
 \echo ''
-\echo '── What the families are told (AC-293, D-11) ────────────────────────'
-select pg_temp.check(
-  (select (significant_changed_at is not null)::text from public.training_sessions
-    where id = '00000000-0000-0000-0000-0000000e0001'),
-  'true', 'a new main coach is a significant change, as it is anywhere else (D-11)');
-select pg_temp.check(
-  (select significant_change -> 'previous' ->> 'main_coach_name' from public.training_sessions
-    where id = '00000000-0000-0000-0000-0000000e0001'),
-  'Trenér Novák', 'the e-mail can say who it used to be (AC-293)');
-select pg_temp.check(
-  (select count(*)::text from public.notification_events
-    where training_session_id = '00000000-0000-0000-0000-0000000e0001'
-      and event_type = 'SESSION_MAIN_COACH_CHANGED'),
-  '1', 'one event for the training, not one per booked family (AC-293)');
-select pg_temp.check(
-  (select count(*)::text from public.audit_log
-    where action = 'SESSION_MAIN_COACH_CHANGED'
-      and entity_id = '00000000-0000-0000-0000-0000000e0001'),
-  '1', 'and the change to the training is audited (AC-293)');
-select pg_temp.check(
-  (select after ->> 'reassigned_sessions' from public.audit_log
-    where action = 'MEMBER_DEACTIVATED' order by id desc limit 1),
-  '1', 'the departure records how many went with it (AC-293)');
-
-\echo ''
-\echo '── What never moves (AC-293) ────────────────────────────────────────'
+\echo '── What never moves (A3f) ───────────────────────────────────────────'
 select pg_temp.check(
   (select main_coach_profile_id::text from public.training_sessions
     where id = '00000000-0000-0000-0000-0000000e0901'),
   '00000000-0000-0000-0000-00000000c0ac',
-  'a training that has happened keeps the coach who took it (AC-293)');
+  'a training that has happened keeps the coach who took it (A3f)');
 select pg_temp.check(
   (select main_coach_profile_id::text from public.training_sessions
     where id = '00000000-0000-0000-0000-0000000e0902'),
   '00000000-0000-0000-0000-00000000c0ac',
-  'and so does one that was called off (AC-293)');
+  'and so does one that was called off (A3f)');
 
 \echo ''
-\echo '── Who may do it (AC-293) ───────────────────────────────────────────'
+\echo '── Who may edit a training nobody leads (K2e) ───────────────────────'
+update public.workspace_members set can_edit_trainings = false
+ where profile_id = '00000000-0000-0000-0000-00000000c0ad';
 select pg_temp.check(
-  pg_temp.as_user(:ADMIN, $$select public.set_member_active(pg_temp.ws(),
-    '00000000-0000-0000-0000-00000000c0ac'::uuid, true) ->> 'ok'$$),
-  'true', 'the coach comes back for the last two cases (AC-293)');
+  pg_temp.as_user('00000000-0000-0000-0000-00000000c0ad',
+    pg_temp.assign_sql('00000000-0000-0000-0000-0000000e0001', '00000000-0000-0000-0000-00000000c0ad')) ::jsonb ->> 'code',
+  'FORBIDDEN_EDIT', 'a coach without the permission cannot, nor take it himself (K2e)');
 select pg_temp.check(
-  pg_temp.as_user(:COACH, $$select public.set_member_active(pg_temp.ws(),
-    '00000000-0000-0000-0000-00000000c0ad'::uuid, false, true, true) ->> 'code'$$),
-  'NOT_AUTHORIZED',
-  'a coach cannot hand a colleague''s trainings to themselves (AC-293)');
+  pg_temp.as_user('00000000-0000-0000-0000-00000000c0ad', $$select public.can_edit_session(pg_temp.ws(), null)::text$$),
+  'false', 'an empty main coach is nobody, not everybody (K2e)');
+update public.workspace_members set can_edit_trainings = true
+ where profile_id = '00000000-0000-0000-0000-00000000c0ad';
 select pg_temp.check(
-  pg_temp.as_user(:A, $$select public.set_member_active(pg_temp.ws(),
-    '00000000-0000-0000-0000-00000000c0ac'::uuid, false, true, true) ->> 'code'$$),
-  'NOT_AUTHORIZED', 'and a parent is not staff at all (AC-293)');
+  pg_temp.as_user('00000000-0000-0000-0000-00000000c0ad', $$select public.can_edit_session(pg_temp.ws(), null)::text$$),
+  'true', 'a coach who may edit every training may (K2e)');
+
+\echo ''
+\echo '── Assigning a new main coach (K2e → K3c, E05) ──────────────────────'
+select pg_temp.check(
+  pg_temp.as_user(:ADMIN,
+    pg_temp.assign_sql('00000000-0000-0000-0000-0000000e0001', '00000000-0000-0000-0000-00000000c0ad')) ::jsonb ->> 'ok',
+  'true', 'the administrator assigns Trenér Dvořák (K2e)');
 select pg_temp.check(
   (select main_coach_profile_id::text from public.training_sessions
     where id = '00000000-0000-0000-0000-0000000e0001'),
-  '00000000-0000-0000-0000-00000000ad11',
-  'neither refusal moved anything (AC-293)');
+  '00000000-0000-0000-0000-00000000c0ad', 'the training has a main coach again (K2e)');
+select pg_temp.check(
+  (select profile_id::text from public.training_session_coaches
+    where training_session_id = '00000000-0000-0000-0000-0000000e0001' and role = 'MAIN'),
+  '00000000-0000-0000-0000-00000000c0ad', 'in the association table too (K2e)');
+select pg_temp.check(
+  (select (main_coach_vacated_from is null and main_coach_vacated_at is null)::text
+     from public.training_sessions where id = '00000000-0000-0000-0000-0000000e0001'),
+  'true', 'and is no longer waiting for one (K2e)');
+select pg_temp.check(
+  (select count(*)::text from public.notification_events
+    where training_session_id = '00000000-0000-0000-0000-0000000e0001'
+      and event_type = 'SESSION_MAIN_COACH_CHANGED'),
+  '1', 'assigning sends E05, once for the training (K2e)');
+select pg_temp.check(
+  (select (significant_change -> 'fields')::text from public.training_sessions
+    where id = '00000000-0000-0000-0000-0000000e0001'),
+  '["MAIN_COACH"]', 'and is a significant change, as anywhere else (D-11)');
+select pg_temp.check(
+  (select count(*)::text from public.audit_log
+    where action = 'SESSION_MAIN_COACH_CHANGED'
+      and entity_id = '00000000-0000-0000-0000-0000000e0001'),
+  '1', 'and audited (K2e)');
+
+\echo ''
+\echo '── Who may deactivate (A3f) ─────────────────────────────────────────'
+select pg_temp.check(
+  pg_temp.as_user(:COACH, $$select public.set_member_active(pg_temp.ws(),
+    '00000000-0000-0000-0000-00000000c0ad'::uuid, false, true) ->> 'code'$$),
+  'NOT_AUTHORIZED', 'a deactivated coach cannot deactivate anybody (A3f)');
+select pg_temp.check(
+  pg_temp.as_user(:A, $$select public.set_member_active(pg_temp.ws(),
+    '00000000-0000-0000-0000-00000000c0ad'::uuid, false, true) ->> 'code'$$),
+  'NOT_AUTHORIZED', 'and a parent is not staff at all (A3f)');
+select pg_temp.check(
+  (select main_coach_profile_id::text from public.training_sessions
+    where id = '00000000-0000-0000-0000-0000000e0001'),
+  '00000000-0000-0000-0000-00000000c0ad', 'neither refusal moved anything (A3f)');
+
+\echo ''
+\echo '── Planned without a main coach (migration 46) ──────────────────────'
+create or replace function pg_temp.mh() returns uuid language sql stable as
+  $$ select f.id from public.facilities f join public.locations l on l.id = f.location_id
+      where l.workspace_id = pg_temp.ws() and f.code = 'MH' $$;
+select pg_temp.check(
+  pg_temp.as_user(:ADMIN, format($$select public.create_training_session(%L::uuid,
+    (now() + interval '20 days')::date, time '10:00', time '11:00', %L::uuid,
+    p_without_main_coach => true) -> 'data' ->> 'training_session_id'$$, pg_temp.ws(), pg_temp.mh()))
+    is not null::text, 'true', 'the administrator plans a training with nobody leading it');
+select pg_temp.check(
+  (select (main_coach_profile_id is null and main_coach_vacated_from is null)::text
+     from public.training_sessions where start_at::date = (now() + interval '20 days')::date
+      and (start_at at time zone 'Europe/Prague')::time = time '10:00'),
+  'true', 'it has no main coach, and nobody left it');
+select pg_temp.check(
+  (select count(*)::text from public.training_session_coaches c
+     join public.training_sessions s on s.id = c.training_session_id
+    where (s.start_at at time zone 'Europe/Prague')::time = time '10:00'
+      and s.start_at::date = (now() + interval '20 days')::date),
+  '0', 'and no MAIN row');
+select pg_temp.check(
+  pg_temp.as_user(:ADMIN, format($$select public.create_training_session(%L::uuid,
+    (now() + interval '21 days')::date, time '10:00', time '11:00', %L::uuid)
+    -> 'data' ->> 'training_session_id'$$, pg_temp.ws(), pg_temp.mh())) is not null::text,
+  'true', 'without the flag the caller still leads it, as before');
+select pg_temp.check(
+  (select main_coach_profile_id::text from public.training_sessions
+    where start_at::date = (now() + interval '21 days')::date
+      and (start_at at time zone 'Europe/Prague')::time = time '10:00'),
+  '00000000-0000-0000-0000-00000000ad11', 'the administrator, in this case');
+select pg_temp.check(
+  pg_temp.as_user(:ADMIN, format($$select public.create_session_series(%L::uuid, array[1,3],
+    (now() + interval '40 days')::date, (now() + interval '54 days')::date, time '07:00', time '08:00',
+    %L::uuid, p_without_main_coach => true) ->> 'ok'$$, pg_temp.ws(), pg_temp.mh())),
+  'true', 'a series can be planned the same way');
+select pg_temp.check(
+  (select count(*) filter (where main_coach_profile_id is not null)::text from public.training_sessions
+    where (start_at at time zone 'Europe/Prague')::time = time '07:00'),
+  '0', 'and every training in it waits for a coach');
+select pg_temp.check(
+  (select count(*)::text from public.session_series where main_coach_profile_id is null),
+  '1', 'as does the series record');
+select pg_temp.check(
+  pg_temp.as_user(:ADMIN, pg_temp.assign_sql(
+    (select id from public.training_sessions where start_at::date = (now() + interval '20 days')::date
+       and (start_at at time zone 'Europe/Prague')::time = time '10:00'),
+    '00000000-0000-0000-0000-00000000c0ad'))::jsonb ->> 'ok',
+  'true', 'a coach is named later');
+select pg_temp.check(
+  (select count(*)::text from public.notification_events e
+     join public.training_sessions s on s.id = e.training_session_id
+    where e.event_type = 'SESSION_MAIN_COACH_CHANGED'
+      and s.start_at::date = (now() + interval '20 days')::date),
+  '1', 'and the families are told (E05)');

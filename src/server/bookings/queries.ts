@@ -78,6 +78,13 @@ export type MyBooking = {
   cancelledByName: string | null
   /** The coach's message to this parent, if they wrote one (§G6d). */
   coachMessage: string | null
+  /**
+   * Decision 34: paid or not, and nothing else — who marked it and when are
+   * the coach's business (G6e).
+   */
+  paid: boolean
+  /** Decision 36: the coach's message about this booking (G6e). */
+  parentMessage: { text: string; sentAt: string; senderName: string | null } | null
   session: GuardianSession
 }
 
@@ -107,7 +114,9 @@ const SESSION_COLUMNS = `
   training_session_occupancy ( confirmed_count ),
   bookings ( id, status, athlete_id, created_at, eligibility_narrowed_at, change_seen_at,
     cancelled_at, cancellation_reason,
+    paid_at, parent_message, parent_message_sent_at,
     app_profiles!bookings_cancelled_by_fkey ( display_name ),
+    sender:app_profiles!bookings_parent_message_sent_by_fkey ( display_name ),
              athletes ( first_name, last_name ) )
 `
 
@@ -137,7 +146,11 @@ type Row = {
     change_seen_at: string | null
     cancelled_at: string | null
     cancellation_reason: string | null
+    paid_at: string | null
+    parent_message: string | null
+    parent_message_sent_at: string | null
     app_profiles: { display_name: string | null } | null
+    sender: { display_name: string | null } | null
     athletes: { first_name: string; last_name: string } | null
   }[]
 }
@@ -303,6 +316,15 @@ export async function listMyBookings(): Promise<{ upcoming: MyBooking[]; past: M
         cancelledAt: booking.cancelled_at,
         cancelledByName: booking.app_profiles?.display_name ?? null,
         coachMessage: booking.cancellation_reason,
+        paid: booking.paid_at !== null,
+        parentMessage:
+          booking.parent_message && booking.parent_message_sent_at
+            ? {
+                text: booking.parent_message,
+                sentAt: booking.parent_message_sent_at,
+                senderName: booking.sender?.display_name ?? null,
+              }
+            : null,
         session,
       })
     }

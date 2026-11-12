@@ -1,6 +1,6 @@
 # Trainlio — Coach UI spec
 
-Audience: Claude Code implementing the coach app. Read `../shared/DESIGN_SYSTEM.md` first. Visual reference: `prototype.html` (screen IDs K0–K16 + A0). Admin-only coach management is in `../admin/SPEC.md`. UI copy is Czech, verbatim.
+Audience: Claude Code implementing the coach app. Read `../shared/DESIGN_SYSTEM.md` first. Visual reference: `prototype.html` (screen IDs K0–K16 + A0; v3.4 player card K13/K13h/K13r/K13z, K2e). Tap-zone board: `design-source/screens/K02s-StavyKarty.dc.html`. Admin-only coach management is in `../admin/SPEC.md`. UI copy is Czech, verbatim.
 
 ## 0. Scope & principles
 
@@ -48,6 +48,13 @@ interface CoachSession extends SessionSummary {
 }
 interface RosterEntry {
   bookingId: string;
+  // v3.4 — per booking
+  attendance: "present" | "absent" | null;   // null = unmarked; after session end UI shows null as absent
+  attendanceBy: { firstName: string; lastName: string } | null; attendanceAt: string | null;
+  // v3.3 — per booking
+  paidAt: string | null; paidBy: { firstName: string; lastName: string } | null;   // guardian sees only paid: boolean
+  coachNote: string | null;        // ≤200, coach/admin only — NEVER in guardian queries
+  parentMessage: { text: string; sentAt: string; sentBy: { firstName: string; lastName: string } } | null; // ≤500, visible to the guardian
   athlete: { id: string; firstName: string; lastName: string; birthYear: number;
              position: string | null; stick: "left" | "right" | "unknown" | null; club: string | null };
   createdAt: string;
@@ -92,15 +99,15 @@ FAB `+ Vytvořit` → K10 (only on `Nadcházející`). Empty: `Zatím nemáte ž
 K2b is shown when `canEdit(session)` is false (the coach is an assistant or not on the session). On their own trainings (main coach) such a coach sees the normal K2 with all actions. Same as K2 with:
 - Notice under the header (white, inset 1.5 px line, eye icon): title `Jen pro čtení`, text `Tento trénink vede {main coach}. Upravit ho může hlavní trenér nebo administrátor.`
 - **Hidden** (not disabled): `Přidat sportovce`, the whole `AKCE` section (Upravit, Duplikovat, Zavřít/Otevřít přihlašování), `Zrušit trénink`, removing an athlete from the roster, editing notes.
-- Still visible: capacity, coaches, both notes (incl. internal note), the roster with guardians' phones (call/SMS).
+- Still visible: capacity, coaches, both notes (incl. internal note), the roster (v3.4: attendance/payment toggles shown as static icons, opacity .75; no `Ostatní byli` / `Zaplatili všichni`). Notice text: `Tento trénink vede {main coach}. Docházku, platby a sestavu může měnit hlavní trenér nebo administrátor.` Cards still open K13 (read-only).
 `/edit` of a session where `canEdit` is false → server redirect to K2b; every mutation on such a session returns `FORBIDDEN_EDIT` (server + RLS); the UI hiding is only convenience.
 **Creating** (FAB, `/new`, duplicate `?from=`, series `?mode=series`) requires `isAdmin || canEditTrainings` — a coach without the permission cannot create trainings, not even as main coach (no FAB, no `Duplikovat` in K2 of own trainings, no `+ Nová série`).
 **Main-coach field:** a coach without the permission editing their own training cannot change `Hlavní trenér` (K3 row disabled, helper `Hlavního trenéra může změnit administrátor.`) — otherwise they would lock themselves out. Assistants can be changed.
-Other: K13 `Upravit poznámku` only with `isAdmin || canEditTrainings`.
+Other: K13 `Upravit poznámku` only with `isAdmin || canEditTrainings`; K13 toggles/notes/messages follow `canEdit(session)` per session.
 
 ### K14 · Past trainings (`?tab=past`) — v3, DR-02
 Same header + segmented control (`Minulé` active). Day groups **descending** (newest first), same heading style. No FAB.
-Row = CoachTrainingRow variant `past`: left time + meta as K1; right **count only** — Barlow 22/700 number + 12 px muted label below, Czech plural: `1 přihlášený`, `2–4 přihlášení`, `5+ přihlášených`, `0 přihlášených`. **No meter** (free places no longer matter; there is no attendance tracking — never imply who came).
+Row = CoachTrainingRow variant `past`: left time + meta as K1; right **two counters** (v3.4) stacked: person-check icon + `{present}/{n}` and $ icon + `{paid}/{n}`, 14/700, success colour when complete, warning colour (#8F5200) when someone is missing. Legend line above the list: `Byli · Zaplatili · oranžově = někdo chybí`. No meter.
 Cancelled session: as in K1 (muted, struck time, danger `Zrušeno`) → K6b.
 Row → K2 (read-only roster; all edit actions hidden for past sessions — the only action left is `Duplikovat jako nový trénink`, as on K6b; the server refuses the rest with `SESSION_FINISHED`, BR-025d).
 Paging: load 20 days at a time, infinite scroll; empty `Zatím žádné odehrané tréninky.`
@@ -115,13 +122,28 @@ Deactivated athletes: separate group `Neaktivní` at the bottom (heading muted),
 No phone on the row (it is on the roster and in K13). Empty (no athletes at all): `Zatím tu nejsou žádní sportovci. Přidávají je rodiče ve své aplikaci.`
 **Fixed:** coaches cannot create athletes or guardian accounts — no add button.
 
-### K13 · Athlete — coach view (`/coach/athletes/[id]`) — v3, DR-01
-Back `‹ Sportovci`. Header: Avatar 72 (photo if present) + H1 name (Barlow 36/40) + meta `Ročník {y} · narozen {d. m. yyyy}`.
-Caption `LEDNÍ HOKEJ` (sport name) → DetailList: `Pozice`, `Hůl`, `Číslo dresu`, `Tým / kategorie` (`—` when empty).
-Caption `RODIČE` → panel, one row per active guardian: name 15/700 + meta `{relation} · {phone}`; when phone present two 44 × 44 icon buttons (primary-100 bg, primary icon) `tel:` and `sms:` with `aria-label="Zavolat {name}"` / `Napsat SMS {name}`; no phone → meta `… · telefon nevyplněn`, no buttons.
-**Internal note** panel (same style as K2: `#FBF7EC` + inset `#E9D9A8`, caption with lock `INTERNÍ POZNÁMKA · JEN TRENÉŘI`) + text button `Upravit poznámku` → inline textarea (200 chars, counter). **Fixed:** `internal_notes` never reaches guardians (D-13).
-Caption `NADCHÁZEJÍCÍ TRÉNINKY · {n}` → list rows (time Barlow 20 + `Ne 4. 10. · MH` + chevron → K2). Text link `Minulé tréninky ({n})` → same list for the past.
-**Read-only** otherwise (decided): no deactivate, no profile edit — the parent does that in their app.
+### K13 · Player card — coach view (v3.4, replaces K13/K17/K19)
+Routes: `/coach/athletes/[id]?tab=treninky|hrac|rodice|zpravy` (default `treninky`). Opened from K2 (card) and from K12. Back `‹ Zpět` (history back).
+Header (all tabs): Avatar 56 + H1 name Barlow 32/36 (single line, ellipsis) + meta `Ročník {y} · {position} · #{number}`.
+Tabs: SegmentedControl with 4 items `Tréninky · Hráč · Rodiče · Zprávy` (`role="tablist"`, 38 px).
+
+**K13 · Tréninky**
+- Period control: small segmented `Měsíc / Rok` + prev/next 36 px buttons + label (`Listopad 2026` / `Rok 2026`).
+- Two stat tiles (white, radius 14): `{pct} %` + `Docházka · byl {b} z {b+n}`; `{paid} / {total}` + `Zaplaceno`. Percent = Byl / (Byl + Nebyl); cancelled sessions excluded. **No „Omluven“ status anywhere.**
+- `NADCHÁZEJÍCÍ · {n}`: cards (same card style as K2, thick right edge): left `{dd d. m.} · {time}` + meta + red text button `Odhlásit z tréninku` (opens the existing remove dialog); right attendance toggle **disabled** + payment toggle (can be paid in advance).
+- `PROBĚHLÉ · {month}`: cards with both toggles active (editable any time). Tap on the left zone → K2 of that session.
+- `Zobrazit další ({n})`, footnote `Platbu lze označit i předem, docházku od začátku tréninku.`
+- Same tap-zone and undo rules as K2.
+
+**K13h · Hráč** — DetailList `Narozen`, `Pozice`, `Hůl`, `Číslo dresu`, `Tým / kategorie` + note `Údaje vyplňuje rodič ve své aplikaci.`; internal panel `POZNÁMKA O HRÁČI · JEN TRENÉŘI` + `Upravit poznámku` (200 chars). **Fixed:** never reaches guardians.
+
+**K13r · Rodiče** — one white card per active guardian: name 16/700, relation (`Matka · přihlašuje na tréninky`), call + SMS 44 px buttons (only with phone), lines phone (or `Telefon nevyplněn` subtle) and e-mail.
+
+**K13z · Zprávy** — intro `Poznámky a zprávy k jednotlivým tréninkům. Zprávu rodiče uvidí v aplikaci a dostanou e-mail.` Then one card per session (newest first), title `{dd d. m.} · {time}`:
+- coach note (yellow block, lock, `Poznámka · jen trenéři`) or link `Přidat poznámku` → inline textarea (200);
+- parent message (blue block, bubble, `Zpráva rodičům · odesláno {d. m.} {HH:MM}`) or link `Napsat rodičům` → editor (500) + `Odeslat` (E09). Editing a sent message re-sends E09.
+
+Read-only coaches (no `canEdit` for that session): toggles shown but not interactive (`opacity .75`, no buttons), no `Odhlásit`, no add/edit links.
 
 ### K15 · Series list (`/coach/series`) — v3, DR-03
 Entry: A0 `Více` → section `PLÁNOVÁNÍ` → row `Série tréninků` (value = number of running series). Visible to all coaches.
@@ -153,10 +175,35 @@ Back `‹ Tréninky`. Page scrolls (tall).
 4. Public note panel: caption with globe icon `INFORMACE PRO SPORTOVCE · VIDÍ RODIČE`, text.
 5. Internal note panel (only if present): `internal` bg + border, caption with lock `INTERNÍ POZNÁMKA · JEN TRENÉŘI` (internal-ink), text.
 6. Roster: heading `Sportovci {n}` + small secondary button `+ Přidat sportovce` (→ K7). Rows (link to athlete detail, not designed): avatar 36, name 16/700, line `2017 · Centr · Levá hůl` (omit missing parts), meta 12 `Přihlásil Milana Kotova · 27. 9. 18:42` or `Přidal trenér Milan Filipi · 24. 9. 17:30` (always masculine form — DS §8). Club is not in the default row. Sorted by booking time.
-   Tap row → BottomSheet "athlete in session": avatar, name, `2017 · Centr · Levá hůl`, `Klub` (if set), DetailList `Rodič` (name), `Telefon` (number or `—`), `Přihlášeno` (date-time). If phone exists: primary lg `Zavolat {phone}` (`<a href="tel:…">`) + outline lg `Poslat SMS` (`sms:`). Bottom: outline-danger `Odhlásit z tréninku` → confirm Dialog: title `Odhlásit sportovce z tréninku?`, line `{athlete} · Ne 4. 10. · 09:00`, optional Textarea `Zpráva pro rodiče` (Nepovinné, max 200, counter), info line (mail icon) `Rodič dostane e-mail. Sportovce bude moci znovu přihlásit, pokud bude volné místo.`, buttons `Ponechat` (outline, initial focus) · `Odhlásit` (primary). Result: booking status `removed_by_coach`, place is freed immediately (bookedCount −1), guardian e-mailed; roster row disappears and a toast `Sportovec odhlášen` shows. Guardian UI: see guardian SPEC G4b / G6d. Phone numbers are shown only to coaches/admins of the workspace (RLS).
+   **v3.4 — roster = attendance + payment in one list (replaces the v3.3 bar/chips and the K17 sheet):**
+   - Above the list a column header row: left caption `SPORTOVEC`; right two 48 px columns `Byl` / `Platba`, each with a live count below (Barlow 18/20 700): `{present}/{n}`, `{paid}/{n}`.
+   - Each athlete = **PlayerCard** (DS §6.37): white card radius 16, min-height 76, padding 0 16/0 12, **thick right edge** `inset -5px 0 0 #C9D0DC` (the "opens" affordance — no chevron), gap 8 between cards.
+     - Left zone (link → K13, Tréninky tab): Avatar 40, name 16/21 700 **single line with ellipsis**, below 13 muted `{year} · {position}` (ellipsis) followed by indicators: lock `#7A5A00` = coach note on this booking, bubble muted = message sent to parents.
+     - Right zone: two **StatusToggles** 48 × 48 (DS §6.36): attendance (person icon) and payment ($ icon).
+   - **Tap zones (binding):** each toggle's hit area spans the full card height and 62 px width; the gap between toggles belongs to them (no-op). Only the left zone opens K13. Toggles call `stopPropagation`. A pointer that moves > 8 px is a scroll (nothing fires); long-press does nothing.
+   - **Feedback:** card tap → whole card darkens (`#EEF1F6`) + scale .98 for 100 ms, then navigates. Toggle tap → only the toggle: scale .9 + 3 px ring, colour/icon swap, `navigator.vibrate(10)` where available.
+   - **Attendance toggle** cycles `unmarked → Byl → Nebyl → Byl …` (never back to unmarked from the UI). Disabled (opacity .4) before the session start. Unmarked after the session end counts as `Nebyl` (shown red). Editable **any time later** (no limit).
+   - **Payment toggle** `Nezaplaceno ↔ Zaplaceno`, allowed before the session too. Turning **off** shows the undo toast (DS §6.16 exception): white card, red $ circle, `Platba zrušena · {athlete}`, button `Vrátit`, 4 s with progress bar. Turning on: no toast.
+   - **Payment and attendance are independent** (no auto-rules).
+   - Below the list: two outline lg buttons (grid 1fr 1fr): `Ostatní byli` (marks all *unmarked* as Byl, **no confirmation**, disabled before start) and `Zaplatili všichni` (→ K2c confirmation). When everybody paid, the second becomes static text `Zaplatili všichni ✓`.
+   - Footnote 12 muted: `Docházku lze zapsat od začátku tréninku; nezapsaní se po skončení počítají jako „Nebyl“.`
+   - Removing an athlete from the session is done in K13 (Tréninky tab, `Odhlásit z tréninku` on upcoming rows) using the existing confirm dialog + E07 flow.
 7. Caption `AKCE` + list (56 px rows, icon + label): `Upravit trénink` (→ K3), `Duplikovat` (→ K4), `Zavřít přihlašování` (→ K5) / `Otevřít přihlašování` when closed.
 8. Separated by 32 px, outline-danger lg button `Zrušit trénink` (→ K6).
 Empty roster: text `Zatím nikdo není přihlášený.`
+
+### ~~K17 / K17b · Player card sheet~~ — removed in v3.4
+Replaced by K13 (player card with tabs). Per-booking coach note and parent message live in K13 `Zprávy`; payment/attendance in K2 and K13 `Tréninky`.
+
+### K2e · Training without a main coach (v3.4)
+When the main coach is deactivated (admin A3f), his future sessions get `mainCoachId = null`.
+- K1 row: orange inset border `1.5px #E3A034` + status line (warning icon) `Bez hlavního trenéra`.
+- K2: warning Notice (`#FBF0DC`, inset `#E3A034`) `Trénink nemá hlavního trenéra` + `{coach} byl deaktivován {d. m.}. Rodiče vidí „Trenér bude upřesněn“.` + primary md `Přiřadit trenéra` (→ K3c). DetailList `Hlavní trenér` = `Bez trenéra` (warning colour).
+- Guardian G6: `Hlavní trenér` row shows `Trenér bude upřesněn` (muted). No e-mail when it becomes empty; E05 is sent when a new main coach is assigned.
+- Who can edit such a session: admins and coaches with `canEditTrainings` (nobody is "main coach").
+
+### K2c · Mark all as paid (v3.3) — BottomSheet
+Title (Barlow 28/32) `Označit {n} sportovce jako zaplacené?` (plural: 1 sportovce / 2–4 sportovce / 5+ sportovců — the accusative form is `sportovce` for 1–4, `sportovců` for 5+), text `Ostatní už zaplaceno mají. Rodiče uvidí v aplikaci „Zaplaceno“.`, list (bg panel) of the unpaid athletes (Avatar 32 + name). Buttons: primary lg `Označit {n} jako zaplacené`, outline lg `Zrušit`. Confirm → one request marks only the unpaid bookings (`paidBy = me`, same timestamp); already-paid rows keep their original `paidAt/paidBy`. Toast `Označeno jako zaplacené`.
 
 ### K7 · Add athlete (sheet)
 Tall BottomSheet (top offset 48). Title `Přidat sportovce`. Summary bar: `Ne 27. 9. · 16:00 · 2017–2018` + mini meter + `8 / 10`. Search input (48 px, neutral-50, search icon, placeholder `Hledat jméno`, filters client-side by name). Helper `Sportovci z ročníků 2017–2018, kteří ještě nejsou přihlášení`.
@@ -264,6 +311,14 @@ The UI must always state the notification consequence **before** the coach confi
 16. `Moje` shows only sessions where I am main coach or assistant; each shows the correct RoleLabel; choice survives reload.
 17. Coach without the permission: no FAB; on a session where they are assistant → K2b with `Jen pro čtení`, no actions, direct POST returns `FORBIDDEN_EDIT`, `/edit` redirects; on a session where they are **main coach** → full K2, can edit/close/cancel/add/remove, but `Duplikovat` is hidden and the `Hlavní trenér` field is locked; creating via API returns `FORBIDDEN_EDIT`.
 18. View-only coach can still call a guardian from the roster and read the internal note.
+19. K2: tapping the $ toggle marks paid without opening K13; tapping the name opens K13; tapping the gap between toggles does nothing; a vertical drag over a toggle scrolls and changes nothing.
+20. Turning payment off shows `Platba zrušena · {athlete}` with `Vrátit` for 4 s; `Vrátit` restores the original `paidAt/paidBy`.
+21. Attendance toggle disabled before start; after start cycles Byl/Nebyl; after the session end unmarked counts as Nebyl in K13 percent; editing a 3-month-old session works.
+22. `Ostatní byli` marks only unmarked athletes, no dialog; `Zaplatili všichni` → K2c lists only unpaid; when all paid the static `Zaplatili všichni ✓` appears.
+23. Header counters `Byl x/n` and `Platba x/n` and K14 counters update immediately; payment and attendance never change each other.
+24. K13 tabs: Tréninky percent = Byl/(Byl+Nebyl) for the selected month/year; Hráč shows the general note; Rodiče call/SMS links; Zprávy note never returned to a guardian session (RLS); sending a message triggers E09.
+25. Deactivate a main coach with 3 future sessions (A3f) → those sessions show `Bez hlavního trenéra` in K1 and K2e; guardian G6 shows `Trenér bude upřesněn`; assigning a coach sends E05.
+26. Read-only coach: K2b/K13 toggles are not interactive; API returns `FORBIDDEN_EDIT`.
 
 ## 6. Assumptions & open questions
 - Reopening closed registration is allowed (`Otevřít přihlašování`) — confirmed v3.

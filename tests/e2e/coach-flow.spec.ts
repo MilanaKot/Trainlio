@@ -141,17 +141,9 @@ test.describe('a coach publishes a training and runs its roster', () => {
     await expect(page.getByRole('heading', { name: 'Sportovci 2' })).toBeVisible()
     await expect(page.getByText('Adam Hráč', { exact: true })).toBeVisible()
     await expect(page.getByText('Bohdan Hráč', { exact: true })).toBeVisible()
-    // BR-092: who booked each child, which no row policy would let a coach
-    // read. Masculine participle for everyone (DESIGN_SYSTEM §8).
-    await expect(page.getByText(/Přihlásil /).first()).toBeVisible()
-
-    // §K2 (AC-274): the athlete sheet is where a coach reaches the family.
-    // AC-254 — the number is readable here and nowhere else.
-    await page.getByRole('button', { name: /Adam Hráč/ }).click()
-    const athlete = page.getByRole('dialog')
-    await expect(athlete).toContainText('Rodič')
-    await expect(athlete).toContainText('Telefon')
-    await athlete.getByRole('button', { name: 'Zavřít' }).click()
+    // v3.4 (decision 38): each booking is a card with the two toggles; the
+    // family is reached from the player card (K13), not from the roster.
+    await expect(page.getByRole('button', { name: /^Platba Adam Hráč/ })).toBeVisible()
 
     // AC-050: the session is full, so adding by hand is refused until the coach
     // confirms, and the dialog quotes the server's own numbers.
@@ -173,9 +165,11 @@ test.describe('a coach publishes a training and runs its roster', () => {
     await expect(page.getByText('Cyril Hráč', { exact: true })).toBeVisible()
 
     // D-06 (AC-275): removing sends the parent an e-mail and frees the place;
-    // the coach's own message can go with it (§G6d).
-    await page.getByRole('button', { name: /Cyril Hráč/ }).click()
-    await page.getByRole('dialog').getByRole('button', { name: 'Odhlásit z tréninku' }).click()
+    // the coach's own message can go with it (§G6d). Since v3.4 it is done
+    // from the player card, on the training's row in `Tréninky`.
+    await page.getByRole('link', { name: /Cyril Hráč/ }).click()
+    await expect(page.getByRole('tab', { name: 'Tréninky', selected: true })).toBeVisible()
+    await page.getByRole('button', { name: 'Odhlásit z tréninku' }).first().click()
 
     const removal = page.getByRole('alertdialog')
     await expect(removal).toContainText('Odhlásit sportovce z tréninku?')
@@ -185,6 +179,7 @@ test.describe('a coach publishes a training and runs its roster', () => {
 
     // By its words: a Notice on the page is a status region too.
     await expect(page.getByText('Sportovec odhlášen')).toBeVisible()
+    await page.goto(sessionUrl)
     await expect(page.getByRole('heading', { name: 'Sportovci 2' })).toBeVisible()
     // BR-044: nothing is deleted, so the removal stays on the record.
     await page.getByText(/Odebraní a odhlášení/).click()
@@ -225,11 +220,12 @@ test.describe('a coach publishes a training and runs its roster', () => {
     await tabs.getByRole('tab', { name: 'Minulé' }).click()
     const row = page.locator('main li', { hasText: room })
     await expect(row).toBeVisible()
-    await expect(row).toContainText('1')
-    await expect(row).toContainText('přihlášený')
+    // v3.4 (decision 44): who came and who paid, out of who was booked.
+    await expect(row.getByLabel('Byli 0/1')).toBeVisible()
+    await expect(row.getByLabel('Zaplatili 0/1')).toBeVisible()
     // No meter, no `1 / 10`: free places mean nothing once it is over.
     await expect(row.getByRole('meter')).toHaveCount(0)
-    await expect(row).not.toContainText('/')
+    await expect(row).not.toContainText('/ 10')
     // Nothing is created from the past.
     await expect(page.getByRole('button', { name: 'Vytvořit', exact: true })).toHaveCount(0)
 
@@ -314,18 +310,21 @@ test.describe('a coach publishes a training and runs its roster', () => {
 
     await row.getByRole('link').click()
     await expect(page.getByRole('heading', { name: `Eliška Dítě${run}` })).toBeVisible()
-    await expect(page.getByText('Ročník 2017 · narozen 5. 5. 2017')).toBeVisible()
+    await expect(page.getByText('Ročník 2017', { exact: false }).first()).toBeVisible()
 
-    // §K13: the family, with the number a coach may ring.
+    // K13 · Rodiče (v3.4): the family, with the number a coach may ring.
+    await page.getByRole('tab', { name: 'Rodiče' }).click()
     await expect(page.getByText(`Hana Řezníčková${run}`)).toBeVisible()
     await expect(page.getByRole('link', { name: `Zavolat Hana Řezníčková${run}` })).toHaveAttribute(
       'href',
       'tel:777111222',
     )
 
-    // The note. D-13: the one thing on this screen a parent must never read.
+    // K13 · Hráč: the note. D-13: the one thing a parent must never read.
+    await page.getByRole('tab', { name: 'Hráč' }).click()
+    await expect(page.getByText('5. 5. 2017')).toBeVisible()
     await page.getByRole('button', { name: 'Upravit poznámku' }).click()
-    await page.getByLabel('INTERNÍ POZNÁMKA · JEN TRENÉŘI').fill('Alergie na ořechy.')
+    await page.getByLabel('POZNÁMKA O HRÁČI · JEN TRENÉŘI').fill('Alergie na ořechy.')
     await page.getByRole('button', { name: 'Uložit' }).click()
     await expect(page.getByText('Alergie na ořechy.')).toBeVisible()
 

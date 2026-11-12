@@ -19,11 +19,16 @@ export function BottomSheet({
   tall = false,
   children,
   footer,
+  icon,
+  tone = 'warning',
 }: {
   open: boolean
   onOpenChange: (open: boolean) => void
   title: string
   tall?: boolean
+  /** A3f: the tile above the title, as on a ConfirmDialog (§6.14). */
+  icon?: React.ReactNode
+  tone?: 'warning' | 'danger'
   children: React.ReactNode
   footer?: React.ReactNode
 }) {
@@ -44,6 +49,18 @@ export function BottomSheet({
             className="mx-auto mb-3 h-1 w-10 shrink-0 rounded-full bg-line"
             aria-hidden="true"
           />
+
+          {icon ? (
+            <span
+              className={cn(
+                'mb-4 flex size-13 shrink-0 items-center justify-center rounded-2xl',
+                tone === 'danger' ? 'bg-danger-soft text-danger' : 'bg-warning-soft text-warning',
+              )}
+              aria-hidden="true"
+            >
+              {icon}
+            </span>
+          ) : null}
 
           <div className="mb-4 flex shrink-0 items-start justify-between gap-3">
             <Dialog.Title className="font-display text-sheet-title font-bold text-ink">

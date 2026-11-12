@@ -319,6 +319,18 @@ export function storedLogoUrl(path: string): string {
  * contrast minimum.
  */
 export async function expectAccessible(page: Page, where: string): Promise<void> {
+  // A button that has just stopped waiting fades from its disabled colours to
+  // its own over a few frames. Measured in between, white on cobalt reads as
+  // 3.9:1 — a contrast nobody sees, and the reason the logo and A3f sheets
+  // failed only when the machine was busy. Transitions only: a spinner or the
+  // toast's bar runs on purpose.
+  await page.waitForFunction(() =>
+    document
+      .getAnimations()
+      .every(
+        (animation) => !(animation instanceof CSSTransition) || animation.playState !== 'running',
+      ),
+  )
   const { violations } = await new AxeBuilder({ page })
     .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
     .analyze()

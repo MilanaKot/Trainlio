@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button'
 import { Notice } from '@/components/ui/notice'
 import { PickerRow } from '@/components/ui/picker-row'
 import { SearchField } from '@/components/ui/search-field'
+import { NO_MAIN_COACH } from '@/lib/domain/session'
 
 const t = messages.coach
 
@@ -42,6 +43,7 @@ export function CoachPickerSheet({
   mode,
   coaches,
   mainCoachId,
+  allowNone = false,
   selected,
   assistantIds,
   bookedCount,
@@ -52,6 +54,8 @@ export function CoachPickerSheet({
   coaches: PickableCoach[]
   /** The training's main coach: not an assistant, and shown as such. */
   mainCoachId: string
+  /** §K3c: offer `Bez trenéra` first (migration 46). */
+  allowNone?: boolean
   /** Assistants for `assistants`, the current main coach for `main`. */
   selected: string[]
   /** The training's assistants, so §K3c can say who would stop being one. */
@@ -144,6 +148,24 @@ export function CoachPickerSheet({
         ) : null}
 
         {shown.length === 0 ? <p className="text-row text-muted">{t.pickerNoMatch}</p> : null}
+
+        {picking && allowNone ? (
+          <PickerRow
+            control="radio"
+            checked={chosen.includes(NO_MAIN_COACH)}
+            onChange={() => setChosen([NO_MAIN_COACH])}
+            leading={
+              <span
+                className="flex size-9 items-center justify-center rounded-full bg-warning-soft text-warning"
+                aria-hidden="true"
+              >
+                ?
+              </span>
+            }
+            title={t.noMainCoachValue}
+            meta={t.noMainCoachHint}
+          />
+        ) : null}
 
         <ul className="flex flex-col gap-2">
           {shown.map((coach) => {

@@ -13,8 +13,9 @@ export const config = {
   matcher: [
     /*
      * Everything except static assets and images. Auth session refresh must run
-     * on real navigations, not on every icon fetch.
+     * on real navigations, not on every icon fetch — nor on the manifest, which
+     * a browser fetches without a session and must not be sent to sign in.
      */
-    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    '/((?!_next/static|_next/image|favicon.ico|manifest.webmanifest|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
 }

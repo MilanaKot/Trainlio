@@ -352,13 +352,28 @@ select pg_temp.check(
 select pg_temp.check(
   pg_temp.as_user(:COACH, $$select future_sessions::text from public.workspace_staff(pg_temp.ws())
     where display_name = 'Petr Málek'$$),
-  '1', 'and the count that makes the warning predictable (AC-251)');
+  '0', 'and the count that makes the warning predictable (AC-251)');
+-- Zero, because the confirmed deactivation above left his training without a
+-- main coach (A3f, decision 46), and coming back does not hand it back.
+select pg_temp.check(
+  (select (main_coach_profile_id is null)::text from public.training_sessions
+    where id = '00000000-0000-0000-0000-0000000e0001'),
+  'true', 'the training he led is left without a main coach (A3f)');
 
 \echo ''
-\echo '── A coach who leaves keeps their name on their trainings (AC-257) ──'
--- By now the fixture session is led by Petr Málek, the coach added above who
--- has never signed in. That makes the case stronger rather than weaker: his
--- profile has no login at all, and a parent must still read his name.
+\echo '── A coach who leaves keeps their name on their past trainings (AC-257) ──'
+-- Since decision 46 only a training that has already happened keeps a
+-- departed coach (A3f); the future ones are left without one, which
+-- validation_attendance.sql covers. So Petr Málek — the coach added above who
+-- has never signed in, which makes the case stronger rather than weaker — is
+-- put back on the fixture session, and the session is moved into the past
+-- for this section only.
+update public.training_sessions
+   set main_coach_vacated_from = null, main_coach_vacated_at = null,
+       start_at = start_at - interval '400 days', end_at = end_at - interval '400 days'
+ where id = '00000000-0000-0000-0000-0000000e0001';
+insert into public.training_session_coaches (training_session_id, profile_id, role)
+values ('00000000-0000-0000-0000-0000000e0001', pg_temp.malek(), 'MAIN');
 select pg_temp.check(
   pg_temp.as_user(:A, $$select p.display_name from public.training_sessions s
     join public.app_profiles p on p.id = s.main_coach_profile_id
@@ -428,6 +443,10 @@ select pg_temp.check(
   pg_temp.as_user(:A, $$select count(*)::text from public.app_profiles
     where id = '00000000-0000-0000-0000-0000000fb000'$$),
   '0', 'and no other family became visible along the way (AC-257, AC-091)');
+
+update public.training_sessions
+   set start_at = start_at + interval '400 days', end_at = end_at + interval '400 days'
+ where id = '00000000-0000-0000-0000-0000000e0001';
 
 update public.workspace_members set is_active = true
  where profile_id = :COACH and workspace_id = pg_temp.ws();

@@ -49,6 +49,8 @@ const removed: MyBooking = {
   cancelledAt: '2026-09-28T09:15:00Z',
   cancelledByName: 'Milan Filipi',
   coachMessage: null,
+  paid: false,
+  parentMessage: null,
   session,
 }
 

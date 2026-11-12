@@ -404,7 +404,7 @@ select pg_temp.check(
 select pg_temp.check(
   (select (array_to_string(p.proargnames, ',')) from pg_proc p
    where p.proname = 'create_session_series' and p.pronamespace = 'public'::regnamespace),
-  'p_workspace_id,p_by_weekdays,p_local_date_from,p_local_date_to,p_local_start_time,p_local_end_time,p_facility_id,p_excluded_dates,p_capacity,p_eligibility_mode,p_birth_year_from,p_birth_year_to,p_changing_room,p_public_notes,p_internal_notes,p_main_coach_profile_id,p_status',
+  'p_workspace_id,p_by_weekdays,p_local_date_from,p_local_date_to,p_local_start_time,p_local_end_time,p_facility_id,p_excluded_dates,p_capacity,p_eligibility_mode,p_birth_year_from,p_birth_year_to,p_changing_room,p_public_notes,p_internal_notes,p_main_coach_profile_id,p_status,p_without_main_coach',
   'and nothing that could name the dates to create (AC-265)');
 -- The behavioural half of the same claim: an exclusion for a date outside the
 -- pattern adds nothing, and the range still decides the outer bounds.
