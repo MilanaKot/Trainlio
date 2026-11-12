@@ -14,7 +14,9 @@ import {
   setMemberPhone,
   setMemberCanEditTrainings,
   setMemberRole,
+  type VacatedSession,
 } from '@/server/staff/actions'
+import { BottomSheet } from '@/components/ui/bottom-sheet'
 import { Button } from '@/components/ui/button'
 import { ConfirmDialog } from '@/components/ui/dialog'
 import { Field } from '@/components/ui/field'
@@ -156,11 +158,8 @@ export function CoachForm({
     form?: string
   }>({})
   const [inviting, startInviting] = useTransition()
-  const [confirmFuture, setConfirmFuture] = useState<number | null>(null)
-  // §A3 (DR-15): the handover is offered rather than assumed, and offered
-  // switched on — a training nobody leads cannot be edited until somebody
-  // does, which is the state the administrator is least likely to want.
-  const [reassignFuture, setReassignFuture] = useState(true)
+  // A3f: the trainings the server says would be left without a main coach.
+  const [confirmFuture, setConfirmFuture] = useState<VacatedSession[] | null>(null)
   const [pending, startSaving] = useTransition()
 
   const name = [firstName, lastName].filter(Boolean).join(' ').trim()
@@ -309,17 +308,13 @@ export function CoachForm({
           member.profileId,
           isActive,
           confirmFutureSessions,
-          // Only ever true behind the confirmation: the first call is the one
-          // that asks, and it must not move anything on its way to the
-          // question.
-          confirmFutureSessions && reassignFuture,
         )
 
         if (!switched.ok) {
-          // The count comes from the refusal, so the warning never states a
-          // number this form made up (AC-251).
+          // The list comes from the refusal, so the sheet never names a
+          // training this form made up (AC-251).
           if (switched.code === 'LEADS_FUTURE_SESSIONS') {
-            setConfirmFuture(switched.futureSessions ?? member.futureSessions)
+            setConfirmFuture(switched.sessions ?? [])
             return
           }
           setErrors({ form: errorText(switched.code) })
@@ -500,18 +495,6 @@ export function CoachForm({
           <p className="rounded-control-lg bg-bg p-3 text-meta text-muted">
             {t.deactivateInfo.replace('{name}', member.displayName ?? t.noName)}
           </p>
-
-          {/* Stated before the save, not after it: what happens to the
-              trainings still to come is a question, and this is where an
-              administrator finds out it is coming. */}
-          {!isActive && member.isActive && member.futureSessions > 0 ? (
-            <Notice variant="warning">
-              {plural(member.futureSessions, t.leadsFutureNotice).replace(
-                '{name}',
-                member.displayName ?? t.noName,
-              )}
-            </Notice>
-          ) : null}
         </Panel>
       ) : (
         <p className="text-hint text-muted">{t.addHelper}</p>
@@ -550,29 +533,73 @@ export function CoachForm({
         </p>
       </ConfirmDialog>
 
-      <ConfirmDialog
+      {/* A3f (decision 46): warned, then the trainings wait for a new coach. */}
+      <BottomSheet
         open={confirmFuture !== null}
         onOpenChange={(open) => (open ? undefined : setConfirmFuture(null))}
-        title={t.deactivate}
-        tone="warning"
-        cancelLabel={messages.common.cancel}
-        confirmLabel={t.deactivate}
-        pending={pending}
-        onConfirm={() => save(true)}
+        title={t.vacateTitle}
+        icon={<WarningIcon />}
+        footer={
+          <div className="flex flex-col gap-2">
+            <Button
+              size="lg"
+              onClick={() => save(true)}
+              {...(pending ? { loadingLabel: t.deactivate } : {})}
+            >
+              {t.deactivate}
+            </Button>
+            <Button
+              size="lg"
+              variant="outline"
+              onClick={() => setConfirmFuture(null)}
+              disabled={pending}
+            >
+              {messages.common.cancel}
+            </Button>
+          </div>
+        }
       >
-        <p className="text-meta text-muted">{plural(confirmFuture ?? 0, t.leadsFutureSessions)}</p>
-        {/* DR-15: the two answers the product settled on. There is no head
-            coach in the club to hand the trainings to, so "yes" means the
-            administrator reading this. */}
-        <div className="rounded-control-lg bg-bg px-4 py-2">
-          <Switch
-            checked={reassignFuture}
-            onChange={setReassignFuture}
-            label={t.reassignSwitch}
-            hint={reassignFuture ? t.reassignHintOn : t.reassignHintOff}
-          />
-        </div>
-      </ConfirmDialog>
+        <p className="text-body text-muted">
+          {vacateBody(member?.displayName ?? t.noName, confirmFuture?.length ?? 0)}
+        </p>
+        <ul className="flex flex-col rounded-control-lg bg-internal px-3.5">
+          {(confirmFuture ?? []).map((session) => {
+            const at = new Date(session.startAt)
+            return (
+              <li
+                key={session.id}
+                className="flex min-h-11 items-center justify-between gap-3 border-b border-internal-border last:border-b-0"
+              >
+                <span className="nums text-meta font-bold text-ink">
+                  {formatDateShort(at, DEFAULT_TIMEZONE)} · {formatTime(at, DEFAULT_TIMEZONE)}
+                </span>
+                <span className="text-meta text-muted">{session.facilityCode}</span>
+              </li>
+            )
+          })}
+        </ul>
+      </BottomSheet>
     </div>
+  )
+}
+
+/** The A3f sentence, with `bez trenéra` in bold as the design sets it. */
+function vacateBody(name: string, count: number): React.ReactNode {
+  const [before, after] = plural(count, t.vacateBody).replace('{name}', name).split('{without}')
+  return (
+    <>
+      {before}
+      <strong className="font-bold text-ink">{t.vacateWithout}</strong>
+      {after}
+    </>
+  )
+}
+
+function WarningIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className="size-6" aria-hidden="true">
+      <path d="M12 4l9 16H3l9-16z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
+      <path d="M12 10v4.5M12 17.2v.3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+    </svg>
   )
 }

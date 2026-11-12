@@ -13,8 +13,12 @@ import type { SessionRole } from '@/components/ui/role-label'
  */
 export type CoachRights = { me: string; canEditAll: boolean }
 
-export function canEditSession(rights: CoachRights, session: { mainCoachId: string }): boolean {
-  return rights.canEditAll || session.mainCoachId === rights.me
+/** A training without a main coach (K2e) is nobody's own, so only canEditAll. */
+export function canEditSession(
+  rights: CoachRights,
+  session: { mainCoachId: string | null },
+): boolean {
+  return rights.canEditAll || (session.mainCoachId !== null && session.mainCoachId === rights.me)
 }
 
 export function canCreateSessions(rights: CoachRights): boolean {
@@ -24,7 +28,7 @@ export function canCreateSessions(rights: CoachRights): boolean {
 /** The signed-in coach's part in a training, or null if they have none. */
 export function sessionRole(
   me: string,
-  session: { mainCoachId: string; coachRoles: { profileId: string; role: SessionRole }[] },
+  session: { mainCoachId: string | null; coachRoles: { profileId: string; role: SessionRole }[] },
 ): SessionRole | null {
   if (session.mainCoachId === me) return 'MAIN'
   return session.coachRoles.some((coach) => coach.profileId === me && coach.role === 'ASSISTANT')

@@ -85,7 +85,7 @@ export default async function EditSessionPage({
           eligibilityMode: session.eligibilityMode,
           birthYearFrom: session.birthYearFrom ? String(session.birthYearFrom) : '',
           birthYearTo: session.birthYearTo ? String(session.birthYearTo) : '',
-          mainCoachId: session.mainCoachId,
+          mainCoachId: session.mainCoachId ?? '',
           assistantIds: coaches
             .filter((coach) => coach.role === 'ASSISTANT')
             .map((coach) => coach.profileId),

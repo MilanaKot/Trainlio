@@ -19,6 +19,8 @@ export function BottomSheet({
   tall = false,
   children,
   footer,
+  icon,
+  tone = 'warning',
   lead,
   subtitle,
 }: {
@@ -26,10 +28,10 @@ export function BottomSheet({
   onOpenChange: (open: boolean) => void
   title: string
   tall?: boolean
-  /**
-   * K17: an avatar before the title and a line under it, which turn the title
-   * into a person's name rather than a sheet's heading.
-   */
+  /** A3f: the tile above the title, as on a ConfirmDialog (§6.14). */
+  icon?: React.ReactNode
+  tone?: 'warning' | 'danger'
+  /** K17 (v3.3, removed with it): an avatar before the title, a line under it. */
   lead?: React.ReactNode
   subtitle?: string
   children: React.ReactNode
@@ -52,6 +54,18 @@ export function BottomSheet({
             className="mx-auto mb-3 h-1 w-10 shrink-0 rounded-full bg-line"
             aria-hidden="true"
           />
+
+          {icon ? (
+            <span
+              className={cn(
+                'mb-4 flex size-13 shrink-0 items-center justify-center rounded-2xl',
+                tone === 'danger' ? 'bg-danger-soft text-danger' : 'bg-warning-soft text-warning',
+              )}
+              aria-hidden="true"
+            >
+              {icon}
+            </span>
+          ) : null}
 
           <div className="mb-4 flex shrink-0 items-start justify-between gap-3">
             {lead ? (

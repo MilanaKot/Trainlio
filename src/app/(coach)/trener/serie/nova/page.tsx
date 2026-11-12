@@ -87,7 +87,7 @@ export default async function NewSeriesPage({
           eligibilityMode: source.eligibilityMode,
           birthYearFrom: source.birthYearFrom ? String(source.birthYearFrom) : '',
           birthYearTo: source.birthYearTo ? String(source.birthYearTo) : '',
-          mainCoachId: source.mainCoachId,
+          mainCoachId: source.mainCoachId ?? blank.mainCoachId,
           assistantIds: coaches
             .filter((coach) => coach.role === 'ASSISTANT')
             .map((coach) => coach.profileId),

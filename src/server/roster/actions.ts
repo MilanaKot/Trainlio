@@ -48,6 +48,9 @@ function refresh(sessionId: string) {
   // The guardian views read the same occupancy projection.
   revalidatePath('/treninky')
   revalidatePath('/moje-treninky')
+  // v3.4: K13 and G8b draw attendance and payment per session.
+  revalidatePath('/trener/sportovci', 'layout')
+  revalidatePath('/moji-sportovci', 'layout')
 }
 
 /**
@@ -187,6 +190,12 @@ export type BookingResult = { ok: true } | { ok: false; code: string }
 const id = z.uuid()
 const paidSchema = z.object({ sessionId: id, bookingId: id, paid: z.boolean() })
 const allPaidSchema = z.object({ sessionId: id })
+const attendanceSchema = z.object({
+  sessionId: id,
+  bookingId: id,
+  attendance: z.enum(['PRESENT', 'ABSENT']),
+})
+const undoSchema = z.object({ sessionId: id, bookingId: id })
 const noteSchema = z.object({
   sessionId: id,
   bookingId: id,
@@ -223,7 +232,51 @@ async function record(
   return { ok: true }
 }
 
-/** K17 `Zaplaceno`, saved on tap. */
+/**
+ * K2 / K13 attendance toggle (decision 40): `Byl` or `Nebyl`, from the start
+ * of the training and at any time after. Never back to unmarked.
+ */
+export async function setAttendance(
+  sessionId: string,
+  bookingId: string,
+  attendance: 'PRESENT' | 'ABSENT',
+): Promise<BookingResult> {
+  const input = attendanceSchema.safeParse({ sessionId, bookingId, attendance })
+  if (!input.success) return { ok: false, code: 'VALIDATION' }
+
+  const supabase = await createClient()
+  return record(sessionId, () =>
+    supabase.rpc('set_booking_attendance', {
+      p_booking_id: bookingId,
+      p_attendance: input.data.attendance,
+    }),
+  )
+}
+
+/** K2 `Ostatní byli` (decision 42): the unmarked only, no confirmation. */
+export async function markAllPresent(sessionId: string): Promise<BookingResult> {
+  const input = allPaidSchema.safeParse({ sessionId })
+  if (!input.success) return { ok: false, code: 'VALIDATION' }
+
+  const supabase = await createClient()
+  return record(sessionId, () =>
+    supabase.rpc('mark_session_present', { p_training_session_id: sessionId }),
+  )
+}
+
+/**
+ * `Vrátit` on the `Platba zrušena` toast (DS §6.16): puts back who marked the
+ * payment and when, which the server read from its own audit.
+ */
+export async function undoUnpaid(sessionId: string, bookingId: string): Promise<BookingResult> {
+  const input = undoSchema.safeParse({ sessionId, bookingId })
+  if (!input.success) return { ok: false, code: 'VALIDATION' }
+
+  const supabase = await createClient()
+  return record(sessionId, () => supabase.rpc('undo_booking_unpaid', { p_booking_id: bookingId }))
+}
+
+/** K2 / K13 payment toggle, saved on tap. */
 export async function setBookingPaid(
   sessionId: string,
   bookingId: string,
@@ -249,7 +302,7 @@ export async function markAllPaid(sessionId: string): Promise<BookingResult> {
   )
 }
 
-/** K17 `Poznámka k tréninku`, saved on blur. Blank clears it. */
+/** K13 `Zprávy` · the coach's note for one training. Blank clears it. */
 export async function setCoachNote(
   sessionId: string,
   bookingId: string,
@@ -264,7 +317,7 @@ export async function setCoachNote(
   )
 }
 
-/** K17 `Odeslat rodiči`: saved on the booking and e-mailed (E09). */
+/** K13 `Zprávy` · `Odeslat`: saved on the booking and e-mailed (E09). */
 export async function sendParentMessage(
   sessionId: string,
   bookingId: string,

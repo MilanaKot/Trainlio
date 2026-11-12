@@ -35,8 +35,18 @@ export type CoachSession = {
   birthYearTo: number | null
   publicNotes: string | null
   internalNotes: string | null
-  mainCoachId: string
+  /** Null when the main coach was deactivated and nobody is assigned (K2e). */
+  mainCoachId: string | null
   mainCoachName: string | null
+  /** K2e: who left the training without a main coach, and when (A3f). */
+  vacatedBy: { name: string | null; at: string } | null
+  /**
+   * K2 / K14 (v3.4): confirmed bookings, how many came and how many paid.
+   * `presentCount` counts `Byl` only; an unmarked booking is neither.
+   */
+  rosterCount: number
+  presentCount: number
+  paidCount: number
   /** Every coach on the training with their part (§K1 v3.2 `Moje`, RoleLabel). */
   coachRoles: { profileId: string; role: 'MAIN' | 'ASSISTANT' }[]
   significantChangedAt: string | null
@@ -125,13 +135,15 @@ export async function getCoachWorkspace(): Promise<CoachWorkspace | null> {
 const SESSION_COLUMNS = `
   id, start_at, end_at, status, capacity, changing_room, public_notes,
   eligibility_mode, birth_year_from, birth_year_to, significant_changed_at,
-  main_coach_profile_id, created_at, updated_at,
+  main_coach_profile_id, main_coach_vacated_at, created_at, updated_at,
   facilities ( code, name ),
   locations ( name ),
   app_profiles!training_sessions_main_coach_profile_id_fkey ( display_name ),
+  vacated:app_profiles!training_sessions_main_coach_vacated_from_fkey ( display_name ),
   training_session_occupancy ( confirmed_count ),
   training_session_internal_notes ( notes ),
-  training_session_coaches ( profile_id, role )
+  training_session_coaches ( profile_id, role ),
+  bookings ( status, attendance, paid_at )
 `
 
 type Row = {
@@ -146,15 +158,29 @@ type Row = {
   birth_year_from: number | null
   birth_year_to: number | null
   significant_changed_at: string | null
-  main_coach_profile_id: string
+  main_coach_profile_id: string | null
+  main_coach_vacated_at: string | null
   created_at: string
   updated_at: string
   facilities: { code: string; name: string } | null
   locations: { name: string } | null
   app_profiles: { display_name: string | null } | null
+  vacated: { display_name: string | null } | null
   training_session_occupancy: { confirmed_count: number } | null
   training_session_internal_notes: { notes: string | null } | null
   training_session_coaches: { profile_id: string; role: 'MAIN' | 'ASSISTANT' }[] | null
+  bookings:
+    { status: string; attendance: 'PRESENT' | 'ABSENT' | null; paid_at: string | null }[] | null
+}
+
+/** K2 header and K14 counters: over confirmed bookings only. */
+function rosterCounts(bookings: NonNullable<Row['bookings']>) {
+  const confirmed = bookings.filter((booking) => booking.status === 'CONFIRMED')
+  return {
+    rosterCount: confirmed.length,
+    presentCount: confirmed.filter((booking) => booking.attendance === 'PRESENT').length,
+    paidCount: confirmed.filter((booking) => booking.paid_at !== null).length,
+  }
 }
 
 function toSession(row: Row): CoachSession {
@@ -179,6 +205,10 @@ function toSession(row: Row): CoachSession {
     internalNotes: row.training_session_internal_notes?.notes ?? null,
     mainCoachId: row.main_coach_profile_id,
     mainCoachName: row.app_profiles?.display_name ?? null,
+    vacatedBy: row.main_coach_vacated_at
+      ? { name: row.vacated?.display_name ?? null, at: row.main_coach_vacated_at }
+      : null,
+    ...rosterCounts(row.bookings ?? []),
     coachRoles: (row.training_session_coaches ?? []).map((coach) => ({
       profileId: coach.profile_id,
       role: coach.role,

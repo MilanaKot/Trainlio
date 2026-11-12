@@ -1218,33 +1218,25 @@ export const cs = {
     activeSwitchHint: 'Lze ho vybrat pro nové tréninky',
     /* The count is the coach's whole history, past and planned: what the
        administrator is deciding about is a name that stays on all of it. */
-    /* §A3's info box, without "i naplánovaných": since DR-15 the planned ones
-       are the administrator's answer to make, and the notice below says so. */
+    /* §A3's info box, without "i naplánovaných": since decision 46 the planned
+       ones are left without a coach, and the A3f sheet says so. */
     deactivateInfo:
       'Po deaktivaci zůstane {name} u všech minulých tréninků. Trenéra nelze smazat, jen deaktivovat.',
-    leadsFutureNotice: {
-      one: '{name} je hlavním trenérem {count} naplánovaného tréninku. Po uložení se zeptáme, jestli ho chcete převzít.',
-      few: '{name} je hlavním trenérem {count} naplánovaných tréninků. Po uložení se zeptáme, jestli je chcete převzít.',
-      many: '{name} je hlavním trenérem {count} naplánovaných tréninků. Po uložení se zeptáme, jestli je chcete převzít.',
-    } satisfies PluralForms,
     cannotDeactivateSelf: 'Sám sebe deaktivovat nemůžete.',
     saved: 'Uloženo',
     empty: 'Zatím není přidaný žádný trenér.',
     deactivate: 'Deaktivovat',
     activate: 'Znovu aktivovat',
-    /* AC-251. The count comes from the server's refusal, so the warning never
-       states a number the client made up. */
-    leadsFutureSessions: {
-      one: 'Tento trenér vede {count} nadcházející trénink.',
-      few: 'Tento trenér vede {count} nadcházející tréninky.',
-      many: 'Tento trenér vede {count} nadcházejících tréninků.',
+    /* A3f (decision 46). The trainings come from the server's refusal, so the
+       sheet never lists a training the client made up (AC-251). `{without}`
+       is the bold `bez trenéra`. */
+    vacateTitle: 'Deaktivovat trenéra?',
+    vacateBody: {
+      one: '{name} je hlavním trenérem {count} naplánovaného tréninku. Po deaktivaci zůstane {without}, dokud mu nepřiřadíte nového. Rodiče uvidí „Trenér bude upřesněn“.',
+      few: '{name} je hlavním trenérem {count} naplánovaných tréninků. Po deaktivaci zůstanou {without}, dokud jim nepřiřadíte nového. Rodiče uvidí „Trenér bude upřesněn“.',
+      many: '{name} je hlavním trenérem {count} naplánovaných tréninků. Po deaktivaci zůstanou {without}, dokud jim nepřiřadíte nového. Rodiče uvidí „Trenér bude upřesněn“.',
     } satisfies PluralForms,
-    /* AC-293 (DR-15). The club has no head coach to hand them to, so the
-       administrator doing the deactivation is who takes them over. */
-    reassignSwitch: 'Převést tréninky na mě',
-    reassignHintOn: 'Povedete je vy. Rodiče přihlášených dětí dostanou e-mail o změně trenéra.',
-    reassignHintOff:
-      'Zůstanou vedené na tomto trenérovi a nepůjde je upravit, dokud u nich nezměníte hlavního trenéra.',
+    vacateWithout: 'bez trenéra',
     errors: {
       NOT_AUTHENTICATED: 'Přihlaste se prosím znovu.',
       NOT_AUTHORIZED: 'Na tuto změnu nemáte právo.',

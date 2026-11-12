@@ -20,14 +20,26 @@ import { composeInvitationEmail } from '@/lib/notifications/invitation'
 
 export type StaffResult =
   | { ok: true; displayName?: string | undefined; profileId?: string | undefined }
-  | { ok: false; code: string; futureSessions?: number | undefined }
+  | {
+      ok: false
+      code: string
+      futureSessions?: number | undefined
+      /** A3f: the trainings the sheet lists, soonest first. */
+      sessions?: VacatedSession[] | undefined
+    }
+
+/** A training a deactivated coach would leave without a main coach (A3f). */
+export type VacatedSession = { id: string; startAt: string; facilityCode: string }
 
 type RpcResult = {
   ok?: boolean
   code?: string
   display_name?: string | null
   profile_id?: string | null
-  details?: { future_sessions?: number }
+  details?: {
+    future_sessions?: number
+    sessions?: { id: string; start_at: string; facility_code: string }[]
+  }
 }
 
 function readRpc(value: unknown): RpcResult {
@@ -144,16 +156,15 @@ export async function setMemberPhone(
  *
  * `confirm` is a server-side gate, not a dialog this action decides to show:
  * without it the domain function refuses a coach who still leads future
- * trainings and returns the count the warning has to quote (AC-251), exactly as
- * an over-capacity booking does.
+ * trainings and returns the trainings the A3f sheet lists (AC-251), exactly as
+ * an over-capacity booking does. Confirmed, those trainings are left without a
+ * main coach until somebody is assigned (decision 46).
  */
 export async function setMemberActive(
   workspaceId: string,
   profileId: string,
   isActive: boolean,
   confirm = false,
-  /** DR-15: the acting administrator takes the future trainings over. */
-  reassign = false,
 ): Promise<StaffResult> {
   const supabase = await createClient()
 
@@ -162,7 +173,6 @@ export async function setMemberActive(
     p_profile_id: profileId,
     p_is_active: isActive,
     p_confirm: confirm,
-    p_reassign: reassign,
   })
 
   if (error) return { ok: false, code: 'generic' }
@@ -173,6 +183,11 @@ export async function setMemberActive(
       ok: false,
       code: result.code ?? 'generic',
       futureSessions: result.details?.future_sessions,
+      sessions: result.details?.sessions?.map((session) => ({
+        id: session.id,
+        startAt: session.start_at,
+        facilityCode: session.facility_code,
+      })),
     }
   }
 
