@@ -222,6 +222,13 @@ export function formatDeadline(at: Date, timeZone: Timezone): string {
   return `${weekday} ${day}. ${month}. ${formatTime(at, timeZone)}`
 }
 
+/** `27. 9. v 16:05` — when something was marked or sent (K17, G6e). */
+export function formatDateAtTime(at: Date, timeZone: Timezone): string {
+  const day = part(at, timeZone, { day: 'numeric' }, 'day')
+  const month = part(at, timeZone, { month: 'numeric' }, 'month')
+  return `${day}. ${month}. v ${formatTime(at, timeZone)}`
+}
+
 /** `27. 9. 18:42` — when a booking was made, on a roster row. */
 export function formatDateTime(at: Date, timeZone: Timezone): string {
   const day = part(at, timeZone, { day: 'numeric' }, 'day')

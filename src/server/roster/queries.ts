@@ -21,6 +21,15 @@ export type RosterEntry = {
   capacityOverride: boolean
   cancelledAt: string | null
   cancellationReason: string | null
+  /** Handoff v3.3, decision 34: when it was marked paid, and by whom. */
+  paidAt: string | null
+  paidByName: string | null
+  /** Decision 35: staff only — the roster function is coach-gated. */
+  coachNote: string | null
+  /** Decision 36: what the parent was sent, and when, and by whom. */
+  parentMessage: string | null
+  parentMessageSentAt: string | null
+  parentMessageSentByName: string | null
 }
 
 export type CandidateAthlete = {
@@ -66,6 +75,12 @@ export async function getSessionRoster(sessionId: string): Promise<RosterEntry[]
     capacityOverride: row.capacity_override,
     cancelledAt: row.cancelled_at,
     cancellationReason: row.cancellation_reason,
+    paidAt: row.paid_at,
+    paidByName: row.paid_by_name,
+    coachNote: row.coach_note,
+    parentMessage: row.parent_message,
+    parentMessageSentAt: row.parent_message_sent_at,
+    parentMessageSentByName: row.parent_message_sent_by_name,
   }))
 }
 
@@ -264,4 +279,28 @@ export async function getAthleteInternalNote(
     .maybeSingle()
 
   return maybeRow('getAthleteInternalNote', result)?.notes ?? null
+}
+
+/**
+ * The general notes (§K13) of the athletes on one roster, by athlete id — K17
+ * prints each under the note for this training, read-only.
+ */
+export async function getAthleteInternalNotes(
+  workspaceId: string,
+  athleteIds: string[],
+): Promise<Record<string, string>> {
+  if (athleteIds.length === 0) return {}
+  const supabase = await createClient()
+
+  const result = await supabase
+    .from('athlete_internal_notes')
+    .select('athlete_id, notes')
+    .eq('workspace_id', workspaceId)
+    .in('athlete_id', athleteIds)
+
+  return Object.fromEntries(
+    rows('getAthleteInternalNotes', result)
+      .filter((row) => row.notes)
+      .map((row) => [row.athlete_id, row.notes as string]),
+  )
 }
