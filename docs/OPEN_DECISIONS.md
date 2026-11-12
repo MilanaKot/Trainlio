@@ -141,3 +141,11 @@ reason.
 | D-31 | K13 `Zprávy`                              | Every active booking of the athlete, newest first, ten at a time; a note or a message can be added to any of them, upcoming ones too.                                                                                                                      |
 | D-32 | Deactivating a main coach (replaces D-25) | As A3f designs it: no `Převést tréninky na mě`. The future trainings wait without a main coach (BR-184).                                                                                                                                                   |
 | D-33 | Planning without a main coach             | Allowed for one training and for a series (BR-186); assigning a coach later sends E05.                                                                                                                                                                     |
+
+## Decided with handoff v3.5, 12 November 2026
+
+| #    | Question                                 | Resolution                                                                                     |
+| ---- | ---------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| D-34 | When does a training count in statistics | Once it has started and was not cancelled; the rest of the month is not yet anything (BR-188). |
+| D-35 | What the birth-year filter selects       | That year's children — their bookings and the trainings they were on (BR-189).                 |
+| D-36 | Whose trainings `Trenéři` counts         | Main coach and assistant, like K20b's default (BR-190).                                        |

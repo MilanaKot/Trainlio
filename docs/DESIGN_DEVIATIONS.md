@@ -387,3 +387,18 @@ Byl`), not by the athlete: on the player card every row is the same athlete,
 - **A training planned without a coach** (BR-186) is not designed; it uses
   K2e's notice without the `{coach} byl deaktivován` sentence, and the K3c
   sheet gains a `Bez trenéra` row.
+
+## After handoff v3.5: statistics and seasons
+
+- **Czech routes**, as everywhere else (decision 32): K20 is
+  `/trener/statistiky`, K20b `/trener/statistiky/trener/[id]`, not
+  `/coach/stats…`.
+- **The statistics module** is the database function and
+  `src/server/stats/queries.ts`, with the drawing rules in
+  `src/lib/domain/stats.ts`, rather than one `lib/stats.ts`: server queries
+  live under `src/server` in this codebase.
+- **The dropdown chips** (`Všechny ročníky ▾`, `Všichni trenéři ▾`) are
+  native selects under the chip, so the phone's own picker opens.
+- **`Trenéři` stays under a coach filter**, narrowed to the trainings shown.
+- **The 403 page** is the app's own `forbidden.tsx`
+  (`experimental.authInterrupts`).

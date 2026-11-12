@@ -956,3 +956,18 @@ payment (decision 45).
 AC-309  
 A training or a series can be created with `Bez trenéra`; it reads as K2e, and
 assigning a coach later sends E05 (BR-186).
+
+## Statistics and seasons (handoff v3.5)
+
+AC-310  
+K20's tiles match hand-computed values for a seeded period, cancelled and
+future trainings left out; `Nezaplaceno` lists only athletes with unpaid
+bookings of held trainings (coach test 27).
+
+AC-311  
+A coach does not see `Trenéři` and gets 403 for another coach's K20b; an
+administrator sees both (coach test 28).
+
+AC-312  
+`Měsíc / Sezóna` in K13, K20, K20b and G8b uses 1 August – 31 July seasons
+labelled `Sezóna 2026/27` (coach test 29).

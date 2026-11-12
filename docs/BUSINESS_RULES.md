@@ -513,3 +513,36 @@ BR-186 **(new — product request)**
 A training or a series may be planned without a main coach (`Bez trenéra`)
 by whoever may create trainings, and given one later under BR-185. A training
 that has a main coach is not offered `Bez trenéra` when edited.
+
+## Statistics and seasons
+
+Handoff v3.5, decisions 47–48, 12 November 2026. Migration 47.
+
+BR-187 **(new — v3.5)**  
+A season runs from 1 August to 31 July in the workspace's timezone and is
+labelled `Sezóna 2026/27`. Every period switch (K13, G8b, K20, K20b) offers a
+month or a season, and opens on the one that contains today — K13, K20 and
+K20b on the month, G8b on the season.
+
+BR-188 **(new — v3.5)**  
+Statistics count a training once it has started and was not cancelled.
+Occupancy = confirmed bookings / capacity; attendance = Byl / (Byl + Nebyl)
+with an unmarked booking of an ended training as Nebyl (BR-178); payment =
+paid / confirmed bookings, all over the held trainings of the period.
+
+BR-189 **(new — v3.5)**  
+The birth-year filter keeps that year's children: their bookings, and the
+trainings at least one of them was on (whose occupancy stays the whole
+training's). The coach filter keeps the trainings the coach led or assisted
+on; K20b can narrow that to those led.
+
+BR-190 **(new — v3.5)**  
+`Nezaplaceno` lists athletes with unpaid bookings of held trainings, most
+first; `Nejnižší docházka` only athletes with at least three trainings in the
+period, lowest first. `Trenéři` counts each coach's trainings as main coach
+or assistant.
+
+BR-191 **(new — v3.5)**  
+Every coach may read K20 with any filter. `Trenéři` and another coach's K20b
+are an administrator's; a coach opening a colleague's K20b gets 403. A
+guardian reads no statistics.

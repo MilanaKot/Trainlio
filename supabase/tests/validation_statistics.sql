@@ -1,6 +1,7 @@
 -- Trainlio — statistics (handoff v3.5, decision 48, migration 47). Run after
 -- the migrations and fixtures, on its own freshly created database. The
--- numbers are worked out by hand in the comment below (coach test 27).
+-- numbers are worked out by hand in the comment below (coach test 27,
+-- AC-310; the refusals are AC-311).
 \set QUIET 1
 \pset format unaligned
 \pset tuples_only on

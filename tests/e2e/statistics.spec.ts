@@ -41,7 +41,7 @@ function monthKey(at: Date): string {
 }
 
 test.describe('statistics (v3.5)', () => {
-  test('K20 shows the hand-worked numbers, and Trenéři to an administrator (tests 27, 28)', async ({
+  test('K20 shows the hand-worked numbers, and Trenéři to an administrator (tests 27, 28; AC-310, AC-311)', async ({
     page,
   }) => {
     const run = Date.now()
@@ -98,7 +98,9 @@ test.describe('statistics (v3.5)', () => {
     await expectAccessible(page, 'K20b')
   })
 
-  test('a coach sees no Trenéři and gets 403 for a colleague (test 28)', async ({ page }) => {
+  test('a coach sees no Trenéři and gets 403 for a colleague (test 28, AC-311)', async ({
+    page,
+  }) => {
     const run = Date.now()
     const c = await club(run)
     await signIn(page, c.viewerEmail)
@@ -114,7 +116,7 @@ test.describe('statistics (v3.5)', () => {
     await expect(page.getByText('Sem nemáte přístup')).toBeVisible()
   })
 
-  test('Měsíc / Sezóna means 1 August – 31 July everywhere (test 29)', async ({ page }) => {
+  test('Měsíc / Sezóna means 1 August – 31 July everywhere (test 29, AC-312)', async ({ page }) => {
     const run = Date.now()
     const c = await club(run)
     const child = await bookedChild(c.assisted, run)

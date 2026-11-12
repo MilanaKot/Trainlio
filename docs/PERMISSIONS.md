@@ -113,6 +113,8 @@ May:
 - mark attendance (`Byl` / `Nebyl`) from the start of a training and at any
   time after, and take back their own un-marking of a payment (`Vrátit`),
   where `canEdit(session)` allows (BR-180);
+- read the club's statistics (K20) with any filter, and their own K20b; an
+  administrator also reads `Trenéři` and every coach's K20b (BR-191);
 - a training without a main coach is nobody's own: only an administrator or
   a coach with `Může upravovat všechny tréninky` may edit it or assign one
   (BR-184).
