@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test'
+import { readCode, uniqueEmail } from './helpers'
 
 /**
  * Phase 1 delivers the OTP sign-in flow (PRD §7). These assert the form a
@@ -30,5 +31,28 @@ test.describe('sign-in', () => {
     await page.getByRole('button', { name: 'Poslat kód' }).click()
     // Native validation keeps the form on the email step.
     await expect(page.getByRole('button', { name: 'Poslat kód' })).toBeVisible()
+  })
+
+  // §6.26: a refused code leaves the field empty and ready, so the right one
+  // can be typed straight after. It used to keep the six wrong digits, and a
+  // field that holds six takes no seventh — the next code went nowhere.
+  test('a wrong code can be followed by the right one', async ({ page }) => {
+    const email = uniqueEmail('spatny.kod')
+    await page.goto('/prihlaseni')
+    await page.getByLabel('E-mail').fill(email)
+    await page.getByRole('button', { name: 'Poslat kód' }).click()
+
+    const code = page.getByLabel('Kód')
+    await code.waitFor()
+    const right = await readCode(email)
+    const wrong = right === '000000' ? '111111' : '000000'
+    await code.pressSequentially(wrong)
+    await expect(page.getByText('Kód je neplatný nebo vypršel. Zkuste to znovu.')).toBeVisible()
+    await expect(code).toHaveValue('')
+    await expect(code).toHaveAttribute('aria-invalid', 'true')
+    await expect(code).toBeFocused()
+
+    await page.keyboard.type(right)
+    await page.waitForURL((url) => !url.pathname.includes('/prihlaseni'))
   })
 })

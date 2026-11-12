@@ -80,7 +80,7 @@ export function uniqueEmail(prefix: string): string {
 }
 
 /** The six-digit code Supabase Auth just emailed, read from Mailpit. */
-async function readCode(email: string): Promise<string> {
+export async function readCode(email: string): Promise<string> {
   for (let attempt = 0; attempt < 20; attempt += 1) {
     const box = (await (await fetch(`${MAILPIT}/api/v1/messages`)).json()) as {
       messages?: { ID: string; To?: { Address: string }[] }[]

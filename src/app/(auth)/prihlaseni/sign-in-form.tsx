@@ -25,6 +25,8 @@ export function SignInForm({ initialEmail = '' }: { initialEmail?: string }) {
   const [email, setEmail] = useState(initialEmail)
   const [code, setCode] = useState('')
   const [error, setError] = useState<string | null>(null)
+  // §6.26: the code itself was refused, rather than sending a new one failing.
+  const [refused, setRefused] = useState(false)
   const [cooldown, setCooldown] = useState(0)
   const [pending, startTransition] = useTransition()
 
@@ -65,6 +67,11 @@ export function SignInForm({ initialEmail = '' }: { initialEmail?: string }) {
     startTransition(async () => {
       const result = await verifyCode(email, digits)
       if (!result.ok) {
+        // Emptied, not left full: six refused digits in the field would take
+        // no seventh, and a parent typing the right code would see nothing
+        // happen. The boxes stay red until the first new digit.
+        setCode('')
+        setRefused(true)
         setError(result.message)
         return
       }
@@ -145,9 +152,16 @@ export function SignInForm({ initialEmail = '' }: { initialEmail?: string }) {
           {/* §6.26: the sixth digit submits. */}
           <CodeInput
             value={code}
-            onChange={setCode}
+            onChange={(digits) => {
+              setCode(digits)
+              if (digits !== '') {
+                setError(null)
+                setRefused(false)
+              }
+            }}
             onComplete={(digits) => verify(digits)}
             label={t.code}
+            invalid={refused}
             autoFocus
           />
 
