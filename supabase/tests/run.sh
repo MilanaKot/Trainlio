@@ -137,5 +137,7 @@ run_suite trainlio_handover supabase/tests/validation_handover.sql
 echo
 run_suite trainlio_permissions supabase/tests/validation_permissions.sql
 echo
+run_suite trainlio_payment supabase/tests/validation_payment.sql
+echo
 echo '── Concurrency ─────────────────────────────────────────────────────'
 bash supabase/tests/concurrency.sh

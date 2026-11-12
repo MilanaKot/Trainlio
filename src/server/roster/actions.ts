@@ -3,7 +3,12 @@
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { getBookingGuardians, type BookingGuardian } from '@/server/roster/queries'
+import { z } from 'zod'
 import { sequenceAdditions, type SequencedAdditions } from '@/lib/domain/roster'
+import { canEditSession } from '@/lib/domain/coach-rights'
+import { COACH_NOTE_LIMIT, PARENT_MESSAGE_LIMIT } from '@/lib/domain/booking-notes'
+import { getCoachSession } from '@/server/sessions/queries'
+import { getCoachRights } from '@/server/staff/queries'
 
 /**
  * Coach roster operations.
@@ -165,4 +170,116 @@ export async function saveAthleteNote(
 
   revalidatePath(`/trener/sportovci/${athleteId}`)
   return { ok: true }
+}
+
+/**
+ * What a coach records against one booking (handoff v3.3, decisions 34–36):
+ * paid, the note for this training, the message to the parent.
+ *
+ * Each is checked twice. Here, so a coach who can only view the training is
+ * refused before a round trip and a malformed value never reaches the
+ * database; and in the domain function, which is the one that decides
+ * (FORBIDDEN_EDIT, migration 43) — the check here could be skipped by anyone
+ * calling the function directly, so it is a courtesy, not the guard.
+ */
+export type BookingResult = { ok: true } | { ok: false; code: string }
+
+const id = z.uuid()
+const paidSchema = z.object({ sessionId: id, bookingId: id, paid: z.boolean() })
+const allPaidSchema = z.object({ sessionId: id })
+const noteSchema = z.object({
+  sessionId: id,
+  bookingId: id,
+  note: z.string().trim().max(COACH_NOTE_LIMIT),
+})
+const messageSchema = z.object({
+  sessionId: id,
+  bookingId: id,
+  message: z.string().trim().min(1).max(PARENT_MESSAGE_LIMIT),
+})
+
+/** canEdit(session), decision 33. */
+async function assertCanEditSession(sessionId: string): Promise<BookingResult> {
+  const [session, rights] = await Promise.all([getCoachSession(sessionId), getCoachRights()])
+  if (!session) return { ok: false, code: 'SESSION_NOT_FOUND' }
+  if (!canEditSession(rights, session)) return { ok: false, code: 'FORBIDDEN_EDIT' }
+  return { ok: true }
+}
+
+async function record(
+  sessionId: string,
+  call: () => PromiseLike<{ data: unknown; error: unknown }>,
+): Promise<BookingResult> {
+  const allowed = await assertCanEditSession(sessionId)
+  if (!allowed.ok) return allowed
+
+  const { data, error } = await call()
+  if (error) return { ok: false, code: 'generic' }
+
+  const result = readRpc(data)
+  if (!result.ok) return { ok: false, code: result.code ?? 'generic' }
+
+  refresh(sessionId)
+  return { ok: true }
+}
+
+/** K17 `Zaplaceno`, saved on tap. */
+export async function setBookingPaid(
+  sessionId: string,
+  bookingId: string,
+  paid: boolean,
+): Promise<BookingResult> {
+  const input = paidSchema.safeParse({ sessionId, bookingId, paid })
+  if (!input.success) return { ok: false, code: 'VALIDATION' }
+
+  const supabase = await createClient()
+  return record(sessionId, () =>
+    supabase.rpc('set_booking_paid', { p_booking_id: bookingId, p_paid: paid }),
+  )
+}
+
+/** K2c `Zaplatili všichni`: the unpaid confirmed bookings, in one request. */
+export async function markAllPaid(sessionId: string): Promise<BookingResult> {
+  const input = allPaidSchema.safeParse({ sessionId })
+  if (!input.success) return { ok: false, code: 'VALIDATION' }
+
+  const supabase = await createClient()
+  return record(sessionId, () =>
+    supabase.rpc('mark_session_paid', { p_training_session_id: sessionId }),
+  )
+}
+
+/** K17 `Poznámka k tréninku`, saved on blur. Blank clears it. */
+export async function setCoachNote(
+  sessionId: string,
+  bookingId: string,
+  note: string,
+): Promise<BookingResult> {
+  const input = noteSchema.safeParse({ sessionId, bookingId, note })
+  if (!input.success) return { ok: false, code: 'NOTE_TOO_LONG' }
+
+  const supabase = await createClient()
+  return record(sessionId, () =>
+    supabase.rpc('set_booking_coach_note', { p_booking_id: bookingId, p_note: input.data.note }),
+  )
+}
+
+/** K17 `Odeslat rodiči`: saved on the booking and e-mailed (E09). */
+export async function sendParentMessage(
+  sessionId: string,
+  bookingId: string,
+  message: string,
+): Promise<BookingResult> {
+  const input = messageSchema.safeParse({ sessionId, bookingId, message })
+  if (!input.success) {
+    return { ok: false, code: message.trim() === '' ? 'MESSAGE_EMPTY' : 'MESSAGE_TOO_LONG' }
+  }
+
+  const supabase = await createClient()
+  return record(sessionId, () =>
+    supabase.rpc('send_parent_message', {
+      p_booking_id: bookingId,
+      p_message: input.data.message,
+    }),
+  )
 }
