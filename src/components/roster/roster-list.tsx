@@ -235,7 +235,7 @@ export function RosterList({
             <span className="text-caption font-bold tracking-[0.05em] text-muted">
               {t.rosterColumnAthlete}
             </span>
-            <span className="-mr-2.5 flex">
+            <span className="-mr-2.5 flex gap-2">
               <ColumnCount
                 className={TOGGLE_CELLS[0]}
                 label={t.rosterColumnPresent}

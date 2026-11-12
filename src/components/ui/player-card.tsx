@@ -12,9 +12,9 @@ import { cn } from '@/lib/utils'
  * Two zones that never mix. The left one is a link — the thicker right edge,
  * not a chevron, says the card opens. The right one holds the StatusToggles,
  * which are siblings of the link rather than children, so a tap on a toggle
- * cannot reach it. Each toggle's hit area is the full card height by 62 px,
- * and the 8 px between the squares is split between them: there is no gap a
- * thumb can fall through to the card.
+ * cannot reach it. Each toggle's hit area is the full card height; the 8 px
+ * between the squares belongs to the toggle zone and does nothing, so there is
+ * no gap a thumb can fall through to the card.
  *
  * The card darkens and shrinks for 100 ms and then navigates, so the press is
  * seen before the screen changes. A pointer that moves more than 8 px is a
@@ -88,17 +88,18 @@ export function PlayerCard({
         </Link>
         {below ? <div className="pb-2">{below}</div> : null}
       </div>
-      <div className="-mr-2.5 flex shrink-0 self-stretch">{toggles}</div>
+      <div className="-mr-2.5 flex shrink-0 gap-2 self-stretch">{toggles}</div>
     </div>
   )
 }
 
 /**
- * The hit areas of the two toggles, attendance then payment: 62 px each, the
- * outer 10 px reaching into the card's padding and the inner 4 px splitting
- * the gap between the squares.
+ * The hit areas of the two toggles, attendance then payment: the full card
+ * height by 58 px, the outer 10 px reaching into the card's padding. The 8 px
+ * between the squares is the zone's own gap — neither toggle and not the card,
+ * so a tap there does nothing (coach test 19).
  */
 export const TOGGLE_CELLS = [
-  'w-[62px] self-stretch pr-1 pl-2.5',
-  'w-[62px] self-stretch pr-2.5 pl-1',
+  'w-[58px] self-stretch pl-2.5',
+  'w-[58px] self-stretch pr-2.5',
 ] as const

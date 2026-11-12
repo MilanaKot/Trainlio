@@ -65,9 +65,10 @@ function SessionMessages({ session, timezone }: { session: CardSession; timezone
   }
 
   function save() {
+    const which = editing
     startTransition(async () => {
       const result =
-        editing === 'note'
+        which === 'note'
           ? await setCoachNote(session.sessionId, session.bookingId, draft)
           : await sendParentMessage(session.sessionId, session.bookingId, draft)
       if (!result.ok) {
@@ -75,8 +76,10 @@ function SessionMessages({ session, timezone }: { session: CardSession; timezone
         toast(table[result.code] ?? messages.coach.errors.generic)
         return
       }
-      if (editing === 'message') toast(messages.coach.messageSentToast)
-      setEditing(null)
+      if (which === 'message') toast(messages.coach.messageSentToast)
+      // Only the editor that was saved closes: the coach may have opened the
+      // other one while this was on its way.
+      setEditing((current) => (current === which ? null : current))
       router.refresh()
     })
   }

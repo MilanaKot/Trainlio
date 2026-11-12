@@ -93,7 +93,7 @@ test.describe('a coach without `Může upravovat všechny tréninky`', () => {
     await expect(page.getByText('Jen pro čtení')).toBeVisible()
     await expect(
       page.getByText(
-        `Tento trénink vede Iva Hlavní${run}. Upravit ho může hlavní trenér nebo administrátor.`,
+        `Tento trénink vede Iva Hlavní${run}. Docházku, platby a sestavu může měnit hlavní trenér nebo administrátor.`,
       ),
     ).toBeVisible()
     await expect(page.getByRole('button', { name: /Přidat sportovce/ })).toHaveCount(0)
@@ -152,17 +152,16 @@ test.describe('a coach without `Může upravovat všechny tréninky`', () => {
     await page.goto(`/trener/${c.assisted}`)
     await expect(page.getByText(`Interní pro asistenta ${run}`)).toBeVisible()
 
-    await page.getByRole('button', { name: new RegExp(child) }).click()
-    const sheet = page.getByRole('dialog', { name: child })
-    // K17 names the parent twice: their own row, and the message caption.
-    await expect(sheet.getByText(`Eva Rodič${run}`).first()).toBeVisible()
-    // The roster sheet names the link by the number (§K5); K13 by the parent.
-    await expect(sheet.getByRole('link', { name: 'Zavolat 777 333 444' })).toHaveAttribute(
+    // v3.4: the player card (K13), `Rodiče`.
+    await page.getByRole('link', { name: new RegExp(child) }).click()
+    await page.getByRole('tab', { name: 'Rodiče' }).click()
+    await expect(page.getByText(`Eva Rodič${run}`)).toBeVisible()
+    await expect(page.getByRole('link', { name: `Zavolat Eva Rodič${run}` })).toHaveAttribute(
       'href',
       'tel:777333444',
     )
     // Reading the family is not removing the child.
-    await expect(page.getByRole('button', { name: 'Odebrat z tréninku' })).toHaveCount(0)
+    await expect(page.getByRole('button', { name: 'Odhlásit z tréninku' })).toHaveCount(0)
   })
 })
 

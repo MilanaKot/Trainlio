@@ -151,6 +151,8 @@ export function TrainingsTab({
     const { session, attendance, paid } = row
     const start = new Date(session.startAt)
     const end = new Date(session.endAt)
+    // On the card the athlete is the page's subject; the toggles name the
+    // training, so two rows never share a label.
     return (
       <li key={session.bookingId}>
         <PlayerCard
@@ -175,7 +177,7 @@ export function TrainingsTab({
                 kind="attendance"
                 size="md"
                 state={attendanceView(attendance, session, now)}
-                athlete={athleteName}
+                athlete={`${formatDateShort(start, timezone)} ${formatTime(start, timezone)}`}
                 readOnly={!session.editable}
                 className={TOGGLE_CELLS[0]}
                 onToggle={() => toggleAttendance(session, attendance)}
@@ -184,7 +186,7 @@ export function TrainingsTab({
                 kind="payment"
                 size="md"
                 state={paid ? 'paid' : 'unpaid'}
-                athlete={athleteName}
+                athlete={`${formatDateShort(start, timezone)} ${formatTime(start, timezone)}`}
                 readOnly={!session.editable}
                 className={TOGGLE_CELLS[1]}
                 onToggle={() => togglePaid(session, paid)}
