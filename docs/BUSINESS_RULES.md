@@ -468,9 +468,10 @@ never goes back to unmarked. A booking nobody marked is unmarked, and is read
 as `Nebyl` once the training has ended — a reading rule, never a stored value.
 
 BR-178 **(new — v3.4)**  
-Attendance percentage = Byl / (Byl + Nebyl) over the period, with cancelled
-trainings and withdrawn or removed bookings left out, and a training still
-under way and unmarked counted as neither.
+Attendance percentage = Byl / (Byl + Nebyl) over the trainings of the period
+that have ended, with cancelled trainings and withdrawn or removed bookings
+left out. A training still under way counts for nothing yet, marked or not
+(product decision, 12 November 2026).
 
 BR-179 **(new — v3.4)**  
 `Ostatní byli` marks every unmarked confirmed booking of the training `Byl` in
@@ -516,7 +517,7 @@ that has a main coach is not offered `Bez trenéra` when edited.
 
 ## Statistics and seasons
 
-Handoff v3.5, decisions 47–48, 12 November 2026. Migration 47.
+Handoff v3.5, decisions 47–48, 12 November 2026. Migrations 47–48.
 
 BR-187 **(new — v3.5)**  
 A season runs from 1 August to 31 July in the workspace's timezone and is
@@ -525,10 +526,11 @@ month or a season, and opens on the one that contains today — K13, K20 and
 K20b on the month, G8b on the season.
 
 BR-188 **(new — v3.5)**  
-Statistics count a training once it has started and was not cancelled.
-Occupancy = confirmed bookings / capacity; attendance = Byl / (Byl + Nebyl)
-with an unmarked booking of an ended training as Nebyl (BR-178); payment =
-paid / confirmed bookings, all over the held trainings of the period.
+Statistics count a training once it has ended, and never a cancelled one or
+a draft (product decision, 12 November 2026; it had been once it started).
+A training under way is not yet a result. Occupancy = confirmed bookings / capacity; attendance = Byl / (Byl + Nebyl)
+with an unmarked booking as Nebyl (BR-178); payment = paid / confirmed
+bookings, all over the held — ended — trainings of the period.
 
 BR-189 **(new — v3.5)**  
 The birth-year filter keeps that year's children: their bookings, and the

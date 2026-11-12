@@ -551,10 +551,10 @@ Not required for MVP:
 - athlete_performance
 - push_subscriptions
 
-## Statistics (migration 47)
+## Statistics (migrations 47–48)
 
 No table. `workspace_statistics(workspace, from, to, birth_year?, coach?,
 main_only?, bucket?, personal?)` aggregates bookings, attendance and payment
-of the held trainings in Postgres and returns K20's and K20b's numbers in one
+of the held trainings — ended, not cancelled, not drafts — in Postgres and returns K20's and K20b's numbers in one
 jsonb (BR-187 to BR-191). It is gated like the data it reads: club staff only,
 `personal` (K20b) only for oneself or an administrator.

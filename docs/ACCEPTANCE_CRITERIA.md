@@ -960,8 +960,8 @@ assigning a coach later sends E05 (BR-186).
 ## Statistics and seasons (handoff v3.5)
 
 AC-310  
-K20's tiles match hand-computed values for a seeded period, cancelled and
-future trainings left out; `Nezaplaceno` lists only athletes with unpaid
+K20's tiles match hand-computed values for a seeded period, cancelled,
+future, under-way and draft trainings left out; `Nezaplaceno` lists only athletes with unpaid
 bookings of held trainings (coach test 27).
 
 AC-311  
