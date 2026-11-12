@@ -33,12 +33,17 @@ export function SelectChip({
   return (
     <label
       className={cn(
-        'relative flex h-11 shrink-0 items-center gap-1.5 rounded-full bg-surface px-3.5 text-meta font-semibold text-ink',
+        'relative flex h-11 min-w-0 items-center justify-between gap-1.5 rounded-full bg-surface px-3.5 text-meta font-semibold text-ink',
         'shadow-[inset_0_0_0_1.5px_var(--color-line)] focus-within:shadow-[var(--shadow-focus)]',
       )}
     >
-      <span>{shown?.label}</span>
-      <svg viewBox="0 0 16 16" fill="none" className="size-3.5 text-muted" aria-hidden="true">
+      <span className="truncate">{shown?.label}</span>
+      <svg
+        viewBox="0 0 16 16"
+        fill="none"
+        className="size-3.5 shrink-0 text-muted"
+        aria-hidden="true"
+      >
         <path
           d="M4 6l4 4 4-4"
           stroke="currentColor"

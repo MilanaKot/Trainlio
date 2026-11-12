@@ -703,6 +703,7 @@ export const cs = {
       lowestCaption: 'NEJNIŽŠÍ DOCHÁZKA',
       allPlayers: 'Všichni hráči',
       lowestNone: 'Nikdo nemá v tomto období aspoň 3 tréninky.',
+      lowestAllPresent: 'Všichni byli na všech trénincích.',
       showLess: 'Méně',
       coachesCaption: 'TRENÉŘI',
       coachSessions: {

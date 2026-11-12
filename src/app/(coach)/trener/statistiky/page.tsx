@@ -50,7 +50,10 @@ export default async function StatisticsPage({
 
   const unpaidTotal = stats.unpaid.reduce((sum, row) => sum + row.count, 0)
   const unpaid = query.seznam === 'nezaplaceno' ? stats.unpaid : stats.unpaid.slice(0, TOP)
-  const lowest = query.seznam === 'dochazka' ? stats.attendance : stats.attendance.slice(0, TOP)
+  // The top three are those who missed something: a child at 100 % is not
+  // anybody's lowest attendance. `Všichni hráči` lists everyone.
+  const missed = stats.attendance.filter((row) => row.present < row.marked)
+  const lowest = query.seznam === 'dochazka' ? stats.attendance : missed.slice(0, TOP)
   const toggle = (list: string) => {
     const search = new URLSearchParams()
     for (const [key, value] of Object.entries(query))
@@ -72,7 +75,9 @@ export default async function StatisticsPage({
 
       <PeriodControl period={period} timezone={workspace.timezone} />
 
-      <div className="flex flex-wrap gap-2">
+      {/* Two halves of one row, whatever they say: a chip that shrank to
+          `Ročník 2017` used to pull the coach chip across the screen. */}
+      <div className="grid grid-cols-2 gap-2">
         <SelectChip
           param="rocnik"
           label={t.yearFilter}
@@ -150,73 +155,79 @@ export default async function StatisticsPage({
             )}
           </section>
 
-          <section className="flex flex-col gap-2">
-            <div className="flex items-center justify-between gap-3">
-              <h2 className="text-caption font-bold tracking-[0.05em] text-muted">
-                {t.lowestCaption}
-              </h2>
-              {stats.attendance.length > TOP ? (
-                <Link
-                  href={toggle('dochazka')}
-                  className="flex min-h-11 items-center text-meta font-bold text-primary"
-                >
-                  {query.seznam === 'dochazka' ? t.showLess : t.allPlayers}
-                </Link>
-              ) : null}
-            </div>
-            {lowest.length === 0 ? (
-              <p className="text-meta text-muted">{t.lowestNone}</p>
-            ) : (
-              <ul className="flex flex-col rounded-card bg-surface px-3.5 shadow-card">
-                {lowest.map((row) => {
-                  const value = percent(row.present, row.marked) ?? 0
-                  const tone = attendanceTone(value)
-                  return (
-                    <li key={row.athleteId} className="border-b border-line last:border-0">
-                      <Link
-                        href={`/trener/sportovci/${row.athleteId}` as Route}
-                        className="flex min-h-15 items-center gap-3 py-2"
-                      >
-                        <Avatar firstName={row.firstName} lastName={row.lastName} size={36} />
-                        <span className="flex min-w-0 flex-1 flex-col gap-1.5">
-                          <span className="flex items-baseline justify-between gap-2">
-                            <span className="truncate text-row font-bold text-ink">
-                              {row.firstName} {row.lastName}
+          {/* Who comes least is the club's question: with one coach chosen
+              it would rank children by somebody else's trainings too. */}
+          {coachId === null ? (
+            <section className="flex flex-col gap-2">
+              <div className="flex items-center justify-between gap-3">
+                <h2 className="text-caption font-bold tracking-[0.05em] text-muted">
+                  {t.lowestCaption}
+                </h2>
+                {stats.attendance.length > lowest.length || query.seznam === 'dochazka' ? (
+                  <Link
+                    href={toggle('dochazka')}
+                    className="flex min-h-11 items-center text-meta font-bold text-primary"
+                  >
+                    {query.seznam === 'dochazka' ? t.showLess : t.allPlayers}
+                  </Link>
+                ) : null}
+              </div>
+              {lowest.length === 0 ? (
+                <p className="text-meta text-muted">
+                  {stats.attendance.length === 0 ? t.lowestNone : t.lowestAllPresent}
+                </p>
+              ) : (
+                <ul className="flex flex-col rounded-card bg-surface px-3.5 shadow-card">
+                  {lowest.map((row) => {
+                    const value = percent(row.present, row.marked) ?? 0
+                    const tone = attendanceTone(value)
+                    return (
+                      <li key={row.athleteId} className="border-b border-line last:border-0">
+                        <Link
+                          href={`/trener/sportovci/${row.athleteId}` as Route}
+                          className="flex min-h-15 items-center gap-3 py-2"
+                        >
+                          <Avatar firstName={row.firstName} lastName={row.lastName} size={36} />
+                          <span className="flex min-w-0 flex-1 flex-col gap-1.5">
+                            <span className="flex items-baseline justify-between gap-2">
+                              <span className="truncate text-row font-bold text-ink">
+                                {row.firstName} {row.lastName}
+                              </span>
+                              <span
+                                className={cn(
+                                  'nums font-display text-[1.0625rem] font-bold',
+                                  tone === 'danger'
+                                    ? 'text-danger'
+                                    : tone === 'warning'
+                                      ? 'text-warning'
+                                      : 'text-ink',
+                                )}
+                              >
+                                {value} %
+                              </span>
                             </span>
-                            <span
-                              className={cn(
-                                'nums font-display text-[1.0625rem] font-bold',
+                            <Bar
+                              value={value}
+                              tone={
                                 tone === 'danger'
-                                  ? 'text-danger'
+                                  ? 'danger'
                                   : tone === 'warning'
-                                    ? 'text-warning'
-                                    : 'text-ink',
-                              )}
-                            >
-                              {value} %
-                            </span>
+                                    ? 'warning'
+                                    : 'success'
+                              }
+                            />
                           </span>
-                          <Bar
-                            value={value}
-                            tone={
-                              tone === 'danger'
-                                ? 'danger'
-                                : tone === 'warning'
-                                  ? 'warning'
-                                  : 'success'
-                            }
-                          />
-                        </span>
-                        <span aria-hidden="true" className="text-subtle">
-                          ›
-                        </span>
-                      </Link>
-                    </li>
-                  )
-                })}
-              </ul>
-            )}
-          </section>
+                          <span aria-hidden="true" className="text-subtle">
+                            ›
+                          </span>
+                        </Link>
+                      </li>
+                    )
+                  })}
+                </ul>
+              )}
+            </section>
+          ) : null}
 
           {stats.coaches ? (
             <section className="flex flex-col gap-2">
