@@ -54,8 +54,11 @@ async function expectTappableControls(page: Page, where: string) {
         // A checkbox or radio is drawn small on purpose and is hit through the
         // label wrapping it — so the label is what gets measured. Skipping them
         // instead would excuse the one control most likely to be too small.
+        // A file input is the same, only more so: it is not drawn at all, and
+        // `Nahrát fotografii` is the label around it.
         const type = el.getAttribute('type')
-        const target = (type === 'checkbox' || type === 'radio' ? el.closest('label') : null) ?? el
+        const viaLabel = type === 'checkbox' || type === 'radio' || type === 'file'
+        const target = (viaLabel ? el.closest('label') : null) ?? el
         const height = target.getBoundingClientRect().height
         if (height >= minTap) return null
 
