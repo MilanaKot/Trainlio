@@ -440,6 +440,75 @@ describe('E08 · the coach booked the child (DR-12, AC-284)', () => {
   })
 })
 
+describe('E09 · a message from the coach (decision 36)', () => {
+  const sent = (overrides: Partial<ClaimedDelivery['session']> = {}) =>
+    composed(
+      delivery({
+        eventType: 'COACH_MESSAGE_TO_GUARDIAN',
+        session: {
+          ...delivery().session,
+          message: 'Ivan dnes výborně bruslil. Na příští trénink prosím nabroušené brusle.',
+          coachName: 'Milan Filipi',
+          coachPhone: '+420603412785',
+          ...overrides,
+        },
+      }),
+    )
+
+  it('names the child and the training in the subject', () => {
+    expect(sent().subject).toBe('Zpráva od trenéra: Ivan Kotov · trénink ne 4. 10.')
+  })
+
+  it('says who wrote and carries what they wrote', () => {
+    const message = sent()
+    expect(message.text).toContain('Trenér vám poslal zprávu')
+    expect(message.text).toContain('Milan Filipi vám poslal zprávu ke sportovci z tréninku.')
+    expect(message.text).toContain(
+      'Zpráva od trenéra: Ivan dnes výborně bruslil. Na příští trénink prosím nabroušené brusle.',
+    )
+  })
+
+  // §E09: Sportovec and Trénink, and nothing about a change — nothing changed.
+  it('shows the child and the training, and no place or deadline', () => {
+    const message = sent()
+    expect(message.text).toContain('Sportovec: Ivan Kotov')
+    expect(message.text).toContain('Trénink: Neděle 4. října · 09:00–10:00')
+    expect(message.text).not.toContain('Kde:')
+    expect(message.text).not.toContain('Odhlásit lze')
+  })
+
+  it('opens the booking it is about', () => {
+    expect(sent().text).toContain(`${APP}/moje-treninky/b-1`)
+  })
+
+  it('says a reply goes nowhere, and gives the number to ring instead', () => {
+    expect(sent().text).toContain(
+      'Na zprávu nelze odpovědět e-mailem. Trenéra kontaktujte telefonicky: +420 603 412 785.',
+    )
+  })
+
+  it('without a number, says only that a reply goes nowhere', () => {
+    const message = sent({ coachPhone: null })
+    expect(message.text).toContain('Na zprávu nelze odpovědět e-mailem.')
+    expect(message.text).not.toContain('telefonicky')
+  })
+
+  it('is the blue label: a message, not a problem', () => {
+    expect(sent().html).toContain('#E5EBFD')
+  })
+
+  it('prints the message even if the coach also gave a reason elsewhere', () => {
+    expect(sent({ reason: 'jiný text' }).text).not.toContain('jiný text')
+  })
+
+  it('reads the same as the last time it was approved', () => {
+    const message = sent()
+    expect(message.subject).toMatchSnapshot('subject')
+    expect(message.text).toMatchSnapshot('text')
+    expect(message.html).toMatchSnapshot('html')
+  })
+})
+
 describe('what a coach types ends up in an HTML document', () => {
   it('escapes a message that would otherwise be markup', () => {
     const message = composed(

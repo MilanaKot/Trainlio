@@ -16,9 +16,10 @@ import {
 } from '@/lib/notifications/layout'
 import type { EmailMessage } from '@/lib/email/types'
 import { changingRoomLabel } from '@/lib/domain/session'
+import { formatPhone } from '@/lib/domain/phone'
 
 /**
- * The message a guardian receives (shared/EMAILS.md, E01–E08).
+ * The message a guardian receives (shared/EMAILS.md, E01–E09).
  *
  * Pure: a claimed delivery in, an e-mail out. No database, no clock, no
  * provider — which is what makes AC-072 and AC-073 assertions on a string, and
@@ -48,6 +49,7 @@ export const NOTIFICATION_EVENT_TYPES = [
   'BOOKING_REMOVED_BY_COACH',
   'BOOKING_ADDED_BY_COACH',
   'SESSION_CHANGED',
+  'COACH_MESSAGE_TO_GUARDIAN',
 ] as const
 
 export type NotificationEventType = (typeof NOTIFICATION_EVENT_TYPES)[number]
@@ -82,6 +84,8 @@ export type ClaimedDelivery = {
     locationName?: string | null
     changingRoom?: string | null
     reason?: string | null
+    /** E09: what the coach wrote, as it was when they pressed `Odeslat`. */
+    message?: string | null
     birthYearFrom?: number | null
     birthYearTo?: number | null
     previousBirthYearFrom?: number | null
@@ -116,6 +120,7 @@ const TONE: Record<NotificationEventType, keyof typeof PALETTE> = {
   BOOKING_REMOVED_BY_COACH: 'orange',
   BOOKING_ADDED_BY_COACH: 'blue',
   SESSION_CHANGED: 'orange',
+  COACH_MESSAGE_TO_GUARDIAN: 'blue',
 }
 
 /** `st 7. 10.` — the form the subject lines use, lowercase inside a sentence. */
@@ -195,6 +200,31 @@ function template(delivery: ClaimedDelivery, event: NotificationEventType): Temp
 
   const rows: Row[] = []
   if (names !== '') rows.push({ label: athletes, value: names })
+
+  // E09 is about the child, not about the training changing: the block says
+  // which training it was, and nothing else (§E09).
+  if (event === 'COACH_MESSAGE_TO_GUARDIAN') {
+    if (start && end) rows.push({ label: t.rows.training, value: whenValue(start, end, zone) })
+    return {
+      tone: TONE[event],
+      label: t.labels[event] ?? '',
+      subject: fill(t.subjects[event] ?? '', { day, athletes: names }),
+      title: t.titles[event] ?? '',
+      body: fill(t.bodies[event] ?? '', { coach: session.coachName ?? '' }),
+      rows,
+      button: {
+        label: t.buttons.booking,
+        path:
+          delivery.bookingIds?.length === 1
+            ? `/moje-treninky/${delivery.bookingIds[0]}`
+            : '/moje-treninky',
+      },
+      // The reply goes nowhere, so the parent is told where to go instead.
+      helper: session.coachPhone
+        ? fill(t.messageHelperPhone, { phone: formatPhone(session.coachPhone) })
+        : t.messageHelper,
+    }
+  }
 
   const timeChanged = fields.includes('TIME') || fields.includes('DATE')
   if (start && end) {
@@ -346,7 +376,13 @@ export function composeNotificationEmail(
   const plan = template(delivery, delivery.eventType)
   const url = `${base}${plan.button.path}`
   const org = delivery.workspaceName ?? ''
-  const message = delivery.session.reason?.trim()
+  // E09's whole point is the message; every other event carries the coach's
+  // optional words in `reason`.
+  const message = (
+    delivery.eventType === 'COACH_MESSAGE_TO_GUARDIAN'
+      ? delivery.session.message
+      : delivery.session.reason
+  )?.trim()
 
   return {
     to: delivery.recipientEmail,

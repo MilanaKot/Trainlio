@@ -862,7 +862,7 @@ export const cs = {
    * Transactional email (BR-061, BR-072). Czech, like every other user-facing
    * string; the event types and codes around them stay English.
    */
-  /* The e-mails a parent receives (shared/EMAILS.md, E01–E08). The subjects
+  /* The e-mails a parent receives (shared/EMAILS.md, E01–E09). The subjects
      always carry the date, because a parent searching their inbox searches for
      the training, not for the word "změna". */
   email: {
@@ -877,7 +877,8 @@ export const cs = {
       BOOKING_REMOVED_BY_COACH: 'Odhlášeno trenérem',
       BOOKING_ADDED_BY_COACH: 'Nová přihláška',
       SESSION_CHANGED: 'Změna tréninku',
-    },
+      COACH_MESSAGE_TO_GUARDIAN: 'Zpráva od trenéra',
+    } as Record<string, string>,
     subjects: {
       SESSION_CANCELLED: 'Zrušeno: trénink {day} v {time}',
       SESSION_SCHEDULE_CHANGED: 'Změna času: trénink {day} — nově {time}',
@@ -889,7 +890,8 @@ export const cs = {
       BOOKING_REMOVED_BY_COACH: 'Odhlášení z tréninku {day} v {time}',
       BOOKING_ADDED_BY_COACH: 'Přihláška na trénink {day} v {time}',
       SESSION_CHANGED: 'Změna tréninku: trénink {day}',
-    },
+      COACH_MESSAGE_TO_GUARDIAN: 'Zpráva od trenéra: {athletes} · trénink {day}',
+    } as Record<string, string>,
     titles: {
       SESSION_CANCELLED: 'Trénink byl zrušen',
       SESSION_SCHEDULE_CHANGED: 'Trénink začíná v jiný čas',
@@ -901,7 +903,8 @@ export const cs = {
       BOOKING_REMOVED_BY_COACH: 'Trenér odhlásil sportovce z tréninku',
       BOOKING_ADDED_BY_COACH: 'Trenér přihlásil sportovce na trénink',
       SESSION_CHANGED: 'Trénink se změnil',
-    },
+      COACH_MESSAGE_TO_GUARDIAN: 'Trenér vám poslal zprávu',
+    } as Record<string, string>,
     bodies: {
       SESSION_CANCELLED:
         'Trenér zrušil trénink, na který je přihlášen sportovec. Přihláška se tím ruší, nic dalšího dělat nemusíte.',
@@ -919,7 +922,8 @@ export const cs = {
       BOOKING_ADDED_BY_COACH:
         '{coach} přihlásil sportovce na trénink. Najdete ho v aplikaci v Moje tréninky.',
       SESSION_CHANGED: 'Trenér upravil trénink. Přihláška platí dál, se změnami níže.',
-    },
+      COACH_MESSAGE_TO_GUARDIAN: '{coach} vám poslal zprávu ke sportovci z tréninku.',
+    } as Record<string, string>,
     /* `Trénink se přesouvá do Malé haly`: the hall's name has to decline, and
        only these two exist in the MVP. Anything else gets the sentence that
        needs no case at all. */
@@ -946,6 +950,7 @@ export const cs = {
       years: 'Ročníky',
       coach: 'Trenér',
       deadline: 'Odhlásit lze',
+      training: 'Trénink',
     },
     deadlineValue: 'do {day} v {time}',
     allYears: 'Všichni sportovci',
@@ -953,6 +958,10 @@ export const cs = {
     /* The caption above what the coach wrote for this one parent. Never the
        internal note, which no parent ever sees (D-13). */
     coachMessage: 'Zpráva od trenéra',
+    /* E09: the e-mail comes from noreply, so a reply would go nowhere. */
+    messageHelper: 'Na zprávu nelze odpovědět e-mailem.',
+    messageHelperPhone:
+      'Na zprávu nelze odpovědět e-mailem. Trenéra kontaktujte telefonicky: {phone}.',
     helpers: {
       SESSION_SCHEDULE_CHANGED:
         'Nový čas vám nevyhovuje? Sportovce můžete v aplikaci odhlásit do uvedeného termínu.',
