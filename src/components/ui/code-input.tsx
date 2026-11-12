@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { cn } from '@/lib/utils'
 
 /**
@@ -19,6 +19,7 @@ export function CodeInput({
   length = 6,
   label,
   autoFocus = false,
+  invalid = false,
   onComplete,
 }: {
   value: string
@@ -26,6 +27,11 @@ export function CodeInput({
   length?: number
   label: string
   autoFocus?: boolean
+  /**
+   * §6.26 error state: the code was refused. Every box turns red, and the
+   * field takes focus again, so the next digit typed starts the new code.
+   */
+  invalid?: boolean
   /**
    * §6.26: called when the last digit arrives, typed or pasted or filled in by
    * the phone. A person who has entered the whole code has said everything
@@ -36,6 +42,10 @@ export function CodeInput({
   const input = useRef<HTMLInputElement>(null)
   const [focused, setFocused] = useState(false)
   const digits = Array.from({ length }, (_, index) => value[index] ?? '')
+
+  useEffect(() => {
+    if (invalid) input.current?.focus()
+  }, [invalid])
 
   return (
     <div className="relative" onClick={() => input.current?.focus()}>
@@ -48,9 +58,11 @@ export function CodeInput({
               // The caret, drawn: the box that would receive the next digit is
               // ringed, and only while the field has focus — otherwise the row
               // looks focused when it is not.
-              focused && index === Math.min(value.length, length - 1)
-                ? 'shadow-[inset_0_0_0_2px_var(--color-primary)]'
-                : 'shadow-[inset_0_0_0_1.5px_var(--color-line)]',
+              invalid
+                ? 'shadow-[inset_0_0_0_2px_var(--color-danger)]'
+                : focused && index === Math.min(value.length, length - 1)
+                  ? 'shadow-[inset_0_0_0_2px_var(--color-primary)]'
+                  : 'shadow-[inset_0_0_0_1.5px_var(--color-line)]',
             )}
           >
             {digit}
@@ -63,6 +75,7 @@ export function CodeInput({
         type="text"
         name="code"
         aria-label={label}
+        aria-invalid={invalid || undefined}
         // The numeric keypad, and the code the phone offers from the message
         // it has just received.
         inputMode="numeric"
