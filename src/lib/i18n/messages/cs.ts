@@ -312,6 +312,18 @@ export const cs = {
   },
 
   athlete: {
+    /* G8b (v3.4): attendance, Byl / Nebyl only. */
+    attendance: {
+      caption: 'DOCHÁZKA · {sport}',
+      summary: {
+        one: 'Byl na {present} z {count} tréninku',
+        few: 'Byl na {present} z {count} tréninků',
+        many: 'Byl na {present} z {count} tréninků',
+      } satisfies PluralForms,
+      present: 'Byl',
+      absent: 'Nebyl',
+      none: 'V tomto období žádný trénink neproběhl.',
+    },
     listTitle: 'Moji sportovci',
     add: 'Přidat sportovce',
     addFirst: 'Zatím nemáte žádného sportovce.',

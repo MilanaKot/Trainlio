@@ -1,10 +1,16 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { getGuardianAthlete } from '@/server/athletes/queries'
+import {
+  getAthleteAttendance,
+  getGuardianAthlete,
+  listJoinableWorkspaces,
+} from '@/server/athletes/queries'
+import { AttendanceBlock } from '@/components/athlete/attendance-block'
+import { localYearMonth, parsePeriod } from '@/lib/domain/attendance'
 import { Avatar } from '@/components/ui/avatar'
 import { DetailList } from '@/components/ui/detail-list'
 import { HOCKEY_POSITION_LABELS, STICK_SIDE_LABELS } from '@/lib/enums/hockey'
-import { formatBirthDate } from '@/lib/time/workspace-time'
+import { DEFAULT_TIMEZONE, formatBirthDate } from '@/lib/time/workspace-time'
 import { messages } from '@/lib/i18n'
 
 const t = messages.athlete
@@ -16,8 +22,15 @@ const t = messages.athlete
  * `Upravit`. A parent opens this to check a jersey number before a training,
  * not to change one.
  */
-export default async function AthletePage({ params }: { params: Promise<{ athleteId: string }> }) {
+export default async function AthletePage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ athleteId: string }>
+  searchParams: Promise<{ obdobi?: string }>
+}) {
   const { athleteId } = await params
+  const { obdobi } = await searchParams
 
   // Returns null for an athlete this guardian does not guard: the row policy
   // filters it out before it reaches here, so a guessed id is a 404, not a leak.
@@ -26,6 +39,14 @@ export default async function AthletePage({ params }: { params: Promise<{ athlet
 
   const sports = messages.sports as Record<string, string>
   const hockey = athlete.sportProfiles.find((profile) => profile.sportCode === 'HOCKEY')
+
+  const [records, workspaces] = await Promise.all([
+    getAthleteAttendance(athleteId),
+    listJoinableWorkspaces(),
+  ])
+  const timezone = workspaces[0]?.timezone ?? DEFAULT_TIMEZONE
+  // G8b opens on the year, as the design draws it; `Měsíc` narrows it.
+  const period = parsePeriod(obdobi, { kind: 'year', ...localYearMonth(new Date(), timezone) })
 
   return (
     <main className="flex flex-col gap-5">
@@ -90,6 +111,15 @@ export default async function AthletePage({ params }: { params: Promise<{ athlet
           </div>
         ) : null}
       </section>
+
+      {hockey ? (
+        <AttendanceBlock
+          records={records}
+          period={period}
+          timezone={timezone}
+          sportName={sports[hockey.sportCode] ?? hockey.sportCode}
+        />
+      ) : null}
     </main>
   )
 }
