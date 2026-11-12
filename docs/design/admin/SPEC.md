@@ -100,7 +100,7 @@ Invitations **do not expire** — sign-in is always a 6-digit code to the e-mail
 Caption `STAV` → panel: switch row `Aktivní trenér` / sub `Lze ho vybrat pro nové tréninky` (switch 52 × 32, success when on; real `<input type="checkbox" role="switch">`). Info box (bg): `Po deaktivaci zůstane {name} u všech minulých i naplánovaných tréninků (nyní {count}). Trenéra nelze smazat, jen deaktivovat.`
 Footer `Uložit` → toast `Uloženo` → A1.
 Renaming updates the name everywhere (sessions reference the stable ID).
-Deactivating a coach who is main coach of future sessions: allowed; show extra warning Notice before save: `{name} je hlavním trenérem {n} naplánovaných tréninků. Zůstane u nich uveden.` (open question: should it block or prompt reassignment?).
+**Deactivating a main coach of future sessions (v3.4, A3f — decided: warn, then the sessions have no main coach):** turning `Aktivní trenér` off and saving opens a BottomSheet: warning icon tile, title `Deaktivovat trenéra?`, text `{name} je hlavním trenérem {n} naplánovaných tréninků. Po deaktivaci zůstanou bez trenéra, dokud jim nepřiřadíte nového. Rodiče uvidí „Trenér bude upřesněn“.`, list of those sessions (`St 30. 9. · 17:00 · MH`), primary `Deaktivovat`, outline `Zrušit`. On confirm: coach inactive, `mainCoachId = null` on all his **future** sessions (past keep him), assistants unchanged (he is also removed as assistant from future sessions). Coach K1/K2e then show `Bez hlavního trenéra` (coach SPEC K2e). No e-mail to parents at this moment.
 An admin cannot deactivate themselves or remove the last active admin (disable switch + helper `Sám sebe deaktivovat nemůžete.`, A3d).
 
 ### A6 · Invitation e-mail (DR-07)
@@ -155,7 +155,7 @@ File rules (validate client-side **and** in the server action with Zod):
 
 ## 5. Open questions
 - ~~E-mail invitation flow~~ → designed v3 (A2, A3–A3c, A6, coach K0).
-- Behaviour when deactivating a main coach of future sessions (warn vs. force reassignment) — still open.
+- ~~Deactivating a main coach of future sessions~~ → warn + sessions stay without a main coach (v3.4, A3f / K2e).
 - ~~Admin rights in the UI~~ → designed v3 (A3 `ROLE`, A3d, A3e).
 - ~~Org logo in the coach header~~ → yes (confirmed v3).
 - E-mail templates: logo in the header when present, otherwise the organization name as text (no monogram in e-mails).

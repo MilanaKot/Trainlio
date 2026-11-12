@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<title>Hráč — poznámky a zprávy (trenér)</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@500;600;700&amp;family=Manrope:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0;background:#F3F5F9;font-family:Manrope,"Segoe UI",system-ui,sans-serif;color:#0E1726}
+.s{--bg:#F3F5F9;--surface:#FFFFFF;--ink:#0E1726;--muted:#55607A;--subtle:#8791A6;--line:#DFE4EE;--n50:#ECEFF5;--accent:#2B55E0;--accentsoft:#E5EBFD;--disp:"Barlow Semi Condensed","Arial Narrow",sans-serif}
+.disp{font-family:var(--disp)}
+.cap{margin:0;padding:0 4px;font-size:12px;line-height:16px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--muted)}
+.tabs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:3px;padding:4px;border-radius:12px;background:var(--n50)}
+.tabs a{height:38px;border-radius:9px;display:flex;align-items:center;justify-content:center;font:600 14px/1 Manrope,sans-serif;color:var(--muted);text-decoration:none}
+.tabs a.on{background:#fff;color:var(--ink);box-shadow:0 1px 2px rgba(14,23,38,.08)}
+.list{background:var(--surface);border-radius:16px;padding:0 14px;display:flex;flex-direction:column}
+.it{display:flex;align-items:center;gap:10px;min-height:60px;box-shadow:0 1px 0 var(--line);color:inherit;text-decoration:none}
+.it:last-child{box-shadow:none}
+.it .l{display:flex;flex-direction:column;flex-grow:1;min-width:0}
+.it b{font-size:15px;line-height:21px}
+.it .m{font-size:13px;line-height:18px;color:var(--muted)}
+.panel{background:var(--surface);border-radius:16px;padding:4px 16px;margin:0}
+.row{display:grid;grid-template-columns:112px minmax(0,1fr);gap:12px;padding:12px 0;font-size:15px;line-height:22px;box-shadow:0 1px 0 var(--line)}
+.row:last-child{box-shadow:none}
+.row dt{color:var(--muted);font-size:14px}
+.row dd{margin:0;font-weight:600}
+.ib{width:44px;height:44px;border-radius:12px;background:var(--accentsoft);color:var(--accent);display:flex;align-items:center;justify-content:center;flex-shrink:0;text-decoration:none}
+.link{border:0;background:transparent;color:var(--accent);font:700 14px/1 Manrope,sans-serif;padding:0;height:36px;display:inline-flex;align-items:center;gap:6px;text-decoration:none}
+.tabsm{display:grid;grid-template-columns:1fr 1fr;gap:3px;padding:3px;border-radius:10px;background:var(--n50);width:132px}
+.tabsm span{height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;color:var(--muted)}
+.tabsm span.on{background:#fff;color:var(--ink);box-shadow:0 1px 2px rgba(14,23,38,.08)}
+.nb{width:36px;height:36px;border:0;border-radius:10px;background:var(--n50);color:var(--ink);display:flex;align-items:center;justify-content:center}
+</style>
+</helmet>
+<div class="s" style="width: 390px; height: 1000px; background: var(--bg); display: flex; flex-direction: column; overflow: hidden">
+<div style="padding: 52px 8px 0">
+<a href="K02-Detail.dc.html" style="height: 44px; display: inline-flex; align-items: center; gap: 4px; color: var(--muted); text-decoration: none; font-size: 15px; font-weight: 600"><span style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; color: var(--ink)"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d='m14.5 6-6 6 6 6'></path></svg></span>Zpět</a>
+</div>
+<main style="flex-grow: 1; overflow: hidden; padding: 4px 16px 24px; display: flex; flex-direction: column; gap: 14px">
+<header style="display: flex; align-items: center; gap: 14px; padding: 0 4px">
+<span style="width: 56px; height: 56px; border-radius: 50%; background: var(--accentsoft); color: var(--accent); display: flex; align-items: center; justify-content: center; font-size: 19px; font-weight: 700; flex-shrink: 0">TB</span>
+<span style="display: flex; flex-direction: column; min-width: 0"><h1 class="disp" style="margin: 0; font-size: 32px; line-height: 36px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">Tomáš Bureš</h1><span style="font-size: 14px; color: var(--muted)">Ročník 2017 · Útočník · #21</span></span>
+</header>
+<nav class="tabs" role="tablist" aria-label="Karta hráče"><a role="tab" href="K13-ProfilSportovce.dc.html" aria-selected="false">Tréninky</a><a role="tab" href="K13h-Hrac.dc.html" aria-selected="false">Hráč</a><a role="tab" href="K13r-Rodice.dc.html" aria-selected="false">Rodiče</a><a role="tab" href="K13z-Zpravy.dc.html" class="on" aria-selected="true">Zprávy</a></nav>
+<p style="margin:0;padding:0 4px;font-size:13px;line-height:18px;color:var(--muted)">Poznámky a zprávy k jednotlivým tréninkům. Zprávu rodiče uvidí v aplikaci a dostanou e-mail.</p>
+<section style="display:flex;flex-direction:column;gap:8px;padding:14px 16px;border-radius:16px;background:var(--surface)"><b style="font-size:15px">Ne 27. 9. · 16:00–17:00</b><div style="display:flex;gap:10px;padding:10px 12px;border-radius:12px;background:#FBF7EC"><span style="color:#7A5A00;display:flex;margin-top:2px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="10.5" width="14" height="10" rx="2"></rect><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5"></path></svg></span><span style="display:flex;flex-direction:column;gap:2px;flex-grow:1"><span style="font-size:12px;font-weight:700;color:#7A5A00">Poznámka · jen trenéři</span><span style="font-size:14px;line-height:20px">Na rozbruslení pomalejší, hlídat levou nohu.</span></span></div><div style="display:flex;gap:10px;padding:10px 12px;border-radius:12px;background:var(--accentsoft)"><span style="color:var(--accent);display:flex;margin-top:2px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5.5A1.5 1.5 0 0 1 5.5 4h13A1.5 1.5 0 0 1 20 5.5v9a1.5 1.5 0 0 1-1.5 1.5H10l-4.5 4v-4A1.5 1.5 0 0 1 4 14.5z"></path></svg></span><span style="display:flex;flex-direction:column;gap:2px;flex-grow:1"><span style="font-size:12px;font-weight:700;color:var(--accent)">Zpráva rodičům · odesláno 27. 9. 17:10</span><span style="font-size:14px;line-height:20px">Tomáš dnes výborně bruslil. Na příští trénink prosím nabroušené brusle.</span></span></div></section><section style="display:flex;flex-direction:column;gap:8px;padding:14px 16px;border-radius:16px;background:var(--surface)"><b style="font-size:15px">St 23. 9. · 17:00–18:00</b><button class="link" style="color:#7A5A00"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="10.5" width="14" height="10" rx="2"></rect><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5"></path></svg>Přidat poznámku</button><button class="link"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5.5A1.5 1.5 0 0 1 5.5 4h13A1.5 1.5 0 0 1 20 5.5v9a1.5 1.5 0 0 1-1.5 1.5H10l-4.5 4v-4A1.5 1.5 0 0 1 4 14.5z"></path></svg>Napsat rodičům</button></section><section style="display:flex;flex-direction:column;gap:8px;padding:14px 16px;border-radius:16px;background:var(--surface)"><b style="font-size:15px">Ne 20. 9. · 09:00–10:00</b><div style="display:flex;gap:10px;padding:10px 12px;border-radius:12px;background:#FBF7EC"><span style="color:#7A5A00;display:flex;margin-top:2px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="10.5" width="14" height="10" rx="2"></rect><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5"></path></svg></span><span style="display:flex;flex-direction:column;gap:2px;flex-grow:1"><span style="font-size:12px;font-weight:700;color:#7A5A00">Poznámka · jen trenéři</span><span style="font-size:14px;line-height:20px">Lepší přihrávky, pochválit.</span></span></div><button class="link"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5.5A1.5 1.5 0 0 1 5.5 4h13A1.5 1.5 0 0 1 20 5.5v9a1.5 1.5 0 0 1-1.5 1.5H10l-4.5 4v-4A1.5 1.5 0 0 1 4 14.5z"></path></svg>Napsat rodičům</button></section>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":1000}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

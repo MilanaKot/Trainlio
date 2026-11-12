@@ -160,7 +160,7 @@ Use for: capacity override, capacity reduction, eligibility change, cancel train
 Radius 12, padding 12–14, icon 20–22 + title 15/700 + text 14. Variants: `warning` (warning-soft), `info` (primary-100), `danger` (danger-soft), `neutral` (bg). Not dismissible. `role="status"` (or `role="alert"` for blocking validation such as "Není dostatek volných míst").
 
 ### 6.16 Toast
-White card radius 16, `shadow-toast`, 16 px from screen sides, 28 px above bottom nav/footer. Leading 32 px circle (success-soft + success check). Text 15/600. **No action button** (decision: no "Vrátit"). Auto-dismiss 3 s. `role="status"`, `aria-live="polite"`.
+White card radius 16, `shadow-toast`, 16 px from screen sides, 28 px above bottom nav/footer. Leading 32 px circle (success-soft + success check). Text 15/600. **No action button** (decision: no "Vrátit") — **one exception (v3.4): un-marking a payment** shows the toast with a red $ circle (danger-soft/danger), text `Platba zrušena · {athlete}`, secondary sm button `Vrátit` (primary-100/primary) and a 3 px progress bar; 4 s. Auto-dismiss 3 s otherwise. `role="status"`, `aria-live="polite"`.
 
 ### 6.17 BottomNav
 Guardian: 4 items — Tréninky, Moje tréninky, Moji sportovci, Účet. Coach/admin: 3 items — Tréninky, Sportovci, Více. Icon 22 stroke 1.8 + label 11/600; active `primary`, inactive `muted`. `aria-current="page"`.
@@ -234,7 +234,18 @@ Highlights where and for whom a training is, right under the time in the coach s
 ### 6.34 RoleLabel (v3.2)
 Small label on a coach's training row showing the signed-in coach's role in that session. Height 22, padding 0 7, radius 6, 11/700, sentence case (not uppercase — differs from status badges). `Hlavní trenér` = primary-100 bg + primary text; `Asistent` = neutral-50 bg + muted text. Placed under the meta line, `align-self: flex-start`, 4 px above. Not interactive.
 
-### 6.35 PaymentChip (v3.3)
+### 6.36 StatusToggle — attendance & payment (v3.4)
+Square icon button, 48 × 48 in K2 / 44 × 44 in K13 (static 32 × 32 in lists like K14, 20 × 20 in legends), radius 14 (12 / 9). Icon 22 (20 / 18), stroke 2.
+- Attendance (person icon): `present` = success-soft bg + success person-check; `absent` = danger-soft bg + danger person-x; `unmarked` = white + inset 1.5 px line + subtle person; disabled = opacity .4 (before session start).
+- Payment ($ in circle): `paid` = success-soft + success; `unpaid` = danger-soft + danger.
+- `aria-label` `Docházka {athlete}: Byl|Nebyl|nezapsáno` / `Platba {athlete}: zaplaceno|nezaplaceno`; `aria-pressed` for payment.
+- Pressed feedback: scale .9 + 3 px ring in the state colour, 100 ms; haptic 10 ms.
+- Read-only variant: rendered as `<span role="img">`, opacity .75.
+
+### 6.37 PlayerCard (v3.4)
+Card used for a booking in K2 and for a session in K13: white, radius 16, min-height 76 (68 in K13), padding 0 16 0 12, `box-shadow: inset -5px 0 0 #C9D0DC, 0 1px 2px rgb(14 23 38 / .06)` — the thicker right edge signals "opens", **no chevron**. Left zone = link; right zone = StatusToggles. Hit areas: each toggle full card height × 62 px; gap belongs to toggles; > 8 px movement = scroll; long-press = nothing. Card pressed: bg `#EEF1F6`, scale .98.
+
+### 6.35 PaymentChip (v3.3) — superseded by §6.36 in v3.4 (kept only for G6e guardian badge)
 Status of payment for one booking, used in the coach roster (K2) and read-only K17. Pill height 26, radius 13, padding 0 9, 12/700, `white-space: nowrap`. `paid` = success-soft bg + success text + 12 px check + `Zaplaceno`; `unpaid` = transparent + subtle text (#8791A6) + inset 1.5 px line + `Nezaplaceno`. Always text — never a bare check or circle (would read as attendance). For guardians only the `paid` variant exists (as an uppercase Badge in G6e).
 
 ### 6.32 E-mail layout (v3)

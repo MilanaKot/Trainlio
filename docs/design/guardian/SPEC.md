@@ -194,6 +194,10 @@ H1 `Moji sportovci`. Cards (link, chevron): avatar 56 (photo or initials), name 
 Below list: block button (primary-100 bg, primary text, 52 px) `+ Přidat sportovce` → G10.
 Empty: EmptyState `Přidejte prvního sportovce a můžete začít rezervovat tréninky.` + `Přidat sportovce`.
 
+### G8b · Athlete profile — attendance block (v3.4)
+Under the sport panel: caption `DOCHÁZKA · LEDNÍ HOKEJ` → white panel: period control `Měsíc / Rok` + prev/next + label; big `{pct} %` (Barlow 44) + `Byl na {b} z {b+n} tréninků` + strip of squares for the period's sessions (green = Byl, red = Nebyl); counters `Byl {b} · Nebyl {n}`. Read-only, no list, no payment info. Percent = Byl / (Byl + Nebyl); cancelled sessions excluded; sessions without a mark are shown as Nebyl only after they end. Statuses are only Byl / Nebyl (no „Omluven“).
+G6 `Hlavní trenér` row shows `Trenér bude upřesněn` (muted) when the session has no main coach (coach K2e).
+
 ### G8 · Athlete profile (`/athletes/[id]`)
 Top row: `‹ Moji sportovci` and text button `Upravit` (→ G9).
 Header: avatar 72, name (Barlow 36/40), `Narozen {date}` (masculine form for everyone — DS §8).

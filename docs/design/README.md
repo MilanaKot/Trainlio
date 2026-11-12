@@ -75,12 +75,22 @@ The prototypes are visual references with sample data (names like Jan Novák, El
 35. Coach note per booking (this training) is internal — never visible or fetched for parents. The general athlete note stays in K13 and is shown read-only in the player card.
 36. Coach message to the parent is per booking: shown in the parent's booking detail and sent by e-mail (E09); one message, editable and re-sendable; no replies in the app.
 37. App icon is product-only (cobalt square, white „t" + two meter bars), never the club logo; files and manifest in `shared/app-icon/`.
+38. Coach roster K2 = one list with **attendance and payment toggles** (person / $ icons, green / red), large cards with a thick right edge that open the player card; no separate attendance tab, no PaymentChips, no K17 sheet.
+39. Tap zones never mix: toggles own the full card height; name area opens the player card; scroll > 8 px cancels; un-marking payment shows `Vrátit` (white toast) for 4 s — the only undo toast.
+40. Attendance statuses are only **Byl / Nebyl** (no Omluven). Marking is possible from the session start; unmarked counts as Nebyl after the end; it can be edited **any time** later. Percent = Byl / (Byl + Nebyl).
+41. Payment and attendance are independent — no automatic rules between them.
+42. `Ostatní byli` marks all unmarked as present without confirmation; `Zaplatili všichni` asks (K2c); when everyone paid it becomes static `Zaplatili všichni ✓`.
+43. Player card (coach) = K13 with tabs `Tréninky · Hráč · Rodiče · Zprávy`; per-training coach notes and parent messages live in `Zprávy`; attendance/payment per session can also be toggled in `Tréninky`; removing a child from a session is in `Tréninky` (upcoming rows).
+44. Past trainings (K14) show `Byl x/n` and `Platba x/n` instead of the booking count.
+45. Parents see attendance in the athlete profile (G8b, month/year), payment only as `Zaplaceno` in the booking detail.
+46. Deactivating a main coach: warning (A3f), then his future sessions are **without a main coach** (K1/K2e warning, parents see `Trenér bude upřesněn`).
 
 Open questions are listed at the end of each SPEC.md. What the implementation
 still needs answered — those questions, plus anything that shipped without a
 design — is collected in `DESIGN_REQUESTS.md`.
 
 ## Changelog
+- **v3.4 — attendance, merged roster, player card tabs.** K2 roster with attendance/payment toggles (DS §6.36/6.37) and tap-zone rules (`design-source/screens/K02s-StavyKarty.dc.html`); K13 player card with 4 tabs (K13, K13h, K13r, K13z) replaces K17/K17b and K19; K14 counters; K2b read-only update; K2e + A3f (main coach deactivated); G8b attendance for parents; undo toast for payment; decisions 38–46. **Task: `CLAUDE_CODE_TASK_v3.4.md` (supersedes `CLAUDE_CODE_TASK_payment.md`, now replaced by `CLAUDE_CODE_TASK_v3.4.md`).**
 - **v3.3 — payment, coach notes and messages per booking; app icon.** K2 roster: payment bar `Zaplaceno x z n` + `Zaplatili všichni` (K2c), PaymentChip per row, note/message indicators; K17/K17b player card (payment checkbox, coach note for the training, message to the parent); guardian G6e (`Zaplaceno` + message from the coach); e-mail E09; DS §6.35; decisions 34–37; app icon in `shared/app-icon/`. Task: `CLAUDE_CODE_TASK_payment.md`.
 - **v3.2 — assistants & view-only coaches.** Coach permission `Může upravovat tréninky` (A2/A3, default on, forced on for admins); coach without it sees K1b (no FAB) and K2b (`Jen pro čtení`) on trainings he does not lead — his own trainings (main coach) stay fully editable; K1 filter `Všechny / Moje` + RoleLabel `Hlavní trenér / Asistent` (DS §6.34). Decision 33. Task: `CLAUDE_CODE_TASK_assistants.md`.
 - **v3.1** — K2 place line becomes a PlaceChip (DS §6.33): cobalt text on light-cobalt background, no icon.
