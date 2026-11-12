@@ -80,7 +80,7 @@ export function uniqueEmail(prefix: string): string {
 }
 
 /** The six-digit code Supabase Auth just emailed, read from Mailpit. */
-async function readCode(email: string): Promise<string> {
+export async function readCode(email: string): Promise<string> {
   for (let attempt = 0; attempt < 20; attempt += 1) {
     const box = (await (await fetch(`${MAILPIT}/api/v1/messages`)).json()) as {
       messages?: { ID: string; To?: { Address: string }[] }[]
@@ -322,27 +322,234 @@ export async function expectAccessible(page: Page, where: string): Promise<void>
   // A button that has just stopped waiting fades from its disabled colours to
   // its own over a few frames. Measured in between, white on cobalt reads as
   // 3.9:1 — a contrast nobody sees, and the reason the logo and A3f sheets
-  // failed only when the machine was busy. Transitions only: a spinner or the
-  // toast's bar runs on purpose.
-  await page.waitForFunction(() =>
-    document
-      .getAnimations()
-      .every(
-        (animation) => !(animation instanceof CSSTransition) || animation.playState !== 'running',
-      ),
-  )
-  const { violations } = await new AxeBuilder({ page })
-    .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
-    .analyze()
-
-  // Reported with the element that failed: "colour-contrast on 3 nodes" sends
-  // the next person back to the browser to find out which three.
-  const blocking = violations
-    .filter((one) => one.impact === 'serious' || one.impact === 'critical')
-    .map(
-      (one) =>
-        `${one.id} (${one.impact}): ${one.nodes.map((node) => node.target.join(' ')).join(', ')}`,
+  // failed only when the machine was busy. So: wait for colour transitions,
+  // and when something is reported, look again half a second later. A real
+  // violation is still there on the third look; a passing frame is not.
+  // Transitions only: a spinner or the toast's bar runs on purpose.
+  let blocking: string[] = []
+  for (let look = 0; look < 3; look += 1) {
+    if (look > 0) await page.waitForTimeout(500)
+    await page.waitForFunction(() =>
+      document
+        .getAnimations()
+        .every(
+          (animation) => !(animation instanceof CSSTransition) || animation.playState !== 'running',
+        ),
     )
+    const { violations } = await new AxeBuilder({ page })
+      .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
+      .analyze()
+
+    // Reported with the element that failed: "colour-contrast on 3 nodes"
+    // sends the next person back to the browser to find out which three.
+    blocking = violations
+      .filter((one) => one.impact === 'serious' || one.impact === 'critical')
+      .map(
+        (one) =>
+          `${one.id} (${one.impact}): ${one.nodes.map((node) => node.target.join(' ')).join(', ')}`,
+      )
+    if (blocking.length === 0) return
+  }
 
   expect(blocking, `${where} has accessibility violations`).toEqual([])
+}
+
+/**
+ * A changing room as a club writes one: a number from 1 to 99 or a letter.
+ * Never the test's handle on its own training — every run shares one
+ * database, so two trainings will share a room; find a card with
+ * `sessionCard` instead.
+ */
+export function pickRoom(): string {
+  const pick = Math.floor(Math.random() * 125)
+  return pick < 99 ? String(pick + 1) : String.fromCharCode(65 + pick - 99)
+}
+
+/** The card of one training on any list, coach's or parent's. */
+export function sessionCard(page: Page, sessionId: string) {
+  return page.locator(`li[data-session-id="${sessionId}"]`)
+}
+
+const BOYS = [
+  'Adam',
+  'Ondřej',
+  'Matěj',
+  'Vojtěch',
+  'Filip',
+  'Dominik',
+  'Lukáš',
+  'Tobiáš',
+  'Šimon',
+  'Kryštof',
+  'Daniel',
+  'Tadeáš',
+  'Jonáš',
+  'Vítek',
+  'Patrik',
+  'Radim',
+  'Marek',
+  'Robin',
+  'Sebastián',
+  'Jáchym',
+  'Kamil',
+  'Oliver',
+  'Hynek',
+  'Bořek',
+  'Erik',
+  'Viktor',
+  'Štěpán',
+  'Denis',
+  'Richard',
+  'Teodor',
+]
+const GIRLS = [
+  'Ema',
+  'Tereza',
+  'Natálie',
+  'Klára',
+  'Viktorie',
+  'Karolína',
+  'Adéla',
+  'Barbora',
+  'Sofie',
+  'Nela',
+  'Rozálie',
+  'Julie',
+  'Magdaléna',
+  'Zuzana',
+  'Veronika',
+  'Linda',
+  'Johana',
+  'Agáta',
+]
+/** Masculine and feminine form of each surname. */
+const SURNAMES: [string, string][] = [
+  ['Novák', 'Nováková'],
+  ['Svoboda', 'Svobodová'],
+  ['Dvořák', 'Dvořáková'],
+  ['Černý', 'Černá'],
+  ['Procházka', 'Procházková'],
+  ['Kučera', 'Kučerová'],
+  ['Veselý', 'Veselá'],
+  ['Horák', 'Horáková'],
+  ['Němec', 'Němcová'],
+  ['Pokorný', 'Pokorná'],
+  ['Marek', 'Marková'],
+  ['Pospíšil', 'Pospíšilová'],
+  ['Hájek', 'Hájková'],
+  ['Jelínek', 'Jelínková'],
+  ['Král', 'Králová'],
+  ['Růžička', 'Růžičková'],
+  ['Beneš', 'Benešová'],
+  ['Fiala', 'Fialová'],
+  ['Sedláček', 'Sedláčková'],
+  ['Doležal', 'Doležalová'],
+  ['Zeman', 'Zemanová'],
+  ['Kolář', 'Kolářová'],
+  ['Navrátil', 'Navrátilová'],
+  ['Čermák', 'Čermáková'],
+  ['Urban', 'Urbanová'],
+  ['Vaněk', 'Vaňková'],
+  ['Blažek', 'Blažková'],
+  ['Kříž', 'Křížová'],
+  ['Kovář', 'Kovářová'],
+  ['Bartoš', 'Bartošová'],
+  ['Vlček', 'Vlčková'],
+  ['Polák', 'Poláková'],
+  ['Musil', 'Musilová'],
+  ['Šimek', 'Šimková'],
+  ['Konečný', 'Konečná'],
+  ['Malý', 'Malá'],
+  ['Holub', 'Holubová'],
+  ['Štěpánek', 'Štěpánková'],
+  ['Kadlec', 'Kadlecová'],
+  ['Dostál', 'Dostálová'],
+]
+const POSITIONS = ['GOALIE', 'DEFENSE', 'CENTER', 'LEFT_WING', 'RIGHT_WING', 'UTILITY'] as const
+const STICKS = ['LEFT', 'RIGHT', 'LEFT', 'RIGHT', 'UNKNOWN'] as const
+
+export type TestAthlete = {
+  firstName: string
+  lastName: string
+  /** `First Last`, as every screen prints it. */
+  name: string
+  /** `YYYY-MM-DD` */
+  dateOfBirth: string
+  birthYear: number
+  position: (typeof POSITIONS)[number]
+  stickSide: (typeof STICKS)[number]
+}
+
+const taken = new Set<string>()
+
+function pick<T>(list: readonly T[]): T {
+  return list[Math.floor(Math.random() * list.length)] as T
+}
+
+/**
+ * A child as a club would have one: a name no other athlete in the database
+ * has, a birth year from 2010 to 2019 unless the test needs a given one, a
+ * position and a stick side. Every run shares one database, so the name is
+ * also the test's handle on its own child — checked against the athletes
+ * already there rather than made unique with a timestamp.
+ */
+export async function freshAthlete(options: { birthYear?: number } = {}): Promise<TestAthlete> {
+  const existing = (await (
+    await fetch(`${STACK}/rest/v1/athletes?select=first_name,last_name`, { headers: admin })
+  ).json()) as { first_name: string; last_name: string }[]
+  for (const one of existing) taken.add(`${one.first_name} ${one.last_name}`)
+
+  for (let attempt = 0; attempt < 500; attempt += 1) {
+    const girl = Math.random() < 0.3
+    const [male, female] = pick(SURNAMES)
+    const firstName = pick(girl ? GIRLS : BOYS)
+    const lastName = girl ? female : male
+    const name = `${firstName} ${lastName}`
+    if (taken.has(name)) continue
+    taken.add(name)
+    const birthYear = options.birthYear ?? 2010 + Math.floor(Math.random() * 10)
+    const month = String(1 + Math.floor(Math.random() * 12)).padStart(2, '0')
+    const day = String(1 + Math.floor(Math.random() * 28)).padStart(2, '0')
+    return {
+      firstName,
+      lastName,
+      name,
+      dateOfBirth: `${birthYear}-${month}-${day}`,
+      birthYear,
+      position: pick(POSITIONS),
+      stickSide: pick(STICKS),
+    }
+  }
+  throw new Error('No unused athlete name left; clean the local database')
+}
+
+/** How the screens print a position and a stick (lib/enums/hockey). */
+export const POSITION_LABEL: Record<TestAthlete['position'], string> = {
+  GOALIE: 'Brankář',
+  DEFENSE: 'Obránce',
+  CENTER: 'Centr',
+  LEFT_WING: 'Levé křídlo',
+  RIGHT_WING: 'Pravé křídlo',
+  UTILITY: 'Univerzál',
+}
+
+/** `5. 5. 2017`, as K13 prints a birth date. */
+export function czechDate(iso: string): string {
+  const [year, month, day] = iso.split('-').map(Number)
+  return `${day}. ${month}. ${year}`
+}
+
+const STICK_LABEL: Record<TestAthlete['stickSide'], string> = {
+  LEFT: 'Levá',
+  RIGHT: 'Pravá',
+  UNKNOWN: 'Nevím',
+}
+
+/** The child's half of G9/G10, filled with this athlete. */
+export async function fillAthleteForm(page: Page, athlete: TestAthlete): Promise<void> {
+  await page.getByLabel('Jméno').last().fill(athlete.firstName)
+  await page.getByLabel('Příjmení').last().fill(athlete.lastName)
+  await page.getByLabel('Datum narození').fill(athlete.dateOfBirth)
+  await page.getByRole('radio', { name: POSITION_LABEL[athlete.position], exact: true }).click()
+  await page.getByRole('radio', { name: STICK_LABEL[athlete.stickSide], exact: true }).click()
 }
