@@ -147,7 +147,7 @@ test.describe('a coach edits a training people are coming to', () => {
     const room = `Šatna ${pickRoom()}`
     const sessionId = await createTraining(page, room, 10)
     const emil = await bookedAthlete(2016, sessionId)
-    await bookedAthlete(2017, sessionId)
+    const stays = await bookedAthlete(2017, sessionId)
 
     await page.goto(`/trener/${sessionId}/upravit`)
     await page.getByRole('radio', { name: 'Ročníky' }).click()
@@ -160,7 +160,7 @@ test.describe('a coach edits a training people are coming to', () => {
     // Exactly the one who falls outside it, by name and by year — a count
     // alone is not something a coach can check.
     await expect(dialog).toContainText(`${emil.name} · 2016`)
-    await expect(dialog).not.toContainText('Filip')
+    await expect(dialog).not.toContainText(stays.name)
     await expect(dialog).toContainText('Jejich přihlášky zůstanou zachovány.')
 
     await dialog.getByRole('button', { name: 'Přesto uložit' }).click()

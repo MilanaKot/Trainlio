@@ -78,7 +78,10 @@ Decisions 47–48, BR-187 to BR-191:
 ### Changed with handoff v3.6 (12 November 2026)
 
 The coach's athlete list shows every birth year at once, as a grid with
-counts, newest first; selected filter chips are blue (decision 49).
+counts, newest first; selected filter chips are blue (decision 49). Series are the
+third tab of the training list (`Nadcházející · Minulé · Série`), `Více` has
+`Přehledy` with the statistics, and every text button has one 12 px radius
+(decisions 50–51).
 
 ### Non-goals for MVP
 

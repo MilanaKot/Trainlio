@@ -565,7 +565,7 @@ test('what v3 added (§K12–§K16, §A3b, §G6d)', async ({ page, browser }) =>
   await page.getByLabel('Šatna').fill('Šatna 4')
   await page.getByRole('button', { name: /Vytvořit \d+ tréninky|Vytvořit \d+ tréninků/ }).click()
   await page.waitForURL(/\/trener\/serie$/)
-  await expect(page.getByRole('heading', { name: 'Série', level: 1 })).toBeVisible()
+  await expect(page.getByRole('tab', { name: 'Série', selected: true })).toBeVisible()
   await shoot(page, 'K15-serie')
 
   await page.locator('main li', { hasText: '16:00–17:00' }).first().getByRole('link').click()

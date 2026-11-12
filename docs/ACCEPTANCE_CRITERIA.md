@@ -979,3 +979,8 @@ K12 shows every birth year of active athletes in a four-column grid, newest
 first with counts, all inside a 390 px screen with no sideways scroll;
 choosing `2018` shows only that group and `{x} z {n}`; leaving and coming back
 starts on `Všechny` again (coach test 11, decision 49).
+
+AC-314  
+From K1 the `Série` tab opens K15 with that tab selected and `Tréninky` lit in
+the bottom navigation; `Více` has no `Série tréninků` row and has `Přehledy`
+(decision 50).
