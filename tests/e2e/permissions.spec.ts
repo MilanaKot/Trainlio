@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test'
 import {
+  freshPerson,
   pickRoom,
   sessionCard,
   apiUser,
@@ -94,7 +95,7 @@ test.describe('a coach without `Může upravovat všechny tréninky`', () => {
     await expect(page.getByText('Jen pro čtení')).toBeVisible()
     await expect(
       page.getByText(
-        `Tento trénink vede Iva Hlavní${run}. Docházku, platby a sestavu může měnit hlavní trenér nebo administrátor.`,
+        `Tento trénink vede ${c.adminName}. Docházku, platby a sestavu může měnit hlavní trenér nebo administrátor.`,
       ),
     ).toBeVisible()
     await expect(page.getByRole('button', { name: /Přidat sportovce/ })).toHaveCount(0)
@@ -132,7 +133,7 @@ test.describe('a coach without `Může upravovat všechny tréninky`', () => {
     // …and in K3 the main coach stays where it is.
     await page.getByRole('link', { name: 'Upravit trénink' }).click()
     await expect(page.getByText('Hlavního trenéra může změnit administrátor.')).toBeVisible()
-    await expect(page.getByRole('button', { name: `Ota Asistent${run}` })).toBeDisabled()
+    await expect(page.getByRole('button', { name: c.viewerName })).toBeDisabled()
     await page.getByLabel('Kapacita', { exact: true }).fill('12')
     await page.getByRole('button', { name: 'Uložit změny' }).click()
     await page.waitForURL(new RegExp(`/trener/${c.led}$`))
@@ -147,7 +148,7 @@ test.describe('a coach without `Může upravovat všechny tréninky`', () => {
   test('still rings a parent and reads the internal note (coach test 18)', async ({ page }) => {
     const run = Date.now()
     const c = await club(run)
-    const { name: child } = await bookedChild(c.assisted, run)
+    const { name: child, parent } = await bookedChild(c.assisted)
     await signIn(page, c.viewerEmail)
 
     await page.goto(`/trener/${c.assisted}`)
@@ -156,8 +157,8 @@ test.describe('a coach without `Může upravovat všechny tréninky`', () => {
     // v3.4: the player card (K13), `Rodiče`.
     await page.getByRole('link', { name: new RegExp(child) }).click()
     await page.getByRole('tab', { name: 'Rodiče' }).click()
-    await expect(page.getByText(`Eva Rodič${run}`)).toBeVisible()
-    await expect(page.getByRole('link', { name: `Zavolat Eva Rodič${run}` })).toHaveAttribute(
+    await expect(page.getByText(parent.name)).toBeVisible()
+    await expect(page.getByRole('link', { name: `Zavolat ${parent.name}` })).toHaveAttribute(
       'href',
       'tel:777333444',
     )
@@ -177,12 +178,13 @@ test.describe('an administrator sets the permission', () => {
     const permission = page.getByRole('switch', { name: /Může upravovat všechny tréninky/ })
     await expect(permission).toBeChecked()
 
-    await page.getByLabel('Jméno').fill('Petr')
-    await page.getByLabel('Příjmení').fill(`Omezený${run}`)
+    const limited = await freshPerson()
+    await page.getByLabel('Jméno').fill(limited.firstName)
+    await page.getByLabel('Příjmení').fill(limited.lastName)
     await page.getByRole('button', { name: 'Přidat trenéra' }).click()
     await page.waitForURL(/\/trener\/vice\/treneri$/)
 
-    const row = page.locator('li', { hasText: `Petr Omezený${run}` })
+    const row = page.locator('li', { hasText: limited.name })
     await row.getByRole('link').click()
     await expect(page.getByText('ROLE A OPRÁVNĚNÍ')).toBeVisible()
     await page.getByText('Může upravovat všechny tréninky').click()
@@ -194,10 +196,7 @@ test.describe('an administrator sets the permission', () => {
     await page.waitForURL(/\/trener\/vice\/treneri$/)
 
     // Saved: A3 reads it back off.
-    await page
-      .locator('li', { hasText: `Petr Omezený${run}` })
-      .getByRole('link')
-      .click()
+    await page.locator('li', { hasText: limited.name }).getByRole('link').click()
     await expect(
       page.getByRole('switch', { name: /Může upravovat všechny tréninky/ }),
     ).not.toBeChecked()
@@ -221,9 +220,7 @@ test.describe('an administrator sets the permission', () => {
       }),
     })
     await page.goto('/trener/vice/treneri')
-    await expect(page.locator('li', { hasText: `Ota Asistent${run}` })).toContainText(
-      'Jen prohlížení',
-    )
+    await expect(page.locator('li', { hasText: c.viewerName })).toContainText('Jen prohlížení')
   })
 
   test("an administrator's own permission is on and fixed (admin test 17)", async ({ page }) => {

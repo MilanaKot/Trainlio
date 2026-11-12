@@ -553,3 +553,76 @@ export async function fillAthleteForm(page: Page, athlete: TestAthlete): Promise
   await page.getByRole('radio', { name: POSITION_LABEL[athlete.position], exact: true }).click()
   await page.getByRole('radio', { name: STICK_LABEL[athlete.stickSide], exact: true }).click()
 }
+
+const MEN = [
+  'Petr',
+  'Jan',
+  'Tomáš',
+  'Martin',
+  'Pavel',
+  'Jakub',
+  'Michal',
+  'Lukáš',
+  'Ondřej',
+  'David',
+  'Jiří',
+  'Karel',
+  'Radek',
+  'Roman',
+  'Aleš',
+  'Libor',
+  'Marek',
+  'Zdeněk',
+  'Vladimír',
+  'Josef',
+]
+const WOMEN = [
+  'Eva',
+  'Jana',
+  'Hana',
+  'Lucie',
+  'Petra',
+  'Martina',
+  'Kateřina',
+  'Lenka',
+  'Veronika',
+  'Monika',
+  'Alena',
+  'Ivana',
+  'Markéta',
+  'Simona',
+  'Barbora',
+  'Michaela',
+  'Pavla',
+  'Renata',
+]
+
+export type TestPerson = { firstName: string; lastName: string; name: string }
+
+const peopleTaken = new Set<string>()
+
+/**
+ * An adult — a coach or a parent — with a Czech name nobody in the database
+ * has. Every run shares one database and a club's list of coaches is read by
+ * people, so a name with a timestamp in it (`Iva Hlavní1794476708882`) is the
+ * kind of thing this replaces.
+ */
+export async function freshPerson(options: { female?: boolean } = {}): Promise<TestPerson> {
+  const existing = (await (
+    await fetch(`${STACK}/rest/v1/app_profiles?select=first_name,last_name`, { headers: admin })
+  ).json()) as { first_name: string | null; last_name: string | null }[]
+  for (const one of existing) {
+    if (one.first_name && one.last_name) peopleTaken.add(`${one.first_name} ${one.last_name}`)
+  }
+  for (let attempt = 0; attempt < 500; attempt += 1) {
+    const female = options.female ?? Math.random() < 0.5
+    const [male, feminine] = pick(SURNAMES)
+    const firstName = pick(female ? WOMEN : MEN)
+    const lastName = female ? feminine : male
+    const name = `${firstName} ${lastName}`
+    if (peopleTaken.has(name)) continue
+    peopleTaken.add(name)
+    return { firstName, lastName, name }
+  }
+  throw new Error('No unused name left; clean the local database')
+}

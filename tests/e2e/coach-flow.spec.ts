@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test'
 import {
   asUser,
+  freshPerson,
   czechDate,
   freshAthlete,
   POSITION_LABEL,
@@ -261,7 +262,6 @@ test.describe('a coach publishes a training and runs its roster', () => {
 
     // A family of this run's own, so the shared database's other athletes do
     // not decide what the assertions below find.
-    const run = Date.now()
     const parentEmail = uniqueEmail('rodic.hledani')
     const token = await tokenFor(parentEmail)
     const workspaces = (await (
@@ -272,6 +272,7 @@ test.describe('a coach publishes a training and runs its roster', () => {
       })
     ).json()) as { id: string }[]
 
+    const parent = await freshPerson({ female: true })
     await fetch(`${STACK}/rest/v1/app_profiles?id=eq.${await profileFor(parentEmail)}`, {
       method: 'PATCH',
       headers: {
@@ -280,8 +281,8 @@ test.describe('a coach publishes a training and runs its roster', () => {
         'content-type': 'application/json',
       },
       body: JSON.stringify({
-        first_name: 'Hana',
-        last_name: `Řezníčková${run}`,
+        first_name: parent.firstName,
+        last_name: parent.lastName,
         phone: '777111222',
       }),
     })
@@ -309,7 +310,12 @@ test.describe('a coach publishes a training and runs its roster', () => {
     // The search matches the parent, not only the child: a coach who met the
     // family remembers the parent's name as often as the child's. And it
     // ignores diacritics, because "Řezníčková" is not what anyone types.
-    await page.getByRole('searchbox').fill(`reznickova${run}`)
+    await page.getByRole('searchbox').fill(
+      parent.lastName
+        .normalize('NFD')
+        .replace(/\p{Diacritic}/gu, '')
+        .toLowerCase(),
+    )
     const row = page.locator('main li', { hasText: child.name })
     await expect(row).toBeVisible()
     await expect(row).toContainText(POSITION_LABEL[child.position])
@@ -326,8 +332,8 @@ test.describe('a coach publishes a training and runs its roster', () => {
 
     // K13 · Rodiče (v3.4): the family, with the number a coach may ring.
     await page.getByRole('tab', { name: 'Rodiče' }).click()
-    await expect(page.getByText(`Hana Řezníčková${run}`)).toBeVisible()
-    await expect(page.getByRole('link', { name: `Zavolat Hana Řezníčková${run}` })).toHaveAttribute(
+    await expect(page.getByText(parent.name)).toBeVisible()
+    await expect(page.getByRole('link', { name: `Zavolat ${parent.name}` })).toHaveAttribute(
       'href',
       'tel:777111222',
     )

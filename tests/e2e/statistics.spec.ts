@@ -47,9 +47,9 @@ test.describe('statistics (v3.5)', () => {
     const run = Date.now()
     const c = await club(run)
     const [came, missed, unmarked] = await Promise.all([
-      bookedChild(c.assisted, run),
-      bookedChild(c.assisted, run),
-      bookedChild(c.assisted, run),
+      bookedChild(c.assisted),
+      bookedChild(c.assisted),
+      bookedChild(c.assisted),
     ])
     const held = await moveTo(c.assisted, 2)
     for (const [child, mark] of [
@@ -127,7 +127,7 @@ test.describe('statistics (v3.5)', () => {
   test('Měsíc / Sezóna means 1 August – 31 July everywhere (test 29, AC-312)', async ({ page }) => {
     const run = Date.now()
     const c = await club(run)
-    const child = await bookedChild(c.assisted, run)
+    const child = await bookedChild(c.assisted)
     const today = new Date()
     const parts = new Intl.DateTimeFormat('en-CA', {
       timeZone: 'Europe/Prague',
