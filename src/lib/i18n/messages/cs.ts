@@ -632,7 +632,7 @@ export const cs = {
     messageSentIndicator: 'Zpráva rodiči odeslána',
     /* K17 · the player card. */
     guardianBooked: 'Přihlásil {when}',
-    callGuardian: 'Zavolat {name}',
+    callGuardian: 'Zavolat {phone}',
     paidHint: 'Po označení uvidí rodič v aplikaci „Zaplaceno“',
     paidBy: 'Označil {name} · {when}',
     bookingNoteCaption: 'POZNÁMKA K TRÉNINKU · JEN TRENÉŘI',

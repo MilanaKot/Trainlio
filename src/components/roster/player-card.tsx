@@ -312,10 +312,7 @@ export function PlayerCard({
                 {guardian.phone ? (
                   <a
                     href={`tel:${guardian.phone}`}
-                    aria-label={t.callGuardian.replace(
-                      '{name}',
-                      guardian.displayName ?? formatPhone(guardian.phone),
-                    )}
+                    aria-label={t.callGuardian.replace('{phone}', formatPhone(guardian.phone))}
                     className="flex size-11 shrink-0 items-center justify-center rounded-[10px] bg-primary-100 text-primary"
                   >
                     <PhoneIcon />

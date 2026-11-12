@@ -145,12 +145,13 @@ test.describe('a coach publishes a training and runs its roster', () => {
     // read. Masculine participle for everyone (DESIGN_SYSTEM §8).
     await expect(page.getByText(/Přihlásil /).first()).toBeVisible()
 
-    // §K2 (AC-274): the athlete sheet is where a coach reaches the family.
-    // AC-254 — the number is readable here and nowhere else.
+    // §K2 (AC-274): the player card (K17, v3.3) is where a coach reaches the
+    // family — one row per guardian, with when they booked and, where there is
+    // one, the number (AC-254). This parent gave none.
     await page.getByRole('button', { name: /Adam Hráč/ }).click()
     const athlete = page.getByRole('dialog')
-    await expect(athlete).toContainText('Rodič')
-    await expect(athlete).toContainText('Telefon')
+    await expect(athlete.getByRole('listitem').first()).toContainText('Přihlásil')
+    await expect(athlete.getByRole('checkbox', { name: /Zaplaceno/ })).toBeVisible()
     await athlete.getByRole('button', { name: 'Zavřít' }).click()
 
     // AC-050: the session is full, so adding by hand is refused until the coach
