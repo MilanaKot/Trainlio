@@ -331,5 +331,13 @@ the child's. While the parent's panel is there, the child's is captioned
 `SPORTOVEC`, in the same style as `VAŠE ÚDAJE` and `LEDNÍ HOKEJ`. A second
 child meets the design's screen unchanged.
 
-Still missing against G10: the photo row. A photograph is uploaded to the
-athlete's own folder, so it is offered from G9 once the athlete exists.
+G10's photo row is there, with one difference in when it acts. A photograph
+is stored in the athlete's own folder, and on G10 there is no athlete yet, so
+the picked photo waits in the page (previewed in the avatar) and is uploaded
+right after the form saves the child. If that upload fails, the child is
+still saved and the parent lands on G9 with the photo row saying so.
+
+Every photograph is resized in the browser before it is sent (§G9: client
+resize), to a JPEG with a 1024 px long edge when the file is over 900 KB.
+Without it a phone's 3 MB JPEG never reached the 5 MB check: the upload is a
+Server Action, and Next refuses an action body over 1 MB.

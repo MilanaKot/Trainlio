@@ -334,6 +334,9 @@ export const cs = {
        as well as in the one the picker accepts. */
     photoHint: 'JPG, PNG, WebP nebo HEIC, maximálně 5 MB.',
     photoConverting: 'Převádím fotku…',
+    /* G10 saved the child, and the photograph did not follow. */
+    photoNotSaved:
+      'Sportovec je uložený, jen fotografii se nepodařilo nahrát. Zkuste to prosím znovu.',
     club: 'Klub',
     team: 'Tým / kategorie',
     position: 'Pozice',

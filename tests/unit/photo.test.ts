@@ -8,7 +8,7 @@ import {
   photoBelongsToAthlete,
   photoPath,
 } from '@/lib/domain/photo'
-import { jpegName } from '@/lib/photo/heic'
+import { jpegName } from '@/lib/photo/shrink'
 
 const ATHLETE = '11111111-2222-3333-4444-555555555555'
 const UUID = 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee'
@@ -104,10 +104,11 @@ describe('HEIC from an iPhone (DR-13)', () => {
     expect(PICKER_ACCEPT).toContain('image/jpeg')
   })
 
-  it('names the converted file as a JPEG', () => {
+  it('names the re-encoded file as a JPEG', () => {
     expect(jpegName('IMG_0421.HEIC')).toBe('IMG_0421.jpg')
     expect(jpegName('dovolena.heif')).toBe('dovolena.jpg')
     expect(jpegName('.heic')).toBe('fotografie.jpg')
     expect(jpegName('bez-pripony')).toBe('bez-pripony.jpg')
+    expect(jpegName('foto.png')).toBe('foto.jpg')
   })
 })
