@@ -84,7 +84,10 @@ export function TrainingCard({
   const eligibility = years === t.allAthletes ? years : `${t.years} ${years}`
 
   return (
-    <li className="flex flex-col gap-1.5 rounded-card bg-surface p-4 shadow-card">
+    <li
+      data-session-id={session.id}
+      className="flex flex-col gap-1.5 rounded-card bg-surface p-4 shadow-card"
+    >
       <p className="nums text-sheet-title font-bold text-ink">
         {formatTimeRange(start, end, timezone)}
       </p>

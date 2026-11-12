@@ -1,5 +1,9 @@
 import { test, expect, type Page } from '@playwright/test'
 import {
+  freshAthlete,
+  type TestAthlete,
+  pickRoom,
+  sessionCard,
   asUser,
   dateInput,
   grantCoach,
@@ -15,18 +19,12 @@ import {
 
 /** A child booked into a training, so the edit screen has somebody to warn about. */
 async function bookedAthlete(
-  firstName: string,
   birthYear: number,
   sessionId: string,
   guardian = 'Milana Kotová',
-) {
-  // The address is built from the child's name, and `Tomáš` is not an address:
-  // GoTrue refuses a local part with diacritics in it.
-  const handle = firstName
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/\p{Diacritic}/gu, '')
-  const token = await tokenFor(uniqueEmail(`rodina.${handle}`))
+): Promise<TestAthlete> {
+  const athlete = await freshAthlete({ birthYear })
+  const token = await tokenFor(uniqueEmail('rodina'))
 
   // The parent says who they are, because the coach's roster names whoever
   // booked each child and a dash there is not what a real one looks like.
@@ -56,12 +54,12 @@ async function bookedAthlete(
       method: 'POST',
       headers: asUser(token),
       body: JSON.stringify({
-        p_first_name: firstName,
-        p_last_name: 'Hráč',
-        p_date_of_birth: `${birthYear}-04-02`,
+        p_first_name: athlete.firstName,
+        p_last_name: athlete.lastName,
+        p_date_of_birth: athlete.dateOfBirth,
         p_workspace_id: workspaces[0]?.id,
         p_sport_code: 'HOCKEY',
-        p_attributes: { position: 'CENTER', stick_side: 'LEFT' },
+        p_attributes: { position: athlete.position, stick_side: athlete.stickSide },
       }),
     })
   ).json()) as { data?: { athlete_id?: string } }
@@ -74,6 +72,7 @@ async function bookedAthlete(
       p_athlete_ids: [created.data?.athlete_id],
     }),
   })
+  return athlete
 }
 
 /**
@@ -209,7 +208,7 @@ test('the create and edit form (§K3)', async ({ page }) => {
   await expect(page.getByText('Šatna 4')).toBeVisible()
 
   const sessionId = page.url().split('/trener/')[1]?.split('/')[0] ?? ''
-  await bookedAthlete('Petr', 2017, sessionId)
+  await bookedAthlete(2017, sessionId)
 
   await page.goto(`/trener/${sessionId}/upravit`)
   await page.getByLabel('Začátek').fill('18:30')
@@ -450,11 +449,8 @@ test('one training and its roster (§K2)', async ({ page }) => {
   await expect(page.getByText('Šatna 4')).toBeVisible()
 
   const sessionId = page.url().split('/trener/')[1]?.split('/')[0] ?? ''
-  for (const [name, year] of [
-    ['Ivan', 2017],
-    ['Anna', 2018],
-  ] as const) {
-    await bookedAthlete(name, year, sessionId)
+  for (const year of [2017, 2018]) {
+    await bookedAthlete(year, sessionId)
   }
 
   await page.reload()
@@ -505,11 +501,9 @@ test('what v3 added (§K12–§K16, §A3b, §G6d)', async ({ page, browser }) =>
   await shoot(page, 'A3b-trener-pozvan')
 
   // A training with children on it, then a second one moved into the past. The
-  // changing room is this test's own: the club is shared by every run, and the
-  // parent below has to book into this training and not somebody else's. A
-  // room number rather than a timestamp, because this one is on the screenshot
-  // — `Šatna 1760074913148` is not what a club calls a room.
-  const room = `Šatna ${100 + Math.floor(Math.random() * 900)}`
+  // club is shared by every run, so the parent below finds this training by its
+  // id (`sessionCard`), and the room is one a club would write.
+  const room = `Šatna ${pickRoom()}`
   await page.goto('/trener/novy')
   await page.getByLabel('Datum').fill(dateInput(9))
   await page.getByLabel('Šatna').fill(room)
@@ -517,8 +511,8 @@ test('what v3 added (§K12–§K16, §A3b, §G6d)', async ({ page, browser }) =>
   // The id is read off the URL, so the navigation has to have happened first.
   await expect(page.getByRole('heading', { name: /Sportovci/ })).toBeVisible()
   const upcomingId = page.url().split('/trener/')[1]?.split('/')[0] ?? ''
-  await bookedAthlete('Ivan', 2017, upcomingId, 'Hana Procházková')
-  await bookedAthlete('Anna', 2018, upcomingId, 'Hana Procházková')
+  const ivan = await bookedAthlete(2017, upcomingId, 'Hana Procházková')
+  await bookedAthlete(2018, upcomingId, 'Hana Procházková')
 
   await page.goto('/trener/novy')
   await page.getByLabel('Datum').fill(dateInput(2))
@@ -526,7 +520,7 @@ test('what v3 added (§K12–§K16, §A3b, §G6d)', async ({ page, browser }) =>
   await page.getByRole('button', { name: 'Vytvořit trénink' }).click()
   await expect(page.getByRole('heading', { name: /Sportovci/ })).toBeVisible()
   const pastId = page.url().split('/trener/')[1]?.split('/')[0] ?? ''
-  await bookedAthlete('Tomáš', 2017, pastId, 'Petr Svoboda')
+  await bookedAthlete(2017, pastId, 'Petr Svoboda')
   await fetch(`${STACK}/rest/v1/training_sessions?id=eq.${pastId}`, {
     method: 'PATCH',
     headers: {
@@ -550,8 +544,8 @@ test('what v3 added (§K12–§K16, §A3b, §G6d)', async ({ page, browser }) =>
   await expect(page.getByRole('heading', { name: 'Sportovci', level: 1 })).toBeVisible()
   await shoot(page, 'K12-sportovci', { full: false })
 
-  await page.locator('main li', { hasText: 'Ivan Hráč' }).first().getByRole('link').click()
-  await expect(page.getByRole('heading', { name: 'Ivan Hráč' })).toBeVisible()
+  await page.locator('main li', { hasText: ivan.name }).getByRole('link').click()
+  await expect(page.getByRole('heading', { name: ivan.name })).toBeVisible()
   await page.getByRole('button', { name: 'Upravit poznámku' }).click()
   await page.getByLabel('INTERNÍ POZNÁMKA · JEN TRENÉŘI').fill('Alergie na ořechy.')
   await page.getByRole('button', { name: 'Uložit' }).click()
@@ -602,11 +596,7 @@ test('what v3 added (§K12–§K16, §A3b, §G6d)', async ({ page, browser }) =>
   // This test's own training. Booking into another run's leftover is how this
   // used to fail: the roster read back below is this training's, and Eliška
   // was on a different one.
-  await parent
-    .locator('li', { hasText: room })
-    .first()
-    .getByRole('button', { name: 'Přihlásit' })
-    .click()
+  await sessionCard(parent, upcomingId).getByRole('button', { name: 'Přihlásit' }).click()
   await parent.getByRole('dialog').getByRole('button', { name: 'Přihlásit' }).click()
   await expect(parent.getByRole('status')).toContainText('Přihlášeno')
 
@@ -764,7 +754,7 @@ test('the handover question (§A3, DR-15)', async ({ page }) => {
       p_facility_id: facilities.find((one) => one.code === 'MH')?.id,
       p_capacity: 10,
       p_eligibility_mode: 'ALL',
-      p_changing_room: `Šatna ${100 + Math.floor(Math.random() * 900)}`,
+      p_changing_room: `Šatna ${pickRoom()}`,
       p_main_coach_profile_id: profileId,
     }),
   })

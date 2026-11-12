@@ -79,7 +79,7 @@ test.describe('attendance and payment in one roster (v3.4)', () => {
     const run = Date.now()
     const c = await club(run)
     const [ivan, adam, ondrej, petr] = await Promise.all(
-      ['Ivan', 'Adam', 'Ondřej', 'Petr'].map((name) => bookedChild(c.assisted, run, name)),
+      [1, 2, 3, 4].map(() => bookedChild(c.assisted, run)),
     )
     if (!ivan || !adam || !ondrej || !petr) throw new Error('families not created')
     // Under way: started half an hour ago.

@@ -1,5 +1,6 @@
 import { expect, test, type Page } from '@playwright/test'
 import {
+  pickRoom,
   asUser,
   dateInput,
   expectAccessible,
@@ -387,7 +388,7 @@ test.describe('a workspace administrator manages the coaching staff', () => {
           p_facility_id: facilities.find((one) => one.code === 'MH')?.id,
           p_capacity: 10,
           p_eligibility_mode: 'ALL',
-          p_changing_room: `Šatna ${Date.now()}`,
+          p_changing_room: `Šatna ${pickRoom()}`,
           p_main_coach_profile_id: profileId,
         }),
       })
