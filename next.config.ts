@@ -62,6 +62,9 @@ const supabaseIsLocal = ['127.0.0.1', '::1', 'localhost'].includes(supabase.host
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
+  // `forbidden()`: K20b of another coach answers 403, not a page that looks
+  // missing (coach test 28).
+  experimental: { authInterrupts: true },
   // `next dev` serves its scripts to localhost only, and refuses them to any
   // other origin. The local stack is addressed as 127.0.0.1 throughout —
   // NEXT_PUBLIC_SITE_URL, so every link in an e-mail, and CONTRIBUTING — and a

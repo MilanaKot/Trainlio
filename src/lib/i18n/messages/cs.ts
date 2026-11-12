@@ -718,6 +718,9 @@ export const cs = {
       ledCaption: 'TRÉNINKY JAKO HLAVNÍ TRENÉR · {count}',
       ledMeta: '{place} · obsazeno {booked}/{capacity}',
       ledPresent: 'Byli {present}/{booked}',
+      forbiddenTitle: 'Sem nemáte přístup',
+      forbiddenBody: 'Statistiky jiného trenéra vidí jen administrátor.',
+      forbiddenBack: 'Zpět na statistiky',
     },
     /* v3.4 · K14 counters and K2e. */
     pastPresent: 'Byli',
