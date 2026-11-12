@@ -37,15 +37,40 @@ BR-170 to BR-176):
 - **A message to the parent**, shown in the booking detail and e-mailed (E09);
   editable and re-sendable.
 
-Attendance (who actually came) was asked for at the same time and is
-deliberately left out until it is designed — see `WISHLIST.md` §4.
+Attendance was asked for at the same time and waited for its design, which
+came with v3.4 (below).
+
+### Added with handoff v3.4 (12 November 2026)
+
+Decisions 38–46, BR-177 to BR-186:
+
+- **Attendance**, `Byl` / `Nebyl` per booking, marked from the start of a
+  training and correctable at any time after. A booking nobody marked counts
+  as `Nebyl` once the training is over. Attendance = Byl / (Byl + Nebyl);
+  cancelled trainings are left out.
+- **One roster for both** (K2): each booking is a card with an attendance and a
+  payment toggle; `Ostatní byli` and `Zaplatili všichni` act on the rest.
+  Payment and attendance never change each other. Un-marking a payment offers
+  `Vrátit` for four seconds.
+- **The player card** (K13) with four tabs — the athlete's trainings with the
+  period's attendance and payment, the profile and the staff's note, the
+  family, and the per-training notes and messages (which replace K17).
+- **Past trainings** (K14) count who came and who paid.
+- **Parents** see attendance in the athlete's profile (G8b), per month or
+  year — never payment there.
+- **A deactivated main coach** leaves their future trainings without one,
+  after a warning (A3f); parents read `Trenér bude upřesněn` and get E05 when
+  a coach is assigned.
+- **A training may be planned without a main coach** (product request,
+  12 November 2026), singly or as a series, and given one later.
 
 ### Non-goals for MVP
 
 - Payments (taking or processing them; the manual `Zaplaceno` flag above is not
   a payment)
 - Waiting list
-- Attendance / no-show tracking
+- No-show statistics beyond Byl / Nebyl (cancellation reasons, trends;
+  `WISHLIST.md` §4)
 - Athlete performance history
 - Chat
 - SMS

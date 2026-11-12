@@ -75,8 +75,9 @@ Code, schema, comments, docs: English.
 - Coach may manually exceed capacity.
 - Coach may reduce capacity below current confirmed bookings after explicit warning.
 - No waiting list.
-- No payments.
-- No attendance tracking.
+- No payment processing: a coach's manual `Zaplaceno` flag only (handoff v3.3).
+- Attendance is `Byl` / `Nebyl` per booking, marked by the coach (handoff v3.4);
+  no further no-show statistics.
 - No calendar UI.
 - No push notifications.
 - Critical session changes and cancellations send email.

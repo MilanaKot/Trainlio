@@ -109,7 +109,13 @@ May:
 - see created_by user for bookings;
 - mark a booking paid, keep a note for it and message its guardians, where
   `canEdit(session)` allows (BR-175) — and read all three on any training of
-  the workspace.
+  the workspace;
+- mark attendance (`Byl` / `Nebyl`) from the start of a training and at any
+  time after, and take back their own un-marking of a payment (`Vrátit`),
+  where `canEdit(session)` allows (BR-180);
+- a training without a main coach is nobody's own: only an administrator or
+  a coach with `Může upravovat všechny tréninky` may edit it or assign one
+  (BR-184).
 
 May not:
 

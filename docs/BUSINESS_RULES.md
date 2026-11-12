@@ -456,3 +456,60 @@ cancelled training and a cancelled booking accept none of them.
 BR-176 **(new — v3.3)**  
 Anonymising an athlete erases the coach's notes and the messages about them;
 the paid flags stay, since they say nothing about who the child was.
+
+## Attendance, the roster and the player card
+
+Handoff v3.4, decisions 38–46, 12 November 2026. Migrations 44–46.
+
+BR-177 **(new — v3.4)**  
+Attendance is `Byl` or `Nebyl` per confirmed booking, with who and when. It can
+be marked from the start of the training and corrected at any time after; it
+never goes back to unmarked. A booking nobody marked is unmarked, and is read
+as `Nebyl` once the training has ended — a reading rule, never a stored value.
+
+BR-178 **(new — v3.4)**  
+Attendance percentage = Byl / (Byl + Nebyl) over the period, with cancelled
+trainings and withdrawn or removed bookings left out, and a training still
+under way and unmarked counted as neither.
+
+BR-179 **(new — v3.4)**  
+`Ostatní byli` marks every unmarked confirmed booking of the training `Byl` in
+one transaction, without a confirmation; one already marked `Nebyl` stays so.
+It is refused before the start.
+
+BR-180 **(new — v3.4)**  
+Attendance follows `canEdit(session)` like payment (BR-175): read-only to a
+coach who can only view, refused on a cancelled training. No e-mail is sent
+for attendance or payment (EMAILS.md §4).
+
+BR-181 **(new — v3.4)**  
+Payment and attendance are independent: neither changes the other.
+
+BR-182 **(new — v3.4)**  
+Un-marking a payment can be taken back with `Vrátit` (DS §6.16): it puts back
+who marked it and when, read from the caller's own audit entry, only within a
+minute and only while the booking is still unpaid. Nobody else's un-marking can
+be taken back.
+
+BR-183 **(new — v3.4)**  
+A parent sees their child's attendance in the athlete's profile (G8b) as Byl /
+Nebyl per training, for a month or a year — never who marked it, and never
+payment there.
+
+BR-184 **(new — v3.4)**  
+Deactivating a coach who leads future, uncancelled trainings needs a
+confirmation that lists them (A3f). Confirmed, those trainings are left
+without a main coach, record who left them and when, and the coach stops
+assisting on any future training. Trainings that have started or were
+cancelled keep them. Nobody is e-mailed then. Replaces D-25.
+
+BR-185 **(new — v3.4)**  
+A training without a main coach shows `Bez hlavního trenéra` to the staff and
+`Trenér bude upřesněn` to parents. Only an administrator or a coach with `Může
+upravovat všechny tréninky` may edit it; assigning a main coach is a
+significant change and sends E05 to the booked families.
+
+BR-186 **(new — product request)**  
+A training or a series may be planned without a main coach (`Bez trenéra`)
+by whoever may create trainings, and given one later under BR-185. A training
+that has a main coach is not offered `Bez trenéra` when edited.

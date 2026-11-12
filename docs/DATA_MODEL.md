@@ -302,7 +302,11 @@ Future facility types:
 - sport_id
 - location_id
 - facility_id
-- main_coach_profile_id
+- main_coach_profile_id nullable — empty when the main coach was deactivated
+  (A3f) or the training was planned without one (migration 46)
+- main_coach_vacated_from, main_coach_vacated_at nullable — who left it
+  without a main coach, and when, for K2e; both or neither, and only while
+  the main coach is empty
 - start_at timestamptz
 - end_at timestamptz
 - changing_room nullable — guardian-visible (D-12)
@@ -358,7 +362,8 @@ agreement.
 ## session_series
 
 - id
-- workspace_id, sport_id, location_id, facility_id, main_coach_profile_id
+- workspace_id, sport_id, location_id, facility_id
+- main_coach_profile_id nullable — a series planned without a coach
 - frequency — WEEKLY in MVP
 - by_weekdays — ISO 1 = Monday .. 7 = Sunday; one or more, stored sorted and
   de-duplicated, at most seven
@@ -431,6 +436,9 @@ Main coach may be mirrored in training_sessions for simple querying, but associa
 - cancelled_at nullable
 - cancelled_by nullable
 - paid_at, paid_by nullable — `Zaplaceno`, both or neither (BR-170)
+- attendance (`PRESENT` | `ABSENT`), attendance_at, attendance_by nullable —
+  all three or none; null is unmarked and reads as `Nebyl` after the end
+  (BR-177)
 - parent_message (≤500), parent_message_sent_at, parent_message_sent_by
   nullable — the coach's message, all three or none (BR-174)
 
@@ -538,7 +546,6 @@ that a thing happened and is retained.
 
 Not required for MVP:
 
-- attendance (parked; WISHLIST §4)
 - payments (online; `bookings.paid_at` is a manual flag only)
 - waiting_list
 - athlete_performance

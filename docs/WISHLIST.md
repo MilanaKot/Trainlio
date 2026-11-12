@@ -137,22 +137,20 @@ in the e-mail; whether a series-wide cancellation, if it ever exists, takes one
 note for all of them; and whether staff are told about every cancellation or
 only about ones somebody else made.
 
-## 4. Attendance, and an athlete's record for the coach
+## 4. Cancellations in an athlete's record for the coach
 
-**What.** The coach marks after a training who came (`Přítomen` / `Chybí`),
-and sees per athlete how many trainings they attended, missed and cancelled —
-and, one level down, the reason a parent gave for each cancellation (a reason
-that would become required when a parent cancels). Asked for by the product
-owner on 12 November 2026.
+**Done with v3.4:** attendance itself (`Byl` / `Nebyl`) and the per-athlete
+percentage in K13 (D-29). What is still wished for is below.
 
-**Why it waits.** Handoff v3.3 designed payment, the note and the message
-without it, and deliberately draws payment as words so it is not mistaken for
-attendance (D-26). Attendance needs its own design: where it is marked, how it
-looks beside `Zaplaceno`, and the statistics screen.
+**What.** Per athlete, how many trainings they cancelled — and, one level
+down, the reason a parent gave for each cancellation (a reason that would
+become required when a parent cancels). Asked for by the product owner on
+12 November 2026.
 
-**What exists already.** A working first version — migration, row policy,
-domain functions, audit, tests, and pills on the K2 row — built before v3.3,
-on the local branch `session-attendance` (commit `c2dd58b`, not pushed). Its
-payment and note parts are superseded by migration 43; its attendance part is
-the starting point. `bookings.cancellation_reason` already exists for the
-parent's reason.
+**Why it waits.** It needs its own design: the required reason when a parent
+cancels (guardian G6), and where K13 would show the count and the reasons.
+
+**What exists already.** `bookings.cancellation_reason` holds the parent's
+reason; K13 already lists each athlete's trainings. The parked branch
+`session-attendance` (commit `c2dd58b`, local only) is superseded by v3.4 and
+can be deleted.

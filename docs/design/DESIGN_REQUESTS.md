@@ -47,6 +47,26 @@ bound to nothing in the meantime.
 
 ---
 
+### DR-16 · A training planned without a main coach (BR-186)
+
+Asked for by the product on 12 November 2026 and built without a design: K3c
+gains a `Bez trenéra` row (a `?` tile, `Trenéra přiřadíte později.`), and
+such a training reads as K2e without the `{coach} byl deaktivován` sentence.
+Worth drawing: the K3c row, the K2e notice for a training that never had a
+coach, and whether K1 should mark it differently from one whose coach left.
+
+### DR-17 · Cancellation reasons in the player card (WISHLIST §4)
+
+A required reason when a parent cancels (G6), and where K13 shows how many
+trainings an athlete cancelled and why.
+
+---
+
+## Answered with v3.4, 12 November 2026
+
+**DR-15** is superseded: A3f replaces the `Převést tréninky na mě` switch, and
+the future trainings wait without a main coach (D-32).
+
 ## Answered by the product, 10 October 2026
 
 **DR-15 · Deactivating a coach who leads future trainings.** The administrator
