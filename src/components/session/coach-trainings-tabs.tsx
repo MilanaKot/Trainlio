@@ -6,10 +6,11 @@ import { messages } from '@/lib/i18n'
 
 const t = messages.coach
 
-export type CoachTrainingsTab = 'upcoming' | 'past'
+export type CoachTrainingsTab = 'upcoming' | 'past' | 'series'
 
 /**
- * Nadcházející / Minulé on the coach's list (coach/SPEC.md §K1, §K14).
+ * Nadcházející / Minulé / Série on the coach's list (coach/SPEC.md §K1, §K14,
+ * and §K15 since v3.6, decision 50).
  *
  * The same component and the same URL-held state as the parent's own tabs: a
  * coach who opens a finished training from `Minulé` and comes back with the
@@ -20,6 +21,11 @@ export function CoachTrainingsTabs({ value }: { value: CoachTrainingsTab }) {
   const params = useSearchParams()
 
   function select(next: CoachTrainingsTab) {
+    // Série is a page of its own (K15), not a filter of this list.
+    if (next === 'series') {
+      router.push('/trener/serie')
+      return
+    }
     const search = new URLSearchParams(params.toString())
     if (next === 'upcoming') search.delete('tab')
     else search.set('tab', 'minule')
@@ -36,6 +42,7 @@ export function CoachTrainingsTabs({ value }: { value: CoachTrainingsTab }) {
       options={[
         { value: 'upcoming', label: t.upcoming },
         { value: 'past', label: t.past },
+        { value: 'series', label: t.seriesTab },
       ]}
     />
   )

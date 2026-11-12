@@ -71,8 +71,7 @@ export const cs = {
     roleCoach: 'Trenér',
     roleAdmin: 'Trenér · Administrátor',
     /* §A0 (v3): planning is every coach's, management is the admin's. */
-    planningCaption: 'PLÁNOVÁNÍ',
-    seriesRow: 'Série tréninků',
+    overviewCaption: 'PŘEHLEDY',
     statisticsRow: 'Statistiky',
     manageCaption: 'SPRÁVA',
     accountCaption: 'ÚČET',
@@ -183,7 +182,7 @@ export const cs = {
     /* G6 (v3.4): the training has no main coach (coach K2e). */
     coachTbd: 'Trenér bude upřesněn',
     title: 'Moje tréninky',
-    tabs: 'Nadcházející nebo minulé tréninky',
+    tabs: 'Tréninky: nadcházející, minulé nebo série',
     upcoming: 'Nadcházející',
     past: 'Minulé',
     noneUpcoming: 'Zatím nemáte žádný nadcházející trénink.',
@@ -889,6 +888,8 @@ export const cs = {
     noSeries: 'Zatím nemáte žádnou sérii.',
     /* K15/K15b/K16 (v3, DR-03). */
     seriesTitle: 'Série',
+    /* v3.6: the third Tréninky tab. */
+    seriesTab: 'Série',
     seriesHelper: 'Tréninky ze série jsou po vytvoření samostatné. Upravit je můžete jednotlivě.',
     seriesRunning: 'PROBÍHAJÍCÍ · {count}',
     seriesEnded: 'UKONČENÉ · {count}',
@@ -896,7 +897,7 @@ export const cs = {
       'Série vytvoří tréninky na celé období najednou — například každé úterý a čtvrtek do Vánoc.',
     seriesRemaining: '{total} tréninků, zbývá {remaining}',
     seriesTotal: '{total} tréninků',
-    seriesBack: 'Série tréninků',
+    seriesBack: 'Série',
     seriesOutOfPattern: 'Upraveno mimo sérii',
     seriesNoEdit:
       'Celou sérii nelze upravit ani zrušit najednou. Každý trénink otevřete a upravte zvlášť.',

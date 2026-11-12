@@ -2,7 +2,9 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { getCoachWorkspace, listCoachSeries } from '@/server/sessions/queries'
 import { getCoachRights } from '@/server/staff/queries'
+import { CoachTrainingsTabs } from '@/components/session/coach-trainings-tabs'
 import { SeriesCard } from '@/components/session/series-card'
+import { TrainingsHeader } from '@/components/session/trainings-header'
 import { buttonVariants } from '@/components/ui/button'
 import { EmptyState } from '@/components/ui/empty-state'
 import { canCreateSessions } from '@/lib/domain/coach-rights'
@@ -33,16 +35,16 @@ export default async function SeriesListPage() {
 
   return (
     <main className="flex flex-col gap-5 pb-8">
-      <Link href="/trener/vice" className="flex min-h-11 items-center gap-1 text-row text-muted">
-        <span aria-hidden="true">‹</span> {messages.more.title}
-      </Link>
+      <TrainingsHeader workspace={workspace} />
+      {/* v3.6 (decision 50): the third tab of Tréninky, not a page of Více. */}
+      <CoachTrainingsTabs value="series" />
 
       <div className="flex items-center justify-between gap-3">
-        <h1 className="font-display text-page font-bold text-ink">{t.seriesTitle}</h1>
+        <p className="text-hint text-muted">{t.seriesHelper}</p>
         {canCreate ? (
           <Link
             href="/trener/serie/nova"
-            className={`${buttonVariants({ size: 'md' })} whitespace-nowrap`}
+            className={`${buttonVariants({ size: 'md' })} shrink-0 whitespace-nowrap`}
           >
             {t.newSeries}
           </Link>
@@ -66,8 +68,6 @@ export default async function SeriesListPage() {
         </EmptyState>
       ) : (
         <>
-          <p className="text-hint text-muted">{t.seriesHelper}</p>
-
           {running.length > 0 ? (
             <section className="flex flex-col gap-2">
               <h2 className="text-caption font-bold uppercase tracking-[0.8px] text-muted">
