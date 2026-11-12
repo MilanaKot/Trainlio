@@ -1,6 +1,10 @@
 import { expect, test } from '@playwright/test'
 import {
   asUser,
+  fillAthleteForm,
+  freshAthlete,
+  pickRoom,
+  sessionCard,
   dateInput,
   expectAccessible,
   grantCoach,
@@ -31,9 +35,10 @@ const admin = {
 /**
  * A session for these athletes to book into, opened by a real coach call.
  *
- * `changingRoom` is the test's handle on its own session. Every run shares one
- * database and the projects run in parallel, so locating a card by "Šatna 4" or
- * by "1 / 1" finds another run's training — which is how these first failed.
+ * The returned id is the test's handle on its own session (`sessionCard`).
+ * Every run shares one database and the projects run in parallel, so locating
+ * a card by "Šatna 4" or by "1 / 1" finds another run's training — which is
+ * how these first failed.
  */
 async function openSession(
   coachEmail: string,
@@ -118,6 +123,7 @@ async function moveSession(
 async function fillSession(sessionId: string): Promise<void> {
   const other = uniqueEmail('jina.rodina')
   const token = await tokenFor(other)
+  const child = await freshAthlete()
 
   const workspaces = (await (
     await fetch(`${STACK}/rest/v1/rpc/joinable_workspaces`, {
@@ -132,12 +138,12 @@ async function fillSession(sessionId: string): Promise<void> {
       method: 'POST',
       headers: asUser(token),
       body: JSON.stringify({
-        p_first_name: 'Petr',
-        p_last_name: 'Jiný',
-        p_date_of_birth: '2017-01-15',
+        p_first_name: child.firstName,
+        p_last_name: child.lastName,
+        p_date_of_birth: child.dateOfBirth,
         p_workspace_id: workspaces[0]?.id,
         p_sport_code: 'HOCKEY',
-        p_attributes: { position: 'DEFENSE', stick_side: 'LEFT' },
+        p_attributes: { position: child.position, stick_side: child.stickSide },
       }),
     })
   ).json()) as { ok?: boolean; data?: { athlete_id?: string } }
@@ -219,8 +225,8 @@ test.describe('a guardian, from first sign-in to a withdrawn booking', () => {
   test('registers a child, books, sees the count, and withdraws', async ({ page }) => {
     const parent = uniqueEmail('rodic')
     const coach = uniqueEmail('trener')
-    const room = `Šatna ${Date.now()}`
-    await openSession(coach, 10, room)
+    const room = `Šatna ${pickRoom()}`
+    const sessionId = await openSession(coach, 10, room)
 
     // AC-001, AC-002: a code arrives and authenticates without a password.
     await signIn(page, parent)
@@ -239,14 +245,11 @@ test.describe('a guardian, from first sign-in to a withdrawn booking', () => {
     await page.getByLabel('Příjmení').first().fill('Kotova')
     await page.getByLabel('Telefon').fill('777 123 456')
 
-    await page.getByLabel('Jméno').last().fill('Ivan')
-    await page.getByLabel('Příjmení').last().fill('Kotov')
-    await page.getByLabel('Datum narození').fill('2017-10-23')
-    await page.getByRole('radio', { name: 'Centr' }).click()
-    await page.getByRole('radio', { name: 'Levá' }).click()
+    const ivan = await freshAthlete()
+    await fillAthleteForm(page, ivan)
     await page.getByRole('button', { name: 'Přidat sportovce' }).click()
 
-    await expect(page.getByText('Ivan Kotov')).toBeVisible()
+    await expect(page.getByText(ivan.name)).toBeVisible()
 
     // Asked once. A second child meets the same screen without the block.
     await page.goto('/moji-sportovci/novy')
@@ -255,7 +258,7 @@ test.describe('a guardian, from first sign-in to a withdrawn booking', () => {
 
     // D-01: the workspace only becomes visible once a child belongs to it.
     await page.goto('/treninky')
-    const card = page.locator('li', { hasText: room }).first()
+    const card = sessionCard(page, sessionId)
     await expect(card).toBeVisible()
     await expect(card).toContainText('0 / 10')
 
@@ -264,21 +267,19 @@ test.describe('a guardian, from first sign-in to a withdrawn booking', () => {
     await card.getByRole('button', { name: 'Přihlásit' }).click()
     const sheet = page.getByRole('dialog')
     await expect(sheet).toContainText('Koho chcete přihlásit?')
-    await expect(sheet).toContainText('Ivan Kotov')
+    await expect(sheet).toContainText(ivan.name)
     await sheet.getByRole('button', { name: 'Přihlásit' }).click()
 
     await expect(page.getByText('Přihlášeno', { exact: true })).toBeVisible()
 
     // The count comes from the projection, so it moving is the projection
     // having been maintained — not the client having decremented something.
-    await expect(page.locator('li', { hasText: room }).first()).toContainText('1 / 10')
+    await expect(sessionCard(page, sessionId)).toContainText('1 / 10')
 
     // And the card now says who is in, without offering to book them twice.
-    await expect(page.locator('li', { hasText: room }).first()).toContainText(
-      'Přihlášen: Ivan Kotov',
-    )
+    await expect(sessionCard(page, sessionId)).toContainText(`Přihlášen: ${ivan.name}`)
     await expect(
-      page.locator('li', { hasText: room }).first().getByRole('button', { name: 'Přihlásit' }),
+      sessionCard(page, sessionId).getByRole('button', { name: 'Přihlásit' }),
     ).toBeDisabled()
 
     // AC-279: read after booking on purpose. The coach of this training is now
@@ -292,14 +293,14 @@ test.describe('a guardian, from first sign-in to a withdrawn booking', () => {
     await expect(page.getByLabel('Telefon')).toHaveValue('777 123 456')
 
     await page.goto('/moje-treninky')
-    await expect(page.getByText('Ivan Kotov')).toBeVisible()
+    await expect(page.getByText(ivan.name)).toBeVisible()
 
     // Well outside the 12-hour deadline, so withdrawing is offered (AC-040).
     // §G4 confirms first: a parent with several bookings is one tap from
     // withdrawing the wrong child.
     await page.getByRole('button', { name: 'Odhlásit' }).click()
     const confirm = page.getByRole('alertdialog')
-    await expect(confirm).toContainText('Odhlásit Ivan Kotov?')
+    await expect(confirm).toContainText(`Odhlásit ${ivan.name}?`)
     await confirm.getByRole('button', { name: 'Odhlásit' }).click()
 
     await expect(page.getByRole('status')).toContainText('Odhlášeno')
@@ -315,13 +316,13 @@ test.describe('a guardian, from first sign-in to a withdrawn booking', () => {
     await expect(page.getByText('Zatím nemáte žádný absolvovaný trénink.')).toBeVisible()
 
     await page.goto('/treninky')
-    await expect(page.locator('li', { hasText: room }).first()).toContainText('0 / 10')
+    await expect(sessionCard(page, sessionId)).toContainText('0 / 10')
   })
 
   test('a full session offers no booking (AC-021)', async ({ page }) => {
     const parent = uniqueEmail('plny')
     const coach = uniqueEmail('trener')
-    const room = `Šatna ${Date.now()}`
+    const room = `Šatna ${pickRoom()}`
     const sessionId = await openSession(coach, 1, room)
     await fillSession(sessionId)
 
@@ -330,16 +331,13 @@ test.describe('a guardian, from first sign-in to a withdrawn booking', () => {
     // §G16 fields first: this parent has no name yet either.
     await page.getByLabel('Jméno').first().fill('Hana')
     await page.getByLabel('Příjmení').first().fill('Kotova')
-    await page.getByLabel('Jméno').last().fill('Anna')
-    await page.getByLabel('Příjmení').last().fill('Kotova')
-    await page.getByLabel('Datum narození').fill('2018-03-04')
-    await page.getByRole('radio', { name: 'Brankář' }).click()
-    await page.getByRole('radio', { name: 'Pravá' }).click()
+    const anna = await freshAthlete()
+    await fillAthleteForm(page, anna)
     await page.getByRole('button', { name: 'Přidat sportovce' }).click()
-    await expect(page.getByText('Anna Kotova')).toBeVisible()
+    await expect(page.getByText(anna.name)).toBeVisible()
 
     await page.goto('/treninky')
-    const card = page.locator('li', { hasText: room }).first()
+    const card = sessionCard(page, sessionId)
     await expect(card).toContainText('1 / 1')
 
     // Booked to capacity by another family before this parent ever looked.
@@ -354,8 +352,9 @@ test.describe('a guardian, from first sign-in to a withdrawn booking', () => {
     await signIn(page, parent)
 
     await page.goto('/moji-sportovci')
-    await expect(page.getByText('Ivan Kotov')).toHaveCount(0)
-    await expect(page.getByText('Anna Kotova')).toHaveCount(0)
+    // Nobody's child at all: every athlete in the database belongs to some
+    // other family.
+    await expect(page.locator('main li')).toHaveCount(0)
 
     // D-01: and with no child anywhere, no workspace's sessions either. The
     // screen says the thing this parent can act on rather than "nothing is on".
@@ -372,27 +371,20 @@ test.describe('a guardian, from first sign-in to a withdrawn booking', () => {
   test('a parent is told what the coach changed, once (AC-270)', async ({ page }) => {
     const parent = uniqueEmail('zmena')
     const coach = uniqueEmail('trener')
-    const room = `Šatna ${Date.now()}`
+    const room = `Šatna ${pickRoom()}`
     const sessionId = await openSession(coach, 10, room)
 
     await signIn(page, parent)
     await page.goto('/moji-sportovci/novy')
     await page.getByLabel('Jméno').first().fill('Jana')
     await page.getByLabel('Příjmení').first().fill('Kotova')
-    await page.getByLabel('Jméno').last().fill('Petr')
-    await page.getByLabel('Příjmení').last().fill('Kotov')
-    await page.getByLabel('Datum narození').fill('2017-02-02')
-    await page.getByRole('radio', { name: 'Centr' }).click()
-    await page.getByRole('radio', { name: 'Levá' }).click()
+    const petr = await freshAthlete()
+    await fillAthleteForm(page, petr)
     await page.getByRole('button', { name: 'Přidat sportovce' }).click()
-    await expect(page.getByText('Petr Kotov')).toBeVisible()
+    await expect(page.getByText(petr.name)).toBeVisible()
 
     await page.goto('/treninky')
-    await page
-      .locator('li', { hasText: room })
-      .first()
-      .getByRole('button', { name: 'Přihlásit' })
-      .click()
+    await sessionCard(page, sessionId).getByRole('button', { name: 'Přihlásit' }).click()
     await page.getByRole('dialog').getByRole('button', { name: 'Přihlásit' }).click()
     await expect(page.getByRole('status')).toContainText('Přihlášeno')
 
@@ -400,7 +392,7 @@ test.describe('a guardian, from first sign-in to a withdrawn booking', () => {
     await moveSession(coach, sessionId, '08:00', '09:00')
 
     await page.goto('/moje-treninky')
-    const card = page.locator('main li', { hasText: 'Petr Kotov' }).first()
+    const card = page.locator('main li', { hasText: petr.name }).first()
     await expect(card).toContainText('Změněno')
     await expect(card).toContainText('08:00–09:00')
     // What it used to be, which is the part migration 28 exists for.
@@ -417,11 +409,11 @@ test.describe('a guardian, from first sign-in to a withdrawn booking', () => {
 
     // Opening it is what silences the badge — and only for this booking.
     await page.goto('/moje-treninky')
-    await expect(page.locator('main li', { hasText: 'Petr Kotov' }).first()).not.toContainText(
+    await expect(page.locator('main li', { hasText: petr.name }).first()).not.toContainText(
       'Změněno',
     )
     // The training still says it moved; only the "new to you" flag is gone.
-    await expect(page.locator('main li', { hasText: 'Petr Kotov' }).first()).toContainText(
+    await expect(page.locator('main li', { hasText: petr.name }).first()).toContainText(
       '08:00–09:00',
     )
   })
@@ -434,35 +426,30 @@ test.describe('a guardian, from first sign-in to a withdrawn booking', () => {
   test('a child the coach removed cannot be booked again (AC-042a)', async ({ page }) => {
     const parent = uniqueEmail('odebrani')
     const coach = uniqueEmail('trener')
-    const room = `Šatna ${Date.now()}`
+    const room = `Šatna ${pickRoom()}`
     const sessionId = await openSession(coach, 10, room)
 
     await signIn(page, parent)
     await page.goto('/moji-sportovci/novy')
     await page.getByLabel('Jméno').first().fill('Hana')
     await page.getByLabel('Příjmení').first().fill('Procházková')
-    await page.getByLabel('Jméno').last().fill('Eliška')
-    await page.getByLabel('Příjmení').last().fill('Procházková')
-    await page.getByLabel('Datum narození').fill('2017-04-04')
-    await page.getByRole('radio', { name: 'Centr' }).click()
-    await page.getByRole('radio', { name: 'Levá' }).click()
+    const eliska = await freshAthlete()
+    await fillAthleteForm(page, eliska)
     await page.getByRole('button', { name: 'Přidat sportovce' }).click()
-    await expect(page.getByText('Eliška Procházková')).toBeVisible()
+    // Saving uploads nothing but still waits on the server; under a full run
+    // that can take longer than the default five seconds.
+    await expect(page.getByText(eliska.name)).toBeVisible({ timeout: 15_000 })
 
     await page.goto('/treninky')
-    await page
-      .locator('li', { hasText: room })
-      .first()
-      .getByRole('button', { name: 'Přihlásit' })
-      .click()
+    await sessionCard(page, sessionId).getByRole('button', { name: 'Přihlásit' }).click()
     await page.getByRole('dialog').getByRole('button', { name: 'Přihlásit' }).click()
     await expect(page.getByRole('status')).toContainText('Přihlášeno')
 
-    await removeByCoach(coach, sessionId, 'Eliška Procházková', '777 654 321')
+    await removeByCoach(coach, sessionId, eliska.name, '777 654 321')
 
     // §G4b: the orange badge, no strike-through, and no button at all.
     await page.goto('/moje-treninky')
-    const card = page.locator('main li', { hasText: 'Eliška Procházková' }).first()
+    const card = page.locator('main li', { hasText: eliska.name }).first()
     await expect(card).toContainText('Odhlášeno trenérem')
     await expect(card).toContainText('Znovu přihlásit může jen trenér')
     await expect(card.getByRole('button')).toHaveCount(0)
@@ -491,7 +478,7 @@ test.describe('a guardian, from first sign-in to a withdrawn booking', () => {
     // D-06: the training is open and has places, and this child still cannot go
     // back on it. The card says why rather than offering a button that fails.
     await page.goto('/treninky')
-    const training = page.locator('li', { hasText: room }).first()
+    const training = sessionCard(page, sessionId)
     await expect(training).toContainText('Sportovce odebral trenér')
     await expect(training.getByRole('button', { name: 'Přihlásit' })).toBeDisabled()
   })

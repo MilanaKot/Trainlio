@@ -118,6 +118,7 @@ export function BookingCard({
 
   return (
     <li
+      data-session-id={booking.session.id}
       className={cn(
         'flex flex-col gap-1.5 rounded-card p-4',
         muted

@@ -1,7 +1,10 @@
 import { expect } from '@playwright/test'
 import {
   apiUser,
+  freshAthlete,
+  type TestAthlete,
   asUser,
+  pickRoom,
   dateInput,
   grantCoach,
   grantWorkspaceRole,
@@ -96,10 +99,8 @@ export async function club(run: number) {
     return created.data?.training_session_id ?? ''
   }
 
-  const assistedRoom = `${run}1`
-  const ledRoom = `${run}2`
-  const assisted = await training(assistedRoom, adminId, `Interní pro asistenta ${run}`)
-  const led = await training(ledRoom, viewerId, null)
+  const assisted = await training(pickRoom(), adminId, `Interní pro asistenta ${run}`)
+  const led = await training(pickRoom(), viewerId, null)
 
   const assistants = await rpc(adminToken, 'set_session_assistants', {
     p_training_session_id: assisted,
@@ -118,17 +119,24 @@ export async function club(run: number) {
     mh,
     assisted,
     led,
-    assistedRoom: `Šatna ${assistedRoom}`,
-    ledRoom: `Šatna ${ledRoom}`,
   }
 }
 
-/** A child with a parent who has a phone, booked onto the training. */
+/**
+ * A child with a parent who has a phone, booked onto the training. Each one
+ * different — name, year, position, stick (`freshAthlete`).
+ */
 export async function bookedChild(
   sessionId: string,
   run: number,
-  firstName = 'Max',
-): Promise<{ name: string; parentEmail: string; parentToken: string; bookingId: string }> {
+): Promise<{
+  name: string
+  athlete: TestAthlete
+  parentEmail: string
+  parentToken: string
+  bookingId: string
+}> {
+  const athlete = await freshAthlete()
   const parentEmail = uniqueEmail('rodic.opravneni')
   const token = await apiUser(parentEmail)
   await fetch(`${STACK}/rest/v1/app_profiles?id=eq.${await profileFor(parentEmail)}`, {
@@ -152,12 +160,12 @@ export async function bookedChild(
       method: 'POST',
       headers: asUser(token),
       body: JSON.stringify({
-        p_first_name: firstName,
-        p_last_name: `Hráč${run}`,
-        p_date_of_birth: '2016-04-02',
+        p_first_name: athlete.firstName,
+        p_last_name: athlete.lastName,
+        p_date_of_birth: athlete.dateOfBirth,
         p_workspace_id: workspaces[0]?.id,
         p_sport_code: 'HOCKEY',
-        p_attributes: { position: 'CENTER', stick_side: 'LEFT' },
+        p_attributes: { position: athlete.position, stick_side: athlete.stickSide },
       }),
     })
   ).json()) as { ok?: boolean; data?: { athlete_id?: string } }
@@ -174,7 +182,8 @@ export async function bookedChild(
     )
   ).json()) as { id: string }[]
   return {
-    name: `${firstName} Hráč${run}`,
+    name: athlete.name,
+    athlete,
     parentEmail,
     parentToken: token,
     bookingId: bookings[0]?.id ?? '',

@@ -1,5 +1,15 @@
 import { test, expect, type Page } from '@playwright/test'
-import { dateInput, grantCoach, signIn, uniqueEmail, MAILPIT } from './helpers'
+import {
+  dateInput,
+  fillAthleteForm,
+  freshAthlete,
+  grantCoach,
+  pickRoom,
+  sessionCard,
+  signIn,
+  uniqueEmail,
+  MAILPIT,
+} from './helpers'
 
 /**
  * The product, end to end, as two people meet it.
@@ -91,7 +101,7 @@ test('a coach opens a training, a parent books, and the training changes', async
   await page.getByLabel('Příjmení').fill('Filipi')
   await page.getByRole('button', { name: 'Uložit' }).click()
 
-  const room = `Šatna ${100 + Math.floor(Math.random() * 900)}`
+  const room = `Šatna ${pickRoom()}`
   await page.goto('/trener/novy')
   await page.getByLabel('Datum').fill(dateInput(7))
   await page.getByLabel('Začátek').fill('17:00')
@@ -133,30 +143,23 @@ test('a coach opens a training, a parent books, and the training changes', async
   await parent.getByLabel('Jméno').first().fill('Hana')
   await parent.getByLabel('Příjmení').first().fill('Nováková')
   await parent.getByLabel('Telefon').fill('777 123 456')
-  await parent.getByLabel('Jméno').last().fill('Eliška')
-  await parent.getByLabel('Příjmení').last().fill('Nováková')
-  await parent.getByLabel('Datum narození').fill('2017-05-05')
-  await parent.getByRole('radio', { name: 'Centr' }).click()
-  await parent.getByRole('radio', { name: 'Levá' }).click()
+  const child = await freshAthlete()
+  await fillAthleteForm(parent, child)
   await shoot(parent, '06-rodic-novy-sportovec', { full: true })
   await parent.getByRole('button', { name: 'Přidat sportovce' }).click()
-  await expect(parent.getByText('Eliška Nováková')).toBeVisible()
+  await expect(parent.getByText(child.name)).toBeVisible()
 
   await parent.goto('/treninky')
-  await expect(parent.locator('li', { hasText: room }).first()).toBeVisible()
+  await expect(sessionCard(parent, sessionId)).toBeVisible()
   await shoot(parent, '07-rodic-treninky')
 
-  await parent
-    .locator('li', { hasText: room })
-    .first()
-    .getByRole('button', { name: 'Přihlásit' })
-    .click()
+  await sessionCard(parent, sessionId).getByRole('button', { name: 'Přihlásit' }).click()
   await shoot(parent, '08-rodic-prihlaseni-sheet')
   await parent.getByRole('dialog').getByRole('button', { name: 'Přihlásit' }).click()
   await expect(parent.getByRole('status')).toContainText('Přihlášeno')
 
   await parent.goto('/moje-treninky')
-  await expect(parent.getByText('Eliška Nováková').first()).toBeVisible()
+  await expect(parent.getByText(child.name).first()).toBeVisible()
   await shoot(parent, '09-rodic-moje-treninky')
 
   // The coach sees the child, and who booked it.
@@ -185,8 +188,9 @@ test('a coach opens a training, a parent books, and the training changes', async
 
   // ─── The coach takes the child off the list ───────────────────────────────
   await page.goto(`/trener/${sessionId}`)
-  await page.getByRole('button', { name: /Eliška Nováková/ }).click()
-  await page.getByRole('dialog').getByRole('button', { name: 'Odhlásit z tréninku' }).click()
+  // v3.4: from the player card, on the training's row in `Tréninky`.
+  await page.getByRole('link', { name: new RegExp(child.name) }).click()
+  await page.getByRole('button', { name: 'Odhlásit z tréninku' }).first().click()
   const removal = page.getByRole('alertdialog')
   await removal
     .getByLabel('Zpráva pro rodiče')
@@ -204,7 +208,7 @@ test('a coach opens a training, a parent books, and the training changes', async
   // D-06: the parent cannot put the child back. The coach is who they ring,
   // and the number is the one he published on his own account.
   await parent.goto('/moje-treninky')
-  const card = parent.locator('main li', { hasText: 'Eliška Nováková' }).first()
+  const card = parent.locator('main li', { hasText: child.name }).first()
   await expect(card).toContainText('Znovu přihlásit může jen trenér')
   await shoot(parent, '16-rodic-odhlasen')
   await card.getByRole('link').first().click()

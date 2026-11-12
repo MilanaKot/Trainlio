@@ -1,5 +1,17 @@
 import { expect, test, type Page } from '@playwright/test'
-import { dateInput, grantCoach, signIn, tokenFor, uniqueEmail, asUser, STACK } from './helpers'
+import {
+  dateInput,
+  fillAthleteForm,
+  freshAthlete,
+  grantCoach,
+  pickRoom,
+  sessionCard,
+  signIn,
+  tokenFor,
+  uniqueEmail,
+  asUser,
+  STACK,
+} from './helpers'
 
 /**
  * Mobile viewport review.
@@ -171,8 +183,8 @@ async function openSession(coachEmail: string, changingRoom: string): Promise<st
 
 test.describe('on a phone', () => {
   test('the guardian screens fit and are tappable', async ({ page }) => {
-    const room = `Šatna ${Date.now()}`
-    await openSession(uniqueEmail('trener'), room)
+    const room = `Šatna ${pickRoom()}`
+    const sessionId = await openSession(uniqueEmail('trener'), room)
 
     await page.goto('/prihlaseni')
     await expectNoHorizontalScroll(page, 'sign-in')
@@ -191,23 +203,20 @@ test.describe('on a phone', () => {
     // The first registration asks who the parent is as well (AC-278).
     await page.getByLabel('Jméno').first().fill('Milana')
     await page.getByLabel('Příjmení').first().fill('Kotova')
-    await page.getByLabel('Jméno').last().fill('Ivan')
-    await page.getByLabel('Příjmení').last().fill('Kotov')
-    await page.getByLabel('Datum narození').fill('2017-10-23')
-    await page.getByRole('radio', { name: 'Centr' }).click()
-    await page.getByRole('radio', { name: 'Levá' }).click()
+    const child = await freshAthlete()
+    await fillAthleteForm(page, child)
     await page.getByRole('button', { name: 'Přidat sportovce' }).click()
-    await expect(page.getByText('Ivan Kotov')).toBeVisible()
+    await expect(page.getByText(child.name)).toBeVisible()
 
     await expectNoHorizontalScroll(page, 'my athletes')
     await expectTappableControls(page, 'my athletes')
 
     await page.goto('/treninky')
-    await expect(page.getByText(room)).toBeVisible()
+    await expect(sessionCard(page, sessionId)).toBeVisible()
     await expectNoHorizontalScroll(page, 'sessions')
     await expectTappableControls(page, 'sessions')
 
-    const card = page.locator('li', { hasText: room }).first()
+    const card = sessionCard(page, sessionId)
     await card.getByRole('button', { name: 'Přihlásit' }).click()
 
     // The sheet is a phone-sized surface of its own, so it gets the same review.
@@ -215,7 +224,7 @@ test.describe('on a phone', () => {
     await expectTappableControls(page, 'booking sheet')
 
     await page.getByRole('dialog').getByRole('button', { name: 'Přihlásit' }).click()
-    await expect(page.locator('li', { hasText: room }).first()).toContainText('1 / 10')
+    await expect(sessionCard(page, sessionId)).toContainText('1 / 10')
 
     await page.goto('/moje-treninky')
     await expectNoHorizontalScroll(page, 'my bookings')
@@ -279,9 +288,10 @@ test.describe('on a phone', () => {
     await page.getByLabel('Začátek').fill('17:00')
     await page.getByLabel('Konec').fill('18:00')
     await page.getByLabel('Kapacita', { exact: true }).fill('10')
-    const coachRoom = `Šatna ${Date.now()}`
+    const coachRoom = `Šatna ${pickRoom()}`
     await page.getByLabel('Šatna').fill(coachRoom)
     await page.getByRole('button', { name: 'Vytvořit trénink' }).click()
+    await page.waitForURL(/\/trener\/[0-9a-f-]{36}$/)
     await expect(page.getByText(coachRoom)).toBeVisible()
 
     await expectNoHorizontalScroll(page, 'session detail with roster')
