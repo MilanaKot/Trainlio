@@ -1,5 +1,6 @@
 import { expect, test, type Page } from '@playwright/test'
 import {
+  freshPerson,
   pickRoom,
   asUser,
   dateInput,
@@ -113,21 +114,21 @@ test.describe('a workspace administrator manages the coaching staff', () => {
     await expect(page.getByRole('heading', { name: 'Upravit trenéra' })).toBeVisible()
 
     // AC-243: a coach without a surname is not how a parent asks for them.
-    await page.getByLabel('Jméno').fill('Pavel')
+    // Unique in the database: the projects run in parallel against one, and
+    // a fixed name matches the row a previous run left behind — which passes
+    // this assertion before this run's own save has landed.
+    const self = await freshPerson()
+    await page.getByLabel('Jméno').fill(self.firstName)
     await page.getByLabel('Příjmení').fill('')
     await page.getByRole('button', { name: 'Uložit změny' }).click()
     await expect(page.getByText('Vyplňte příjmení.')).toBeVisible()
 
-    // Unique per run: the projects run in parallel against one database, and a
-    // fixed surname matches the row a previous run left behind — which passes
-    // this assertion before this run's own save has landed.
-    const run = Date.now()
-    await page.getByLabel('Příjmení').fill(`Zeman${run}`)
+    await page.getByLabel('Příjmení').fill(self.lastName)
     // §A3 KONTAKT (decision 28). What a parent is given when this coach removes
     // their child — and the only place a parent ever meets it (§G6d).
     await page.getByLabel('Telefon').fill('777 123 456')
     await page.getByRole('button', { name: 'Uložit změny' }).click()
-    await expect(page.getByText(`Pavel Zeman${run}`)).toBeVisible()
+    await expect(page.getByText(self.name)).toBeVisible()
 
     // Read back from the database, grouped as a person reads it.
     await page.goto(`/trener/vice/treneri/${await profileFor(admin)}`)
@@ -147,14 +148,14 @@ test.describe('a workspace administrator manages the coaching staff', () => {
     await page.getByRole('button', { name: 'Zrušit' }).click()
 
     // AC-248: a coach the club employs but who has never signed in.
-    const surname = `Málek${run}`
+    const absent = await freshPerson()
     await page.getByRole('link', { name: '+ Přidat trenéra' }).click()
-    await page.getByLabel('Jméno').fill('Petr')
-    await page.getByLabel('Příjmení').fill(surname)
+    await page.getByLabel('Jméno').fill(absent.firstName)
+    await page.getByLabel('Příjmení').fill(absent.lastName)
     await page.getByRole('button', { name: 'Přidat trenéra' }).click()
 
     await expect(page.getByText('Trenér přidán')).toBeVisible()
-    const added = page.getByRole('link', { name: new RegExp(`Petr ${surname}`) })
+    const added = page.getByRole('link', { name: new RegExp(absent.name) })
     await expect(added).toBeVisible()
     // §A1 (v3): the meta answers whether this coach can get in, and this one
     // was added without an address.
@@ -171,19 +172,19 @@ test.describe('a workspace administrator manages the coaching staff', () => {
     // Scoped to this run's own row: the list is shared, and other runs leave
     // their own deactivated coaches in the same section.
     const inactive = page.locator('section', { hasText: 'NEAKTIVNÍ' })
-    const inactiveRow = inactive.locator('li', { hasText: `Petr ${surname}` })
+    const inactiveRow = inactive.locator('li', { hasText: absent.name })
     await expect(inactiveRow).toBeVisible()
     await expect(inactiveRow).toContainText('Nezobrazuje se při výběru trenérů')
     await expect(inactiveRow).toContainText('Neaktivní')
 
-    await inactiveRow.getByRole('link', { name: new RegExp(`Petr ${surname}`) }).click()
+    await inactiveRow.getByRole('link', { name: new RegExp(absent.name) }).click()
     // The switch itself is visually hidden; the label is the target, which is
     // also what a thumb hits.
     await page.locator('label', { hasText: 'Aktivní trenér' }).click()
     await page.getByRole('button', { name: 'Uložit změny' }).click()
     await expect(
       page.locator('section', { hasText: 'AKTIVNÍ' }).locator('li', {
-        hasText: `Petr ${surname}`,
+        hasText: absent.name,
       }),
     ).toBeVisible()
 
@@ -206,11 +207,11 @@ test.describe('a workspace administrator manages the coaching staff', () => {
     await grantCoach(coach)
 
     await page.goto('/trener/vice/treneri')
-    await expect(page.getByText(`Pavel Zeman${run}`)).toBeVisible()
+    await expect(page.getByText(self.name)).toBeVisible()
     // Visible, and not editable: the rows are not even links for a coach who
     // cannot open what is behind them (§A1).
     await expect(page.getByRole('link', { name: '+ Přidat trenéra' })).toHaveCount(0)
-    await expect(page.getByRole('link', { name: new RegExp(`Pavel Zeman${run}`) })).toHaveCount(0)
+    await expect(page.getByRole('link', { name: new RegExp(self.name) })).toHaveCount(0)
     await expect(page.getByRole('button', { name: '+ Přidat trenéra' })).toHaveCount(0)
   })
 
@@ -224,12 +225,12 @@ test.describe('a workspace administrator manages the coaching staff', () => {
     await signIn(page, admin)
     await grantWorkspaceRole(admin, 'WORKSPACE_ADMIN')
 
-    const run = Date.now()
     const coachEmail = uniqueEmail('trener.pozvany')
 
     await page.goto('/trener/vice/treneri/novy')
-    await page.getByLabel('Jméno').fill('Petr')
-    await page.getByLabel('Příjmení').fill(`Pozvaný${run}`)
+    const invited = await freshPerson()
+    await page.getByLabel('Jméno').fill(invited.firstName)
+    await page.getByLabel('Příjmení').fill(invited.lastName)
     await page.getByLabel('E-mail').fill(coachEmail)
     await page.getByLabel('Telefon').fill('777 222 333')
 
@@ -238,7 +239,7 @@ test.describe('a workspace administrator manages the coaching staff', () => {
     await expect(page.getByText('Trenér přidán, pozvánka odeslána')).toBeVisible()
 
     // §A1: the state the design gives them until they first sign in.
-    const row = page.locator('li', { hasText: `Petr Pozvaný${run}` })
+    const row = page.locator('li', { hasText: invited.name })
     await expect(row).toContainText('Pozván')
     await expect(row).toContainText('Ještě se nepřihlásil')
 
@@ -254,7 +255,7 @@ test.describe('a workspace administrator manages the coaching staff', () => {
     // §A6: the message itself, with the link that prefills the address.
     const invitation = await readInvitation(coachEmail)
     expect(invitation).toContain('Pozvánka do aplikace')
-    expect(invitation).toContain(`Petr Pozvaný${run}`)
+    expect(invitation).toContain(invited.name)
     expect(invitation).toContain('pozvánka nevyprší')
     expect(invitation).toContain(`/prihlaseni?email=${encodeURIComponent(coachEmail)}`)
 
@@ -277,7 +278,7 @@ test.describe('a workspace administrator manages the coaching staff', () => {
     await expectAccessible(page, '§K0 the welcome screen') // AC-292
     // The profile they were attached to is the one the administrator named —
     // not a second one made by signing up.
-    await expect(page.getByText(`Petr Pozvaný${run}`)).toBeVisible()
+    await expect(page.getByText(invited.name)).toBeVisible()
     await page.getByLabel('Váš telefon').fill('777 999 000')
     await page.getByRole('button', { name: 'Pokračovat na tréninky' }).click()
 
@@ -298,22 +299,22 @@ test.describe('a workspace administrator manages the coaching staff', () => {
     await signIn(page, admin)
     await grantWorkspaceRole(admin, 'WORKSPACE_ADMIN')
 
-    const run = Date.now()
     await page.goto('/trener/vice/treneri/novy')
-    await page.getByLabel('Jméno').fill('Jana')
-    await page.getByLabel('Příjmení').fill(`Kolegová${run}`)
+    const colleague = await freshPerson()
+    await page.getByLabel('Jméno').fill(colleague.firstName)
+    await page.getByLabel('Příjmení').fill(colleague.lastName)
     await page.getByRole('button', { name: 'Přidat trenéra' }).click()
     await expect(page.getByText('Trenér přidán')).toBeVisible()
 
     // §A3: the switch, and what it says it does.
-    await page.getByRole('link', { name: new RegExp(`Jana Kolegová${run}`) }).click()
+    await page.getByRole('link', { name: new RegExp(colleague.name) }).click()
     const adminSwitch = page.getByRole('switch', { name: 'Administrátor' })
     await expect(adminSwitch).not.toBeChecked()
     await page.locator('label', { hasText: 'Administrátor' }).click()
     await page.getByRole('button', { name: 'Uložit změny' }).click()
     await expect(page.getByText('Uloženo')).toBeVisible()
 
-    await page.getByRole('link', { name: new RegExp(`Jana Kolegová${run}`) }).click()
+    await page.getByRole('link', { name: new RegExp(colleague.name) }).click()
     await expect(page.getByRole('switch', { name: 'Administrátor' })).toBeChecked()
 
     // AC-292: the ROLE panel the role arrived with. Its §A3d variant differs by
@@ -324,7 +325,7 @@ test.describe('a workspace administrator manages the coaching staff', () => {
     // asking — can this person get in — so a coach with no address says so
     // rather than announcing a role they cannot yet use.
     await page.goto('/trener/vice/treneri')
-    const row = page.locator('li', { hasText: `Jana Kolegová${run}` })
+    const row = page.locator('li', { hasText: colleague.name })
     await expect(row).toContainText('Chybí e-mail')
     await expect(row).toContainText('Bez přístupu')
 
@@ -332,8 +333,9 @@ test.describe('a workspace administrator manages the coaching staff', () => {
     // This administrator signed in and was granted the role; nobody has given
     // them a name yet, and §A3 requires both halves of one before it saves.
     await page.goto(`/trener/vice/treneri/${await profileFor(admin)}`)
-    await page.getByLabel('Jméno').fill('Milana')
-    await page.getByLabel('Příjmení').fill(`Správná${run}`)
+    const renamed = await freshPerson()
+    await page.getByLabel('Jméno').fill(renamed.firstName)
+    await page.getByLabel('Příjmení').fill(renamed.lastName)
     await page.locator('label', { hasText: 'Administrátor' }).click()
     await page.getByRole('button', { name: 'Uložit změny' }).click()
 
@@ -398,10 +400,10 @@ test.describe('a workspace administrator manages the coaching staff', () => {
 
     // §A3 requires both halves of a name before it saves anything, and this
     // coach was granted the role rather than added on A2.
-    const run = Date.now()
     await page.goto(`/trener/vice/treneri/${profileId}`)
-    await page.getByLabel('Jméno').fill('Jana')
-    await page.getByLabel('Příjmení').fill(`Odcházející${run}`)
+    const departing = await freshPerson()
+    await page.getByLabel('Jméno').fill(departing.firstName)
+    await page.getByLabel('Příjmení').fill(departing.lastName)
     await page.locator('label', { hasText: 'Aktivní trenér' }).click()
     await page.getByRole('button', { name: 'Uložit změny' }).click()
 
@@ -430,7 +432,7 @@ test.describe('a workspace administrator manages the coaching staff', () => {
     expect(after[0]?.main_coach_profile_id).toBeNull()
 
     // And the coach is gone from the active list, not from the club.
-    const row = page.locator('li', { hasText: `Jana Odcházející${run}` })
+    const row = page.locator('li', { hasText: departing.name })
     await expect(row).toContainText('Neaktivní')
   })
 

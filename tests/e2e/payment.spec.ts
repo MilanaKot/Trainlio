@@ -79,7 +79,7 @@ test.describe('attendance and payment in one roster (v3.4)', () => {
     const run = Date.now()
     const c = await club(run)
     const [ivan, adam, ondrej, petr] = await Promise.all(
-      [1, 2, 3, 4].map(() => bookedChild(c.assisted, run)),
+      [1, 2, 3, 4].map(() => bookedChild(c.assisted)),
     )
     if (!ivan || !adam || !ondrej || !petr) throw new Error('families not created')
     // Under way: started half an hour ago.
@@ -188,7 +188,7 @@ test.describe('attendance and payment in one roster (v3.4)', () => {
   }) => {
     const run = Date.now()
     const c = await club(run)
-    const child = await bookedChild(c.assisted, run)
+    const child = await bookedChild(c.assisted)
     // Book the same child on the second training too: one past, one ahead.
     const added = await rpc(c.adminToken, 'book_athlete_as_coach', {
       p_training_session_id: c.led,
@@ -303,7 +303,7 @@ test.describe('attendance and payment in one roster (v3.4)', () => {
       })
       expect(created.ok).toBe(true)
     }
-    const child = await bookedChild(c.led, run)
+    const child = await bookedChild(c.led)
 
     await signIn(page, c.adminEmail)
     await page.goto(`/trener/vice/treneri/${c.viewerId}`)
@@ -337,8 +337,8 @@ test.describe('attendance and payment in one roster (v3.4)', () => {
     await page.getByRole('button', { name: 'Bez trenéra' }).click()
     // Parallel workers can share a run number, so two clubs' administrators
     // may share a name; either may lead it.
-    await page.getByRole('searchbox').fill(`Hlavní${run}`)
-    await page.getByText(`Iva Hlavní${run}`).first().click()
+    await page.getByRole('searchbox').fill(c.adminName)
+    await page.getByText(c.adminName).first().click()
     await page.getByRole('button', { name: 'Hotovo' }).click()
     await page.getByRole('button', { name: 'Uložit změny' }).click()
     await page.waitForURL(`**/trener/${c.led}`)
@@ -352,7 +352,7 @@ test.describe('attendance and payment in one roster (v3.4)', () => {
   }) => {
     const run = Date.now()
     const c = await club(run)
-    const child = await bookedChild(c.assisted, run)
+    const child = await bookedChild(c.assisted)
     await moveTo(c.assisted, -30)
 
     await signIn(page, c.viewerEmail)

@@ -1,6 +1,8 @@
 import { expect } from '@playwright/test'
 import {
   apiUser,
+  freshPerson,
+  type TestPerson,
   freshAthlete,
   type TestAthlete,
   asUser,
@@ -43,6 +45,8 @@ export async function facility(token: string, code: string): Promise<string> {
  * administrator leads with that coach assisting, one that coach leads.
  */
 export async function club(run: number) {
+  const chief = await freshPerson()
+  const viewer = await freshPerson()
   const adminEmail = uniqueEmail('spravce.opravneni')
   const viewerEmail = uniqueEmail('asistent.opravneni')
   // API users: only the browser signs in through a code (see apiUser).
@@ -62,7 +66,7 @@ export async function club(run: number) {
       authorization: `Bearer ${SERVICE}`,
       'content-type': 'application/json',
     },
-    body: JSON.stringify({ first_name: 'Ota', last_name: `Asistent${run}` }),
+    body: JSON.stringify({ first_name: viewer.firstName, last_name: viewer.lastName }),
   })
   await fetch(`${STACK}/rest/v1/app_profiles?id=eq.${adminId}`, {
     method: 'PATCH',
@@ -71,7 +75,7 @@ export async function club(run: number) {
       authorization: `Bearer ${SERVICE}`,
       'content-type': 'application/json',
     },
-    body: JSON.stringify({ first_name: 'Iva', last_name: `Hlavní${run}` }),
+    body: JSON.stringify({ first_name: chief.firstName, last_name: chief.lastName }),
   })
 
   const restricted = await rpc(adminToken, 'set_member_can_edit_trainings', {
@@ -110,6 +114,9 @@ export async function club(run: number) {
 
   return {
     workspaceId,
+    /** The administrator's and the view-only coach's names, as screens print them. */
+    adminName: chief.name,
+    viewerName: viewer.name,
     adminEmail,
     adminToken,
     adminId,
@@ -126,17 +133,16 @@ export async function club(run: number) {
  * A child with a parent who has a phone, booked onto the training. Each one
  * different — name, year, position, stick (`freshAthlete`).
  */
-export async function bookedChild(
-  sessionId: string,
-  run: number,
-): Promise<{
+export async function bookedChild(sessionId: string): Promise<{
   name: string
   athlete: TestAthlete
+  parent: TestPerson
   parentEmail: string
   parentToken: string
   bookingId: string
 }> {
   const athlete = await freshAthlete()
+  const parent = await freshPerson()
   const parentEmail = uniqueEmail('rodic.opravneni')
   const token = await apiUser(parentEmail)
   await fetch(`${STACK}/rest/v1/app_profiles?id=eq.${await profileFor(parentEmail)}`, {
@@ -146,7 +152,11 @@ export async function bookedChild(
       authorization: `Bearer ${SERVICE}`,
       'content-type': 'application/json',
     },
-    body: JSON.stringify({ first_name: 'Eva', last_name: `Rodič${run}`, phone: '777333444' }),
+    body: JSON.stringify({
+      first_name: parent.firstName,
+      last_name: parent.lastName,
+      phone: '777333444',
+    }),
   })
   const workspaces = (await (
     await fetch(`${STACK}/rest/v1/rpc/joinable_workspaces`, {
@@ -184,6 +194,7 @@ export async function bookedChild(
   return {
     name: athlete.name,
     athlete,
+    parent,
     parentEmail,
     parentToken: token,
     bookingId: bookings[0]?.id ?? '',
