@@ -151,6 +151,4 @@ become required when a parent cancels). Asked for by the product owner on
 cancels (guardian G6), and where K13 would show the count and the reasons.
 
 **What exists already.** `bookings.cancellation_reason` holds the parent's
-reason; K13 already lists each athlete's trainings. The parked branch
-`session-attendance` (commit `c2dd58b`, local only) is superseded by v3.4 and
-can be deleted.
+reason; K13 already lists each athlete's trainings.
