@@ -19,6 +19,24 @@ function Chevron() {
   )
 }
 
+function ChartIcon() {
+  return (
+    <span
+      aria-hidden="true"
+      className="flex size-7 items-center justify-center rounded-chip bg-primary-100 text-primary"
+    >
+      <svg viewBox="0 0 20 20" fill="none" className="size-4">
+        <path
+          d="M4 16V9M8.5 16V4.5M13 16v-5M17 16H3"
+          stroke="currentColor"
+          strokeWidth="1.8"
+          strokeLinecap="round"
+        />
+      </svg>
+    </span>
+  )
+}
+
 function CalendarIcon() {
   return (
     <span
@@ -95,7 +113,7 @@ export default async function MorePage() {
       <section className="flex flex-col gap-2.5">
         <Caption>{t.planningCaption}</Caption>
         <ul className="flex flex-col rounded-card bg-surface px-4 shadow-card">
-          <li>
+          <li className="border-b border-line">
             <Link
               href="/trener/serie"
               className="flex min-h-14 items-center gap-3 py-2 text-row font-semibold text-ink"
@@ -103,6 +121,17 @@ export default async function MorePage() {
               <CalendarIcon />
               <span className="flex-1">{t.seriesRow}</span>
               <span className="text-meta font-normal text-muted">{running}</span>
+              <Chevron />
+            </Link>
+          </li>
+          {/* v3.5 (decision 48): every coach's, like the series. */}
+          <li>
+            <Link
+              href="/trener/statistiky"
+              className="flex min-h-14 items-center gap-3 py-2 text-row font-semibold text-ink"
+            >
+              <ChartIcon />
+              <span className="flex-1">{t.statisticsRow}</span>
               <Chevron />
             </Link>
           </li>
