@@ -75,6 +75,11 @@ Decisions 47–48, BR-187 to BR-191:
 - **Seasons**: every period switch is `Měsíc / Sezóna`, a season running
   1 August – 31 July (`Sezóna 2026/27`).
 
+### Changed with handoff v3.6 (12 November 2026)
+
+The coach's athlete list shows every birth year at once, as a grid with
+counts, newest first; selected filter chips are blue (decision 49).
+
 ### Non-goals for MVP
 
 - Payments (taking or processing them; the manual `Zaplaceno` flag above is not

@@ -971,3 +971,11 @@ administrator sees both (coach test 28).
 AC-312  
 `Měsíc / Sezóna` in K13, K20, K20b and G8b uses 1 August – 31 July seasons
 labelled `Sezóna 2026/27` (coach test 29).
+
+## The year filter (handoff v3.6)
+
+AC-313  
+K12 shows every birth year of active athletes in a four-column grid, newest
+first with counts, all inside a 390 px screen with no sideways scroll;
+choosing `2018` shows only that group and `{x} z {n}`; leaving and coming back
+starts on `Všechny` again (coach test 11, decision 49).

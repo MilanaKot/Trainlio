@@ -402,3 +402,10 @@ Byl`), not by the athlete: on the player card every row is the same athlete,
 - **`Trenéři` stays under a coach filter**, narrowed to the trainings shown.
 - **The 403 page** is the app's own `forbidden.tsx`
   (`experimental.authInterrupts`).
+
+## After handoff v3.6: the year grid and blue chips
+
+- **YearGrid chips are 44 px tall, not 36**, like every other control (DS §10,
+  the mobile tap-size review).
+- **A year chip is named `2018, 10`** for a screen reader; read as one string
+  the year and the count ran together.
