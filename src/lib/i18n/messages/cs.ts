@@ -616,6 +616,10 @@ export const cs = {
     duplicateAsNew: 'Duplikovat jako nový trénink',
     /* The roster (UI_SPEC, BR-092, AC-090). */
     rosterTitle: 'Sportovci {count}',
+    /* Handoff v3.3: payment, the coach's note and the message per booking
+       (K2, K17, K2c). */
+    paid: 'Zaplaceno',
+    unpaid: 'Nezaplaceno',
     roster: 'Přihlášení sportovci',
     rosterEmpty: 'Zatím není přihlášen nikdo.',
     rosterRemoved: 'Odebraní a odhlášení',
