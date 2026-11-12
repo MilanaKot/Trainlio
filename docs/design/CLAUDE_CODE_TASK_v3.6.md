@@ -1,4 +1,4 @@
-# Task for Claude Code: year filter in Sportovci + blue selected chips (handoff v3.6)
+# Task for Claude Code: year filter, blue chips, Série tab, Více sections, button radius (handoff v3.6)
 
 Paste this into Claude Code from the repo root. First replace `docs/design/` with the folder from the zip. This is a small UI task. It does not depend on v3.4/v3.5 beyond the screens that already exist.
 
@@ -6,10 +6,11 @@ Paste this into Claude Code from the repo root. First replace `docs/design/` wit
 
 The design handoff in `docs/design/` was updated to v3.6. Read these first:
 
-- `README.md`: decision 49 and the changelog
-- `coach/SPEC.md`: **K12** (rewritten) and test 11
-- `shared/DESIGN_SYSTEM.md`: §6.28 FilterChips (selected colour + the YearGrid variant)
-- Prototype: `coach/prototype.html`, K12 and K12b (group "Athletes")
+- `README.md`: decisions 49–51 and the changelog
+- `coach/SPEC.md`: **K12** (rewritten), test 11, **K15** entry, K20 entry
+- `admin/SPEC.md`: A0 (`Přehledy`)
+- `shared/DESIGN_SYSTEM.md`: §6.28 FilterChips (selected colour + the YearGrid variant), Button sizes, §6.18 FAB
+- Prototype: `coach/prototype.html`: K12, K12b, K1, K14, K15, A0
 - Source: `design-source/screens/K12-Sportovci.dc.html`, `K12b-Rocnik2017.dc.html`
 
 The specs win over the prototypes.
@@ -31,15 +32,25 @@ Work in small commits, in this order.
    - with a year selected: only that group plus inactive athletes of that year; header meta `{shown} z {n}`;
    - search and year combine (AND); no match → `Nikdo neodpovídá hledání.`;
    - no athletes at all → hide the grid, show the existing empty state.
-4. **Tests.**
+4. **Série tab.**
+   - The Tréninky segmented control gets a third tab: `Nadcházející · Minulé · Série` (3 equal columns), on K1, K1b, K14 and K15.
+   - K15 (`/coach/series`) becomes that tab: same header as K1, no back link, bottom nav `Tréninky` active (fix the longest-prefix rule if needed). Helper text + `+ Nová série` button under the tabs; the button only with `isAdmin || canEditTrainings`.
+   - K16 back link → `‹ Série`.
+5. **Více (A0).**
+   - Remove the `Plánování` section and the `Série tréninků` row.
+   - New section `Přehledy` with the `Statistiky` row → K20.
+   - Order: profile, `Přehledy`, `Správa` (admin only), `Účet`, sign out.
+6. **Button radius.** One token `--radius-button: 12px` used by every text button: Button md/sm/lg, FAB (no longer a pill), header actions (`+ Nová série`, `+ Přidat sportovce`), secondary/outline buttons, the toast `Vrátit`, and the e-mail CTA in the templates (+ VML `arcsize` ≈ 25 %). Chips/filters stay pills; StatusToggle keeps §6.36. Grep for leftover `rounded-full` / radius 10 / 28 on buttons.
+7. **Tests.**
    - Update coach test 11 (Playwright 390×844): seed 9 birth years and assert every chip is in the viewport without horizontal scrolling; selecting `2018` filters and shows `x z n`; leaving the tab and coming back shows `Všechny` selected.
    - Vitest for YearGrid: order, counts, `aria-pressed`.
-   - Axe: no serious violations on K12.
+   - Playwright: from K1 tap `Série` → K15 with the tab selected and `Tréninky` active in the bottom nav; A0 has no `Série tréninků` row.
+   - Axe: no serious violations on K12, K15 and A0.
 
 ## Done when
 
 - All of the above tests pass.
 - `tsc --noEmit`, lint and Vitest are green.
-- Send me screenshots of K12 (`Všechny`), K12 with `2017` selected, K1 and K20 (to check the blue chips).
+- Send me screenshots of K12 (`Všechny`), K12 with `2017` selected, K1 and K20 (to check the blue chips), K15 (Série tab), A0 Více and one form screen (buttons with the new radius).
 
 If something is ambiguous, ask me instead of guessing.

@@ -148,7 +148,7 @@ Tabs: SegmentedControl with 4 items `Tréninky · Hráč · Rodiče · Zprávy` 
 Read-only coaches (no `canEdit` for that session): toggles shown but not interactive (`opacity .75`, no buttons), no `Odhlásit`, no add/edit links.
 
 ### K20 · Statistiky (v3.5) — `/coach/stats`
-Entry: A0 `Více › Plánování › Statistiky` (chart icon). Visible to **all coaches**; the `Trenéři` block and K20b of *other* coaches only for admins (a coach sees only his own K20b).
+Entry: A0 `Více › Přehledy › Statistiky` (chart icon, v3.6). Visible to **all coaches**; the `Trenéři` block and K20b of *other* coaches only for admins (a coach sees only his own K20b).
 - H1 `Statistiky`; period `Měsíc / Sezóna` + prev/next + label; FilterChips with dropdowns `Všechny ročníky ▾` (single year or all) and `Všichni trenéři ▾` (sessions where the coach is main or assistant).
 - 4 tiles (2 × 2, white, radius 14, Barlow 30): `{n} Tréninků` (held, not cancelled), `{x} % Obsazenost` (Σ bookings / Σ capacity), `{x} % Docházka` (Byl / (Byl + Nebyl)), `{x} % Zaplaceno` (paid / bookings of held sessions).
 - `NEZAPLACENO · {n} tréninky` + link `Vše`: rows Avatar 36 + name + year + red `$ {n} tréninky` + chevron → K13 (Tréninky tab). Sorted by count desc. Top 3, `Vše` opens the full list.
@@ -161,7 +161,7 @@ Entry: A0 `Více › Plánování › Statistiky` (chart icon). Visible to **all
 Header Avatar 48 + name (Barlow 30) + `Statistiky trenéra`; period control; chips `Hlavní trenér + asistent` / `Jen hlavní`; 4 tiles (first = `{n} Tréninků ({m} jako hlavní)`); `DOCHÁZKA PO TÝDNECH` bar chart (one bar per week of the month / per month of the season; green ≥ 80 %, warning below; value on top; labels below; `role="img"` + text alternative table for screen readers); list `TRÉNINKY JAKO HLAVNÍ TRENÉR · {n}` rows date · time, meta `{place} · obsazeno {booked}/{capacity}`, right person-check `{present}/{n}` (success when complete, warning otherwise) → K2.
 
 ### K15 · Series list (`/coach/series`) — v3, DR-03
-Entry: A0 `Více` → section `PLÁNOVÁNÍ` → row `Série tréninků` (value = number of running series). Visible to all coaches.
+**v3.6:** Entry is the third tab of the Tréninky segmented control: `Nadcházející · Minulé · Série` (K1, K1b, K14, K15 share it; `role=tablist`, 3 equal columns). No back link; bottom nav `Tréninky` stays active. Header = K1 header (`Tréninky` + org line). Under the tabs: helper text 13 muted `Tréninky ze série jsou po vytvoření samostatné. Upravit je můžete jednotlivě.` and to its right the `+ Nová série` button (only with `isAdmin || canEditTrainings`). The `Série tréninků` row in Více is removed. Visible to all coaches.
 Back `‹ Více`; header H1 `Série` + primary md button `+ Nová série` (→ K11, `white-space: nowrap`).
 Helper text (muted): `Tréninky ze série jsou po vytvoření samostatné. Upravit je můžete jednotlivě.`
 Captions `PROBÍHAJÍCÍ · {n}` (to ≥ today) and `UKONČENÉ · {n}` (muted cards).
@@ -170,7 +170,7 @@ Series card (whole card → K16): WeekdayBadges (DS §6.29) · time Barlow 26/30
 EmptyState: calendar icon tile, `Zatím nemáte žádnou sérii.`, text `Série vytvoří tréninky na celé období najednou — například každé úterý a čtvrtek do Vánoc.`, primary `+ Nová série`.
 
 ### K16 · Trainings of one series (`/coach/series/[id]`) — v3, DR-03
-Back `‹ Série tréninků`. Header: WeekdayBadges, H1 time (Barlow 36/40), line 15/600 `Úterý a čtvrtek · {from} – {to}`, meta place/years.
+Back `‹ Série` (returns to the Série tab). Header: WeekdayBadges, H1 time (Barlow 36/40), line 15/600 `Úterý a čtvrtek · {from} – {to}`, meta place/years.
 SegmentedControl `Nadcházející · {n}` / `Minulé · {n}`. Rows = CoachTrainingRow (count `9 / 12`, chevron → K2). A training edited individually after creation shows status line `Upraveno mimo sérii` (muted 13/600).
 Footer note (muted 13): `Celou sérii nelze upravit ani zrušit najednou. Každý trénink otevřete a upravte zvlášť.` **Fixed:** no series editing.
 

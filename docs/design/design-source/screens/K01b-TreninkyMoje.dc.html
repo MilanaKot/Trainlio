@@ -33,16 +33,16 @@ body{margin:0;background:#F3F5F9;font-family:Manrope,"Segoe UI",system-ui,sans-s
 .gh h2{margin:0;font-size:17px;line-height:24px;font-weight:700;color:var(--accent)}
 .today{height:22px;padding:0 8px;border-radius:6px;background:#13795B;color:#fff;font-size:12px;font-weight:700;display:inline-flex;align-items:center}
 .chev{flex-shrink:0}
-.fab{position:absolute;right:16px;bottom:92px;height:56px;padding:0 20px 0 16px;border-radius:28px;border:0;background:var(--accent);color:#fff;font:700 16px/1 Manrope,system-ui,sans-serif;display:flex;align-items:center;gap:8px;box-shadow:0 8px 24px rgba(43,85,224,.35)}
+.fab{position:absolute;right:16px;bottom:92px;height:56px;padding:0 20px 0 16px;border-radius:12px;border:0;background:var(--accent);color:#fff;font:700 16px/1 Manrope,system-ui,sans-serif;display:flex;align-items:center;gap:8px;box-shadow:0 8px 24px rgba(43,85,224,.35)}
 .nav{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));height:76px;padding-bottom:8px;box-sizing:border-box;background:var(--surface);box-shadow:0 -1px 0 var(--line)}
 .nav a{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font-size:11px;font-weight:600;color:var(--muted);text-decoration:none}
 .nav a.act{color:var(--accent)}
-.segctl{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px;padding:4px;border-radius:12px;background:var(--n50)}
+.segctl{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;padding:4px;border-radius:12px;background:var(--n50)}
 .segctl a{height:40px;border-radius:9px;display:flex;align-items:center;justify-content:center;font:600 15px/1 Manrope,system-ui,sans-serif;color:var(--muted);text-decoration:none}
 .segctl a.on{background:#fff;color:var(--ink);box-shadow:0 1px 2px rgba(14,23,38,.08)}
 .chips{display:flex;gap:8px;margin-bottom:4px}
 .chip{height:36px;padding:0 14px;border-radius:18px;border:0;background:var(--surface);box-shadow:inset 0 0 0 1.5px var(--line);font:600 14px/1 Manrope,sans-serif;color:var(--ink);display:flex;align-items:center}
-.chip.on{background:var(--ink);color:#fff;box-shadow:none}
+.chip.on{background:var(--accent);color:#fff;box-shadow:none}
 .role{align-self:flex-start;margin-top:4px;height:22px;padding:0 7px;border-radius:6px;font-size:11px;font-weight:700;display:inline-flex;align-items:center}
 .role.main{background:var(--accentsoft);color:var(--accent)}
 .role.asst{background:var(--n50);color:var(--muted)}
@@ -56,7 +56,7 @@ body{margin:0;background:#F3F5F9;font-family:Manrope,"Segoe UI",system-ui,sans-s
 <h1 class="disp" style="margin: 0; font-size: 40px; line-height: 44px; font-weight: 700">Tréninky</h1>
 <div class="meta">Lední hokej · Příbram</div>
 </header>
-<div class="segctl" role="tablist" style="margin-bottom: 6px"><a role="tab" href="K01b-TreninkyMoje.dc.html" class="on" aria-selected="true">Nadcházející</a><a role="tab" href="K14-Minule.dc.html" aria-selected="false">Minulé</a></div>
+<div class="segctl" role="tablist" style="margin-bottom: 6px"><a role="tab" href="K01b-TreninkyMoje.dc.html" class="on" aria-selected="true">Nadcházející</a><a role="tab" href="K14-Minule.dc.html" aria-selected="false">Minulé</a><a role="tab" href="K15-SerieSeznam.dc.html" aria-selected="false">Série</a></div>
 <div class="chips" role="group" aria-label="Zobrazit"><button class="chip" aria-pressed="false">Všechny</button><button class="chip on" aria-pressed="true">Moje</button></div>
 <div class="gh" style="align-items: center"><h2>Neděle 27. září</h2><span class="today">Dnes</span></div>
 <a class="card" href="K02b-DetailJenCteni.dc.html">

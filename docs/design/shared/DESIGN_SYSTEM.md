@@ -83,7 +83,7 @@ Props below are suggestions; keep them strict-TS friendly (no optional `undefine
 | `danger` | danger / white | danger-600 | "Zrušit trénink" only |
 | `danger-outline` | transparent / danger, inset border danger-border | danger-soft | Entry point "Zrušit trénink" at bottom of session detail |
 
-Sizes: `md` 44 px height, radius 10, 15 px/600 · `lg` (block) 52 px, radius 12, 16 px/700, full width. **Card buttons are fixed 124 × 44.**
+Sizes: `md` 44 px height, radius 12, 15 px/600 · `sm` 36–40 px, radius 12 · `lg` (block) 52 px, radius 12, 16 px/700, full width. **v3.6: every text button has radius 12** (md, sm, lg, FAB, header buttons like `+ Nová série`, e-mail CTA). Pill shapes (radius = height/2) are only for chips/filters and tags; icon-only toggles keep their own radius (§6.36). **Card buttons are fixed 124 × 44.**
 States: default · pressed · focus (`shadow-focus`, 2 px ring offset 2) · disabled (`neutral-50` bg, `subtle` text, no border) · loading (spinner 18 px + verb in progressive form: "Přihlašuji…", "Ukládám…", "Odhlašuji…", "Ruším…"; button keeps width, `aria-busy="true"`).
 
 ```ts
@@ -167,7 +167,7 @@ Guardian: 4 items — Tréninky, Moje tréninky, Moji sportovci, Účet. Coach/a
 **v3 (DR-06):** height 76 incl. 8 px bottom padding + safe-area inset. Active item = the one whose route is the **longest prefix** of the current path (built that way — confirmed); pushed screens (detail, edit, A1–A6, K13, K15, K16) keep their tab active (`Více` for A* and K15/K16, `Sportovci` for K13). Icons (24 grid, stroke 1.8, round caps): Tréninky = calendar, Moje tréninky = calendar-check, (Moji) sportovci = two people, Účet = person-circle, Více = three dots. Labels never truncate; 4 tabs fit 320 px at 11 px.
 
 ### 6.18 FAB (coach)
-Extended pill 56 px high, radius 28, primary, `+ Vytvořit`, `shadow` `0 8px 24px rgb(43 85 224 / .35)`; right 16, above nav. Opens "Vytvořit" sheet.
+Extended button 56 px high, **radius 12** (v3.6, was a pill), primary, `+ Vytvořit`, `shadow` `0 8px 24px rgb(43 85 224 / .35)`; right 16, above nav. Opens "Vytvořit" sheet.
 
 ### 6.19 Avatar
 Circle 28 / 36 / 40 / 56 / 72 (people only — organizations use the square OrgLogo, §6.23); initials 11–24 px/700; active: primary-100 + primary; inactive/ineligible: neutral-200 + muted. Photo replaces initials when present (object-fit cover).
