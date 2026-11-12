@@ -248,3 +248,59 @@ select pg_temp.check(
   (select main_coach_profile_id::text from public.training_sessions
     where id = '00000000-0000-0000-0000-0000000e0001'),
   '00000000-0000-0000-0000-00000000c0ad', 'neither refusal moved anything (A3f)');
+
+\echo ''
+\echo '── Planned without a main coach (migration 46) ──────────────────────'
+create or replace function pg_temp.mh() returns uuid language sql stable as
+  $$ select f.id from public.facilities f join public.locations l on l.id = f.location_id
+      where l.workspace_id = pg_temp.ws() and f.code = 'MH' $$;
+select pg_temp.check(
+  pg_temp.as_user(:ADMIN, format($$select public.create_training_session(%L::uuid,
+    (now() + interval '20 days')::date, time '10:00', time '11:00', %L::uuid,
+    p_without_main_coach => true) -> 'data' ->> 'training_session_id'$$, pg_temp.ws(), pg_temp.mh()))
+    is not null::text, 'true', 'the administrator plans a training with nobody leading it');
+select pg_temp.check(
+  (select (main_coach_profile_id is null and main_coach_vacated_from is null)::text
+     from public.training_sessions where start_at::date = (now() + interval '20 days')::date
+      and (start_at at time zone 'Europe/Prague')::time = time '10:00'),
+  'true', 'it has no main coach, and nobody left it');
+select pg_temp.check(
+  (select count(*)::text from public.training_session_coaches c
+     join public.training_sessions s on s.id = c.training_session_id
+    where (s.start_at at time zone 'Europe/Prague')::time = time '10:00'
+      and s.start_at::date = (now() + interval '20 days')::date),
+  '0', 'and no MAIN row');
+select pg_temp.check(
+  pg_temp.as_user(:ADMIN, format($$select public.create_training_session(%L::uuid,
+    (now() + interval '21 days')::date, time '10:00', time '11:00', %L::uuid)
+    -> 'data' ->> 'training_session_id'$$, pg_temp.ws(), pg_temp.mh())) is not null::text,
+  'true', 'without the flag the caller still leads it, as before');
+select pg_temp.check(
+  (select main_coach_profile_id::text from public.training_sessions
+    where start_at::date = (now() + interval '21 days')::date
+      and (start_at at time zone 'Europe/Prague')::time = time '10:00'),
+  '00000000-0000-0000-0000-00000000ad11', 'the administrator, in this case');
+select pg_temp.check(
+  pg_temp.as_user(:ADMIN, format($$select public.create_session_series(%L::uuid, array[1,3],
+    (now() + interval '40 days')::date, (now() + interval '54 days')::date, time '07:00', time '08:00',
+    %L::uuid, p_without_main_coach => true) ->> 'ok'$$, pg_temp.ws(), pg_temp.mh())),
+  'true', 'a series can be planned the same way');
+select pg_temp.check(
+  (select count(*) filter (where main_coach_profile_id is not null)::text from public.training_sessions
+    where (start_at at time zone 'Europe/Prague')::time = time '07:00'),
+  '0', 'and every training in it waits for a coach');
+select pg_temp.check(
+  (select count(*)::text from public.session_series where main_coach_profile_id is null),
+  '1', 'as does the series record');
+select pg_temp.check(
+  pg_temp.as_user(:ADMIN, pg_temp.assign_sql(
+    (select id from public.training_sessions where start_at::date = (now() + interval '20 days')::date
+       and (start_at at time zone 'Europe/Prague')::time = time '10:00'),
+    '00000000-0000-0000-0000-00000000c0ad'))::jsonb ->> 'ok',
+  'true', 'a coach is named later');
+select pg_temp.check(
+  (select count(*)::text from public.notification_events e
+     join public.training_sessions s on s.id = e.training_session_id
+    where e.event_type = 'SESSION_MAIN_COACH_CHANGED'
+      and s.start_at::date = (now() + interval '20 days')::date),
+  '1', 'and the families are told (E05)');

@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
-import { validateSession, type SessionInput } from '@/lib/domain/session'
+import { NO_MAIN_COACH, validateSession, type SessionInput } from '@/lib/domain/session'
 import { canonicalWeekdays } from '@/lib/domain/series'
 
 /**
@@ -53,6 +53,14 @@ function readRpc(value: unknown): RpcResult {
   return value as RpcResult
 }
 
+/**
+ * `Bez trenéra` is a flag of its own to the database (migration 46), never a
+ * profile id; on an edit it means "leave the training without one".
+ */
+function mainCoach(id: string | null): string | null {
+  return id === NO_MAIN_COACH ? null : id
+}
+
 function withoutEmpty<T extends Record<string, string | number | null | undefined>>(
   values: T,
 ): { [K in keyof T]?: NonNullable<T[K]> } {
@@ -94,8 +102,9 @@ export async function createSession(
       p_changing_room: v.changingRoom,
       p_public_notes: v.publicNotes,
       p_internal_notes: v.internalNotes,
-      p_main_coach_profile_id: v.mainCoachProfileId,
+      p_main_coach_profile_id: mainCoach(v.mainCoachProfileId),
     }),
+    p_without_main_coach: v.mainCoachProfileId === NO_MAIN_COACH,
   })
 
   if (error) return { ok: false, code: 'generic' }
@@ -153,7 +162,7 @@ export async function updateSession(
       p_changing_room: v.changingRoom,
       p_public_notes: v.publicNotes,
       p_internal_notes: v.internalNotes,
-      p_main_coach_profile_id: v.mainCoachProfileId,
+      p_main_coach_profile_id: mainCoach(v.mainCoachProfileId),
     }),
   })
 
@@ -283,8 +292,9 @@ export async function createSeries(
       p_changing_room: v.changingRoom,
       p_public_notes: v.publicNotes,
       p_internal_notes: v.internalNotes,
-      p_main_coach_profile_id: v.mainCoachProfileId,
+      p_main_coach_profile_id: mainCoach(v.mainCoachProfileId),
     }),
+    p_without_main_coach: v.mainCoachProfileId === NO_MAIN_COACH,
   })
 
   if (error) return { ok: false, code: 'generic' }

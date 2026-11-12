@@ -677,6 +677,7 @@ export const cs = {
     noMainCoachBody: '{coach} byl deaktivován {date} Rodiče vidí „Trenér bude upřesněn“.',
     noMainCoachBodyUnknown: 'Rodiče vidí „Trenér bude upřesněn“.',
     noMainCoachValue: 'Bez trenéra',
+    noMainCoachHint: 'Trenéra přiřadíte později.',
     assignCoach: 'Přiřadit trenéra',
     /* v3.4 · DS §6.36 StatusToggle. */
     toggle: {
