@@ -90,6 +90,14 @@ test.describe('statistics (v3.5)', () => {
       '1 trénink',
     )
     await expect(page.getByRole('heading', { name: 'TRENÉŘI', exact: true })).toBeVisible()
+    // With one coach chosen there is no club-wide lowest attendance to show.
+    await expect(page.getByRole('heading', { name: 'NEJNIŽŠÍ DOCHÁZKA' })).toHaveCount(0)
+    // And the filters do not move when one of them changes.
+    const before = await page.getByLabel('Trenér').boundingBox()
+    await page.getByLabel('Ročník').selectOption({ index: 1 })
+    await page.waitForURL(/rocnik=/)
+    expect(await page.getByLabel('Trenér').boundingBox()).toEqual(before)
+    await page.goto(`/trener/statistiky?obdobi=${monthKey(held)}&trener=${c.adminId}`)
     await expectAccessible(page, 'K20')
 
     await page.goto(`/trener/statistiky/trener/${c.adminId}?obdobi=${monthKey(held)}`)
