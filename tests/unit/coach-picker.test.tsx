@@ -26,7 +26,7 @@ function picker(allowNone: boolean, onDone = vi.fn()) {
   return onDone
 }
 
-describe('Bez trenéra (migration 46)', () => {
+describe('Bez trenéra (migration 46, AC-309)', () => {
   it('is offered when planning a training', async () => {
     const onDone = picker(true)
     await userEvent.click(screen.getByRole('radio', { name: /Bez trenéra/ }))

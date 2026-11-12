@@ -7,7 +7,7 @@
 -- other way: after a warning, the trainings that are still to come are left
 -- without a main coach until somebody is assigned, and parents read `Trenér
 -- bude upřesněn`. These cases are about what that does, what never moves, and
--- who may edit a training nobody leads.
+-- who may edit a training nobody leads (AC-293, AC-306, AC-309).
 --
 -- Its own database rather than a section of validation_staff.sql: that suite
 -- deactivates the administrator halfway through to prove the club keeps one

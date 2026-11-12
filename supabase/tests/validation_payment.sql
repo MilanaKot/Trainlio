@@ -1,5 +1,6 @@
 -- Trainlio — payment, the coach's note and the message to the parent, per
--- booking (handoff v3.3, decisions 34–36, migration 43). Run after the
+-- booking (handoff v3.3, decisions 34–36, migration 43). The database half of
+-- AC-295, AC-296, AC-297, AC-298 and AC-299; v3.4 replaced their screens. Run after the
 -- migrations and fixtures, on its own freshly created database.
 --
 -- The fixture training e0001 is led by COACH (Novák) and starts in 30 days,

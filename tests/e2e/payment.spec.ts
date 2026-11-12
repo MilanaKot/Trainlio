@@ -4,6 +4,7 @@ import { bookedChild, club, rpc } from './club'
 
 /**
  * Attendance, payment, the player card and a training without a main coach
+ * (AC-300, AC-301, AC-302, AC-303, AC-304, AC-305, AC-306, AC-307, AC-308)
  * (handoff v3.4, decisions 38–46): coach tests 19–26 at 390 × 844, with axe on
  * K2, K2c, K13 in all four tabs, G8b and A3f.
  *
@@ -72,7 +73,9 @@ async function booking(token: string, id: string) {
 }
 
 test.describe('attendance and payment in one roster (v3.4)', () => {
-  test('the main coach marks who came and who paid (coach tests 19–23)', async ({ page }) => {
+  test('the main coach marks who came and who paid (coach tests 19–23, AC-300–AC-304)', async ({
+    page,
+  }) => {
     const run = Date.now()
     const c = await club(run)
     const [ivan, adam, ondrej, petr] = await Promise.all(
@@ -179,7 +182,7 @@ test.describe('attendance and payment in one roster (v3.4)', () => {
     await expect(page.getByLabel('Zaplatili 4/4').first()).toBeVisible()
   })
 
-  test('the player card, its four tabs, and the parent (coach tests 21, 24; G8b)', async ({
+  test('the player card, its four tabs, and the parent (coach tests 21, 24; G8b; AC-302, AC-305, AC-308)', async ({
     page,
     request,
   }) => {
@@ -282,7 +285,7 @@ test.describe('attendance and payment in one roster (v3.4)', () => {
     await expectAccessible(page, 'G8b')
   })
 
-  test('a deactivated main coach leaves the trainings without one (coach test 25, A3f)', async ({
+  test('a deactivated main coach leaves the trainings without one (coach test 25, A3f, AC-306)', async ({
     page,
     request,
   }) => {
@@ -344,7 +347,7 @@ test.describe('attendance and payment in one roster (v3.4)', () => {
     expect(await mailTo(child.parentEmail, /trenér/i)).toBe(true)
   })
 
-  test('a coach who can only view sees it all and changes nothing (coach test 26)', async ({
+  test('a coach who can only view sees it all and changes nothing (coach test 26, AC-307)', async ({
     page,
   }) => {
     const run = Date.now()
