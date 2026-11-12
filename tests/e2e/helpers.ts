@@ -322,27 +322,34 @@ export async function expectAccessible(page: Page, where: string): Promise<void>
   // A button that has just stopped waiting fades from its disabled colours to
   // its own over a few frames. Measured in between, white on cobalt reads as
   // 3.9:1 — a contrast nobody sees, and the reason the logo and A3f sheets
-  // failed only when the machine was busy. Transitions only: a spinner or the
-  // toast's bar runs on purpose.
-  await page.waitForFunction(() =>
-    document
-      .getAnimations()
-      .every(
-        (animation) => !(animation instanceof CSSTransition) || animation.playState !== 'running',
-      ),
-  )
-  const { violations } = await new AxeBuilder({ page })
-    .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
-    .analyze()
-
-  // Reported with the element that failed: "colour-contrast on 3 nodes" sends
-  // the next person back to the browser to find out which three.
-  const blocking = violations
-    .filter((one) => one.impact === 'serious' || one.impact === 'critical')
-    .map(
-      (one) =>
-        `${one.id} (${one.impact}): ${one.nodes.map((node) => node.target.join(' ')).join(', ')}`,
+  // failed only when the machine was busy. So: wait for colour transitions,
+  // and when something is reported, look again half a second later. A real
+  // violation is still there on the third look; a passing frame is not.
+  // Transitions only: a spinner or the toast's bar runs on purpose.
+  let blocking: string[] = []
+  for (let look = 0; look < 3; look += 1) {
+    if (look > 0) await page.waitForTimeout(500)
+    await page.waitForFunction(() =>
+      document
+        .getAnimations()
+        .every(
+          (animation) => !(animation instanceof CSSTransition) || animation.playState !== 'running',
+        ),
     )
+    const { violations } = await new AxeBuilder({ page })
+      .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
+      .analyze()
+
+    // Reported with the element that failed: "colour-contrast on 3 nodes"
+    // sends the next person back to the browser to find out which three.
+    blocking = violations
+      .filter((one) => one.impact === 'serious' || one.impact === 'critical')
+      .map(
+        (one) =>
+          `${one.id} (${one.impact}): ${one.nodes.map((node) => node.target.join(' ')).join(', ')}`,
+      )
+    if (blocking.length === 0) return
+  }
 
   expect(blocking, `${where} has accessibility violations`).toEqual([])
 }
