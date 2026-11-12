@@ -1,5 +1,7 @@
 import { expect, test } from '@playwright/test'
 import {
+  pickRoom,
+  sessionCard,
   apiUser,
   dateInput,
   expectAccessible,
@@ -36,8 +38,8 @@ test.describe('a coach without `Může upravovat všechny tréninky`', () => {
     // §K1b: `Moje` is where a view-only coach starts.
     await expect(page.getByRole('button', { name: 'Moje' })).toHaveAttribute('aria-pressed', 'true')
 
-    const assisted = page.locator('main li', { hasText: c.assistedRoom })
-    const led = page.locator('main li', { hasText: c.ledRoom })
+    const assisted = sessionCard(page, c.assisted)
+    const led = sessionCard(page, c.led)
     await expect(assisted).toContainText('Asistent')
     await expect(led).toContainText('Hlavní trenér')
     await expectAccessible(page, '§K1b the list under `Moje`')
@@ -53,7 +55,7 @@ test.describe('a coach without `Může upravovat všechny tréninky`', () => {
       'aria-pressed',
       'true',
     )
-    await expect(page.locator('main li', { hasText: c.assistedRoom })).toContainText('Asistent')
+    await expect(sessionCard(page, c.assisted)).toContainText('Asistent')
 
     // `Moje` hides a training they have no part in.
     const elsewhere = await rpc(c.adminToken, 'create_training_session', {
@@ -62,17 +64,16 @@ test.describe('a coach without `Může upravovat všechny tréninky`', () => {
       p_local_start_time: '19:00',
       p_local_end_time: '20:00',
       p_facility_id: c.mh,
-      p_changing_room: `${run}3`,
+      p_changing_room: pickRoom(),
       p_main_coach_profile_id: c.adminId,
     })
     expect(elsewhere.ok).toBe(true)
+    const other = sessionCard(page, elsewhere.data?.training_session_id ?? '')
     await page.reload()
-    await expect(page.locator('main li', { hasText: `Šatna ${run}3` })).toHaveCount(1)
-    await expect(page.locator('main li', { hasText: `Šatna ${run}3` })).not.toContainText(
-      'Asistent',
-    )
+    await expect(other).toHaveCount(1)
+    await expect(other).not.toContainText('Asistent')
     await page.getByRole('button', { name: 'Moje' }).click()
-    await expect(page.locator('main li', { hasText: `Šatna ${run}3` })).toHaveCount(0)
+    await expect(other).toHaveCount(0)
   })
 
   test('reads what they assist, and edits what they lead (coach test 17)', async ({ page }) => {

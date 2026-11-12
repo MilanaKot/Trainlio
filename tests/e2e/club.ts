@@ -2,6 +2,7 @@ import { expect } from '@playwright/test'
 import {
   apiUser,
   asUser,
+  pickRoom,
   dateInput,
   grantCoach,
   grantWorkspaceRole,
@@ -96,10 +97,8 @@ export async function club(run: number) {
     return created.data?.training_session_id ?? ''
   }
 
-  const assistedRoom = `${run}1`
-  const ledRoom = `${run}2`
-  const assisted = await training(assistedRoom, adminId, `Interní pro asistenta ${run}`)
-  const led = await training(ledRoom, viewerId, null)
+  const assisted = await training(pickRoom(), adminId, `Interní pro asistenta ${run}`)
+  const led = await training(pickRoom(), viewerId, null)
 
   const assistants = await rpc(adminToken, 'set_session_assistants', {
     p_training_session_id: assisted,
@@ -118,8 +117,6 @@ export async function club(run: number) {
     mh,
     assisted,
     led,
-    assistedRoom: `Šatna ${assistedRoom}`,
-    ledRoom: `Šatna ${ledRoom}`,
   }
 }
 

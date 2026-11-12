@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test'
 import {
   asUser,
+  pickRoom,
   dateInput,
   expectAccessible,
   grantCoach,
@@ -10,6 +11,7 @@ import {
   uniqueEmail,
   SERVICE,
   STACK,
+  sessionCard,
 } from './helpers'
 
 /**
@@ -118,12 +120,11 @@ test.describe('a coach publishes a training and runs its roster', () => {
     await page.getByLabel('Začátek').fill('17:00')
     await page.getByLabel('Konec').fill('18:00')
     await page.getByLabel('Kapacita', { exact: true }).fill('2')
-    // Unique per run: the projects run in parallel against one database, so a
-    // fixed room name finds the other run's training.
-    const room = `Šatna ${Date.now()}`
+    const room = `Šatna ${pickRoom()}`
     await page.getByLabel('Šatna').fill(room)
     await page.getByRole('button', { name: 'Vytvořit trénink' }).click()
 
+    await page.waitForURL(/\/trener\/[0-9a-f-]{36}$/)
     await expect(page.getByText(room)).toBeVisible()
     await expect(page.getByRole('heading', { name: 'Sportovci 0' })).toBeVisible()
 
@@ -202,10 +203,11 @@ test.describe('a coach publishes a training and runs its roster', () => {
     await page.getByLabel('Začátek').fill('09:00')
     await page.getByLabel('Konec').fill('10:00')
     await page.getByLabel('Kapacita', { exact: true }).fill('10')
-    const room = `Šatna ${Date.now()}`
+    const room = `Šatna ${pickRoom()}`
     await page.getByLabel('Šatna').fill(room)
     await page.getByRole('button', { name: 'Vytvořit trénink' }).click()
 
+    await page.waitForURL(/\/trener\/[0-9a-f-]{36}$/)
     await expect(page.getByText(room)).toBeVisible()
     const sessionId = page.url().split('/trener/')[1]?.split('/')[0] ?? ''
     await family('Dalibor', { bookInto: sessionId })
@@ -215,10 +217,10 @@ test.describe('a coach publishes a training and runs its roster', () => {
     const tabs = page.getByRole('tablist')
     await expect(tabs).toBeVisible()
     // Finished, so it is not on the list a coach opens the app for.
-    await expect(page.locator('main').getByText(room)).toHaveCount(0)
+    await expect(sessionCard(page, sessionId)).toHaveCount(0)
 
     await tabs.getByRole('tab', { name: 'Minulé' }).click()
-    const row = page.locator('main li', { hasText: room })
+    const row = sessionCard(page, sessionId)
     await expect(row).toBeVisible()
     // v3.4 (decision 44): who came and who paid, out of who was booked.
     await expect(row.getByLabel('Byli 0/1')).toBeVisible()
@@ -234,7 +236,7 @@ test.describe('a coach publishes a training and runs its roster', () => {
     await expectAccessible(page, '§K14 the past-trainings tab')
 
     await page.getByRole('tab', { name: 'Nadcházející' }).click()
-    await expect(page.locator('main').getByText(room)).toHaveCount(0)
+    await expect(sessionCard(page, sessionId)).toHaveCount(0)
     await expect(page.getByRole('button', { name: 'Vytvořit', exact: true })).toBeVisible()
   })
 
@@ -357,11 +359,12 @@ test.describe('a coach publishes a training and runs its roster', () => {
     await signIn(page, coach)
     await grantCoach(coach)
 
-    const room = `Šatna ${Date.now()}`
+    const room = `Šatna ${pickRoom()}`
     await page.goto('/trener/novy')
     await page.getByLabel('Datum').fill(dateInput(6))
     await page.getByLabel('Šatna').fill(room)
     await page.getByRole('button', { name: 'Vytvořit trénink' }).click()
+    await page.waitForURL(/\/trener\/[0-9a-f-]{36}$/)
     await expect(page.getByText(room)).toBeVisible()
     const sessionId = page.url().split('/trener/')[1]?.split('/')[0] ?? ''
 
@@ -414,9 +417,10 @@ test.describe('a coach publishes a training and runs its roster', () => {
     await page.getByLabel('Začátek').fill('18:00')
     await page.getByLabel('Konec').fill('19:00')
     await page.getByLabel('Kapacita', { exact: true }).fill('10')
-    const room = `Šatna ${Date.now()}`
+    const room = `Šatna ${pickRoom()}`
     await page.getByLabel('Šatna').fill(room)
     await page.getByRole('button', { name: 'Vytvořit trénink' }).click()
+    await page.waitForURL(/\/trener\/[0-9a-f-]{36}$/)
     await expect(page.getByText(room)).toBeVisible()
 
     // §K5 (AC-275): reversible, so the sheet says what it does and does not do

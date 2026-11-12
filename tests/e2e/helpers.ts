@@ -346,3 +346,19 @@ export async function expectAccessible(page: Page, where: string): Promise<void>
 
   expect(blocking, `${where} has accessibility violations`).toEqual([])
 }
+
+/**
+ * A changing room as a club writes one: a number from 1 to 99 or a letter.
+ * Never the test's handle on its own training — every run shares one
+ * database, so two trainings will share a room; find a card with
+ * `sessionCard` instead.
+ */
+export function pickRoom(): string {
+  const pick = Math.floor(Math.random() * 125)
+  return pick < 99 ? String(pick + 1) : String.fromCharCode(65 + pick - 99)
+}
+
+/** The card of one training on any list, coach's or parent's. */
+export function sessionCard(page: Page, sessionId: string) {
+  return page.locator(`li[data-session-id="${sessionId}"]`)
+}

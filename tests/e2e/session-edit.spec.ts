@@ -1,5 +1,14 @@
 import { expect, test, type Page } from '@playwright/test'
-import { asUser, dateInput, grantCoach, signIn, tokenFor, uniqueEmail, STACK } from './helpers'
+import {
+  asUser,
+  dateInput,
+  grantCoach,
+  pickRoom,
+  signIn,
+  tokenFor,
+  uniqueEmail,
+  STACK,
+} from './helpers'
 
 /**
  * Editing a training that people are already coming to
@@ -67,6 +76,7 @@ async function createTraining(page: Page, room: string, capacity: number): Promi
   await page.getByLabel('Šatna').fill(room)
   await page.getByRole('button', { name: 'Vytvořit trénink' }).click()
 
+  await page.waitForURL(/\/trener\/[0-9a-f-]{36}$/)
   await expect(page.getByText(room)).toBeVisible()
   return page.url().split('/trener/')[1]?.split('/')[0] ?? ''
 }
@@ -77,7 +87,7 @@ test.describe('a coach edits a training people are coming to', () => {
     await signIn(page, coach)
     await grantCoach(coach)
 
-    const room = `Šatna ${Date.now()}`
+    const room = `Šatna ${pickRoom()}`
     const sessionId = await createTraining(page, room, 10)
     await bookedAthlete('Adam', 2017, sessionId)
     await bookedAthlete('Bohdan', 2017, sessionId)
@@ -109,7 +119,7 @@ test.describe('a coach edits a training people are coming to', () => {
     await signIn(page, coach)
     await grantCoach(coach)
 
-    const room = `Šatna ${Date.now()}`
+    const room = `Šatna ${pickRoom()}`
     const sessionId = await createTraining(page, room, 10)
     await bookedAthlete('Cyril', 2017, sessionId)
     await bookedAthlete('Dalibor', 2017, sessionId)
@@ -134,7 +144,7 @@ test.describe('a coach edits a training people are coming to', () => {
     await signIn(page, coach)
     await grantCoach(coach)
 
-    const room = `Šatna ${Date.now()}`
+    const room = `Šatna ${pickRoom()}`
     const sessionId = await createTraining(page, room, 10)
     await bookedAthlete('Emil', 2016, sessionId)
     await bookedAthlete('Filip', 2017, sessionId)
@@ -166,7 +176,8 @@ test.describe('a coach edits a training people are coming to', () => {
     await signIn(page, coach)
     await grantCoach(coach)
 
-    const room = `Šatna ${Date.now()}`
+    // A letter, so it can never be the `Šatna 12` typed below.
+    const room = 'Šatna A'
     const sessionId = await createTraining(page, room, 10)
 
     await page.goto(`/trener/${sessionId}/upravit`)
@@ -197,7 +208,7 @@ test.describe('a coach copies a training', () => {
     await signIn(page, coach)
     await grantCoach(coach)
 
-    const room = `Šatna ${Date.now()}`
+    const room = `Šatna ${pickRoom()}`
     const sessionId = await createTraining(page, room, 8)
 
     await page.getByRole('link', { name: 'Duplikovat' }).click()

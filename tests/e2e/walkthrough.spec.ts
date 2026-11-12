@@ -1,5 +1,13 @@
 import { test, expect, type Page } from '@playwright/test'
-import { dateInput, grantCoach, signIn, uniqueEmail, MAILPIT } from './helpers'
+import {
+  dateInput,
+  grantCoach,
+  pickRoom,
+  sessionCard,
+  signIn,
+  uniqueEmail,
+  MAILPIT,
+} from './helpers'
 
 /**
  * The product, end to end, as two people meet it.
@@ -91,7 +99,7 @@ test('a coach opens a training, a parent books, and the training changes', async
   await page.getByLabel('Příjmení').fill('Filipi')
   await page.getByRole('button', { name: 'Uložit' }).click()
 
-  const room = `Šatna ${100 + Math.floor(Math.random() * 900)}`
+  const room = `Šatna ${pickRoom()}`
   await page.goto('/trener/novy')
   await page.getByLabel('Datum').fill(dateInput(7))
   await page.getByLabel('Začátek').fill('17:00')
@@ -143,14 +151,10 @@ test('a coach opens a training, a parent books, and the training changes', async
   await expect(parent.getByText('Eliška Nováková')).toBeVisible()
 
   await parent.goto('/treninky')
-  await expect(parent.locator('li', { hasText: room }).first()).toBeVisible()
+  await expect(sessionCard(parent, sessionId)).toBeVisible()
   await shoot(parent, '07-rodic-treninky')
 
-  await parent
-    .locator('li', { hasText: room })
-    .first()
-    .getByRole('button', { name: 'Přihlásit' })
-    .click()
+  await sessionCard(parent, sessionId).getByRole('button', { name: 'Přihlásit' }).click()
   await shoot(parent, '08-rodic-prihlaseni-sheet')
   await parent.getByRole('dialog').getByRole('button', { name: 'Přihlásit' }).click()
   await expect(parent.getByRole('status')).toContainText('Přihlášeno')

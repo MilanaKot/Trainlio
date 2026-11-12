@@ -74,7 +74,7 @@ export function CoachTrainingRow({
   const leaderless = session.mainCoachId === null && !cancelled
 
   return (
-    <li>
+    <li data-session-id={session.id}>
       <Link
         href={`/trener/${session.id}`}
         className={cn(

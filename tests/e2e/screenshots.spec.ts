@@ -1,5 +1,7 @@
 import { test, expect, type Page } from '@playwright/test'
 import {
+  pickRoom,
+  sessionCard,
   asUser,
   dateInput,
   grantCoach,
@@ -505,11 +507,9 @@ test('what v3 added (§K12–§K16, §A3b, §G6d)', async ({ page, browser }) =>
   await shoot(page, 'A3b-trener-pozvan')
 
   // A training with children on it, then a second one moved into the past. The
-  // changing room is this test's own: the club is shared by every run, and the
-  // parent below has to book into this training and not somebody else's. A
-  // room number rather than a timestamp, because this one is on the screenshot
-  // — `Šatna 1760074913148` is not what a club calls a room.
-  const room = `Šatna ${100 + Math.floor(Math.random() * 900)}`
+  // club is shared by every run, so the parent below finds this training by its
+  // id (`sessionCard`), and the room is one a club would write.
+  const room = `Šatna ${pickRoom()}`
   await page.goto('/trener/novy')
   await page.getByLabel('Datum').fill(dateInput(9))
   await page.getByLabel('Šatna').fill(room)
@@ -602,11 +602,7 @@ test('what v3 added (§K12–§K16, §A3b, §G6d)', async ({ page, browser }) =>
   // This test's own training. Booking into another run's leftover is how this
   // used to fail: the roster read back below is this training's, and Eliška
   // was on a different one.
-  await parent
-    .locator('li', { hasText: room })
-    .first()
-    .getByRole('button', { name: 'Přihlásit' })
-    .click()
+  await sessionCard(parent, upcomingId).getByRole('button', { name: 'Přihlásit' }).click()
   await parent.getByRole('dialog').getByRole('button', { name: 'Přihlásit' }).click()
   await expect(parent.getByRole('status')).toContainText('Přihlášeno')
 
@@ -764,7 +760,7 @@ test('the handover question (§A3, DR-15)', async ({ page }) => {
       p_facility_id: facilities.find((one) => one.code === 'MH')?.id,
       p_capacity: 10,
       p_eligibility_mode: 'ALL',
-      p_changing_room: `Šatna ${100 + Math.floor(Math.random() * 900)}`,
+      p_changing_room: `Šatna ${pickRoom()}`,
       p_main_coach_profile_id: profileId,
     }),
   })

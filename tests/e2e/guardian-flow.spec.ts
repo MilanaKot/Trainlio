@@ -1,6 +1,8 @@
 import { expect, test } from '@playwright/test'
 import {
   asUser,
+  pickRoom,
+  sessionCard,
   dateInput,
   expectAccessible,
   grantCoach,
@@ -31,9 +33,10 @@ const admin = {
 /**
  * A session for these athletes to book into, opened by a real coach call.
  *
- * `changingRoom` is the test's handle on its own session. Every run shares one
- * database and the projects run in parallel, so locating a card by "Šatna 4" or
- * by "1 / 1" finds another run's training — which is how these first failed.
+ * The returned id is the test's handle on its own session (`sessionCard`).
+ * Every run shares one database and the projects run in parallel, so locating
+ * a card by "Šatna 4" or by "1 / 1" finds another run's training — which is
+ * how these first failed.
  */
 async function openSession(
   coachEmail: string,
@@ -219,8 +222,8 @@ test.describe('a guardian, from first sign-in to a withdrawn booking', () => {
   test('registers a child, books, sees the count, and withdraws', async ({ page }) => {
     const parent = uniqueEmail('rodic')
     const coach = uniqueEmail('trener')
-    const room = `Šatna ${Date.now()}`
-    await openSession(coach, 10, room)
+    const room = `Šatna ${pickRoom()}`
+    const sessionId = await openSession(coach, 10, room)
 
     // AC-001, AC-002: a code arrives and authenticates without a password.
     await signIn(page, parent)
@@ -255,7 +258,7 @@ test.describe('a guardian, from first sign-in to a withdrawn booking', () => {
 
     // D-01: the workspace only becomes visible once a child belongs to it.
     await page.goto('/treninky')
-    const card = page.locator('li', { hasText: room }).first()
+    const card = sessionCard(page, sessionId)
     await expect(card).toBeVisible()
     await expect(card).toContainText('0 / 10')
 
@@ -271,14 +274,12 @@ test.describe('a guardian, from first sign-in to a withdrawn booking', () => {
 
     // The count comes from the projection, so it moving is the projection
     // having been maintained — not the client having decremented something.
-    await expect(page.locator('li', { hasText: room }).first()).toContainText('1 / 10')
+    await expect(sessionCard(page, sessionId)).toContainText('1 / 10')
 
     // And the card now says who is in, without offering to book them twice.
-    await expect(page.locator('li', { hasText: room }).first()).toContainText(
-      'Přihlášen: Ivan Kotov',
-    )
+    await expect(sessionCard(page, sessionId)).toContainText('Přihlášen: Ivan Kotov')
     await expect(
-      page.locator('li', { hasText: room }).first().getByRole('button', { name: 'Přihlásit' }),
+      sessionCard(page, sessionId).getByRole('button', { name: 'Přihlásit' }),
     ).toBeDisabled()
 
     // AC-279: read after booking on purpose. The coach of this training is now
@@ -315,13 +316,13 @@ test.describe('a guardian, from first sign-in to a withdrawn booking', () => {
     await expect(page.getByText('Zatím nemáte žádný absolvovaný trénink.')).toBeVisible()
 
     await page.goto('/treninky')
-    await expect(page.locator('li', { hasText: room }).first()).toContainText('0 / 10')
+    await expect(sessionCard(page, sessionId)).toContainText('0 / 10')
   })
 
   test('a full session offers no booking (AC-021)', async ({ page }) => {
     const parent = uniqueEmail('plny')
     const coach = uniqueEmail('trener')
-    const room = `Šatna ${Date.now()}`
+    const room = `Šatna ${pickRoom()}`
     const sessionId = await openSession(coach, 1, room)
     await fillSession(sessionId)
 
@@ -339,7 +340,7 @@ test.describe('a guardian, from first sign-in to a withdrawn booking', () => {
     await expect(page.getByText('Anna Kotova')).toBeVisible()
 
     await page.goto('/treninky')
-    const card = page.locator('li', { hasText: room }).first()
+    const card = sessionCard(page, sessionId)
     await expect(card).toContainText('1 / 1')
 
     // Booked to capacity by another family before this parent ever looked.
@@ -372,7 +373,7 @@ test.describe('a guardian, from first sign-in to a withdrawn booking', () => {
   test('a parent is told what the coach changed, once (AC-270)', async ({ page }) => {
     const parent = uniqueEmail('zmena')
     const coach = uniqueEmail('trener')
-    const room = `Šatna ${Date.now()}`
+    const room = `Šatna ${pickRoom()}`
     const sessionId = await openSession(coach, 10, room)
 
     await signIn(page, parent)
@@ -388,11 +389,7 @@ test.describe('a guardian, from first sign-in to a withdrawn booking', () => {
     await expect(page.getByText('Petr Kotov')).toBeVisible()
 
     await page.goto('/treninky')
-    await page
-      .locator('li', { hasText: room })
-      .first()
-      .getByRole('button', { name: 'Přihlásit' })
-      .click()
+    await sessionCard(page, sessionId).getByRole('button', { name: 'Přihlásit' }).click()
     await page.getByRole('dialog').getByRole('button', { name: 'Přihlásit' }).click()
     await expect(page.getByRole('status')).toContainText('Přihlášeno')
 
@@ -434,7 +431,7 @@ test.describe('a guardian, from first sign-in to a withdrawn booking', () => {
   test('a child the coach removed cannot be booked again (AC-042a)', async ({ page }) => {
     const parent = uniqueEmail('odebrani')
     const coach = uniqueEmail('trener')
-    const room = `Šatna ${Date.now()}`
+    const room = `Šatna ${pickRoom()}`
     const sessionId = await openSession(coach, 10, room)
 
     await signIn(page, parent)
@@ -450,11 +447,7 @@ test.describe('a guardian, from first sign-in to a withdrawn booking', () => {
     await expect(page.getByText('Eliška Procházková')).toBeVisible()
 
     await page.goto('/treninky')
-    await page
-      .locator('li', { hasText: room })
-      .first()
-      .getByRole('button', { name: 'Přihlásit' })
-      .click()
+    await sessionCard(page, sessionId).getByRole('button', { name: 'Přihlásit' }).click()
     await page.getByRole('dialog').getByRole('button', { name: 'Přihlásit' }).click()
     await expect(page.getByRole('status')).toContainText('Přihlášeno')
 
@@ -491,7 +484,7 @@ test.describe('a guardian, from first sign-in to a withdrawn booking', () => {
     // D-06: the training is open and has places, and this child still cannot go
     // back on it. The card says why rather than offering a button that fails.
     await page.goto('/treninky')
-    const training = page.locator('li', { hasText: room }).first()
+    const training = sessionCard(page, sessionId)
     await expect(training).toContainText('Sportovce odebral trenér')
     await expect(training.getByRole('button', { name: 'Přihlásit' })).toBeDisabled()
   })
