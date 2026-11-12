@@ -11,9 +11,10 @@ const t = messages.athlete
 /**
  * Editing one child (guardian/SPEC.md §G9).
  *
- * The photograph is here and not on the new-athlete screen because it is
- * stored against an athlete that has to exist first — a parent adds the child,
- * then the picture.
+ * The photograph uploads the moment it is picked, because the athlete it is
+ * stored against already exists. G10 holds it until the child is saved, and
+ * sends a parent here (`?fotka=0`) when the child was saved and the picture
+ * was not.
  *
  * Deactivation is not in the design and is kept: D-09 gives a parent a way to
  * take a child out of the booking lists for a season without losing anything
@@ -21,10 +22,12 @@ const t = messages.athlete
  */
 export default async function EditAthletePage({
   params,
+  searchParams,
 }: {
   params: Promise<{ athleteId: string }>
+  searchParams: Promise<{ fotka?: string }>
 }) {
-  const { athleteId } = await params
+  const [{ athleteId }, { fotka }] = await Promise.all([params, searchParams])
 
   // Returns null for an athlete this guardian does not guard: the row policy
   // filters it out before it reaches here, so a guessed id is a 404, not a leak.
@@ -45,7 +48,11 @@ export default async function EditAthletePage({
       </Link>
       <h1 className="font-display text-form-title font-bold text-ink">{t.editTitle}</h1>
 
-      <PhotoField athleteId={athlete.id} photoUrl={athlete.photoUrl} />
+      <PhotoField
+        athleteId={athlete.id}
+        photoUrl={athlete.photoUrl}
+        initialError={fotka === '0' && !athlete.photoUrl ? t.photoNotSaved : undefined}
+      />
 
       <AthleteForm
         workspaceId={workspace.id}

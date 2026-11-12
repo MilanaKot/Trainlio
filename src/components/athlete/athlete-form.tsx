@@ -4,7 +4,8 @@ import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { messages } from '@/lib/i18n'
 import { HOCKEY_POSITION_LABELS, STICK_SIDES, STICK_SIDE_LABELS } from '@/lib/enums/hockey'
-import { createAthlete, updateAthlete } from '@/server/athletes/actions'
+import { createAthlete, updateAthlete, uploadAthletePhoto } from '@/server/athletes/actions'
+import { PhotoField } from '@/components/athlete/photo-field'
 import { Button } from '@/components/ui/button'
 import { Field } from '@/components/ui/field'
 import { Notice } from '@/components/ui/notice'
@@ -41,12 +42,22 @@ const POSITION_ORDER: readonly HockeyPosition[] = [
   'RIGHT_WING',
 ]
 
-function Panel({ caption, children }: { caption?: string; children: React.ReactNode }) {
+function Panel({
+  caption,
+  lead,
+  children,
+}: {
+  caption?: string
+  /** Its own card, between the caption and the panel: G10's photo row. */
+  lead?: React.ReactNode
+  children: React.ReactNode
+}) {
   return (
     <section className="flex flex-col gap-2.5">
       {caption ? (
         <h2 className="text-caption font-bold uppercase tracking-[0.8px] text-muted">{caption}</h2>
       ) : null}
+      {lead}
       <div className="flex flex-col gap-4 rounded-card bg-surface p-4 shadow-card">{children}</div>
     </section>
   )
@@ -81,6 +92,7 @@ export function AthleteForm({
   const [formError, setFormError] = useState<string | null>(null)
   const [position, setPosition] = useState<HockeyPosition | ''>(hockey?.position ?? '')
   const [stickSide, setStickSide] = useState<StickSide | ''>(hockey?.stickSide ?? '')
+  const [photo, setPhoto] = useState<File | null>(null)
   const [pending, startTransition] = useTransition()
 
   function onSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -95,6 +107,21 @@ export function AthleteForm({
         : await createAthlete(workspaceId, timezone, form)
 
       if (result.ok) {
+        // G10's photograph, now that there is an athlete to keep it. The child
+        // is saved either way; if the picture is not, the parent lands where
+        // they can try it again, told why they are there.
+        if (photo && result.athleteId) {
+          const upload = new FormData()
+          upload.set('photo', photo)
+          const sent = await uploadAthletePhoto(result.athleteId, upload).catch(() => ({
+            ok: false as const,
+          }))
+          if (!sent.ok) {
+            router.push(`/moji-sportovci/${result.athleteId}/upravit?fotka=0`)
+            return
+          }
+        }
+
         router.push('/moji-sportovci')
         router.refresh()
         return
@@ -156,7 +183,10 @@ export function AthleteForm({
       {/* With the parent's own panel above it, this one says whose it is: two
           `Jméno` / `Příjmení` pairs in a row with nothing between them read as
           the same thing asked twice. G10 alone has the title for that. */}
-      <Panel {...(askGuardianDetails ? { caption: t.athleteSection } : {})}>
+      <Panel
+        {...(askGuardianDetails ? { caption: t.athleteSection } : {})}
+        {...(isEdit ? {} : { lead: <PhotoField onDraft={setPhoto} /> })}
+      >
         <Field
           label={t.firstName}
           required
