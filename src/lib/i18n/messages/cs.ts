@@ -630,6 +630,26 @@ export const cs = {
     allPaid: 'Zaplatili všichni ✓',
     hasCoachNote: 'Má poznámku trenéra',
     messageSentIndicator: 'Zpráva rodiči odeslána',
+    /* v3.4 · DS §6.36 StatusToggle. */
+    toggle: {
+      attendance: 'Docházka {athlete}: {state}',
+      payment: 'Platba {athlete}: {state}',
+      present: 'Byl',
+      absent: 'Nebyl',
+      unmarked: 'nezapsáno',
+      paid: 'zaplaceno',
+      unpaid: 'nezaplaceno',
+    },
+    /* v3.4 · K2 roster. */
+    rosterColumnAthlete: 'SPORTOVEC',
+    rosterColumnPresent: 'Byl',
+    rosterColumnPaid: 'Platba',
+    othersPresent: 'Ostatní byli',
+    attendanceFootnote:
+      'Docházku lze zapsat od začátku tréninku; nezapsaní se po skončení počítají jako „Nebyl“.',
+    /* DS §6.16, the one toast with an action. */
+    paymentCancelled: 'Platba zrušena · {athlete}',
+    undoPayment: 'Vrátit',
     /* K17 · the player card. */
     guardianBooked: 'Přihlásil {when}',
     callGuardian: 'Zavolat {phone}',
