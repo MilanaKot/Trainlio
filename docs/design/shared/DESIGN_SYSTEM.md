@@ -217,7 +217,7 @@ Grid 6 × 1fr, gap 8; box 60 px high, radius 10, white, inset 1.5 px line; digit
 Height 48, radius 12, white with inset 1.5 px line (on white sheets: `neutral-50` fill, no border); 20 px search icon `subtle` at 14 px; input 16/500 (16 px prevents iOS zoom); placeholder subtle. `type="search"`, clear button 32 px appears when non-empty (`aria-label="Vymazat"`). Debounce 150 ms. Matching is diacritics- and case-insensitive.
 
 ### 6.28 FilterChips (v3)
-Row of pills, height 36, radius 18, padding 0 14, 14/600; off: white + inset 1.5 px line; on: ink bg + white text. Single-select with `aria-pressed`; first chip `Všechny`. Overflow scrolls horizontally (no wrap, 16 px end padding, scroll-snap). Used for birth years in K12.
+Row of pills, height 36, radius 18, padding 0 14, 14/600; off: white + inset 1.5 px line; on: primary `#2B55E0` bg + white text (never ink/black). Single-select with `aria-pressed`; first chip `Všechny` (default). Used in K1 (`Všechny / Moje`). Birth years in K12 use the YearGrid variant: white panel radius 16, padding 12, grid of 4 columns, gap 8, every chip shows the year + count (13/500, white 80 % on the selected chip); all years always visible, no collapse, no horizontal scroll; selection resets to `Všechny` when the screen is left.
 
 ### 6.29 WeekdayBadges (v3)
 Seven 24 × 24 squares, radius 6, gap 3, 11/700: `Po Út St Čt Pá So Ne`; selected = primary bg + white, others = neutral-50 + subtle. Decorative (`aria-hidden`) — the container has `aria-label` with the selected days in words (`úterý, čtvrtek`). Used in K15/K16.

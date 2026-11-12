@@ -29,7 +29,7 @@ body{margin:0;background:#F3F5F9;font-family:Manrope,"Segoe UI",system-ui,sans-s
 .gh span{font-size:13px;color:var(--muted)}
 .chips{display:flex;gap:8px;overflow:hidden}
 .chip{height:36px;padding:0 14px;border-radius:18px;border:0;background:var(--surface);box-shadow:inset 0 0 0 1.5px var(--line);font:600 14px/1 Manrope,sans-serif;color:var(--ink);flex-shrink:0;display:flex;align-items:center}
-.chip.on{background:var(--ink);color:#fff;box-shadow:none}
+.chip.on{background:var(--accent);color:#fff;box-shadow:none}
 .panel{background:var(--surface);border-radius:16px;padding:4px 16px;margin:0}
 .row{display:grid;grid-template-columns:112px minmax(0,1fr);gap:12px;padding:12px 0;font-size:15px;line-height:22px;box-shadow:0 1px 0 var(--line)}
 .row:last-child{box-shadow:none}
@@ -41,22 +41,44 @@ body{margin:0;background:#F3F5F9;font-family:Manrope,"Segoe UI",system-ui,sans-s
 .nav{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));height:76px;padding-bottom:8px;box-sizing:border-box;background:var(--surface);box-shadow:0 -1px 0 var(--line)}
 .nav a{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font-size:11px;font-weight:600;color:var(--muted);text-decoration:none}
 .nav a.act{color:var(--accent)}
+.yr{background:var(--surface);border-radius:16px;overflow:hidden}
+.yh{display:flex;align-items:center;gap:12px;width:100%;min-height:56px;padding:0 14px 0 16px;border:0;background:transparent;font:inherit;color:inherit;text-decoration:none;box-sizing:border-box}
+.yh .t{font-family:var(--disp);font-size:22px;line-height:28px;font-weight:700;flex-grow:1}
+.yh .c{font-size:14px;color:var(--muted);font-weight:600}
+.yh .ch{display:flex;color:var(--subtle);transition:transform .2s}
+.yr.open .yh{box-shadow:0 1px 0 var(--line)}
+.yr.open .yh .t{color:var(--accent)}
+.yr.open .yh .ch{transform:rotate(180deg);color:var(--accent)}
+.yr .list{border-radius:0}
+.yr.off .yh .t{color:var(--muted)}
+main>*{flex-shrink:0}
+.ylist{display:flex;flex-direction:column;gap:8px}
+.yf{display:flex;gap:8px;align-items:center}
+.yf .chip,.yp .chip{text-decoration:none;gap:6px}
+.chip i{font-style:normal;font-weight:500;font-size:13px;color:var(--muted)}
+.chip.on i{color:rgba(255,255,255,.8)}
+.tg{height:36px;padding:0 10px 0 14px;border-radius:18px;background:var(--accentsoft);color:var(--accent);font:700 14px/1 Manrope,sans-serif;display:flex;align-items:center;gap:4px;text-decoration:none;flex-shrink:0;margin-left:auto}
+.yp{background:var(--surface);border-radius:16px;padding:12px;display:flex;flex-direction:column;gap:10px}
+.yp .g{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.yp .g .chip{justify-content:center;padding:0}
+.yp .hd{display:flex;justify-content:space-between;align-items:center;padding:0 2px}
+.yf{display:flex;gap:8px;align-items:center}
+.yf .chip,.yp .chip{text-decoration:none;gap:6px}
+.chip i{font-style:normal;font-weight:500;font-size:13px;color:var(--muted)}
+.chip.on i{color:rgba(255,255,255,.8)}
+.tg{height:36px;padding:0 10px 0 14px;border-radius:18px;background:var(--accentsoft);color:var(--accent);font:700 14px/1 Manrope,sans-serif;display:flex;align-items:center;gap:4px;text-decoration:none;flex-shrink:0;margin-left:auto}
+.yp{background:var(--surface);border-radius:16px;padding:12px;display:flex;flex-direction:column;gap:10px}
+.yp .g{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.yp .g .chip{justify-content:center;padding:0}
+.yp .hd{display:flex;justify-content:space-between;align-items:center;padding:0 2px}
 </style>
 </helmet>
 <div class="s" style="width: 390px; height: 1100px; background: var(--bg); display: flex; flex-direction: column; overflow: hidden">
 <main style="flex-grow: 1; overflow: hidden; padding: 60px 16px 16px; display: flex; flex-direction: column; gap: 12px">
-<header style="display: flex; align-items: baseline; justify-content: space-between; padding: 0 4px"><h1 class="disp" style="margin: 0; font-size: 40px; line-height: 44px; font-weight: 700">Sportovci</h1><span class="meta">64 aktivních</span></header>
+<header style="display: flex; align-items: baseline; justify-content: space-between; padding: 0 4px"><h1 class="disp" style="margin: 0; font-size: 40px; line-height: 44px; font-weight: 700">Sportovci</h1><span class="meta">64</span></header>
 <label style="display: flex; align-items: center; gap: 10px; height: 48px; padding: 0 14px; border-radius: 12px; background: var(--surface); box-shadow: inset 0 0 0 1.5px var(--line)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8791A6" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"></circle><path d="m20 20-4.2-4.2"></path></svg><input type="search" placeholder="Hledat jméno nebo rodiče" aria-label="Hledat sportovce" style="border: 0; outline: 0; background: transparent; font: 500 16px Manrope, sans-serif; color: var(--ink); flex-grow: 1; min-width: 0"></label>
-<div class="chips" role="group" aria-label="Ročník"><button class="chip on" aria-pressed="true">Všechny</button><button class="chip" aria-pressed="false">2015</button><button class="chip" aria-pressed="false">2016</button><button class="chip" aria-pressed="false">2017</button><button class="chip" aria-pressed="false">2018</button></div>
-
-<div class="gh" style="margin-top: 4px"><h2>Ročník 2017</h2><span>18 sportovců</span></div>
-<nav class="list" aria-label="Ročník 2017"><a class="item" href="K13-ProfilSportovce.dc.html"><span class="av">TB</span><span class="l"><b>Tomáš Bureš</b><span class="m">Útočník · 3 nadcházející</span></span><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8791A6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9.5 6 6 6-6 6"></path></svg></a><a class="item" href="K13-ProfilSportovce.dc.html"><span class="av">AD</span><span class="l"><b>Adam Dvořák</b><span class="m">Brankář · 1 nadcházející</span></span><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8791A6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9.5 6 6 6-6 6"></path></svg></a><a class="item" href="K13-ProfilSportovce.dc.html"><span class="av">IK</span><span class="l"><b>Ivan Kotov</b><span class="m">Centr · 2 nadcházející</span></span><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8791A6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9.5 6 6 6-6 6"></path></svg></a><a class="item" href="K13-ProfilSportovce.dc.html"><span class="av">JM</span><span class="l"><b>Jakub Malý</b><span class="m">Obránce · bez přihlášek</span></span><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8791A6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9.5 6 6 6-6 6"></path></svg></a></nav>
-
-<div class="gh" style="margin-top: 4px"><h2>Ročník 2018</h2><span>15 sportovců</span></div>
-<nav class="list" aria-label="Ročník 2018"><a class="item" href="K13-ProfilSportovce.dc.html"><span class="av">OH</span><span class="l"><b>Ondřej Hájek</b><span class="m">Útočník · 2 nadcházející</span></span><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8791A6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9.5 6 6 6-6 6"></path></svg></a><a class="item" href="K13-ProfilSportovce.dc.html"><span class="av">MN</span><span class="l"><b>Matyáš Novotný</b><span class="m">Obránce · 1 nadcházející</span></span><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8791A6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9.5 6 6 6-6 6"></path></svg></a><a class="item" href="K13-ProfilSportovce.dc.html"><span class="av">FS</span><span class="l"><b>Filip Svoboda</b><span class="m">Pozice nevyplněna · bez přihlášek</span></span><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8791A6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9.5 6 6 6-6 6"></path></svg></a></nav>
-
-<div class="gh" style="margin-top: 4px"><h2 style="color: var(--muted)">Neaktivní</h2><span>2</span></div>
-<nav class="list" aria-label="Neaktivní"><a class="item off" href="K13-ProfilSportovce.dc.html"><span class="av">LP</span><span class="l"><b>Lukáš Pokorný</b><span class="m">Ročník 2016 · deaktivoval rodič</span></span><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8791A6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9.5 6 6 6-6 6"></path></svg></a></nav>
+<div class="yp" role="group" aria-label="Ročník"><div class="g"><a class="chip on" href="K12-Sportovci.dc.html" aria-pressed="true">Všechny</a><a class="chip" href="K12b-Rocnik2017.dc.html" aria-pressed="false">2020<i>6</i></a><a class="chip" href="K12b-Rocnik2017.dc.html" aria-pressed="false">2019<i>8</i></a><a class="chip" href="K12b-Rocnik2017.dc.html" aria-pressed="false">2018<i>10</i></a><a class="chip" href="K12b-Rocnik2017.dc.html" aria-pressed="false">2017<i>9</i></a><a class="chip" href="K12b-Rocnik2017.dc.html" aria-pressed="false">2016<i>8</i></a><a class="chip" href="K12b-Rocnik2017.dc.html" aria-pressed="false">2015<i>7</i></a><a class="chip" href="K12b-Rocnik2017.dc.html" aria-pressed="false">2014<i>6</i></a><a class="chip" href="K12b-Rocnik2017.dc.html" aria-pressed="false">2013<i>5</i></a><a class="chip" href="K12b-Rocnik2017.dc.html" aria-pressed="false">2012<i>3</i></a></div></div>
+<div class="gh" style="margin-top: 4px"><h2>Ročník 2020</h2><span>6 sportovců</span></div><nav class="list" aria-label="Ročník 2020"><a class="item" href="K13-ProfilSportovce.dc.html"><span class="av">EB</span><span class="l"><b>Eliška Benešová</b><span class="m">Útočník · 2 nadcházející</span></span><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8791A6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9.5 6 6 6-6 6"></path></svg></a><a class="item" href="K13-ProfilSportovce.dc.html"><span class="av">PČ</span><span class="l"><b>Petr Černý</b><span class="m">Obránce · 1 nadcházející</span></span><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8791A6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9.5 6 6 6-6 6"></path></svg></a><a class="item" href="K13-ProfilSportovce.dc.html"><span class="av">ŠD</span><span class="l"><b>Šimon Doležal</b><span class="m">Brankář · 3 nadcházející</span></span><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8791A6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9.5 6 6 6-6 6"></path></svg></a></nav><div class="gh" style="margin-top: 4px"><h2>Ročník 2019</h2><span>8 sportovců</span></div><nav class="list" aria-label="Ročník 2019"><a class="item" href="K13-ProfilSportovce.dc.html"><span class="av">TB</span><span class="l"><b>Tomáš Bureš</b><span class="m">Útočník · 3 nadcházející</span></span><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8791A6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9.5 6 6 6-6 6"></path></svg></a><a class="item" href="K13-ProfilSportovce.dc.html"><span class="av">AD</span><span class="l"><b>Adam Dvořák</b><span class="m">Brankář · 1 nadcházející</span></span><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8791A6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9.5 6 6 6-6 6"></path></svg></a><a class="item" href="K13-ProfilSportovce.dc.html"><span class="av">MH</span><span class="l"><b>Matyáš Horák</b><span class="m">Útočník · 2 nadcházející</span></span><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8791A6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9.5 6 6 6-6 6"></path></svg></a></nav>
 </main>
 <nav class="nav" aria-label="Hlavní navigace">
 <a href="K01-Treninky.dc.html"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15" rx="2.5"></rect><path d="M3.5 10h17M8 3v4M16 3v4"></path></svg>Tréninky</a>

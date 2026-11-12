@@ -86,12 +86,14 @@ The prototypes are visual references with sample data (names like Jan Novák, El
 46. Deactivating a main coach: warning (A3f), then his future sessions are **without a main coach** (K1/K2e warning, parents see `Trenér bude upřesněn`).
 47. Period switch everywhere is `Měsíc / Sezóna` (not `Rok`). A season runs **1 August – 31 July** and is labelled `Sezóna 2026/27`. Default for the season view = the season containing today.
 48. Statistics (K20/K20b) live in `Více › Statistiky`: tiles (trainings, occupancy, attendance, paid), unpaid list, lowest attendance, coaches (admin only) and per-coach statistics; per-child statistics are the K13 `Tréninky` tab. No charts in the player card.
+49. Selected filter chips are **primary blue `#2B55E0`, never black/ink** (K1, K12, K20, K20b). Birth-year filter in K12 is a YearGrid: all years always visible in a 4-column grid with counts, default `Všechny`, not remembered.
 
 Open questions are listed at the end of each SPEC.md. What the implementation
 still needs answered — those questions, plus anything that shipped without a
 design — is collected in `DESIGN_REQUESTS.md`.
 
 ## Changelog
+- **v3.6 — year filter + chip colour.** K12 year filter becomes a YearGrid (all years visible, counts, newest first; K12b = year selected); selected FilterChips are primary blue instead of ink in K1, K12, K20, K20b. DS §6.28. Decision 49. Task: `CLAUDE_CODE_TASK_v3.6.md`.
 - **v3.5 — statistics + season.** K20 Statistiky, K20b per-coach statistics, A0 row `Statistiky`; `Rok` → `Sezóna` (1 Aug – 31 Jul) in K13, K20, K20b, G8b; K13 season view = month layout. Decisions 47–48. Task: `CLAUDE_CODE_TASK_v3.5.md`.
 - **v3.4 — attendance, merged roster, player card tabs.** K2 roster with attendance/payment toggles (DS §6.36/6.37) and tap-zone rules (`design-source/screens/K02s-StavyKarty.dc.html`); K13 player card with 4 tabs (K13, K13h, K13r, K13z) replaces K17/K17b and K19; K14 counters; K2b read-only update; K2e + A3f (main coach deactivated); G8b attendance for parents; undo toast for payment; decisions 38–46. **Task: `CLAUDE_CODE_TASK_v3.4.md` (supersedes `CLAUDE_CODE_TASK_payment.md`, now replaced by `CLAUDE_CODE_TASK_v3.4.md`).**
 - **v3.3 — payment, coach notes and messages per booking; app icon.** K2 roster: payment bar `Zaplaceno x z n` + `Zaplatili všichni` (K2c), PaymentChip per row, note/message indicators; K17/K17b player card (payment checkbox, coach note for the training, message to the parent); guardian G6e (`Zaplaceno` + message from the coach); e-mail E09; DS §6.35; decisions 34–37; app icon in `shared/app-icon/`. Task: `CLAUDE_CODE_TASK_payment.md`.

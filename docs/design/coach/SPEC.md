@@ -112,15 +112,17 @@ Cancelled session: as in K1 (muted, struck time, danger `Zrušeno`) → K6b.
 Row → K2 (read-only roster; all edit actions hidden for past sessions — the only action left is `Duplikovat jako nový trénink`, as on K6b; the server refuses the rest with `SESSION_FINISHED`, BR-025d).
 Paging: load 20 days at a time, infinite scroll; empty `Zatím žádné odehrané tréninky.`
 
-### K12 · Athletes (`/coach/athletes`) — v3, DR-01
-H1 `Sportovci` + meta right `{n} aktivních`.
-SearchField (DS §6.27) `Hledat jméno nebo rodiče` — matches athlete first/last name and guardian names, diacritics-insensitive (`normalize("NFD")`). Always visible.
-FilterChips (DS §6.28) by birth year: `Všechny` + one chip per year present (single select). Horizontal scroll when they overflow.
-List grouped by **ročník**, ascending (`Ročník 2017`, `Ročník 2018` …), heading `text-date` primary + right `{n} sportovců`; inside a group sorted by last name (`Intl.Collator("cs")`).
+### K12 · Athletes (`/coach/athletes`) — v3, DR-01; year filter v3.6
+H1 `Sportovci` + meta right: `{n}` (all athletes) or `{shown} z {n}` when a year is selected.
+SearchField (DS §6.27) `Hledat jméno nebo rodiče` — matches athlete first/last name and guardian names, diacritics-insensitive (`normalize("NFD")`). Always visible. Search and year filter combine (AND).
+**Year filter = YearGrid (DS §6.28, v3.6)** under the search: white panel, radius 16, padding 12, 4-column grid, gap 8. Chips: `Všechny` first, then one chip per birth year present among active athletes, **newest first** (2020, 2019 …). Each year chip shows the year + count of active athletes (`2017 9`). Single select, `aria-pressed`. Selected chip = primary `#2B55E0` bg, white text (count white 80 %). **All years are always visible** — no collapse, no horizontal scroll, the grid simply grows by rows.
+Default and on every visit: `Všechny` (the choice is not remembered).
+List grouped by **ročník**, newest first (`Ročník 2020`, `Ročník 2019` …) — the same order as the grid; heading `text-date` primary + right `{n} sportovců`; inside a group sorted by last name (`Intl.Collator("cs")`). With a year selected, only that group is shown, plus `Neaktivní` athletes of that year.
 Row (64 px, white list panel): Avatar 40 + name 16/600 + meta 13 muted `{position or "Pozice nevyplněna"} · {upcomingBookings} nadcházející` (`bez přihlášek` when 0) + chevron → K13.
-Deactivated athletes: separate group `Neaktivní` at the bottom (heading muted), muted avatar/name, meta `Ročník {y} · deaktivoval rodič`.
-No phone on the row (it is on the roster and in K13). Empty (no athletes at all): `Zatím tu nejsou žádní sportovci. Přidávají je rodiče ve své aplikaci.`
+Deactivated athletes: separate group `Neaktivní` at the bottom (heading muted), muted avatar/name, meta `Ročník {y} · deaktivoval rodič`. They are not counted in the year chips.
+No phone on the row (it is on the roster and in K13). Empty (no athletes at all): `Zatím tu nejsou žádní sportovci. Přidávají je rodiče ve své aplikaci.` — the grid is hidden. Search with no match: `Nikdo neodpovídá hledání.`
 **Fixed:** coaches cannot create athletes or guardian accounts — no add button.
+Screens: K12 (`Všechny`), K12b (`2017` selected).
 
 ### K13 · Player card — coach view (v3.4, replaces K13/K17/K19)
 Routes: `/coach/athletes/[id]?tab=treninky|hrac|rodice|zpravy` (default `treninky`). Opened from K2 (card) and from K12. Back `‹ Zpět` (history back).
@@ -316,7 +318,7 @@ The UI must always state the notification consequence **before** the coach confi
 8. Series Sun 4.10.–29.11. generates 9 dates; unchecking one → button `Vytvořit 8 tréninků`.
 9. Internal note never appears in guardian API responses (integration test on RLS).
 10. K1 ↔ K14 switch via the segmented control; K14 shows counts with correct plurals and no meter.
-11. K12 search `bures` finds `Tomáš Bureš`; year chip `2018` shows only that group; inactive athletes at the bottom.
+11. K12 search `bures` finds `Tomáš Bureš`; year chip `2018` shows only that group and meta `{x} z {n}`; all year chips visible at 390 px with 9+ years (no horizontal scroll); `Všechny` is selected again after leaving and reopening the tab; inactive athletes at the bottom.
 12. K13 shows internal note to coaches; the same athlete fetched with a guardian session has no internal note field.
 13. K15 lists running and ended series; K16 shows only that series' trainings; there is no edit-series action anywhere.
 14. Coach adds an athlete in K7 → guardians receive E08 with the cancellation deadline.
