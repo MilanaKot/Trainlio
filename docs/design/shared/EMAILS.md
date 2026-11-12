@@ -47,6 +47,7 @@ Rules:
 | E06 | `SESSION_ELIGIBILITY_NARROWED` | only guardians of athletes outside the new range (D-08) | orange `Odhlášeno` | `Najít jiný trénink` → G1 |
 | E07 | `BOOKING_REMOVED_BY_COACH` | the removed athlete's guardians | orange `Odhlášeno trenérem` | `Otevřít v aplikaci` → G6d |
 | E08 | `BOOKING_ADDED_BY_COACH` **(new, DR-12)** | the added athlete's guardians | blue `Nová přihláška` | `Otevřít v aplikaci` → G6 |
+| E09 | `COACH_MESSAGE_TO_GUARDIAN` **(v3.3)** | all guardians of that athlete | blue `Zpráva od trenéra` | `Otevřít v aplikaci` → G6 (booking) |
 
 When several significant fields change in one save (e.g. time and hall), send **one** e-mail: label `Změna tréninku`, subject `Změna tréninku: trénink {dd d. m.}`, H1 `Trénink se změnil`, and all changed rows highlighted.
 
@@ -100,10 +101,19 @@ When several significant fields change in one save (e.g. time and hall), send **
 - Helper: `Sportovec nepůjde? Odhlaste ho v aplikaci do uvedeného termínu, ať místo může dostat někdo jiný.`
 - Sent also when the coach adds over capacity (K7b). Not sent for the guardian's own bookings.
 
+### E09 · COACH_MESSAGE_TO_GUARDIAN (v3.3)
+- Subject: `Zpráva od trenéra: {Ivan Kotov} · trénink {ne 27. 9.}`
+- H1: `Trenér vám poslal zprávu` · Text: `{Milan Filipi} vám poslal zprávu ke sportovci z tréninku.`
+- Block: `Sportovec` · `Trénink` `{Neděle 27. září · 16:00–17:00}`
+- Message block (caption `Zpráva od trenéra`) with the text.
+- Helper: `Na zprávu nelze odpovědět e-mailem. Trenéra kontaktujte telefonicky: {coach phone}.` (without phone: `Na zprávu nelze odpovědět e-mailem.`)
+- Sent again (same subject) when the coach edits and re-sends. Payment changes send **no** e-mail.
+
 ## 3. Label colours
 - red (`#FBE9E7` / `#B42318`) — cancelled
 - orange (`#FBF0DC` / `#8F5200`) — change, removal
 - blue (`#E5EBFD` / `#2B55E0`) — new booking, invitation
 
 ## 4. Not sent
+Payment marked/unmarked; coach note per booking (internal).
 Room, capacity, notes, assistants changes; closing/reopening registration; guardian's own booking/cancellation (in-app toast only).

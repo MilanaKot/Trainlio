@@ -234,6 +234,9 @@ Highlights where and for whom a training is, right under the time in the coach s
 ### 6.34 RoleLabel (v3.2)
 Small label on a coach's training row showing the signed-in coach's role in that session. Height 22, padding 0 7, radius 6, 11/700, sentence case (not uppercase — differs from status badges). `Hlavní trenér` = primary-100 bg + primary text; `Asistent` = neutral-50 bg + muted text. Placed under the meta line, `align-self: flex-start`, 4 px above. Not interactive.
 
+### 6.35 PaymentChip (v3.3)
+Status of payment for one booking, used in the coach roster (K2) and read-only K17. Pill height 26, radius 13, padding 0 9, 12/700, `white-space: nowrap`. `paid` = success-soft bg + success text + 12 px check + `Zaplaceno`; `unpaid` = transparent + subtle text (#8791A6) + inset 1.5 px line + `Nezaplaceno`. Always text — never a bare check or circle (would read as attendance). For guardians only the `paid` variant exists (as an uppercase Badge in G6e).
+
 ### 6.32 E-mail layout (v3)
 Defined in `EMAILS.md` — system fonts only, 520 px card, works with images blocked.
 

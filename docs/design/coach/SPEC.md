@@ -48,6 +48,10 @@ interface CoachSession extends SessionSummary {
 }
 interface RosterEntry {
   bookingId: string;
+  // v3.3 — per booking
+  paidAt: string | null; paidBy: { firstName: string; lastName: string } | null;   // guardian sees only paid: boolean
+  coachNote: string | null;        // ≤200, coach/admin only — NEVER in guardian queries
+  parentMessage: { text: string; sentAt: string; sentBy: { firstName: string; lastName: string } } | null; // ≤500, visible to the guardian
   athlete: { id: string; firstName: string; lastName: string; birthYear: number;
              position: string | null; stick: "left" | "right" | "unknown" | null; club: string | null };
   createdAt: string;
@@ -153,10 +157,29 @@ Back `‹ Tréninky`. Page scrolls (tall).
 4. Public note panel: caption with globe icon `INFORMACE PRO SPORTOVCE · VIDÍ RODIČE`, text.
 5. Internal note panel (only if present): `internal` bg + border, caption with lock `INTERNÍ POZNÁMKA · JEN TRENÉŘI` (internal-ink), text.
 6. Roster: heading `Sportovci {n}` + small secondary button `+ Přidat sportovce` (→ K7). Rows (link to athlete detail, not designed): avatar 36, name 16/700, line `2017 · Centr · Levá hůl` (omit missing parts), meta 12 `Přihlásil Milana Kotova · 27. 9. 18:42` or `Přidal trenér Milan Filipi · 24. 9. 17:30` (always masculine form — DS §8). Club is not in the default row. Sorted by booking time.
-   Tap row → BottomSheet "athlete in session": avatar, name, `2017 · Centr · Levá hůl`, `Klub` (if set), DetailList `Rodič` (name), `Telefon` (number or `—`), `Přihlášeno` (date-time). If phone exists: primary lg `Zavolat {phone}` (`<a href="tel:…">`) + outline lg `Poslat SMS` (`sms:`). Bottom: outline-danger `Odhlásit z tréninku` → confirm Dialog: title `Odhlásit sportovce z tréninku?`, line `{athlete} · Ne 4. 10. · 09:00`, optional Textarea `Zpráva pro rodiče` (Nepovinné, max 200, counter), info line (mail icon) `Rodič dostane e-mail. Sportovce bude moci znovu přihlásit, pokud bude volné místo.`, buttons `Ponechat` (outline, initial focus) · `Odhlásit` (primary). Result: booking status `removed_by_coach`, place is freed immediately (bookedCount −1), guardian e-mailed; roster row disappears and a toast `Sportovec odhlášen` shows. Guardian UI: see guardian SPEC G4b / G6d. Phone numbers are shown only to coaches/admins of the workspace (RLS).
+   **v3.3 — payment & notes in the roster:**
+   - Between the heading row and the list: green bar (`success-soft`, radius 12, padding 10/12/10/16): left `Zaplaceno {paid} z {n}` (14/700 success); right outline-success sm button `✓ Zaplatili všichni` (36 px, white, inset 1.5 px `#A7D9C4`) → K2c. When everybody paid, the button is replaced by static text `Zaplatili všichni ✓` (not a button).
+   - Each row, right side: **PaymentChip** (DS §6.35) `✓ Zaplaceno` (success-soft/success) or `Nezaplaceno` (transparent, subtle text, inset 1.5 px line). Text chips on purpose — a bare check would read as attendance.
+   - After the name, small 14 px indicators: lock (`#7A5A00`) = the booking has a coach note; speech bubble (muted) = a message was sent to the parent. `aria-label` `Má poznámku trenéra` / `Zpráva rodiči odeslána`.
+   Tap row → **K17 player card** (replaces the earlier "athlete in session" sheet; the content below is kept inside K17). Old sheet content for reference: avatar, name, `2017 · Centr · Levá hůl`, `Klub` (if set), DetailList `Rodič` (name), `Telefon` (number or `—`), `Přihlášeno` (date-time). If phone exists: primary lg `Zavolat {phone}` (`<a href="tel:…">`) + outline lg `Poslat SMS` (`sms:`). Bottom: outline-danger `Odhlásit z tréninku` → confirm Dialog: title `Odhlásit sportovce z tréninku?`, line `{athlete} · Ne 4. 10. · 09:00`, optional Textarea `Zpráva pro rodiče` (Nepovinné, max 200, counter), info line (mail icon) `Rodič dostane e-mail. Sportovce bude moci znovu přihlásit, pokud bude volné místo.`, buttons `Ponechat` (outline, initial focus) · `Odhlásit` (primary). Result: booking status `removed_by_coach`, place is freed immediately (bookedCount −1), guardian e-mailed; roster row disappears and a toast `Sportovec odhlášen` shows. Guardian UI: see guardian SPEC G4b / G6d. Phone numbers are shown only to coaches/admins of the workspace (RLS).
 7. Caption `AKCE` + list (56 px rows, icon + label): `Upravit trénink` (→ K3), `Duplikovat` (→ K4), `Zavřít přihlašování` (→ K5) / `Otevřít přihlašování` when closed.
 8. Separated by 32 px, outline-danger lg button `Zrušit trénink` (→ K6).
 Empty roster: text `Zatím nikdo není přihlášený.`
+
+### K17 / K17b · Player card in a session (v3.3) — tall BottomSheet from a K2 roster row
+Header: Avatar 48 + name 20/26 700 + meta `2017 · Centr · Levá hůl` + close 44.
+Guardian row (white, radius 12): name 14/700 + meta `Přihlásil {d. m. HH:MM} · {phone}` + 40 px call button (`tel:`). Several guardians → one row each.
+**1. Payment** — checkbox row 60 px (PickerRow style, DS §6.8): `Zaplaceno`. Unchecked: white, inset line, helper `Po označení uvidí rodič v aplikaci „Zaplaceno“`. Checked: success-soft bg, inset 2 px success, box filled success with white check, title success, meta `Označil {coach} · {d. m.} v {HH:MM}`. **Saves immediately** on tap (optimistic, toast on error only). Unchecking clears `paidAt/paidBy`. Only a flag — no amount, no method.
+**2. Coach note for this training** — internal style (`#FBF7EC` + inset `#E9D9A8`), caption with lock `POZNÁMKA K TRÉNINKU · JEN TRENÉŘI`, Textarea (placeholder `Např. jak se mu dnes dařilo`, max 200, counter). Saves on blur. Below, read-only line 12 `Poznámka v profilu: {athlete internal note}` when the athlete has a general note (K13). **Never** reachable by guardians (RLS + not in guardian queries).
+**3. Message to the parent** — white panel, caption with bubble `ZPRÁVA PRO RODIČE · {guardian name(s)}`.
+- Not sent yet (K17): Textarea (placeholder `Napište zprávu rodiči`, max 500, counter), helper `Rodič ji uvidí v detailu přihlášky a dostane e-mail.`, secondary md `Odeslat rodiči` (disabled while empty). Send → saved on the booking + e-mail E09 to all the athlete's guardians; toast `Zpráva odeslána`.
+- Sent (K17b): the text, line success 12/600 `✓ Odesláno {d. m.} v {HH:MM} · v aplikaci a e-mailem`, text button `Upravit a poslat znovu` → back to the editor prefilled; sending again replaces the text and sends E09 again.
+- One message per booking (latest wins). No replies in the app.
+Footer: primary lg `Hotovo` (closes), text danger `Odhlásit z tréninku` (existing remove flow, see K2 item 6).
+**Permissions:** payment, note, message and remove follow `canEdit(session)` (decision 33). Coaches who can only view see K17 read-only: payment as a PaymentChip, note as text, message as text, no inputs/buttons.
+
+### K2c · Mark all as paid (v3.3) — BottomSheet
+Title (Barlow 28/32) `Označit {n} sportovce jako zaplacené?` (plural: 1 sportovce / 2–4 sportovce / 5+ sportovců — the accusative form is `sportovce` for 1–4, `sportovců` for 5+), text `Ostatní už zaplaceno mají. Rodiče uvidí v aplikaci „Zaplaceno“.`, list (bg panel) of the unpaid athletes (Avatar 32 + name). Buttons: primary lg `Označit {n} jako zaplacené`, outline lg `Zrušit`. Confirm → one request marks only the unpaid bookings (`paidBy = me`, same timestamp); already-paid rows keep their original `paidAt/paidBy`. Toast `Označeno jako zaplacené`.
 
 ### K7 · Add athlete (sheet)
 Tall BottomSheet (top offset 48). Title `Přidat sportovce`. Summary bar: `Ne 27. 9. · 16:00 · 2017–2018` + mini meter + `8 / 10`. Search input (48 px, neutral-50, search icon, placeholder `Hledat jméno`, filters client-side by name). Helper `Sportovci z ročníků 2017–2018, kteří ještě nejsou přihlášení`.
@@ -264,6 +287,11 @@ The UI must always state the notification consequence **before** the coach confi
 16. `Moje` shows only sessions where I am main coach or assistant; each shows the correct RoleLabel; choice survives reload.
 17. Coach without the permission: no FAB; on a session where they are assistant → K2b with `Jen pro čtení`, no actions, direct POST returns `FORBIDDEN_EDIT`, `/edit` redirects; on a session where they are **main coach** → full K2, can edit/close/cancel/add/remove, but `Duplikovat` is hidden and the `Hlavní trenér` field is locked; creating via API returns `FORBIDDEN_EDIT`.
 18. View-only coach can still call a guardian from the roster and read the internal note.
+19. Tap `Zaplaceno` in K17 → saved without pressing anything else; K2 row shows `✓ Zaplaceno`, bar count +1; guardian G6 shows `Zaplaceno`.
+20. `Zaplatili všichni` with 3 unpaid → K2c lists exactly those 3; confirm → bar `Zaplaceno 8 z 8` and static `Zaplatili všichni ✓`; previously paid rows keep their original `paidBy`.
+21. Coach note for a booking is never returned to a guardian session (RLS integration test); the K2 row shows the lock indicator.
+22. `Odeslat rodiči` → E09 delivered to every guardian of the athlete; G6 shows the message; `Upravit a poslat znovu` replaces it and sends again.
+23. Coach without edit rights on that session: K17 read-only, K2c button hidden, API returns `FORBIDDEN_EDIT`.
 
 ## 6. Assumptions & open questions
 - Reopening closed registration is allowed (`Otevřít přihlašování`) — confirmed v3.

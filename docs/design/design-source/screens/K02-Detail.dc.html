@@ -33,6 +33,11 @@ body{margin:0;background:#F3F5F9;font-family:Manrope,"Segoe UI",system-ui,sans-s
 .ab .by{font-size:12px;line-height:16px;color:var(--muted);margin-top:2px}
 .act{display:flex;align-items:center;gap:12px;min-height:56px;padding:0 16px;border:0;background:transparent;width:100%;font:600 16px/1 Manrope,system-ui,sans-serif;color:var(--ink);box-shadow:0 1px 0 var(--line);text-align:left}
 .act:last-child{box-shadow:none}
+.pay{height:26px;padding:0 9px;border-radius:13px;flex-shrink:0;display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:700;white-space:nowrap}
+.pay.on{background:#E3F4EC;color:#13795B}
+.pay.off{background:transparent;color:#8791A6;box-shadow:inset 0 0 0 1.5px #DFE4EE}
+.ic{display:inline-flex;align-items:center;gap:3px;margin-left:8px;color:var(--muted);vertical-align:-2px}
+.ic.n{color:#7A5A00}
 .btn-s{height:40px;padding:0 14px;border-radius:10px;border:0;background:var(--accentsoft);color:var(--accent);font:700 14px/1 Manrope,system-ui,sans-serif;display:inline-flex;align-items:center;gap:6px}
 </style>
 </helmet>
@@ -70,18 +75,22 @@ body{margin:0;background:#F3F5F9;font-family:Manrope,"Segoe UI",system-ui,sans-s
 
 <section style="display: flex; flex-direction: column; gap: 8px">
 <div style="display: flex; align-items: center; justify-content: space-between; padding: 0 4px">
-<h2 style="margin: 0; font-size: 20px; line-height: 28px; font-weight: 700">Sportovci <span style="color: var(--muted); font-weight: 600">8</span></h2>
+<div style="display: flex; flex-direction: column; gap: 2px"><h2 style="margin: 0; font-size: 20px; line-height: 28px; font-weight: 700">Sportovci <span style="color: var(--muted); font-weight: 600">8</span></h2></div>
 <button class="btn-s"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg>Přidat sportovce</button>
 </div>
+<div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 12px 10px 16px; border-radius: 12px; background: #E3F4EC">
+<span style="font-size: 14px; font-weight: 700; color: #13795B">Zaplaceno 5 z 8</span>
+<button style="height: 36px; padding: 0 12px; border-radius: 10px; border: 0; background: #fff; color: #13795B; box-shadow: inset 0 0 0 1.5px #A7D9C4; font: 700 14px/1 Manrope, sans-serif; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"></path></svg>Zaplatili všichni</button>
+</div>
 <div class="panel">
-<a class="ath" href="#"><span class="av">IK</span><span class="ab"><b>Ivan Kotov</b><span class="d">2017 · Centr · Levá hůl</span><span class="by">Přihlásil Milana Kotova · 27. 9. 18:42</span></span></a>
-<a class="ath" href="#"><span class="av">AK</span><span class="ab"><b>Anna Kotova</b><span class="d">2018 · Obránce · Pravá hůl</span><span class="by">Přihlásil Milana Kotova · 27. 9. 18:42</span></span></a>
-<a class="ath" href="#"><span class="av">JD</span><span class="ab"><b>Jakub Dvořák</b><span class="d">2017 · Brankář · Levá hůl</span><span class="by">Přihlásil Petr Dvořák · 25. 9. 20:15</span></span></a>
-<a class="ath" href="#"><span class="av">TN</span><span class="ab"><b>Tereza Nováková</b><span class="d">2018 · Levé křídlo · Levá hůl</span><span class="by">Přihlásil Eva Nováková · 25. 9. 09:03</span></span></a>
-<a class="ath" href="#"><span class="av">MS</span><span class="ab"><b>Matěj Svoboda</b><span class="d">2017 · Univerzál · Pravá hůl</span><span class="by">Přidal trenér Milan Filipi · 24. 9. 17:30</span></span></a>
-<a class="ath" href="#"><span class="av">OH</span><span class="ab"><b>Ondřej Horák</b><span class="d">2018 · Pravé křídlo</span><span class="by">Přihlásil Tomáš Horák · 23. 9. 21:48</span></span></a>
-<a class="ath" href="#"><span class="av">LČ</span><span class="ab"><b>Lukáš Černý</b><span class="d">2017 · Obránce · Levá hůl</span><span class="by">Přihlásil Jana Černá · 23. 9. 12:10</span></span></a>
-<a class="ath" href="#"><span class="av">AV</span><span class="ab"><b>Adam Veselý</b><span class="d">2018 · Centr · Nevím</span><span class="by">Přihlásil Martin Veselý · 22. 9. 19:55</span></span></a>
+<a class="ath" href="K17-KartaHrace.dc.html"><span class="av">IK</span><span class="ab"><b>Ivan Kotov</b><span class="d">2017 · Centr · Levá hůl</span><span class="by">Přihlásil Milana Kotova · 27. 9. 18:42</span></span><span class="pay off">Nezaplaceno</span></a>
+<a class="ath" href="K17b-KartaHraceVyplneno.dc.html"><span class="av">AK</span><span class="ab"><b>Anna Kotova<span class="ic n" aria-label="Má poznámku trenéra"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="10.5" width="14" height="10" rx="2"></rect><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5"></path></svg></span><span class="ic" aria-label="Zpráva rodiči odeslána"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5.5A1.5 1.5 0 0 1 5.5 4h13A1.5 1.5 0 0 1 20 5.5v9a1.5 1.5 0 0 1-1.5 1.5H10l-4.5 4v-4A1.5 1.5 0 0 1 4 14.5z"></path></svg></span></b><span class="d">2018 · Obránce · Pravá hůl</span><span class="by">Přihlásil Milana Kotova · 27. 9. 18:42</span></span><span class="pay on"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"></path></svg>Zaplaceno</span></a>
+<a class="ath" href="#"><span class="av">JD</span><span class="ab"><b>Jakub Dvořák<span class="ic n" aria-label="Má poznámku trenéra"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="10.5" width="14" height="10" rx="2"></rect><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5"></path></svg></span></b><span class="d">2017 · Brankář · Levá hůl</span><span class="by">Přihlásil Petr Dvořák · 25. 9. 20:15</span></span><span class="pay on"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"></path></svg>Zaplaceno</span></a>
+<a class="ath" href="#"><span class="av">TN</span><span class="ab"><b>Tereza Nováková</b><span class="d">2018 · Levé křídlo · Levá hůl</span><span class="by">Přihlásil Eva Nováková · 25. 9. 09:03</span></span><span class="pay on"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"></path></svg>Zaplaceno</span></a>
+<a class="ath" href="#"><span class="av">MS</span><span class="ab"><b>Matěj Svoboda<span class="ic" aria-label="Zpráva rodiči odeslána"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5.5A1.5 1.5 0 0 1 5.5 4h13A1.5 1.5 0 0 1 20 5.5v9a1.5 1.5 0 0 1-1.5 1.5H10l-4.5 4v-4A1.5 1.5 0 0 1 4 14.5z"></path></svg></span></b><span class="d">2017 · Univerzál · Pravá hůl</span><span class="by">Přidal trenér Milan Filipi · 24. 9. 17:30</span></span><span class="pay on"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"></path></svg>Zaplaceno</span></a>
+<a class="ath" href="#"><span class="av">OH</span><span class="ab"><b>Ondřej Horák</b><span class="d">2018 · Pravé křídlo</span><span class="by">Přihlásil Tomáš Horák · 23. 9. 21:48</span></span><span class="pay off">Nezaplaceno</span></a>
+<a class="ath" href="#"><span class="av">LČ</span><span class="ab"><b>Lukáš Černý</b><span class="d">2017 · Obránce · Levá hůl</span><span class="by">Přihlásil Jana Černá · 23. 9. 12:10</span></span><span class="pay on"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"></path></svg>Zaplaceno</span></a>
+<a class="ath" href="#"><span class="av">AV</span><span class="ab"><b>Adam Veselý</b><span class="d">2018 · Centr · Nevím</span><span class="by">Přihlásil Martin Veselý · 22. 9. 19:55</span></span><span class="pay off">Nezaplaceno</span></a>
 </div>
 </section>
 
