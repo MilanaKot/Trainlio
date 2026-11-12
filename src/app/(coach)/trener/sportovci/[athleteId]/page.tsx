@@ -18,7 +18,7 @@ import { Avatar } from '@/components/ui/avatar'
 import { ContactActions, PhoneIcon } from '@/components/ui/contact-actions'
 import { DetailList } from '@/components/ui/detail-list'
 import { canEditSession } from '@/lib/domain/coach-rights'
-import { localYearMonth, parsePeriod } from '@/lib/domain/attendance'
+import { parsePeriod } from '@/lib/period'
 import { formatPhone } from '@/lib/domain/phone'
 import {
   HOCKEY_POSITION_LABELS,
@@ -63,8 +63,7 @@ export default async function PlayerCardPage({
   const tab: CardTab = CARD_TABS.includes(query.tab as CardTab)
     ? (query.tab as CardTab)
     : 'treninky'
-  const today = localYearMonth(new Date(), workspace.timezone)
-  const period = parsePeriod(query.obdobi, { kind: 'month', ...today })
+  const period = parsePeriod(query.obdobi, 'month', new Date(), workspace.timezone)
 
   const [guardians, sessions, note, photoUrl, rights] = await Promise.all([
     getAthleteGuardians(athleteId),

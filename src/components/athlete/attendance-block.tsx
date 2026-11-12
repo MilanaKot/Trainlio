@@ -1,5 +1,6 @@
 import { messages, plural } from '@/lib/i18n'
-import { attendanceView, inPeriod, summarizeAttendance, type Period } from '@/lib/domain/attendance'
+import { attendanceView, summarizeAttendance } from '@/lib/domain/attendance'
+import { inPeriod, type Period } from '@/lib/period'
 import { PeriodControl } from '@/components/ui/period-control'
 import type { AttendanceRecord } from '@/server/athletes/queries'
 
@@ -10,7 +11,7 @@ const t = messages.athlete.attendance
  *
  * The parent's view of attendance: the period's percentage, a square per
  * training (green Byl, red Nebyl) and the two counts. Read-only, no list, and
- * nothing about payment. Same rules as the coach's K13: cancelled trainings
+ * nothing about payment; a month or a season (decision 47). Same rules as the coach's K13: cancelled trainings
  * are left out, and one nobody marked counts as Nebyl only once it is over.
  */
 export function AttendanceBlock({
@@ -27,7 +28,7 @@ export function AttendanceBlock({
   const now = new Date()
   const inThisPeriod = records
     .filter((record) => !record.sessionCancelled)
-    .filter((record) => inPeriod(new Date(record.startAt), period, timezone))
+    .filter((record) => inPeriod(new Date(record.startAt), period))
     .sort((a, b) => a.startAt.localeCompare(b.startAt))
   const summary = summarizeAttendance(inThisPeriod, now)
   const squares = inThisPeriod
@@ -41,7 +42,7 @@ export function AttendanceBlock({
         {t.caption.replace('{sport}', sportName.toLocaleUpperCase('cs'))}
       </h2>
       <div className="flex flex-col gap-3 rounded-card bg-surface p-4 shadow-card">
-        <PeriodControl period={period} />
+        <PeriodControl period={period} timezone={timezone} />
         {total === 0 ? (
           <p className="text-meta text-muted">{t.none}</p>
         ) : (

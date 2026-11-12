@@ -633,7 +633,7 @@ export const cs = {
       tabMessages: 'Zprávy',
       period: 'Období',
       month: 'Měsíc',
-      year: 'Rok',
+      season: 'Sezóna',
       previous: 'Předchozí období',
       next: 'Další období',
       attendanceTile: 'Docházka · byl {present} z {total}',
