@@ -8,6 +8,7 @@ import { CreateSheet } from '@/components/session/create-sheet'
 import { OrgLogo } from '@/components/ui/org-logo'
 import { EmptyState } from '@/components/ui/empty-state'
 import { canCreateSessions } from '@/lib/domain/coach-rights'
+import { DollarIcon, PersonCheckIcon } from '@/components/ui/status-toggle'
 import { messages } from '@/lib/i18n'
 
 const t = messages.coach
@@ -76,6 +77,21 @@ export default async function CoachSessionsPage({
       </header>
 
       <CoachTrainingsTabs value={showingPast ? 'past' : 'upcoming'} />
+
+      {/* §K14 (decision 44): what the two counters on each row are. */}
+      {showingPast && sessions.length > 0 ? (
+        <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-hint text-muted">
+          <span className="flex items-center gap-1">
+            <PersonCheckIcon className="size-3.5" />
+            {t.pastPresent}
+          </span>
+          <span className="flex items-center gap-1">
+            <DollarIcon className="size-3.5" />
+            {t.pastPaid}
+          </span>
+          <span>· {t.pastLegendMissing}</span>
+        </p>
+      ) : null}
 
       {sessions.length === 0 ? (
         <EmptyState

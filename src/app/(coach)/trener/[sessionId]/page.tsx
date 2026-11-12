@@ -14,6 +14,7 @@ import { PlaceChip } from '@/components/ui/place-chip'
 import { splitRoster } from '@/lib/domain/roster'
 import {
   formatDateGroup,
+  formatDayMonth,
   formatDateShort,
   formatTime,
   formatTimeRange,
@@ -102,6 +103,7 @@ export default async function SessionDetailPage({
   // only thing left to do with it is the same copy a cancelled one offers.
   const finished = end.getTime() < now.getTime()
   const { confirmed } = splitRoster(entries)
+  const leaderless = session.mainCoachId === null && !cancelled
   const assistants = coaches.filter((c) => c.role === 'ASSISTANT')
 
   const sessionLabel = `${formatDateShort(start, workspace.timezone)} · ${formatTime(start, workspace.timezone)}`
@@ -155,8 +157,36 @@ export default async function SessionDetailPage({
         ) : null}
       </header>
 
+      {/* K2e (decision 46): the main coach was deactivated. Parents read
+          `Trenér bude upřesněn` until somebody is assigned (K3c), which sends
+          them E05. Only those who may edit every training can assign one. */}
+      {leaderless ? (
+        <Notice variant="warning" title={t.noMainCoachTitle}>
+          <div className="flex flex-col items-start gap-3">
+            <p>
+              {session.vacatedBy
+                ? t.noMainCoachBody
+                    .replace('{coach}', session.vacatedBy.name ?? t.none)
+                    .replace(
+                      '{date}',
+                      formatDayMonth(new Date(session.vacatedBy.at), workspace.timezone),
+                    )
+                : t.noMainCoachBodyUnknown}
+            </p>
+            {editable && !finished ? (
+              <Link
+                href={`/trener/${session.id}/upravit`}
+                className={buttonVariants({ variant: 'primary', size: 'md' })}
+              >
+                {t.assignCoach}
+              </Link>
+            ) : null}
+          </div>
+        </Notice>
+      ) : null}
+
       {/* §K2b: says why nothing here can be changed, and who can change it. */}
-      {!editable && !cancelled ? (
+      {!editable && !cancelled && !leaderless ? (
         <Notice variant="plain" icon={<EyeIcon />} title={t.readOnlyTitle}>
           <span className="text-muted">
             {t.readOnlyBody.replace('{coach}', session.mainCoachName ?? t.none)}
@@ -179,7 +209,11 @@ export default async function SessionDetailPage({
         items={[
           {
             term: t.mainCoach,
-            value: coaches.find((c) => c.role === 'MAIN')?.displayName ?? session.mainCoachName,
+            value: leaderless ? (
+              <span className="font-semibold text-warning">{t.noMainCoachValue}</span>
+            ) : (
+              (coaches.find((c) => c.role === 'MAIN')?.displayName ?? session.mainCoachName)
+            ),
           },
           {
             term: t.assistants,

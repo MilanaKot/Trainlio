@@ -95,7 +95,7 @@ describe('the coach training row (AC-272)', () => {
  * §K14 (v3, DR-02). A finished training has no free places to report and no
  * attendance to report either, so the row says one thing: how many were booked.
  */
-describe('a finished training (AC-285)', () => {
+describe('a finished training (AC-285, K14 v3.4)', () => {
   const renderPast = (s: CoachSession) =>
     render(
       <ul>
@@ -103,21 +103,10 @@ describe('a finished training (AC-285)', () => {
       </ul>,
     )
 
-  it('counts who was booked, in the right Czech', () => {
-    renderPast(session({ confirmedCount: 1 }))
-    expect(screen.getByText('1')).toBeInTheDocument()
-    expect(screen.getByText('přihlášený')).toBeInTheDocument()
-  })
-
-  it('agrees for two to four', () => {
-    renderPast(session({ confirmedCount: 3 }))
-    expect(screen.getByText('přihlášení')).toBeInTheDocument()
-  })
-
-  it('and beyond five, and for none at all', () => {
-    renderPast(session({ confirmedCount: 8 }))
-    expect(screen.getByText('přihlášených')).toBeInTheDocument()
-    screen.getByText('8')
+  it('counts who came and who paid, out of who was booked (decision 44)', () => {
+    renderPast(session({ rosterCount: 8, presentCount: 8, paidCount: 5 }))
+    expect(screen.getByLabelText('Byli 8/8')).toHaveClass('text-success')
+    expect(screen.getByLabelText('Zaplatili 5/8')).toHaveClass('text-warning')
   })
 
   it('shows no meter: fullness means nothing once it is over', () => {
@@ -131,6 +120,20 @@ describe('a finished training (AC-285)', () => {
   it('keeps the cancelled badge instead of a count', () => {
     renderPast(session({ status: 'CANCELLED', confirmedCount: 8 }))
     expect(screen.getByText('Zrušeno')).toBeInTheDocument()
-    expect(screen.queryByText('přihlášených')).toBeNull()
+    expect(screen.queryByLabelText(/Byli/)).toBeNull()
+  })
+})
+
+describe('a training without a main coach (K2e)', () => {
+  it('says so on the row', () => {
+    render(
+      <ul>
+        <CoachTrainingRow
+          session={session({ mainCoachId: null, mainCoachName: null })}
+          timezone={PRAGUE}
+        />
+      </ul>,
+    )
+    expect(screen.getByText('Bez hlavního trenéra')).toBeInTheDocument()
   })
 })

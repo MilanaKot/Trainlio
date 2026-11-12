@@ -176,6 +176,8 @@ export const cs = {
 
   /** "Moje tréninky" (guardian/SPEC.md §G4, §G4b, §G5, §G6). */
   myTrainings: {
+    /* G6 (v3.4): the training has no main coach (coach K2e). */
+    coachTbd: 'Trenér bude upřesněn',
     title: 'Moje tréninky',
     tabs: 'Nadcházející nebo minulé tréninky',
     upcoming: 'Nadcházející',
@@ -422,13 +424,6 @@ export const cs = {
     pastSessions: 'Minulé tréninky',
     upcomingSessions: 'Nadcházející tréninky',
     noPastSessions: 'Zatím žádné odehrané tréninky.',
-    /* K14: a finished training reports who was booked and nothing more —
-       attendance is not tracked, so the row must never imply who came. */
-    bookedLabel: {
-      one: 'přihlášený',
-      few: 'přihlášení',
-      many: 'přihlášených',
-    } satisfies PluralForms,
     noSessionsAction: 'Vytvořit trénink',
     /* K10, the sheet behind the FAB. */
     create: 'Vytvořit',
@@ -660,6 +655,17 @@ export const cs = {
       save: 'Uložit',
       edit: 'Upravit',
     },
+    /* v3.4 · K14 counters and K2e. */
+    pastPresent: 'Byli',
+    pastPaid: 'Zaplatili',
+    pastLegendMissing: 'oranžově = někdo chybí',
+    noMainCoach: 'Bez hlavního trenéra',
+    noMainCoachTitle: 'Trénink nemá hlavního trenéra',
+    /* `{date}` is `26. 9.`, whose last dot ends the sentence. */
+    noMainCoachBody: '{coach} byl deaktivován {date} Rodiče vidí „Trenér bude upřesněn“.',
+    noMainCoachBodyUnknown: 'Rodiče vidí „Trenér bude upřesněn“.',
+    noMainCoachValue: 'Bez trenéra',
+    assignCoach: 'Přiřadit trenéra',
     /* v3.4 · DS §6.36 StatusToggle. */
     toggle: {
       attendance: 'Docházka {athlete}: {state}',

@@ -217,7 +217,11 @@ export default async function BookingDetailPage({
           { term: t.years, value: years },
           {
             term: t.mainCoach,
-            value: coaches.find((c) => c.role === 'MAIN')?.displayName ?? t.none,
+            // K2e (decision 46): a deactivated main coach leaves the training
+            // without one until somebody is assigned.
+            value: coaches.find((c) => c.role === 'MAIN')?.displayName ?? (
+              <span className="text-muted">{t.coachTbd}</span>
+            ),
           },
           {
             term: t.assistants,
