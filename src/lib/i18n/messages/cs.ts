@@ -228,6 +228,11 @@ export const cs = {
     occupancy: 'Obsazenost',
     athleteInfo: 'INFORMACE PRO SPORTOVCE',
     coachMessage: 'Zpráva od trenéra',
+    /* G6e (handoff v3.3). Only the paid state exists for a parent: nothing is
+       shown when it is not paid. */
+    paidBadge: 'Zaplaceno',
+    parentMessageCaption: 'ZPRÁVA OD TRENÉRA · {athlete}',
+    parentMessageMeta: '{coach} · {when}',
     /* §G6: a training the coach called off, and a child the coach took off it.
        Each says who acted and what it means for this family. */
     sessionCancelledNotice: 'Trénink byl zrušen trenérem.',
@@ -620,6 +625,40 @@ export const cs = {
        (K2, K17, K2c). */
     paid: 'Zaplaceno',
     unpaid: 'Nezaplaceno',
+    paidCount: 'Zaplaceno {paid} z {count}',
+    markAllPaid: 'Zaplatili všichni',
+    allPaid: 'Zaplatili všichni ✓',
+    hasCoachNote: 'Má poznámku trenéra',
+    messageSentIndicator: 'Zpráva rodiči odeslána',
+    /* K17 · the player card. */
+    guardianBooked: 'Přihlásil {when}',
+    callGuardian: 'Zavolat {name}',
+    paidHint: 'Po označení uvidí rodič v aplikaci „Zaplaceno“',
+    paidBy: 'Označil {name} · {when}',
+    bookingNoteCaption: 'POZNÁMKA K TRÉNINKU · JEN TRENÉŘI',
+    bookingNotePlaceholder: 'Např. jak se mu dnes dařilo',
+    bookingNoteNone: 'Bez poznámky.',
+    profileNote: 'Poznámka v profilu: {note}',
+    messageCaption: 'ZPRÁVA PRO RODIČE · {names}',
+    messageCaptionNoGuardian: 'ZPRÁVA PRO RODIČE',
+    messagePlaceholder: 'Napište zprávu rodiči',
+    messageHelper: 'Rodič ji uvidí v detailu přihlášky a dostane e-mail.',
+    sendMessage: 'Odeslat rodiči',
+    sendingMessage: 'Odesílám…',
+    messageSentAt: 'Odesláno {when} · v aplikaci a e-mailem',
+    messageNone: 'Zatím žádná zpráva.',
+    resendMessage: 'Upravit a poslat znovu',
+    messageSentToast: 'Zpráva odeslána',
+    /* K2c. `sportovce` for 1–4, `sportovců` for 5 and more — the accusative. */
+    markAllTitle: {
+      one: 'Označit {count} sportovce jako zaplacené?',
+      few: 'Označit {count} sportovce jako zaplacené?',
+      many: 'Označit {count} sportovců jako zaplacené?',
+    } satisfies PluralForms,
+    markAllBody: 'Ostatní už zaplaceno mají. Rodiče uvidí v aplikaci „Zaplaceno“.',
+    markAllBodyNonePaid: 'Rodiče uvidí v aplikaci „Zaplaceno“.',
+    markAllConfirm: 'Označit {count} jako zaplacené',
+    markedAllToast: 'Označeno jako zaplacené',
     roster: 'Přihlášení sportovci',
     rosterEmpty: 'Zatím není přihlášen nikdo.',
     rosterRemoved: 'Odebraní a odhlášení',
@@ -855,6 +894,9 @@ export const cs = {
       ATHLETE_NOT_FOUND: 'Sportovec nebyl nalezen.',
       BOOKING_NOT_FOUND: 'Přihláška nebyla nalezena.',
       BOOKING_NOT_CONFIRMED: 'Přihláška už není aktivní.',
+      NOTE_TOO_LONG: 'Poznámka může mít nejvýše 200 znaků.',
+      MESSAGE_EMPTY: 'Napište zprávu.',
+      MESSAGE_TOO_LONG: 'Zpráva může mít nejvýše 500 znaků.',
       WOULD_EXCEED_CAPACITY: 'Trénink je plný. Potvrďte překročení kapacity.',
       /* coach/SPEC.md §K3b. One person, one role on one training. */
       MAIN_COACH_AS_ASSISTANT: 'Hlavní trenér nemůže být zároveň asistent.',

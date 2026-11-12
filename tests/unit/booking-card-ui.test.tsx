@@ -52,6 +52,8 @@ const booking = (over: Partial<MyBooking> = {}): MyBooking => ({
   cancelledAt: null,
   cancelledByName: null,
   coachMessage: null,
+  paid: false,
+  parentMessage: null,
   session: session(),
   ...over,
 })
