@@ -161,7 +161,7 @@ begin
                       a.last_name, a.first_name)
         from per_athlete p join public.athletes a on a.id = p.athlete_id
        where p.bookings >= 3 and p.marked > 0), '[]'::jsonb),
-    'coaches', case when v_admin and p_coach_id is null then coalesce((
+    'coaches', case when v_admin and not p_personal then coalesce((
       select jsonb_agg(row order by (row ->> 'sessions')::int desc, row ->> 'name')
         from (
           select jsonb_build_object(
