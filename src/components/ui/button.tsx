@@ -33,11 +33,11 @@ export const buttonVariants = cva(
           'bg-transparent text-danger shadow-[inset_0_0_0_1.5px_var(--color-danger-border)] active:bg-danger-soft',
       },
       size: {
-        md: 'h-touch rounded-control px-4 text-row',
-        lg: 'h-btn-block w-full rounded-control-lg px-5 text-body font-bold',
+        md: 'h-touch rounded-button px-4 text-row',
+        lg: 'h-btn-block w-full rounded-button px-5 text-body font-bold',
         // Every button on a training or booking card is this wide, so a column
         // of cards has one straight edge instead of a ragged one (§6.1).
-        card: 'h-touch w-card-btn rounded-control text-row',
+        card: 'h-touch w-card-btn rounded-button text-row',
       },
     },
     defaultVariants: { variant: 'primary', size: 'md' },

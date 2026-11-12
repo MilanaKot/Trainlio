@@ -110,7 +110,7 @@ function ToastCard({
             undo.onAction()
             onDone()
           }}
-          className="flex h-9 shrink-0 items-center rounded-control bg-primary-100 px-3 text-meta font-bold text-primary"
+          className="flex h-9 shrink-0 items-center rounded-button bg-primary-100 px-3 text-meta font-bold text-primary"
         >
           {undo.actionLabel}
         </button>
