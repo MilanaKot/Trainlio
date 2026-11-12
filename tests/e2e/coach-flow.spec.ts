@@ -1,6 +1,10 @@
 import { expect, test } from '@playwright/test'
 import {
   asUser,
+  czechDate,
+  freshAthlete,
+  POSITION_LABEL,
+  type TestAthlete,
   pickRoom,
   dateInput,
   expectAccessible,
@@ -29,8 +33,9 @@ import {
  * Registered-but-not-booked is what gives the coach's picker something to
  * offer: the picker lists workspace athletes who hold no place yet.
  */
-async function family(firstName: string, options: { bookInto?: string } = {}): Promise<void> {
-  const token = await tokenFor(uniqueEmail(`rodina.${firstName.toLowerCase()}`))
+async function family(options: { bookInto?: string } = {}): Promise<TestAthlete> {
+  const athlete = await freshAthlete()
+  const token = await tokenFor(uniqueEmail('rodina'))
 
   const workspaces = (await (
     await fetch(`${STACK}/rest/v1/rpc/joinable_workspaces`, {
@@ -45,18 +50,18 @@ async function family(firstName: string, options: { bookInto?: string } = {}): P
       method: 'POST',
       headers: asUser(token),
       body: JSON.stringify({
-        p_first_name: firstName,
-        p_last_name: 'Hráč',
-        p_date_of_birth: '2017-04-02',
+        p_first_name: athlete.firstName,
+        p_last_name: athlete.lastName,
+        p_date_of_birth: athlete.dateOfBirth,
         p_workspace_id: workspaces[0]?.id,
         p_sport_code: 'HOCKEY',
-        p_attributes: { position: 'CENTER', stick_side: 'LEFT' },
+        p_attributes: { position: athlete.position, stick_side: athlete.stickSide },
       }),
     })
   ).json()) as { ok?: boolean; data?: { athlete_id?: string } }
   expect(created.ok).toBe(true)
 
-  if (!options.bookInto) return
+  if (!options.bookInto) return athlete
 
   const booked = (await (
     await fetch(`${STACK}/rest/v1/rpc/book_athletes_as_guardian`, {
@@ -69,6 +74,7 @@ async function family(firstName: string, options: { bookInto?: string } = {}): P
     })
   ).json()) as { ok?: boolean; code?: string }
   expect(booked.ok, `booking failed: ${booked.code}`).toBe(true)
+  return athlete
 }
 
 /**
@@ -134,27 +140,28 @@ test.describe('a coach publishes a training and runs its roster', () => {
 
     // Two families book, which is what makes the roster worth reading. A third
     // registers without booking, so the coach's picker has someone to offer.
-    await family('Adam', { bookInto: sessionId })
-    await family('Bohdan', { bookInto: sessionId })
-    await family('Cyril')
+    const adam = await family({ bookInto: sessionId })
+    const bohdan = await family({ bookInto: sessionId })
+    const cyril = await family()
 
     await page.reload()
     await expect(page.getByRole('heading', { name: 'Sportovci 2' })).toBeVisible()
-    await expect(page.getByText('Adam Hráč', { exact: true })).toBeVisible()
-    await expect(page.getByText('Bohdan Hráč', { exact: true })).toBeVisible()
+    await expect(page.getByText(adam.name, { exact: true })).toBeVisible()
+    await expect(page.getByText(bohdan.name, { exact: true })).toBeVisible()
     // v3.4 (decision 38): each booking is a card with the two toggles; the
     // family is reached from the player card (K13), not from the roster.
-    await expect(page.getByRole('button', { name: /^Platba Adam Hráč/ })).toBeVisible()
+    await expect(
+      page.getByRole('button', { name: new RegExp(`^Platba ${adam.name}`) }),
+    ).toBeVisible()
 
     // AC-050: the session is full, so adding by hand is refused until the coach
     // confirms, and the dialog quotes the server's own numbers.
     await page.getByRole('button', { name: '+ Přidat sportovce' }).click()
     const adding = page.getByRole('dialog')
     // The row, not the input: the control is visually hidden inside its label,
-    // which is what a thumb hits. Both projects run against one database, so
-    // another run's "Cyril Hráč" is in the workspace too; the roster below is
-    // per session and unambiguous.
-    await adding.locator('label', { hasText: 'Cyril' }).first().click()
+    // which is what a thumb hits. The name is unique in the database
+    // (`freshAthlete`), so it finds this run's child and no other.
+    await adding.locator('label', { hasText: cyril.name }).click()
     await adding.getByRole('button', { name: /Přidat 1 sportovce/ }).click()
 
     const override = page.getByRole('alertdialog')
@@ -163,12 +170,12 @@ test.describe('a coach publishes a training and runs its roster', () => {
     await override.getByRole('button', { name: 'Přidat', exact: true }).click()
 
     await expect(page.getByRole('heading', { name: 'Sportovci 3' })).toBeVisible()
-    await expect(page.getByText('Cyril Hráč', { exact: true })).toBeVisible()
+    await expect(page.getByText(cyril.name, { exact: true })).toBeVisible()
 
     // D-06 (AC-275): removing sends the parent an e-mail and frees the place;
     // the coach's own message can go with it (§G6d). Since v3.4 it is done
     // from the player card, on the training's row in `Tréninky`.
-    await page.getByRole('link', { name: /Cyril Hráč/ }).click()
+    await page.getByRole('link', { name: new RegExp(cyril.name) }).click()
     await expect(page.getByRole('tab', { name: 'Tréninky', selected: true })).toBeVisible()
     await page.getByRole('button', { name: 'Odhlásit z tréninku' }).first().click()
 
@@ -210,7 +217,7 @@ test.describe('a coach publishes a training and runs its roster', () => {
     await page.waitForURL(/\/trener\/[0-9a-f-]{36}$/)
     await expect(page.getByText(room)).toBeVisible()
     const sessionId = page.url().split('/trener/')[1]?.split('/')[0] ?? ''
-    await family('Dalibor', { bookInto: sessionId })
+    await family({ bookInto: sessionId })
     await moveToPast(sessionId)
 
     await page.goto('/trener')
@@ -279,17 +286,18 @@ test.describe('a coach publishes a training and runs its roster', () => {
       }),
     })
 
+    const child = await freshAthlete()
     const created = (await (
       await fetch(`${STACK}/rest/v1/rpc/create_athlete_with_guardian`, {
         method: 'POST',
         headers: asUser(token),
         body: JSON.stringify({
-          p_first_name: 'Eliška',
-          p_last_name: `Dítě${run}`,
-          p_date_of_birth: '2017-05-05',
+          p_first_name: child.firstName,
+          p_last_name: child.lastName,
+          p_date_of_birth: child.dateOfBirth,
           p_workspace_id: workspaces[0]?.id,
           p_sport_code: 'HOCKEY',
-          p_attributes: { position: 'GOALIE', stick_side: 'LEFT' },
+          p_attributes: { position: child.position, stick_side: child.stickSide },
         }),
       })
     ).json()) as { ok?: boolean; data?: { athlete_id?: string } }
@@ -302,17 +310,19 @@ test.describe('a coach publishes a training and runs its roster', () => {
     // family remembers the parent's name as often as the child's. And it
     // ignores diacritics, because "Řezníčková" is not what anyone types.
     await page.getByRole('searchbox').fill(`reznickova${run}`)
-    const row = page.locator('main li', { hasText: `Eliška Dítě${run}` })
+    const row = page.locator('main li', { hasText: child.name })
     await expect(row).toBeVisible()
-    await expect(row).toContainText('Brankář')
+    await expect(row).toContainText(POSITION_LABEL[child.position])
     await expect(row).toContainText('bez přihlášek')
 
     // AC-292: with the search field filled, which is the state it is used in.
     await expectAccessible(page, '§K12 the athletes tab')
 
     await row.getByRole('link').click()
-    await expect(page.getByRole('heading', { name: `Eliška Dítě${run}` })).toBeVisible()
-    await expect(page.getByText('Ročník 2017', { exact: false }).first()).toBeVisible()
+    await expect(page.getByRole('heading', { name: child.name })).toBeVisible()
+    await expect(
+      page.getByText(`Ročník ${child.birthYear}`, { exact: false }).first(),
+    ).toBeVisible()
 
     // K13 · Rodiče (v3.4): the family, with the number a coach may ring.
     await page.getByRole('tab', { name: 'Rodiče' }).click()
@@ -324,7 +334,7 @@ test.describe('a coach publishes a training and runs its roster', () => {
 
     // K13 · Hráč: the note. D-13: the one thing a parent must never read.
     await page.getByRole('tab', { name: 'Hráč' }).click()
-    await expect(page.getByText('5. 5. 2017')).toBeVisible()
+    await expect(page.getByText(czechDate(child.dateOfBirth))).toBeVisible()
     await page.getByRole('button', { name: 'Upravit poznámku' }).click()
     await page.getByLabel('POZNÁMKA O HRÁČI · JEN TRENÉŘI').fill('Alergie na ořechy.')
     await page.getByRole('button', { name: 'Uložit' }).click()
@@ -369,25 +379,25 @@ test.describe('a coach publishes a training and runs its roster', () => {
     const sessionId = page.url().split('/trener/')[1]?.split('/')[0] ?? ''
 
     // Somebody else's child, booked by their own parent.
-    await family('Bohumil', { bookInto: sessionId })
+    const other = await family({ bookInto: sessionId })
     await page.reload()
-    await expect(page.getByText(/Bohumil/)).toBeVisible()
+    await expect(page.getByText(other.name)).toBeVisible()
 
     // The club's athletes are the coach's business on the coach's own screen.
     await page.goto('/trener/sportovci')
     await expect(page.getByRole('searchbox')).toBeVisible()
-    await page.getByRole('searchbox').fill('Bohumil')
-    await expect(page.locator('main li', { hasText: 'Bohumil' }).first()).toBeVisible()
+    await page.getByRole('searchbox').fill(other.firstName)
+    await expect(page.locator('main li', { hasText: other.name })).toBeVisible()
 
     // And nobody's business on the parent's.
     await page.goto('/moji-sportovci')
     await expect(
       page.getByText('Přidejte prvního sportovce a můžete začít rezervovat tréninky.'),
     ).toBeVisible()
-    await expect(page.getByText(/Bohumil/)).toHaveCount(0)
+    await expect(page.getByText(other.name)).toHaveCount(0)
 
     await page.goto('/moje-treninky')
-    await expect(page.getByText(/Bohumil/)).toHaveCount(0)
+    await expect(page.getByText(other.name)).toHaveCount(0)
     await expect(page.locator('main li')).toHaveCount(0)
   })
 

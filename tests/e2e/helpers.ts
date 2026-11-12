@@ -362,3 +362,187 @@ export function pickRoom(): string {
 export function sessionCard(page: Page, sessionId: string) {
   return page.locator(`li[data-session-id="${sessionId}"]`)
 }
+
+const BOYS = [
+  'Adam',
+  'Ondřej',
+  'Matěj',
+  'Vojtěch',
+  'Filip',
+  'Dominik',
+  'Lukáš',
+  'Tobiáš',
+  'Šimon',
+  'Kryštof',
+  'Daniel',
+  'Tadeáš',
+  'Jonáš',
+  'Vítek',
+  'Patrik',
+  'Radim',
+  'Marek',
+  'Robin',
+  'Sebastián',
+  'Jáchym',
+  'Kamil',
+  'Oliver',
+  'Hynek',
+  'Bořek',
+  'Erik',
+  'Viktor',
+  'Štěpán',
+  'Denis',
+  'Richard',
+  'Teodor',
+]
+const GIRLS = [
+  'Ema',
+  'Tereza',
+  'Natálie',
+  'Klára',
+  'Viktorie',
+  'Karolína',
+  'Adéla',
+  'Barbora',
+  'Sofie',
+  'Nela',
+  'Rozálie',
+  'Julie',
+  'Magdaléna',
+  'Zuzana',
+  'Veronika',
+  'Linda',
+  'Johana',
+  'Agáta',
+]
+/** Masculine and feminine form of each surname. */
+const SURNAMES: [string, string][] = [
+  ['Novák', 'Nováková'],
+  ['Svoboda', 'Svobodová'],
+  ['Dvořák', 'Dvořáková'],
+  ['Černý', 'Černá'],
+  ['Procházka', 'Procházková'],
+  ['Kučera', 'Kučerová'],
+  ['Veselý', 'Veselá'],
+  ['Horák', 'Horáková'],
+  ['Němec', 'Němcová'],
+  ['Pokorný', 'Pokorná'],
+  ['Marek', 'Marková'],
+  ['Pospíšil', 'Pospíšilová'],
+  ['Hájek', 'Hájková'],
+  ['Jelínek', 'Jelínková'],
+  ['Král', 'Králová'],
+  ['Růžička', 'Růžičková'],
+  ['Beneš', 'Benešová'],
+  ['Fiala', 'Fialová'],
+  ['Sedláček', 'Sedláčková'],
+  ['Doležal', 'Doležalová'],
+  ['Zeman', 'Zemanová'],
+  ['Kolář', 'Kolářová'],
+  ['Navrátil', 'Navrátilová'],
+  ['Čermák', 'Čermáková'],
+  ['Urban', 'Urbanová'],
+  ['Vaněk', 'Vaňková'],
+  ['Blažek', 'Blažková'],
+  ['Kříž', 'Křížová'],
+  ['Kovář', 'Kovářová'],
+  ['Bartoš', 'Bartošová'],
+  ['Vlček', 'Vlčková'],
+  ['Polák', 'Poláková'],
+  ['Musil', 'Musilová'],
+  ['Šimek', 'Šimková'],
+  ['Konečný', 'Konečná'],
+  ['Malý', 'Malá'],
+  ['Holub', 'Holubová'],
+  ['Štěpánek', 'Štěpánková'],
+  ['Kadlec', 'Kadlecová'],
+  ['Dostál', 'Dostálová'],
+]
+const POSITIONS = ['GOALIE', 'DEFENSE', 'CENTER', 'LEFT_WING', 'RIGHT_WING', 'UTILITY'] as const
+const STICKS = ['LEFT', 'RIGHT', 'LEFT', 'RIGHT', 'UNKNOWN'] as const
+
+export type TestAthlete = {
+  firstName: string
+  lastName: string
+  /** `First Last`, as every screen prints it. */
+  name: string
+  /** `YYYY-MM-DD` */
+  dateOfBirth: string
+  birthYear: number
+  position: (typeof POSITIONS)[number]
+  stickSide: (typeof STICKS)[number]
+}
+
+const taken = new Set<string>()
+
+function pick<T>(list: readonly T[]): T {
+  return list[Math.floor(Math.random() * list.length)] as T
+}
+
+/**
+ * A child as a club would have one: a name no other athlete in the database
+ * has, a birth year from 2010 to 2019 unless the test needs a given one, a
+ * position and a stick side. Every run shares one database, so the name is
+ * also the test's handle on its own child — checked against the athletes
+ * already there rather than made unique with a timestamp.
+ */
+export async function freshAthlete(options: { birthYear?: number } = {}): Promise<TestAthlete> {
+  const existing = (await (
+    await fetch(`${STACK}/rest/v1/athletes?select=first_name,last_name`, { headers: admin })
+  ).json()) as { first_name: string; last_name: string }[]
+  for (const one of existing) taken.add(`${one.first_name} ${one.last_name}`)
+
+  for (let attempt = 0; attempt < 500; attempt += 1) {
+    const girl = Math.random() < 0.3
+    const [male, female] = pick(SURNAMES)
+    const firstName = pick(girl ? GIRLS : BOYS)
+    const lastName = girl ? female : male
+    const name = `${firstName} ${lastName}`
+    if (taken.has(name)) continue
+    taken.add(name)
+    const birthYear = options.birthYear ?? 2010 + Math.floor(Math.random() * 10)
+    const month = String(1 + Math.floor(Math.random() * 12)).padStart(2, '0')
+    const day = String(1 + Math.floor(Math.random() * 28)).padStart(2, '0')
+    return {
+      firstName,
+      lastName,
+      name,
+      dateOfBirth: `${birthYear}-${month}-${day}`,
+      birthYear,
+      position: pick(POSITIONS),
+      stickSide: pick(STICKS),
+    }
+  }
+  throw new Error('No unused athlete name left; clean the local database')
+}
+
+/** How the screens print a position and a stick (lib/enums/hockey). */
+export const POSITION_LABEL: Record<TestAthlete['position'], string> = {
+  GOALIE: 'Brankář',
+  DEFENSE: 'Obránce',
+  CENTER: 'Centr',
+  LEFT_WING: 'Levé křídlo',
+  RIGHT_WING: 'Pravé křídlo',
+  UTILITY: 'Univerzál',
+}
+
+/** `5. 5. 2017`, as K13 prints a birth date. */
+export function czechDate(iso: string): string {
+  const [year, month, day] = iso.split('-').map(Number)
+  return `${day}. ${month}. ${year}`
+}
+
+const STICK_LABEL: Record<TestAthlete['stickSide'], string> = {
+  LEFT: 'Levá',
+  RIGHT: 'Pravá',
+  UNKNOWN: 'Nevím',
+}
+
+/** The child's half of G9/G10, filled with this athlete. */
+export async function fillAthleteForm(page: Page, athlete: TestAthlete): Promise<void> {
+  await page.getByLabel('Jméno').last().fill(athlete.firstName)
+  await page.getByLabel('Příjmení').last().fill(athlete.lastName)
+  await page.getByLabel('Datum narození').fill(athlete.dateOfBirth)
+  await page.getByRole('radio', { name: POSITION_LABEL[athlete.position], exact: true }).click()
+  await page.getByRole('radio', { name: STICK_LABEL[athlete.stickSide], exact: true }).click()
+}

@@ -1,6 +1,8 @@
 import { expect, test, type Page } from '@playwright/test'
 import {
   dateInput,
+  fillAthleteForm,
+  freshAthlete,
   grantCoach,
   pickRoom,
   sessionCard,
@@ -201,13 +203,10 @@ test.describe('on a phone', () => {
     // The first registration asks who the parent is as well (AC-278).
     await page.getByLabel('Jméno').first().fill('Milana')
     await page.getByLabel('Příjmení').first().fill('Kotova')
-    await page.getByLabel('Jméno').last().fill('Ivan')
-    await page.getByLabel('Příjmení').last().fill('Kotov')
-    await page.getByLabel('Datum narození').fill('2017-10-23')
-    await page.getByRole('radio', { name: 'Centr' }).click()
-    await page.getByRole('radio', { name: 'Levá' }).click()
+    const child = await freshAthlete()
+    await fillAthleteForm(page, child)
     await page.getByRole('button', { name: 'Přidat sportovce' }).click()
-    await expect(page.getByText('Ivan Kotov')).toBeVisible()
+    await expect(page.getByText(child.name)).toBeVisible()
 
     await expectNoHorizontalScroll(page, 'my athletes')
     await expectTappableControls(page, 'my athletes')

@@ -1,6 +1,8 @@
 import { expect, test, type Page } from '@playwright/test'
 import {
   asUser,
+  freshAthlete,
+  type TestAthlete,
   dateInput,
   grantCoach,
   pickRoom,
@@ -21,13 +23,10 @@ import {
  * whether the coach can see what they are about to do.
  */
 
-/** A child of a given birth year, booked into the session. */
-async function bookedAthlete(
-  firstName: string,
-  birthYear: number,
-  sessionId: string,
-): Promise<void> {
-  const token = await tokenFor(uniqueEmail(`rodina.${firstName.toLowerCase()}`))
+/** A child of a given birth year, booked into the session; otherwise its own. */
+async function bookedAthlete(birthYear: number, sessionId: string): Promise<TestAthlete> {
+  const athlete = await freshAthlete({ birthYear })
+  const token = await tokenFor(uniqueEmail('rodina'))
 
   const workspaces = (await (
     await fetch(`${STACK}/rest/v1/rpc/joinable_workspaces`, {
@@ -42,12 +41,12 @@ async function bookedAthlete(
       method: 'POST',
       headers: asUser(token),
       body: JSON.stringify({
-        p_first_name: firstName,
-        p_last_name: 'Hráč',
-        p_date_of_birth: `${birthYear}-04-02`,
+        p_first_name: athlete.firstName,
+        p_last_name: athlete.lastName,
+        p_date_of_birth: athlete.dateOfBirth,
         p_workspace_id: workspaces[0]?.id,
         p_sport_code: 'HOCKEY',
-        p_attributes: { position: 'CENTER', stick_side: 'LEFT' },
+        p_attributes: { position: athlete.position, stick_side: athlete.stickSide },
       }),
     })
   ).json()) as { ok?: boolean; data?: { athlete_id?: string } }
@@ -64,6 +63,7 @@ async function bookedAthlete(
     })
   ).json()) as { ok?: boolean; code?: string }
   expect(booked.ok, `booking failed: ${booked.code}`).toBe(true)
+  return athlete
 }
 
 /** A training created through the form, returning its id. */
@@ -89,8 +89,8 @@ test.describe('a coach edits a training people are coming to', () => {
 
     const room = `Šatna ${pickRoom()}`
     const sessionId = await createTraining(page, room, 10)
-    await bookedAthlete('Adam', 2017, sessionId)
-    await bookedAthlete('Bohdan', 2017, sessionId)
+    await bookedAthlete(2017, sessionId)
+    await bookedAthlete(2017, sessionId)
 
     await page.goto(`/trener/${sessionId}/upravit`)
 
@@ -121,8 +121,8 @@ test.describe('a coach edits a training people are coming to', () => {
 
     const room = `Šatna ${pickRoom()}`
     const sessionId = await createTraining(page, room, 10)
-    await bookedAthlete('Cyril', 2017, sessionId)
-    await bookedAthlete('Dalibor', 2017, sessionId)
+    await bookedAthlete(2017, sessionId)
+    await bookedAthlete(2017, sessionId)
 
     await page.goto(`/trener/${sessionId}/upravit`)
     await page.getByLabel('Kapacita', { exact: true }).fill('1')
@@ -146,8 +146,8 @@ test.describe('a coach edits a training people are coming to', () => {
 
     const room = `Šatna ${pickRoom()}`
     const sessionId = await createTraining(page, room, 10)
-    await bookedAthlete('Emil', 2016, sessionId)
-    await bookedAthlete('Filip', 2017, sessionId)
+    const emil = await bookedAthlete(2016, sessionId)
+    await bookedAthlete(2017, sessionId)
 
     await page.goto(`/trener/${sessionId}/upravit`)
     await page.getByRole('radio', { name: 'Ročníky' }).click()
@@ -159,7 +159,7 @@ test.describe('a coach edits a training people are coming to', () => {
     await expect(dialog).toContainText('1 přihlášený sportovec nesplňuje novou věkovou podmínku.')
     // Exactly the one who falls outside it, by name and by year — a count
     // alone is not something a coach can check.
-    await expect(dialog).toContainText('Emil Hráč · 2016')
+    await expect(dialog).toContainText(`${emil.name} · 2016`)
     await expect(dialog).not.toContainText('Filip')
     await expect(dialog).toContainText('Jejich přihlášky zůstanou zachovány.')
 
@@ -168,7 +168,7 @@ test.describe('a coach edits a training people are coming to', () => {
     // D-08: narrowing never cancels anybody. Both children are still on the
     // roster afterwards, the one outside the range included.
     await expect(page.getByRole('heading', { name: 'Sportovci 2' })).toBeVisible()
-    await expect(page.getByText('Emil Hráč')).toBeVisible()
+    await expect(page.getByText(emil.name)).toBeVisible()
   })
 
   test('asks before throwing away edits, and only when there are some', async ({ page }) => {
