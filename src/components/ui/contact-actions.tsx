@@ -4,7 +4,7 @@ import { cn } from '@/lib/utils'
 
 const t = messages.myTrainings
 
-function PhoneIcon({ className }: { className?: string }) {
+export function PhoneIcon({ className }: { className?: string }) {
   return (
     <svg
       viewBox="0 0 20 20"

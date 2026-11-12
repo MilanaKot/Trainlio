@@ -1310,7 +1310,9 @@ export type Database = {
       athlete_guardians: {
         Args: { p_athlete_id: string }
         Returns: {
+          books: boolean
           display_name: string
+          email: string
           phone: string
           profile_id: string
           relationship_code: string
@@ -1387,9 +1389,17 @@ export type Database = {
       coach_athlete_sessions: {
         Args: { p_athlete_id: string; p_workspace_id: string }
         Returns: {
+          attendance: Database["public"]["Enums"]["attendance_status"]
+          booking_id: string
           booking_status: Database["public"]["Enums"]["booking_status"]
+          changing_room: string
+          coach_note: string
           end_at: string
           facility_code: string
+          main_coach_profile_id: string
+          paid_at: string
+          parent_message: string
+          parent_message_sent_at: string
           start_at: string
           status: Database["public"]["Enums"]["session_status"]
           training_session_id: string

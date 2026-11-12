@@ -188,6 +188,28 @@ select pg_temp.check(
   'FORBIDDEN_EDIT', 'and a view-only assistant may not try');
 
 \echo ''
+\echo '── K13 · the player card (decision 43, coach test 24) ──────────────'
+select pg_temp.check(
+  pg_temp.code(:COACH, format('public.set_booking_coach_note(%L::uuid, %L)', pg_temp.booking(:IVAN), 'Hlídat levou nohu.')),
+  'OK', 'a note for one training');
+select pg_temp.check(
+  pg_temp.as_user(:COACH2, format(
+    'select coach_note || '' · '' || attendance || '' · '' || (paid_at is not null)::text
+       from public.coach_athlete_sessions(%L::uuid, %L::uuid) where booking_id = %L::uuid',
+    (select workspace_id from public.training_sessions where id = :S1), :IVAN, pg_temp.booking(:IVAN))),
+  'Hlídat levou nohu. · PRESENT · true', 'K13 reads note, attendance and payment per training, even view-only');
+select pg_temp.check(
+  pg_temp.as_user(:FAMA, format(
+    'select count(*)::text from public.coach_athlete_sessions(%L::uuid, %L::uuid)',
+    (select workspace_id from public.training_sessions where id = :S1), :IVAN)),
+  '0', 'a parent reads none of it, the note least of all (coach test 24)');
+select pg_temp.check(
+  pg_temp.as_user(:COACH, format(
+    'select string_agg(coalesce(email, ''-'') || '' '' || books::text, '', '' order by email)
+       from public.athlete_guardians(%L::uuid)', :IVAN)),
+  'familyA@example.test true, familyB@example.test false', 'K13r: each guardian''s e-mail, and who books');
+
+\echo ''
 \echo '── A cancelled training (BR-175) ───────────────────────────────────'
 update public.training_sessions set status = 'CANCELLED', cancelled_at = now(), cancelled_by = :COACH
  where id = :S1;

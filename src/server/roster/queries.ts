@@ -113,35 +113,6 @@ export async function listCandidates(sessionId: string): Promise<CandidateAthlet
   }))
 }
 
-export type BookingGuardian = {
-  profileId: string
-  displayName: string | null
-  phone: string | null
-}
-
-/**
- * Who to call about one booking (AC-254, coach/SPEC.md §K2).
- *
- * Every active guardian of the athlete, not whoever happened to book: two
- * parents share a child, and the one who tapped the button is not necessarily
- * the one at the rink.
- *
- * Through a domain function because a guardian's profile is deliberately not
- * coach-readable. The function returns the name and the number for this one
- * booking, to a coach of this one workspace, instead of the policy being
- * widened to every family in it.
- */
-export async function getBookingGuardians(bookingId: string): Promise<BookingGuardian[]> {
-  const supabase = await createClient()
-  const result = await supabase.rpc('booking_guardians', { p_booking_id: bookingId })
-
-  return rows('booking_guardians', result).map((row) => ({
-    profileId: row.profile_id,
-    displayName: row.display_name,
-    phone: row.phone,
-  }))
-}
-
 export type CoachAthlete = {
   id: string
   firstName: string
@@ -166,6 +137,9 @@ export type AthleteGuardian = {
   displayName: string | null
   relationshipCode: string
   phone: string | null
+  email: string | null
+  /** K13r `přihlašuje na tréninky`: has booked this athlete. */
+  books: boolean
 }
 
 export type CoachAthleteSession = {
@@ -174,7 +148,16 @@ export type CoachAthleteSession = {
   endAt: string
   status: SessionStatus
   facilityCode: string | null
+  changingRoom: string | null
+  mainCoachId: string | null
+  bookingId: string
   bookingStatus: BookingStatus
+  /** v3.4: what K2 shows for this booking, per training (K13). */
+  attendance: 'PRESENT' | 'ABSENT' | null
+  paidAt: string | null
+  coachNote: string | null
+  parentMessage: string | null
+  parentMessageSentAt: string | null
 }
 
 /**
@@ -236,6 +219,8 @@ export async function getAthleteGuardians(athleteId: string): Promise<AthleteGua
     displayName: row.display_name,
     relationshipCode: row.relationship_code,
     phone: row.phone,
+    email: row.email,
+    books: row.books,
   }))
 }
 
@@ -258,7 +243,15 @@ export async function listAthleteSessions(
     endAt: row.end_at,
     status: row.status,
     facilityCode: row.facility_code,
+    changingRoom: row.changing_room,
+    mainCoachId: row.main_coach_profile_id,
+    bookingId: row.booking_id,
     bookingStatus: row.booking_status,
+    attendance: row.attendance,
+    paidAt: row.paid_at,
+    coachNote: row.coach_note,
+    parentMessage: row.parent_message,
+    parentMessageSentAt: row.parent_message_sent_at,
   }))
 }
 
@@ -282,28 +275,4 @@ export async function getAthleteInternalNote(
     .maybeSingle()
 
   return maybeRow('getAthleteInternalNote', result)?.notes ?? null
-}
-
-/**
- * The general notes (§K13) of the athletes on one roster, by athlete id — K17
- * prints each under the note for this training, read-only.
- */
-export async function getAthleteInternalNotes(
-  workspaceId: string,
-  athleteIds: string[],
-): Promise<Record<string, string>> {
-  if (athleteIds.length === 0) return {}
-  const supabase = await createClient()
-
-  const result = await supabase
-    .from('athlete_internal_notes')
-    .select('athlete_id, notes')
-    .eq('workspace_id', workspaceId)
-    .in('athlete_id', athleteIds)
-
-  return Object.fromEntries(
-    rows('getAthleteInternalNotes', result)
-      .filter((row) => row.notes)
-      .map((row) => [row.athlete_id, row.notes as string]),
-  )
 }

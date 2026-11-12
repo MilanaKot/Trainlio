@@ -34,12 +34,15 @@ export function AthleteNote({
   athleteId,
   note,
   editable,
+  caption = t.athleteNote,
 }: {
   workspaceId: string
   athleteId: string
   note: string | null
   /** §K13 v3.2: `Upravit poznámku` needs the permission (decision 33). */
   editable: boolean
+  /** K13h (v3.4): `POZNÁMKA O HRÁČI · JEN TRENÉŘI`. */
+  caption?: string
 }) {
   const router = useRouter()
   const [editing, setEditing] = useState(false)
@@ -64,7 +67,7 @@ export function AthleteNote({
     <section className="flex flex-col gap-2 rounded-card bg-internal p-4 shadow-[inset_0_0_0_1px_var(--color-internal-border)]">
       <h2 className="flex items-center gap-1.5 text-caption font-bold uppercase tracking-[0.05em] text-internal-ink">
         <LockIcon />
-        {t.athleteNote}
+        {caption}
       </h2>
 
       {editing ? (
@@ -76,7 +79,7 @@ export function AthleteNote({
             rows={3}
             autoFocus
             placeholder={t.athleteNotePlaceholder}
-            aria-label={t.athleteNote}
+            aria-label={caption}
           />
           {error ? (
             <p role="alert" className="text-hint font-semibold text-danger">
@@ -109,7 +112,7 @@ export function AthleteNote({
             <button
               type="button"
               onClick={() => setEditing(true)}
-              className="flex min-h-11 items-center text-row font-semibold text-primary"
+              className="flex min-h-11 items-center text-row font-bold text-internal-ink"
             >
               {t.athleteNoteEdit}
             </button>

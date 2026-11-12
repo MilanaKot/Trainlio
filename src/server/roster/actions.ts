@@ -2,7 +2,6 @@
 
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
-import { getBookingGuardians, type BookingGuardian } from '@/server/roster/queries'
 import { z } from 'zod'
 import { sequenceAdditions, type SequencedAdditions } from '@/lib/domain/roster'
 import { canEditSession } from '@/lib/domain/coach-rights'
@@ -131,19 +130,6 @@ export async function addAthletesToSession(
   return sequenceAdditions(athleteIds, (athleteId) =>
     addAthleteToSession(sessionId, athleteId, confirmOverCapacity),
   )
-}
-
-/**
- * The guardians of one booking, fetched when the coach opens that athlete
- * (coach/SPEC.md §K2).
- *
- * On demand rather than with the roster: a training of twenty would otherwise
- * cost twenty extra round trips on every page load, to show a telephone number
- * the coach looks at once. Reading through an action because the query is
- * `server-only` and the sheet is a Client Component.
- */
-export async function loadBookingGuardians(bookingId: string): Promise<BookingGuardian[]> {
-  return getBookingGuardians(bookingId)
 }
 
 /**
