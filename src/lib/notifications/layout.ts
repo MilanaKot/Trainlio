@@ -159,7 +159,7 @@ export function renderHtml(
   // image, and it is still a real link when the styles are stripped.
   const button =
     `<tr><td style="padding:0 0 18px"><table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr>` +
-    `<td align="center" bgcolor="#2B55E0" style="border-radius:10px"><a href="${escapeHtml(context.url)}" ` +
+    `<td align="center" bgcolor="#2B55E0" style="border-radius:12px"><a href="${escapeHtml(context.url)}" ` +
     `style="display:inline-block;padding:13px 24px;font:700 16px/22px ${FONT};color:#FFFFFF;text-decoration:none">` +
     `${escapeHtml(plan.button.label)}</a></td></tr></table></td></tr>`
 

@@ -4,7 +4,7 @@ import { useMemo, useState } from 'react'
 import Link from 'next/link'
 import { Avatar } from '@/components/ui/avatar'
 import { EmptyState } from '@/components/ui/empty-state'
-import { FilterChips } from '@/components/ui/filter-chips'
+import { YearGrid } from '@/components/ui/filter-chips'
 import { SearchField } from '@/components/ui/search-field'
 import { matchesName } from '@/lib/domain/roster'
 import { HOCKEY_POSITION_LABELS, type HockeyPosition } from '@/lib/enums/hockey'
@@ -29,18 +29,23 @@ const COLLATOR = new Intl.Collator('cs')
  * Filtering here rather than on the server: a club is tens of athletes, the
  * list is already on the page, and a round trip per keystroke would make the
  * search feel slower than scrolling.
+ *
+ * v3.6 (decision 49): the years are a YearGrid, newest first, every one in
+ * sight with its count of active athletes. The choice is component state and
+ * nothing else, so every visit starts on `Všechny`.
  */
 export function AthleteList({ athletes }: { athletes: CoachAthlete[] }) {
   const [query, setQuery] = useState('')
   const [year, setYear] = useState<string>('all')
 
-  const years = useMemo(
-    () =>
-      [...new Set(athletes.filter((a) => a.isActive).map((a) => a.birthYear))].sort(
-        (a, b) => a - b,
-      ),
-    [athletes],
-  )
+  const years = useMemo(() => {
+    const counts = new Map<number, number>()
+    for (const athlete of athletes) {
+      if (athlete.isActive) counts.set(athlete.birthYear, (counts.get(athlete.birthYear) ?? 0) + 1)
+    }
+    return [...counts].sort(([a], [b]) => b - a)
+  }, [athletes])
+  const activeTotal = athletes.filter((a) => a.isActive).length
 
   const matching = athletes.filter((athlete) => {
     const names = [`${athlete.firstName} ${athlete.lastName}`, ...athlete.guardianNames]
@@ -52,7 +57,7 @@ export function AthleteList({ athletes }: { athletes: CoachAthlete[] }) {
   const inactive = matching.filter((a) => !a.isActive)
 
   const groups = [...new Set(active.map((a) => a.birthYear))]
-    .sort((a, b) => a - b)
+    .sort((a, b) => b - a)
     .map((birthYear) => ({
       birthYear,
       items: active
@@ -63,23 +68,43 @@ export function AthleteList({ athletes }: { athletes: CoachAthlete[] }) {
         ),
     }))
 
-  if (athletes.length === 0) return <EmptyState>{t.athletesEmpty}</EmptyState>
+  const header = (
+    <header className="flex items-baseline justify-between gap-3">
+      <h1 className="font-display text-page font-bold text-ink">{t.athletesTitle}</h1>
+      {athletes.length > 0 ? (
+        <span className="text-meta text-muted">
+          {year === 'all'
+            ? String(activeTotal)
+            : t.athletesShown
+                .replace('{shown}', String(active.length))
+                .replace('{count}', String(activeTotal))}
+        </span>
+      ) : null}
+    </header>
+  )
+
+  if (athletes.length === 0)
+    return (
+      <>
+        {header}
+        <EmptyState>{t.athletesEmpty}</EmptyState>
+      </>
+    )
 
   return (
     <div className="flex flex-col gap-4">
+      {header}
       <SearchField value={query} onChange={setQuery} label={t.athletesSearch} />
 
-      {years.length > 1 ? (
-        <FilterChips
-          label={t.athletesSearch}
-          value={year}
-          onChange={setYear}
-          options={[
-            { value: 'all', label: t.athletesAllYears },
-            ...years.map((y) => ({ value: String(y), label: String(y) })),
-          ]}
-        />
-      ) : null}
+      <YearGrid
+        label={t.athletesYearFilter}
+        value={year}
+        onChange={setYear}
+        options={[
+          { value: 'all', label: t.athletesAllYears },
+          ...years.map(([y, count]) => ({ value: String(y), label: String(y), count })),
+        ]}
+      />
 
       {matching.length === 0 ? <p className="text-row text-muted">{t.athletesNoMatch}</p> : null}
 
@@ -94,7 +119,7 @@ export function AthleteList({ athletes }: { athletes: CoachAthlete[] }) {
             </span>
           </h2>
 
-          <ul className="flex flex-col gap-2">
+          <ul className="flex flex-col rounded-card bg-surface px-3 shadow-card">
             {group.items.map((athlete) => (
               <AthleteRow key={athlete.id} athlete={athlete} />
             ))}
@@ -105,7 +130,7 @@ export function AthleteList({ athletes }: { athletes: CoachAthlete[] }) {
       {inactive.length > 0 ? (
         <section className="flex flex-col gap-2">
           <h2 className="text-date font-bold text-muted">{t.athletesInactiveGroup}</h2>
-          <ul className="flex flex-col gap-2">
+          <ul className="flex flex-col rounded-card bg-surface px-3 shadow-card">
             {inactive.map((athlete) => (
               <AthleteRow key={athlete.id} athlete={athlete} />
             ))}
@@ -134,10 +159,10 @@ function AthleteRow({ athlete }: { athlete: CoachAthlete }) {
     : t.athletesDeactivated.replace('{year}', String(athlete.birthYear))
 
   return (
-    <li>
+    <li className="border-b border-line last:border-0">
       <Link
         href={`/trener/sportovci/${athlete.id}`}
-        className="flex min-h-16 items-center gap-3 rounded-card bg-surface p-3 shadow-card"
+        className="flex min-h-16 items-center gap-3 py-3"
       >
         <Avatar
           firstName={athlete.firstName}

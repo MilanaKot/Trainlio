@@ -1852,6 +1852,19 @@ export type Database = {
         }
         Returns: string[]
       }
+      workspace_statistics: {
+        Args: {
+          p_birth_year?: number
+          p_bucket?: string
+          p_coach_id?: string
+          p_from: string
+          p_main_only?: boolean
+          p_personal?: boolean
+          p_to: string
+          p_workspace_id: string
+        }
+        Returns: Json
+      }
       workspace_staff: {
         Args: { p_workspace_id: string }
         Returns: {

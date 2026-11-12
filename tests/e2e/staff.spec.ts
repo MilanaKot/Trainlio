@@ -352,8 +352,8 @@ test.describe('a workspace administrator manages the coaching staff', () => {
     await page.goto('/trener/vice')
     await expect(page.getByText('SPRÁVA')).toHaveCount(0)
     await expect(page.getByRole('link', { name: /Trenéři/ })).toHaveCount(0)
-    // Planning is every coach's, and stays.
-    await expect(page.getByRole('link', { name: /Série tréninků/ })).toBeVisible()
+    // Přehledy is every coach's, and stays (v3.6, decision 50).
+    await expect(page.getByRole('link', { name: /Statistiky/ })).toBeVisible()
   })
 
   /**

@@ -6,13 +6,11 @@ import type { Route } from 'next'
 import { messages } from '@/lib/i18n'
 import {
   attendanceView,
-  inPeriod,
   nextAttendance,
-  periodCaption,
   summarizeAttendance,
   type AttendanceMark,
-  type Period,
 } from '@/lib/domain/attendance'
+import { inPeriod, periodCaption, type Period } from '@/lib/period'
 import { changingRoomLabel } from '@/lib/domain/session'
 import { formatDateShort, formatTime, formatTimeRange } from '@/lib/time/workspace-time'
 import { setAttendance, setBookingPaid, undoUnpaid } from '@/server/roster/actions'
@@ -82,9 +80,7 @@ export function TrainingsTab({
     }
   })
 
-  const inThisPeriod = rows.filter((row) =>
-    inPeriod(new Date(row.session.startAt), period, timezone),
-  )
+  const inThisPeriod = rows.filter((row) => inPeriod(new Date(row.session.startAt), period))
   const summary = summarizeAttendance(
     inThisPeriod.map((row) => ({
       startAt: row.session.startAt,
@@ -214,7 +210,7 @@ export function TrainingsTab({
 
   return (
     <div className="flex flex-col gap-4">
-      <PeriodControl period={period} />
+      <PeriodControl period={period} timezone={timezone} />
 
       <div className="grid grid-cols-2 gap-2">
         <div className="flex flex-col gap-1 rounded-[14px] bg-surface p-3.5 shadow-card">
@@ -250,7 +246,7 @@ export function TrainingsTab({
 
       <section className="flex flex-col gap-2">
         <h2 className="text-caption font-bold uppercase tracking-[0.05em] text-muted">
-          {t.past.replace('{period}', periodCaption(period).toLocaleUpperCase('cs'))}
+          {t.past.replace('{period}', periodCaption(period))}
         </h2>
         {past.length === 0 ? (
           <p className="text-meta text-muted">{t.pastNone}</p>

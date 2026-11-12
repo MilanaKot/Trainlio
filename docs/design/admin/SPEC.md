@@ -59,7 +59,7 @@ Rules (brief §34):
 
 ### A0 · More (`/coach/more`)
 H1 `Více`. Profile card: avatar 56, name 17/700, meta `Trenér · Administrátor` (or `Trenér`).
-Caption `PLÁNOVÁNÍ` (all coaches, v3) → row with calendar icon `Série tréninků` + value `{running series}` + chevron → coach K15.
+Caption `PŘEHLEDY` (all coaches, v3.6) → row with chart icon `Statistiky` → coach K20. The former `PLÁNOVÁNÍ` section and its `Série tréninků` row are removed: series live in the Tréninky tab `Série` (coach K15).
 Caption `SPRÁVA` (admins only) → row `Organizace` with OrgLogo 28 as icon + value `Logo a název` + chevron → A4; then row: icon + `Trenéři` + value `{count}` + chevron → A1.
 Caption `ÚČET` → row `Osobní údaje a e-mail` (→ same account screens as guardian G13/G16/G14 patterns).
 Button (white, danger text) `Odhlásit se z aplikace` + confirm dialog.

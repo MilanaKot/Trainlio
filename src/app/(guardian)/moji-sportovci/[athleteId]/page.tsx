@@ -6,7 +6,7 @@ import {
   listJoinableWorkspaces,
 } from '@/server/athletes/queries'
 import { AttendanceBlock } from '@/components/athlete/attendance-block'
-import { localYearMonth, parsePeriod } from '@/lib/domain/attendance'
+import { parsePeriod } from '@/lib/period'
 import { Avatar } from '@/components/ui/avatar'
 import { DetailList } from '@/components/ui/detail-list'
 import { HOCKEY_POSITION_LABELS, STICK_SIDE_LABELS } from '@/lib/enums/hockey'
@@ -45,8 +45,8 @@ export default async function AthletePage({
     listJoinableWorkspaces(),
   ])
   const timezone = workspaces[0]?.timezone ?? DEFAULT_TIMEZONE
-  // G8b opens on the year, as the design draws it; `Měsíc` narrows it.
-  const period = parsePeriod(obdobi, { kind: 'year', ...localYearMonth(new Date(), timezone) })
+  // G8b opens on the season, as the design draws it; `Měsíc` narrows it.
+  const period = parsePeriod(obdobi, 'season', new Date(), timezone)
 
   return (
     <main className="flex flex-col gap-5">

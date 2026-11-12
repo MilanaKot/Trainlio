@@ -83,7 +83,7 @@ Props below are suggestions; keep them strict-TS friendly (no optional `undefine
 | `danger` | danger / white | danger-600 | "Zrušit trénink" only |
 | `danger-outline` | transparent / danger, inset border danger-border | danger-soft | Entry point "Zrušit trénink" at bottom of session detail |
 
-Sizes: `md` 44 px height, radius 10, 15 px/600 · `lg` (block) 52 px, radius 12, 16 px/700, full width. **Card buttons are fixed 124 × 44.**
+Sizes: `md` 44 px height, radius 12, 15 px/600 · `sm` 36–40 px, radius 12 · `lg` (block) 52 px, radius 12, 16 px/700, full width. **v3.6: every text button has radius 12** (md, sm, lg, FAB, header buttons like `+ Nová série`, e-mail CTA). Pill shapes (radius = height/2) are only for chips/filters and tags; icon-only toggles keep their own radius (§6.36). **Card buttons are fixed 124 × 44.**
 States: default · pressed · focus (`shadow-focus`, 2 px ring offset 2) · disabled (`neutral-50` bg, `subtle` text, no border) · loading (spinner 18 px + verb in progressive form: "Přihlašuji…", "Ukládám…", "Odhlašuji…", "Ruším…"; button keeps width, `aria-busy="true"`).
 
 ```ts
@@ -167,7 +167,7 @@ Guardian: 4 items — Tréninky, Moje tréninky, Moji sportovci, Účet. Coach/a
 **v3 (DR-06):** height 76 incl. 8 px bottom padding + safe-area inset. Active item = the one whose route is the **longest prefix** of the current path (built that way — confirmed); pushed screens (detail, edit, A1–A6, K13, K15, K16) keep their tab active (`Více` for A* and K15/K16, `Sportovci` for K13). Icons (24 grid, stroke 1.8, round caps): Tréninky = calendar, Moje tréninky = calendar-check, (Moji) sportovci = two people, Účet = person-circle, Více = three dots. Labels never truncate; 4 tabs fit 320 px at 11 px.
 
 ### 6.18 FAB (coach)
-Extended pill 56 px high, radius 28, primary, `+ Vytvořit`, `shadow` `0 8px 24px rgb(43 85 224 / .35)`; right 16, above nav. Opens "Vytvořit" sheet.
+Extended button 56 px high, **radius 12** (v3.6, was a pill), primary, `+ Vytvořit`, `shadow` `0 8px 24px rgb(43 85 224 / .35)`; right 16, above nav. Opens "Vytvořit" sheet.
 
 ### 6.19 Avatar
 Circle 28 / 36 / 40 / 56 / 72 (people only — organizations use the square OrgLogo, §6.23); initials 11–24 px/700; active: primary-100 + primary; inactive/ineligible: neutral-200 + muted. Photo replaces initials when present (object-fit cover).
@@ -217,7 +217,7 @@ Grid 6 × 1fr, gap 8; box 60 px high, radius 10, white, inset 1.5 px line; digit
 Height 48, radius 12, white with inset 1.5 px line (on white sheets: `neutral-50` fill, no border); 20 px search icon `subtle` at 14 px; input 16/500 (16 px prevents iOS zoom); placeholder subtle. `type="search"`, clear button 32 px appears when non-empty (`aria-label="Vymazat"`). Debounce 150 ms. Matching is diacritics- and case-insensitive.
 
 ### 6.28 FilterChips (v3)
-Row of pills, height 36, radius 18, padding 0 14, 14/600; off: white + inset 1.5 px line; on: ink bg + white text. Single-select with `aria-pressed`; first chip `Všechny`. Overflow scrolls horizontally (no wrap, 16 px end padding, scroll-snap). Used for birth years in K12.
+Row of pills, height 36, radius 18, padding 0 14, 14/600; off: white + inset 1.5 px line; on: primary `#2B55E0` bg + white text (never ink/black). Single-select with `aria-pressed`; first chip `Všechny` (default). Used in K1 (`Všechny / Moje`). Birth years in K12 use the YearGrid variant: white panel radius 16, padding 12, grid of 4 columns, gap 8, every chip shows the year + count (13/500, white 80 % on the selected chip); all years always visible, no collapse, no horizontal scroll; selection resets to `Všechny` when the screen is left.
 
 ### 6.29 WeekdayBadges (v3)
 Seven 24 × 24 squares, radius 6, gap 3, 11/700: `Po Út St Čt Pá So Ne`; selected = primary bg + white, others = neutral-50 + subtle. Decorative (`aria-hidden`) — the container has `aria-label` with the selected days in words (`úterý, čtvrtek`). Used in K15/K16.

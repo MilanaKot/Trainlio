@@ -956,3 +956,31 @@ payment (decision 45).
 AC-309  
 A training or a series can be created with `Bez trenéra`; it reads as K2e, and
 assigning a coach later sends E05 (BR-186).
+
+## Statistics and seasons (handoff v3.5)
+
+AC-310  
+K20's tiles match hand-computed values for a seeded period, cancelled and
+future trainings left out; `Nezaplaceno` lists only athletes with unpaid
+bookings of held trainings (coach test 27).
+
+AC-311  
+A coach does not see `Trenéři` and gets 403 for another coach's K20b; an
+administrator sees both (coach test 28).
+
+AC-312  
+`Měsíc / Sezóna` in K13, K20, K20b and G8b uses 1 August – 31 July seasons
+labelled `Sezóna 2026/27` (coach test 29).
+
+## The year filter (handoff v3.6)
+
+AC-313  
+K12 shows every birth year of active athletes in a four-column grid, newest
+first with counts, all inside a 390 px screen with no sideways scroll;
+choosing `2018` shows only that group and `{x} z {n}`; leaving and coming back
+starts on `Všechny` again (coach test 11, decision 49).
+
+AC-314  
+From K1 the `Série` tab opens K15 with that tab selected and `Tréninky` lit in
+the bottom navigation; `Více` has no `Série tréninků` row and has `Přehledy`
+(decision 50).

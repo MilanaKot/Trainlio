@@ -112,15 +112,17 @@ Cancelled session: as in K1 (muted, struck time, danger `Zrušeno`) → K6b.
 Row → K2 (read-only roster; all edit actions hidden for past sessions — the only action left is `Duplikovat jako nový trénink`, as on K6b; the server refuses the rest with `SESSION_FINISHED`, BR-025d).
 Paging: load 20 days at a time, infinite scroll; empty `Zatím žádné odehrané tréninky.`
 
-### K12 · Athletes (`/coach/athletes`) — v3, DR-01
-H1 `Sportovci` + meta right `{n} aktivních`.
-SearchField (DS §6.27) `Hledat jméno nebo rodiče` — matches athlete first/last name and guardian names, diacritics-insensitive (`normalize("NFD")`). Always visible.
-FilterChips (DS §6.28) by birth year: `Všechny` + one chip per year present (single select). Horizontal scroll when they overflow.
-List grouped by **ročník**, ascending (`Ročník 2017`, `Ročník 2018` …), heading `text-date` primary + right `{n} sportovců`; inside a group sorted by last name (`Intl.Collator("cs")`).
+### K12 · Athletes (`/coach/athletes`) — v3, DR-01; year filter v3.6
+H1 `Sportovci` + meta right: `{n}` (all athletes) or `{shown} z {n}` when a year is selected.
+SearchField (DS §6.27) `Hledat jméno nebo rodiče` — matches athlete first/last name and guardian names, diacritics-insensitive (`normalize("NFD")`). Always visible. Search and year filter combine (AND).
+**Year filter = YearGrid (DS §6.28, v3.6)** under the search: white panel, radius 16, padding 12, 4-column grid, gap 8. Chips: `Všechny` first, then one chip per birth year present among active athletes, **newest first** (2020, 2019 …). Each year chip shows the year + count of active athletes (`2017 9`). Single select, `aria-pressed`. Selected chip = primary `#2B55E0` bg, white text (count white 80 %). **All years are always visible** — no collapse, no horizontal scroll, the grid simply grows by rows.
+Default and on every visit: `Všechny` (the choice is not remembered).
+List grouped by **ročník**, newest first (`Ročník 2020`, `Ročník 2019` …) — the same order as the grid; heading `text-date` primary + right `{n} sportovců`; inside a group sorted by last name (`Intl.Collator("cs")`). With a year selected, only that group is shown, plus `Neaktivní` athletes of that year.
 Row (64 px, white list panel): Avatar 40 + name 16/600 + meta 13 muted `{position or "Pozice nevyplněna"} · {upcomingBookings} nadcházející` (`bez přihlášek` when 0) + chevron → K13.
-Deactivated athletes: separate group `Neaktivní` at the bottom (heading muted), muted avatar/name, meta `Ročník {y} · deaktivoval rodič`.
-No phone on the row (it is on the roster and in K13). Empty (no athletes at all): `Zatím tu nejsou žádní sportovci. Přidávají je rodiče ve své aplikaci.`
+Deactivated athletes: separate group `Neaktivní` at the bottom (heading muted), muted avatar/name, meta `Ročník {y} · deaktivoval rodič`. They are not counted in the year chips.
+No phone on the row (it is on the roster and in K13). Empty (no athletes at all): `Zatím tu nejsou žádní sportovci. Přidávají je rodiče ve své aplikaci.` — the grid is hidden. Search with no match: `Nikdo neodpovídá hledání.`
 **Fixed:** coaches cannot create athletes or guardian accounts — no add button.
+Screens: K12 (`Všechny`), K12b (`2017` selected).
 
 ### K13 · Player card — coach view (v3.4, replaces K13/K17/K19)
 Routes: `/coach/athletes/[id]?tab=treninky|hrac|rodice|zpravy` (default `treninky`). Opened from K2 (card) and from K12. Back `‹ Zpět` (history back).
@@ -128,7 +130,7 @@ Header (all tabs): Avatar 56 + H1 name Barlow 32/36 (single line, ellipsis) + me
 Tabs: SegmentedControl with 4 items `Tréninky · Hráč · Rodiče · Zprávy` (`role="tablist"`, 38 px).
 
 **K13 · Tréninky**
-- Period control: small segmented `Měsíc / Rok` + prev/next 36 px buttons + label (`Listopad 2026` / `Rok 2026`).
+- Period control: small segmented `Měsíc / Sezóna` + prev/next 36 px buttons + label (`Listopad 2026` / `Sezóna 2026/27`). Season = 1 August – 31 July (decision 47). The season view (K13y) has exactly the same layout as the month view — no charts.
 - Two stat tiles (white, radius 14): `{pct} %` + `Docházka · byl {b} z {b+n}`; `{paid} / {total}` + `Zaplaceno`. Percent = Byl / (Byl + Nebyl); cancelled sessions excluded. **No „Omluven“ status anywhere.**
 - `NADCHÁZEJÍCÍ · {n}`: cards (same card style as K2, thick right edge): left `{dd d. m.} · {time}` + meta + red text button `Odhlásit z tréninku` (opens the existing remove dialog); right attendance toggle **disabled** + payment toggle (can be paid in advance).
 - `PROBĚHLÉ · {month}`: cards with both toggles active (editable any time). Tap on the left zone → K2 of that session.
@@ -145,8 +147,21 @@ Tabs: SegmentedControl with 4 items `Tréninky · Hráč · Rodiče · Zprávy` 
 
 Read-only coaches (no `canEdit` for that session): toggles shown but not interactive (`opacity .75`, no buttons), no `Odhlásit`, no add/edit links.
 
+### K20 · Statistiky (v3.5) — `/coach/stats`
+Entry: A0 `Více › Přehledy › Statistiky` (chart icon, v3.6). Visible to **all coaches**; the `Trenéři` block and K20b of *other* coaches only for admins (a coach sees only his own K20b).
+- H1 `Statistiky`; period `Měsíc / Sezóna` + prev/next + label; FilterChips with dropdowns `Všechny ročníky ▾` (single year or all) and `Všichni trenéři ▾` (sessions where the coach is main or assistant).
+- 4 tiles (2 × 2, white, radius 14, Barlow 30): `{n} Tréninků` (held, not cancelled), `{x} % Obsazenost` (Σ bookings / Σ capacity), `{x} % Docházka` (Byl / (Byl + Nebyl)), `{x} % Zaplaceno` (paid / bookings of held sessions).
+- `NEZAPLACENO · {n} tréninky` + link `Vše`: rows Avatar 36 + name + year + red `$ {n} tréninky` + chevron → K13 (Tréninky tab). Sorted by count desc. Top 3, `Vše` opens the full list.
+- `NEJNIŽŠÍ DOCHÁZKA` + link `Všichni hráči`: rows with name, `{pct} %` (Barlow 17; red < 60 %, warning < 80 %) and a 6 px bar; → K13. Top 3 lowest (min. 3 sessions in the period); `Všichni hráči` = full sortable list.
+- `TRENÉŘI` (admin only): rows name + `{pct} %` + sub `{n} tréninků · docházka` + success bar → K20b.
+- Footnote: `Docházka = Byl / (Byl + Nebyl). Obsazenost = přihlášení / kapacita. Zrušené tréninky se nepočítají.`
+- Empty period: `V tomto období neproběhl žádný trénink.`
+
+### K20b · Statistiky trenéra (v3.5) — `/coach/stats/coach/[coachId]`
+Header Avatar 48 + name (Barlow 30) + `Statistiky trenéra`; period control; chips `Hlavní trenér + asistent` / `Jen hlavní`; 4 tiles (first = `{n} Tréninků ({m} jako hlavní)`); `DOCHÁZKA PO TÝDNECH` bar chart (one bar per week of the month / per month of the season; green ≥ 80 %, warning below; value on top; labels below; `role="img"` + text alternative table for screen readers); list `TRÉNINKY JAKO HLAVNÍ TRENÉR · {n}` rows date · time, meta `{place} · obsazeno {booked}/{capacity}`, right person-check `{present}/{n}` (success when complete, warning otherwise) → K2.
+
 ### K15 · Series list (`/coach/series`) — v3, DR-03
-Entry: A0 `Více` → section `PLÁNOVÁNÍ` → row `Série tréninků` (value = number of running series). Visible to all coaches.
+**v3.6:** Entry is the third tab of the Tréninky segmented control: `Nadcházející · Minulé · Série` (K1, K1b, K14, K15 share it; `role=tablist`, 3 equal columns). No back link; bottom nav `Tréninky` stays active. Header = K1 header (`Tréninky` + org line). Under the tabs: helper text 13 muted `Tréninky ze série jsou po vytvoření samostatné. Upravit je můžete jednotlivě.` and to its right the `+ Nová série` button (only with `isAdmin || canEditTrainings`). The `Série tréninků` row in Více is removed. Visible to all coaches.
 Back `‹ Více`; header H1 `Série` + primary md button `+ Nová série` (→ K11, `white-space: nowrap`).
 Helper text (muted): `Tréninky ze série jsou po vytvoření samostatné. Upravit je můžete jednotlivě.`
 Captions `PROBÍHAJÍCÍ · {n}` (to ≥ today) and `UKONČENÉ · {n}` (muted cards).
@@ -155,7 +170,7 @@ Series card (whole card → K16): WeekdayBadges (DS §6.29) · time Barlow 26/30
 EmptyState: calendar icon tile, `Zatím nemáte žádnou sérii.`, text `Série vytvoří tréninky na celé období najednou — například každé úterý a čtvrtek do Vánoc.`, primary `+ Nová série`.
 
 ### K16 · Trainings of one series (`/coach/series/[id]`) — v3, DR-03
-Back `‹ Série tréninků`. Header: WeekdayBadges, H1 time (Barlow 36/40), line 15/600 `Úterý a čtvrtek · {from} – {to}`, meta place/years.
+Back `‹ Série` (returns to the Série tab). Header: WeekdayBadges, H1 time (Barlow 36/40), line 15/600 `Úterý a čtvrtek · {from} – {to}`, meta place/years.
 SegmentedControl `Nadcházející · {n}` / `Minulé · {n}`. Rows = CoachTrainingRow (count `9 / 12`, chevron → K2). A training edited individually after creation shows status line `Upraveno mimo sérii` (muted 13/600).
 Footer note (muted 13): `Celou sérii nelze upravit ani zrušit najednou. Každý trénink otevřete a upravte zvlášť.` **Fixed:** no series editing.
 
@@ -303,7 +318,7 @@ The UI must always state the notification consequence **before** the coach confi
 8. Series Sun 4.10.–29.11. generates 9 dates; unchecking one → button `Vytvořit 8 tréninků`.
 9. Internal note never appears in guardian API responses (integration test on RLS).
 10. K1 ↔ K14 switch via the segmented control; K14 shows counts with correct plurals and no meter.
-11. K12 search `bures` finds `Tomáš Bureš`; year chip `2018` shows only that group; inactive athletes at the bottom.
+11. K12 search `bures` finds `Tomáš Bureš`; year chip `2018` shows only that group and meta `{x} z {n}`; all year chips visible at 390 px with 9+ years (no horizontal scroll); `Všechny` is selected again after leaving and reopening the tab; inactive athletes at the bottom.
 12. K13 shows internal note to coaches; the same athlete fetched with a guardian session has no internal note field.
 13. K15 lists running and ended series; K16 shows only that series' trainings; there is no edit-series action anywhere.
 14. Coach adds an athlete in K7 → guardians receive E08 with the cancellation deadline.
@@ -319,6 +334,9 @@ The UI must always state the notification consequence **before** the coach confi
 24. K13 tabs: Tréninky percent = Byl/(Byl+Nebyl) for the selected month/year; Hráč shows the general note; Rodiče call/SMS links; Zprávy note never returned to a guardian session (RLS); sending a message triggers E09.
 25. Deactivate a main coach with 3 future sessions (A3f) → those sessions show `Bez hlavního trenéra` in K1 and K2e; guardian G6 shows `Trenér bude upřesněn`; assigning a coach sends E05.
 26. Read-only coach: K2b/K13 toggles are not interactive; API returns `FORBIDDEN_EDIT`.
+27. K20 tiles match hand-computed values for a seeded month; cancelled sessions excluded; `Nezaplaceno` lists only athletes with unpaid bookings of held sessions.
+28. A non-admin coach does not see the `Trenéři` block and gets 403 for another coach's K20b; an admin sees all.
+29. Switching `Měsíc / Sezóna` in K13, K20, K20b and G8b uses 1 Aug – 31 Jul seasons; the labels say `Sezóna 2026/27`.
 
 ## 6. Assumptions & open questions
 - Reopening closed registration is allowed (`Otevřít přihlašování`) — confirmed v3.

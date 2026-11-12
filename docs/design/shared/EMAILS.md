@@ -14,7 +14,7 @@ This file is the single source of truth for subjects, copy, recipients and links
 │ One sentence 16/25 — what happened and whether the parent must do anything
 │ Detail block (bg #F3F5F9, radius 10): label column 96 px muted 15 / value 15
 │ Coach message (only if present): 3 px left border #DFE4EE, caption "Zpráva od trenéra" 13 muted
-│ Button: 48 px, radius 10, #2B55E0, white 16/700 — HTML/VML "bulletproof", never an image
+│ Button: 48 px, radius 12, #2B55E0, white 16/700 — HTML/VML "bulletproof", never an image
 │ Optional helper line 13/20 muted
 │ ─ divider ─
 │ Footer 13 muted: "Tento e-mail jste dostali, protože máte sportovce přihlášeného na trénink v aplikaci {org}."

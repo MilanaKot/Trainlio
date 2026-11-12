@@ -64,6 +64,25 @@ Decisions 38–46, BR-177 to BR-186:
 - **A training may be planned without a main coach** (product request,
   12 November 2026), singly or as a series, and given one later.
 
+### Added with handoff v3.5 (12 November 2026)
+
+Decisions 47–48, BR-187 to BR-191:
+
+- **Statistics** for every coach (K20, `Více › Statistiky`): trainings held,
+  occupancy, attendance and payment for a month or a season, by birth year
+  and by coach; who has not paid, and who comes least. Administrators also
+  see every coach, and each coach's own page (K20b).
+- **Seasons**: every period switch is `Měsíc / Sezóna`, a season running
+  1 August – 31 July (`Sezóna 2026/27`).
+
+### Changed with handoff v3.6 (12 November 2026)
+
+The coach's athlete list shows every birth year at once, as a grid with
+counts, newest first; selected filter chips are blue (decision 49). Series are the
+third tab of the training list (`Nadcházející · Minulé · Série`), `Více` has
+`Přehledy` with the statistics, and every text button has one 12 px radius
+(decisions 50–51).
+
 ### Non-goals for MVP
 
 - Payments (taking or processing them; the manual `Zaplaceno` flag above is not

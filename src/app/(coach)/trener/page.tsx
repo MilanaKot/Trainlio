@@ -5,7 +5,7 @@ import { touchStaffSeen } from '@/server/staff/actions'
 import { CoachSessionList } from '@/components/session/coach-session-list'
 import { CoachTrainingsTabs } from '@/components/session/coach-trainings-tabs'
 import { CreateSheet } from '@/components/session/create-sheet'
-import { OrgLogo } from '@/components/ui/org-logo'
+import { TrainingsHeader } from '@/components/session/trainings-header'
 import { EmptyState } from '@/components/ui/empty-state'
 import { canCreateSessions } from '@/lib/domain/coach-rights'
 import { DollarIcon, PersonCheckIcon } from '@/components/ui/status-toggle'
@@ -55,26 +55,9 @@ export default async function CoachSessionsPage({
   const sessions = showingPast ? past : upcoming
   const now = new Date()
 
-  const sports = messages.sports as Record<string, string>
-
-  // The club's own location, not whichever training happens to be first in the
-  // list. On the day the club is handed over there are no trainings at all,
-  // and a header that only names the town once somebody creates one reads as a
-  // half-loaded screen. Named only while the club has a single location: with
-  // two, picking one of them would be a guess. (The parent's §G1 header has
-  // taken it from the workspace since migration 29.)
-  const towns = [...new Set(workspace.facilities.map((one) => one.locationName))]
-  const meta = [sports[workspace.sportCode], towns.length === 1 ? towns[0] : null].filter(Boolean)
-
   return (
     <main className="flex flex-col gap-5 pb-24">
-      <header className="flex items-center gap-3">
-        <OrgLogo org={workspace.organization} size={36} />
-        <div className="flex min-w-0 flex-col gap-1">
-          <h1 className="font-display text-page font-bold text-ink">{t.sessionsTitle}</h1>
-          {meta.length > 0 ? <p className="text-meta text-muted">{meta.join(' · ')}</p> : null}
-        </div>
-      </header>
+      <TrainingsHeader workspace={workspace} />
 
       <CoachTrainingsTabs value={showingPast ? 'past' : 'upcoming'} />
 

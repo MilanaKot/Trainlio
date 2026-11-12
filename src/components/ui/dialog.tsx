@@ -82,7 +82,7 @@ export function ConfirmDialog({
           <div className={cn('mt-6 flex gap-3', stacked ? 'flex-col-reverse' : 'flex-row')}>
             <AlertDialog.Cancel
               className={cn(
-                'flex min-h-touch items-center justify-center rounded-control bg-surface px-4 text-row font-semibold text-ink',
+                'flex min-h-touch items-center justify-center rounded-button bg-surface px-4 text-row font-semibold text-ink',
                 'shadow-[inset_0_0_0_1.5px_var(--color-line)]',
                 stacked ? 'w-full' : 'flex-1',
               )}
@@ -100,7 +100,7 @@ export function ConfirmDialog({
               disabled={pending}
               aria-busy={pending || undefined}
               className={cn(
-                'flex min-h-touch items-center justify-center rounded-control px-4 text-row font-semibold text-white',
+                'flex min-h-touch items-center justify-center rounded-button px-4 text-row font-semibold text-white',
                 confirmVariant === 'danger' ? 'bg-danger' : 'bg-primary',
                 'disabled:bg-neutral-50 disabled:text-subtle',
                 stacked ? 'w-full' : 'flex-1',

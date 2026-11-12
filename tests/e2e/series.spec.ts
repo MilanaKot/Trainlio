@@ -111,11 +111,20 @@ test('a series opens its trainings and never an edit form (AC-288)', async ({ pa
   await page.getByRole('button', { name: 'Vytvořit 3 tréninky' }).click()
   await expect(page).toHaveURL(/\/trener\/serie$/)
 
-  // §A0: planning is every coach's section, not the administrator's.
+  // v3.6 (decision 50, AC-314): Série is the third Tréninky tab, and Více no
+  // longer lists it.
   await page.goto('/trener/vice')
-  await page.getByRole('link', { name: /Série tréninků/ }).click()
+  await expect(page.getByRole('link', { name: /Série tréninků/ })).toHaveCount(0)
+  await expect(page.getByText('PŘEHLEDY')).toBeVisible()
+  await expectAccessible(page, '§A0 Více with Přehledy')
+
+  await page.goto('/trener')
+  await page.getByRole('tab', { name: 'Série' }).click()
   await expect(page).toHaveURL(/\/trener\/serie$/)
-  await expect(page.getByRole('heading', { name: 'Série', level: 1 })).toBeVisible()
+  await expect(page.getByRole('tab', { name: 'Série', selected: true })).toBeVisible()
+  await expect(
+    page.getByRole('navigation').getByRole('link', { name: 'Tréninky' }),
+  ).toHaveAttribute('aria-current', 'page')
   await expectAccessible(page, '§K15 the series list') // AC-292
 
   const made = await newestSeries(coach)
