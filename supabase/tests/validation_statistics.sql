@@ -100,6 +100,21 @@ select v.s::uuid, v.a::uuid, :COACH, 'COACH',
     ('00000000-0000-0000-0000-0000000f5005', :IVAN,  'ABSENT',  false)) v(s, a, att, paid);
 update public.training_sessions set status = 'CANCELLED', cancelled_at = now(), cancelled_by = :COACH
  where id = '00000000-0000-0000-0000-0000000f5003';
+-- S6 an hour ago, still under way, and S7 a past draft: neither counts.
+insert into public.training_sessions(id,workspace_id,sport_id,location_id,facility_id,main_coach_profile_id,
+  start_at,end_at,capacity,status,created_by,eligibility_mode)
+select v.id::uuid, w.id, w.primary_sport_id, l.id, f.id, :COACH::uuid,
+       now() - v.ago, now() - v.ago + interval '2 hours', 10, v.st::public.session_status, :COACH::uuid, 'ALL'
+  from (values ('00000000-0000-0000-0000-0000000f5006', interval '1 hour', 'OPEN'),
+               ('00000000-0000-0000-0000-0000000f5007', interval '4 days', 'DRAFT')) v(id, ago, st)
+  cross join public.workspaces w
+  join public.locations l on l.workspace_id = w.id
+  join public.facilities f on f.location_id = l.id and f.code = 'MH';
+insert into public.training_session_coaches(training_session_id,profile_id,role) values
+  ('00000000-0000-0000-0000-0000000f5006', :COACH, 'MAIN'),
+  ('00000000-0000-0000-0000-0000000f5007', :COACH, 'MAIN');
+insert into public.bookings(training_session_id, athlete_id, created_by, created_by_role, attendance, attendance_at, attendance_by)
+values ('00000000-0000-0000-0000-0000000f5006', :ANNA, :COACH, 'COACH', 'PRESENT', now(), :COACH);
 
 \echo ''
 \echo '── The tiles (K20, coach test 27) ─────────────────────────────────'
@@ -108,7 +123,7 @@ select pg_temp.check(
           (d ->> 'present') || '/' || (d ->> 'marked') || ' · ' || (d ->> 'paid') || '/' || (d ->> 'bookings')
      from (select pg_temp.stats(:ADMIN, pg_temp.win()) -> 'data' as d) x),
   '3 · 6/20 · 3/6 · 3/6',
-  'three held trainings, 6 of 20 places, 3 of 6 came, 3 of 6 paid — cancelled and future left out');
+  'three trainings that ended, 6 of 20 places, 3 of 6 came, 3 of 6 paid — cancelled, future, under way and draft left out');
 select pg_temp.check(
   (select string_agg((u ->> 'first_name') || ' ' || (u ->> 'count'), ', ' order by ord)
      from jsonb_array_elements(pg_temp.stats(:ADMIN, pg_temp.win()) -> 'data' -> 'unpaid')

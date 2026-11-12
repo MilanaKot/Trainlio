@@ -44,14 +44,16 @@ export type AttendanceSummary = {
 }
 
 /**
- * K13 tiles and G8b. A training under way and not yet marked is neither: it
- * becomes `Nebyl` at its end, not at its start.
+ * K13 tiles and G8b. Only trainings that have ended count, like the club's
+ * statistics (migration 48): one under way is not yet a result, marked or
+ * not. An ended one nobody marked is `Nebyl`.
  */
 export function summarizeAttendance(items: AttendanceItem[], now: Date): AttendanceSummary {
   let present = 0
   let absent = 0
   for (const item of items) {
     if (item.sessionCancelled) continue
+    if (new Date(item.endAt) > now) continue
     const view = attendanceView(item.mark, item, now)
     if (view === 'present') present += 1
     if (view === 'absent') absent += 1

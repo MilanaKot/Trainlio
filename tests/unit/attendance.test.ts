@@ -49,9 +49,15 @@ describe('summarizeAttendance (K13, G8b)', () => {
     expect(summary).toEqual({ present: 2, absent: 2, percent: 50 })
   })
 
-  it('leaves out cancelled trainings, future ones and one still unmarked under way', () => {
+  it('counts only trainings that have ended: not cancelled ones, future ones or one under way', () => {
     const summary = summarizeAttendance(
-      [item('PRESENT'), item('ABSENT', past, true), item(null, future), item(null, running)],
+      [
+        item('PRESENT'),
+        item('ABSENT', past, true),
+        item(null, future),
+        item(null, running),
+        item('PRESENT', running),
+      ],
       NOW,
     )
     expect(summary).toEqual({ present: 1, absent: 0, percent: 100 })
