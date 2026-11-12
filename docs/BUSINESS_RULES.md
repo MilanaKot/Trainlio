@@ -541,7 +541,8 @@ on; K20b can narrow that to those led.
 BR-190 **(new — v3.5)**  
 `Nezaplaceno` lists athletes with unpaid bookings of held trainings, most
 first; `Nejnižší docházka` only athletes with at least three trainings in the
-period, lowest first. `Trenéři` counts each coach's trainings as main coach
+period, lowest first, under every filter — with a coach chosen, over that
+coach's trainings. `Trenéři` counts each coach's trainings as main coach
 or assistant.
 
 BR-191 **(new — v3.5)**  

@@ -90,8 +90,8 @@ test.describe('statistics (v3.5)', () => {
       '1 trénink',
     )
     await expect(page.getByRole('heading', { name: 'TRENÉŘI', exact: true })).toBeVisible()
-    // With one coach chosen there is no club-wide lowest attendance to show.
-    await expect(page.getByRole('heading', { name: 'NEJNIŽŠÍ DOCHÁZKA' })).toHaveCount(0)
+    // Lowest attendance shows with one coach chosen too, over that coach's trainings.
+    await expect(page.getByRole('heading', { name: 'NEJNIŽŠÍ DOCHÁZKA' })).toBeVisible()
     // And the filters do not move when one of them changes.
     const before = await page.getByLabel('Trenér').boundingBox()
     await page.getByLabel('Ročník').selectOption({ index: 1 })
