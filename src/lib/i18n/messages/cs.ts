@@ -889,7 +889,9 @@ export const cs = {
     roleAssistant: 'Asistent',
     /* §K2b v3.2. */
     readOnlyTitle: 'Jen pro čtení',
-    readOnlyBody: 'Tento trénink vede {coach}. Upravit ho může hlavní trenér nebo administrátor.',
+    /* v3.4: says what the static toggles below are. */
+    readOnlyBody:
+      'Tento trénink vede {coach}. Docházku, platby a sestavu může měnit hlavní trenér nebo administrátor.',
     mainCoachLockedHint: 'Hlavního trenéra může změnit administrátor.',
     errors: {
       NOT_AUTHENTICATED: 'Nejste přihlášeni.',
@@ -917,6 +919,9 @@ export const cs = {
       NOTE_TOO_LONG: 'Poznámka může mít nejvýše 200 znaků.',
       MESSAGE_EMPTY: 'Napište zprávu.',
       MESSAGE_TOO_LONG: 'Zpráva může mít nejvýše 500 znaků.',
+      /* v3.4, decision 40. */
+      SESSION_NOT_STARTED: 'Docházku lze zapsat až od začátku tréninku.',
+      UNDO_EXPIRED: 'Platbu už nelze vrátit. Označte ji znovu.',
       WOULD_EXCEED_CAPACITY: 'Trénink je plný. Potvrďte překročení kapacity.',
       /* coach/SPEC.md §K3b. One person, one role on one training. */
       MAIN_COACH_AS_ASSISTANT: 'Hlavní trenér nemůže být zároveň asistent.',

@@ -21,8 +21,6 @@ export function BottomSheet({
   footer,
   icon,
   tone = 'warning',
-  lead,
-  subtitle,
 }: {
   open: boolean
   onOpenChange: (open: boolean) => void
@@ -31,9 +29,6 @@ export function BottomSheet({
   /** A3f: the tile above the title, as on a ConfirmDialog (§6.14). */
   icon?: React.ReactNode
   tone?: 'warning' | 'danger'
-  /** K17 (v3.3, removed with it): an avatar before the title, a line under it. */
-  lead?: React.ReactNode
-  subtitle?: string
   children: React.ReactNode
   footer?: React.ReactNode
 }) {
@@ -68,21 +63,9 @@ export function BottomSheet({
           ) : null}
 
           <div className="mb-4 flex shrink-0 items-start justify-between gap-3">
-            {lead ? (
-              <div className="flex min-w-0 items-center gap-3">
-                {lead}
-                <div className="flex min-w-0 flex-col">
-                  <Dialog.Title className="text-[1.25rem]/[1.625rem] font-bold text-ink">
-                    {title}
-                  </Dialog.Title>
-                  {subtitle ? <p className="text-hint text-muted">{subtitle}</p> : null}
-                </div>
-              </div>
-            ) : (
-              <Dialog.Title className="font-display text-sheet-title font-bold text-ink">
-                {title}
-              </Dialog.Title>
-            )}
+            <Dialog.Title className="font-display text-sheet-title font-bold text-ink">
+              {title}
+            </Dialog.Title>
             <Dialog.Close
               aria-label="Zavřít"
               className="flex size-11 shrink-0 items-center justify-center rounded-full bg-neutral-50 text-muted"

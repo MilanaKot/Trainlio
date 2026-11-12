@@ -30,6 +30,8 @@ export type RosterEntry = {
   parentMessage: string | null
   parentMessageSentAt: string | null
   parentMessageSentByName: string | null
+  /** v3.4, decision 40: Byl / Nebyl, null until somebody marks it. */
+  attendance: 'PRESENT' | 'ABSENT' | null
 }
 
 export type CandidateAthlete = {
@@ -81,6 +83,7 @@ export async function getSessionRoster(sessionId: string): Promise<RosterEntry[]
     parentMessage: row.parent_message,
     parentMessageSentAt: row.parent_message_sent_at,
     parentMessageSentByName: row.parent_message_sent_by_name,
+    attendance: row.attendance,
   }))
 }
 

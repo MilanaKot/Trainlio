@@ -1,8 +1,7 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { getCoachSession, getCoachWorkspace, getSessionCoaches } from '@/server/sessions/queries'
-import { getAthleteInternalNotes, getSessionRoster, listCandidates } from '@/server/roster/queries'
-import { getOwnProfile } from '@/server/athletes/queries'
+import { getSessionRoster, listCandidates } from '@/server/roster/queries'
 import { getCoachRights } from '@/server/staff/queries'
 import { RosterList } from '@/components/roster/roster-list'
 import { SessionControls } from '@/components/session/session-controls'
@@ -82,18 +81,12 @@ export default async function SessionDetailPage({
   const session = await getCoachSession(sessionId)
   if (!session) notFound()
 
-  const [entries, candidates, coaches, rights, me] = await Promise.all([
+  const [entries, candidates, coaches, rights] = await Promise.all([
     getSessionRoster(sessionId),
     listCandidates(sessionId),
     getSessionCoaches(sessionId),
     getCoachRights(),
-    getOwnProfile(),
   ])
-  // K17 prints each athlete's general note under the one for this training.
-  const profileNotes = await getAthleteInternalNotes(
-    workspace.id,
-    entries.map((entry) => entry.athleteId),
-  )
 
   // §K2b (decision 33): what this coach may do here. The database refuses the
   // rest with FORBIDDEN_EDIT; the screen hides it rather than disabling it.
@@ -228,16 +221,14 @@ export default async function SessionDetailPage({
       <RosterList
         sessionId={session.id}
         sessionLabel={sessionLabel}
+        startAt={session.startAt}
+        endAt={session.endAt}
         entries={entries}
         candidates={candidates}
         capacity={session.capacity}
         confirmedCount={session.confirmedCount}
-        timezone={workspace.timezone}
         addable={editable && !cancelled && !finished}
-        removable={editable && !finished}
         editable={editable && !cancelled}
-        profileNotes={profileNotes}
-        myName={[me?.firstName, me?.lastName].filter(Boolean).join(' ')}
       />
 
       {/* §K6b: a cancelled training has one thing left to do — the same
