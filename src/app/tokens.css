@@ -38,6 +38,7 @@
   /* ---------- Color: status ---------- */
   --color-success: #13795b; /* "Dnes" chip, success toast icon, positive list icons */
   --color-success-soft: #e3f4ec;
+  --color-success-border: #a9d9c3; /* `Půjde` button outline (DS §6.38) */
 
   --color-warning: #8f5200; /* text for "Zbývá 1 místo", "Změněno", notices */
   --color-warning-fill: #e3a034; /* last-places capacity segments, changed-field outline */
@@ -48,6 +49,7 @@
   --color-danger-600: #931b12; /* destructive pressed */
   --color-danger-soft: #fbe9e7;
   --color-danger-border: #f1c4bf;
+  --color-danger-line: #efc2bc; /* `Nepůjde` button outline, withdrawn section (DS §6.38) */
 
   /* Internal (coach-only) note */
   --color-internal: #fbf7ec;

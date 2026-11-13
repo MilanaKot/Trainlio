@@ -235,10 +235,12 @@ select pg_temp.check(
   pg_temp.as_user(:A, format($$select (public.book_athletes_as_guardian(%L::uuid, array[%L::uuid]) -> 'data' ->> 'booked_count')$$,
     pg_temp.soon(), pg_temp.ath('Ivan'))),
   '1', 'a guardian books into a session six hours away');
+-- Decision 52: never without saying why, so the booking is still there for
+-- the coach's checks below.
 select pg_temp.check(
-  pg_temp.as_user(:A, format($$select (public.cancel_booking_as_guardian(%L::uuid) ->> 'code')$$,
+  pg_temp.as_user(:A, format($$select (public.cancel_booking_as_guardian(%L::uuid, '   ') ->> 'code')$$,
     pg_temp.booking(pg_temp.soon(), pg_temp.ath('Ivan')))),
-  'CANCELLATION_DEADLINE_PASSED', 'and can no longer withdraw (AC-041)');
+  'VALIDATION', 'and cannot withdraw without a reason (AC-041)');
 select pg_temp.check(
   pg_temp.as_user(:A, format($$select (public.cancel_booking_as_coach(%L::uuid) ->> 'code')$$,
     pg_temp.booking(pg_temp.soon(), pg_temp.ath('Ivan')))),
@@ -309,7 +311,7 @@ select pg_temp.check(
     pg_temp.free(), pg_temp.ath('Anna'))),
   '1', 'a guardian books');
 select pg_temp.check(
-  pg_temp.as_user(:B, format($$select (public.cancel_booking_as_guardian(%L::uuid) ->> 'ok')$$,
+  pg_temp.as_user(:B, format($$select (public.cancel_booking_as_guardian(%L::uuid, 'Škola') ->> 'ok')$$,
     pg_temp.booking(pg_temp.free(), pg_temp.ath('Anna')))),
   'true', 'then cancels, well before the deadline');
 select pg_temp.check(

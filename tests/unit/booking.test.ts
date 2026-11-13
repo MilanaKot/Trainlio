@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest'
 import {
-  canCancel,
   freePlaces,
   sessionAvailability,
   showsChangedBadge,
@@ -58,36 +57,6 @@ describe('free places', () => {
   it('never reports a negative number when a coach has overridden capacity', () => {
     expect(freePlaces({ capacity: 10, confirmedCount: 11 })).toBe(0)
     expect(freePlaces({ capacity: 10, confirmedCount: 3 })).toBe(7)
-  })
-})
-
-describe('cancellation deadline (D-02)', () => {
-  const start = '2026-10-04T20:00:00Z'
-  const s = { startAt: start, status: 'OPEN' as const }
-  const booking = { status: 'CONFIRMED' as const }
-
-  it('allows cancellation at exactly the deadline', () => {
-    expect(canCancel(booking, s, 12, new Date('2026-10-04T08:00:00Z'))).toBe(true)
-  })
-
-  it('allows it a second earlier', () => {
-    expect(canCancel(booking, s, 12, new Date('2026-10-04T07:59:59Z'))).toBe(true)
-  })
-
-  it('blocks it a second later', () => {
-    expect(canCancel(booking, s, 12, new Date('2026-10-04T08:00:01Z'))).toBe(false)
-  })
-
-  it('reads the deadline rather than assuming twelve hours', () => {
-    expect(canCancel(booking, s, 24, new Date('2026-10-03T20:00:00Z'))).toBe(true)
-    expect(canCancel(booking, s, 24, new Date('2026-10-03T20:00:01Z'))).toBe(false)
-  })
-
-  it('offers nothing to cancel on an already-cancelled booking or session', () => {
-    const early = new Date('2026-10-04T00:00:00Z')
-    expect(canCancel({ status: 'CANCELLED_BY_USER' }, s, 12, early)).toBe(false)
-    expect(canCancel({ status: 'CANCELLED_BY_COACH' }, s, 12, early)).toBe(false)
-    expect(canCancel(booking, { ...s, status: 'CANCELLED' }, 12, early)).toBe(false)
   })
 })
 

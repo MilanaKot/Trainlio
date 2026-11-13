@@ -142,6 +142,8 @@ echo
 run_suite trainlio_attendance supabase/tests/validation_attendance.sql
 echo
 run_suite trainlio_statistics supabase/tests/validation_statistics.sql
+
+run_suite trainlio_guardian_response supabase/tests/validation_guardian_response.sql
 echo
 echo '── Concurrency ─────────────────────────────────────────────────────'
 bash supabase/tests/concurrency.sh

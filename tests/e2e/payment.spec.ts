@@ -1,6 +1,6 @@
-import { expect, test, type APIRequestContext } from '@playwright/test'
-import { MAILPIT, SERVICE, STACK, asUser, expectAccessible, signIn } from './helpers'
-import { bookedChild, club, rpc } from './club'
+import { expect, test } from '@playwright/test'
+import { STACK, asUser, expectAccessible, signIn } from './helpers'
+import { bookedChild, club, deliver, mailTo, moveTo, rpc } from './club'
 
 /**
  * Attendance, payment, the player card and a training without a main coach
@@ -15,52 +15,6 @@ import { bookedChild, club, rpc } from './club'
  */
 
 test.use({ viewport: { width: 390, height: 844 } })
-
-/** Empties the outbox the way production does: the cron route. */
-async function deliver(request: APIRequestContext) {
-  const secret = process.env.CRON_SECRET ?? 'local-development-secret-value'
-  const response = await request.get('/api/notifications/drain', {
-    headers: { authorization: `Bearer ${secret}` },
-  })
-  expect(response.ok(), 'the drain route answered').toBe(true)
-}
-
-async function mailTo(address: string, subject: RegExp): Promise<boolean> {
-  for (let attempt = 0; attempt < 20; attempt += 1) {
-    const box = (await (await fetch(`${MAILPIT}/api/v1/messages?limit=200`)).json()) as {
-      messages?: { Subject: string; To?: { Address: string }[] }[]
-    }
-    if (
-      box.messages?.some(
-        (one) => one.To?.some((to) => to.Address === address) && subject.test(one.Subject),
-      )
-    ) {
-      return true
-    }
-    await new Promise((resolve) => setTimeout(resolve, 500))
-  }
-  return false
-}
-
-/**
- * Moves a training in time with the service key. Nothing in the product moves
- * a training into the past, and the cases below need one under way and one
- * three months old.
- */
-async function moveTo(sessionId: string, startOffsetMinutes: number, lengthMinutes = 60) {
-  const start = new Date(Date.now() + startOffsetMinutes * 60_000)
-  const end = new Date(start.getTime() + lengthMinutes * 60_000)
-  const response = await fetch(`${STACK}/rest/v1/training_sessions?id=eq.${sessionId}`, {
-    method: 'PATCH',
-    headers: {
-      apikey: SERVICE,
-      authorization: `Bearer ${SERVICE}`,
-      'content-type': 'application/json',
-    },
-    body: JSON.stringify({ start_at: start.toISOString(), end_at: end.toISOString() }),
-  })
-  expect(response.ok, 'moving the training').toBe(true)
-}
 
 async function booking(token: string, id: string) {
   return (

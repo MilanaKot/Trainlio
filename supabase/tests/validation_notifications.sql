@@ -140,13 +140,27 @@ select pg_temp.check(
 
 -- A cancelled booking is not a recipient.
 select pg_temp.check(
-  pg_temp.as_user(:B, format($$select (public.cancel_booking_as_guardian(%L::uuid) ->> 'ok')$$,
+  pg_temp.as_user(:B, format($$select (public.cancel_booking_as_guardian(%L::uuid, 'Rodinné důvody') ->> 'ok')$$,
     (select id from public.bookings where training_session_id = pg_temp.s()
        and athlete_id = pg_temp.ath('Anna') and status='CONFIRMED'))),
   'true', 'a family withdraws');
 select pg_temp.check(
   (select count(*)::text from public.notification_event_recipients(pg_temp.ev('SESSION_SCHEDULE_CHANGED'))),
   '1', 'and stops being told about the session');
+
+-- E10 (v3.7, decision 55): the withdrawal itself is news, to the staff.
+select pg_temp.check(
+  (select string_agg(r.recipient_profile_id::text, ',')
+     from public.notification_event_recipients(pg_temp.ev('GUARDIAN_ABSENCE_TO_COACH')) r),
+  (select main_coach_profile_id::text from public.training_sessions where id = pg_temp.s()),
+  'it goes to the training''s main coach and nobody else (coach test 30)');
+select pg_temp.check(
+  (public.expand_notification_event(pg_temp.ev('GUARDIAN_ABSENCE_TO_COACH')) -> 'data' ->> 'created'),
+  '1', 'one E10 delivery');
+select pg_temp.check(
+  (select (payload ->> 'reason') || '|' || (payload ->> 'late')
+     from public.notification_events where id = pg_temp.ev('GUARDIAN_ABSENCE_TO_COACH')),
+  'Rodinné důvody|false', 'carrying the reason, and that it was on time');
 
 \echo ''
 \echo '── Expansion, and re-running it (AC-151, BR-073) ───────────────────'
@@ -257,12 +271,13 @@ select pg_temp.check(
 select pg_temp.check(
   (select count(*)::text from public.pending_notification_events(50)),
   '0', 'and then nothing is left undispatched');
+-- Five to families and E10's one to the coach.
 select pg_temp.check(
   (select count(*)::text from public.claim_notification_deliveries(10)),
-  '5', 'the drain claims every sendable delivery');
+  '6', 'the drain claims every sendable delivery');
 select pg_temp.check(
   (select count(*)::text from public.notification_deliveries where status = 'SENDING'),
-  '5', 'claiming marks them SENDING inside the claiming transaction');
+  '6', 'claiming marks them SENDING inside the claiming transaction');
 select pg_temp.check(
   (select bool_and(claimed_at is not null)::text from public.notification_deliveries),
   'true', 'and stamps when it took them');

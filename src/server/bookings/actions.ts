@@ -1,14 +1,16 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
+import { z } from 'zod'
 import { createClient } from '@/lib/supabase/server'
+import { ABSENCE_REASON_LIMIT } from '@/lib/domain/guardian-response'
 
 /**
- * Guardian booking and cancellation.
+ * Guardian booking, its answer (`Půjde`) and its withdrawal (`Nepůjde`).
  *
- * Both call a domain function. Guardians hold no INSERT or UPDATE grant on
+ * Each calls a domain function. Guardians hold no INSERT or UPDATE grant on
  * `bookings`, so capacity, eligibility, the coach-removal rule and the
- * cancellation deadline cannot be reached around.
+ * start of the training cannot be reached around.
  */
 
 export type BookingResult =
@@ -82,11 +84,41 @@ export async function bookAthletes(
   return { ok: true, bookedCount: Number(result.data?.booked_count ?? athleteIds.length) }
 }
 
-/** The deadline is evaluated on the server, from the workspace's own setting. */
-export async function cancelBooking(bookingId: string): Promise<BookingResult> {
+const id = z.uuid()
+const reasonSchema = z.string().trim().min(1).max(ABSENCE_REASON_LIMIT)
+
+/** G6f `Půjde`: saved at once, no dialog, no e-mail (decision 52). */
+export async function confirmGoing(bookingId: string): Promise<BookingResult> {
+  if (!id.safeParse(bookingId).success) return { ok: false, code: 'VALIDATION' }
+
+  const supabase = await createClient()
+  const { data, error } = await supabase.rpc('confirm_attendance_as_guardian', {
+    p_booking_id: bookingId,
+  })
+
+  if (error) return { ok: false, code: 'generic' }
+
+  const result = readRpc(data)
+  if (!result.ok) return { ok: false, code: result.code ?? 'generic' }
+
+  refresh()
+  return { ok: true }
+}
+
+/**
+ * G6g `Nepůjde`: the only way a guardian withdraws, always with a reason
+ * (decision 52). Until the training starts; past the workspace's deadline the
+ * server stores it as late, which the coach reads as `Pozdě` (decision 53). The
+ * place is freed and E10 queued in the same transaction.
+ */
+export async function cancelWithReason(bookingId: string, reason: string): Promise<BookingResult> {
+  const parsed = reasonSchema.safeParse(reason)
+  if (!id.safeParse(bookingId).success || !parsed.success) return { ok: false, code: 'VALIDATION' }
+
   const supabase = await createClient()
   const { data, error } = await supabase.rpc('cancel_booking_as_guardian', {
     p_booking_id: bookingId,
+    p_reason: parsed.data,
   })
 
   if (error) return { ok: false, code: 'generic' }

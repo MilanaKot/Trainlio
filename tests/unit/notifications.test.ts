@@ -563,3 +563,63 @@ describe('the club mark in the message (AC-277)', () => {
     )
   })
 })
+
+describe('E10 · a guardian’s withdrawal, to the coach (v3.7, decision 55)', () => {
+  const sent = (overrides: Partial<ClaimedDelivery['session']> = {}) =>
+    composed(
+      delivery({
+        eventType: 'GUARDIAN_ABSENCE_TO_COACH',
+        recipientEmail: 'trener@example.test',
+        session: {
+          ...delivery().session,
+          reason: 'Nemoc – teplota, zůstává doma.',
+          coachName: 'Milana Kotova',
+          actorPhone: '+420731228914',
+          actorEmail: 'milana@example.test',
+          sessionId: 's-1',
+          cancelledAt: '2026-10-03T16:40:00Z',
+          booked: 4,
+          capacity: 10,
+          late: false,
+          ...overrides,
+        },
+      }),
+    )
+
+  it('says who will not come, to which training', () => {
+    const message = sent()
+    expect(message.subject).toBe('Omluvenka: Ivan Kotov nepůjde · trénink ne 4. 10. v 09:00')
+    expect(message.text).toContain('Ivan Kotov na trénink nepůjde')
+    expect(message.text).toContain('Sportovec: Ivan Kotov')
+    expect(message.text).toContain('Trénink: Neděle 4. října · 09:00–10:00')
+    expect(message.text).toContain('Odhlásil: Milana Kotova · 3. 10. v 18:40')
+    expect(message.text).toContain('Obsazenost: 4 / 10')
+  })
+
+  it('quotes the family’s reason as theirs, not the coach’s', () => {
+    const message = sent()
+    expect(message.text).toContain('Důvod od rodiče: Nemoc – teplota, zůstává doma.')
+    expect(message.text).not.toContain('Zpráva od trenéra')
+  })
+
+  it('replies to the guardian, and gives their number', () => {
+    const message = sent()
+    expect(message.replyTo).toBe('milana@example.test')
+    expect(message.text).toContain('Rodiče kontaktujte telefonicky: +420 731 228 914.')
+    expect(sent({ actorPhone: null }).text).not.toContain('telefonicky')
+  })
+
+  it('warns when it came after the deadline, and only then', () => {
+    expect(sent({ late: true }).text).toContain('Upozornění: Po termínu pro odhlášení')
+    expect(sent().text).not.toContain('Upozornění')
+  })
+
+  it('opens the training, and says why the coach got it', () => {
+    const message = sent()
+    expect(message.text).toContain(`${APP}/trener/s-1`)
+    expect(message.text).toContain('jako hlavní trenér tréninku')
+    expect(message.html).toContain('#FBE9E7')
+    // No main coach: the administrators were told instead (§E10).
+    expect(sent({ mainCoachName: null }).text).toContain('jako administrátor')
+  })
+})

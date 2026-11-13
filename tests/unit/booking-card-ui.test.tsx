@@ -5,8 +5,13 @@ import { BookingCard } from '@/components/booking/booking-card'
 import { ToastProvider } from '@/components/ui/toast'
 import type { MyBooking } from '@/server/bookings/queries'
 
+const actions = vi.hoisted(() => ({
+  confirmGoing: vi.fn(async () => ({ ok: true })),
+  cancelWithReason: vi.fn(async () => ({ ok: true })),
+}))
+
 vi.mock('@/server/bookings/actions', () => ({
-  cancelBooking: async () => ({ ok: true }),
+  ...actions,
   markBookingChangeSeen: async () => undefined,
 }))
 
@@ -54,6 +59,8 @@ const booking = (over: Partial<MyBooking> = {}): MyBooking => ({
   coachMessage: null,
   paid: false,
   parentMessage: null,
+  response: null,
+  absenceReason: null,
   session: session(),
   ...over,
 })
@@ -68,31 +75,55 @@ function renderCard(b: MyBooking, now = NOW) {
   )
 }
 
-describe('a booking a parent can still withdraw from (AC-271)', () => {
-  it('offers the button with the deadline beside it', () => {
+describe('a booking the family has not answered yet (v3.7, guardian test 11)', () => {
+  it('asks to confirm, with the deadline and both answers', () => {
     renderCard(booking())
+    expect(screen.getByText('Potvrďte účast')).toBeInTheDocument()
     // 17:30 on Sunday, minus the workspace's twelve hours.
     expect(screen.getByText('Odhlásit lze do ne 11. 10. 05:30')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Odhlásit' })).toBeEnabled()
+    const group = screen.getByRole('group', { name: 'Účast' })
+    expect(group).toHaveTextContent('Půjde')
+    expect(group).toHaveTextContent('Nepůjde')
   })
 
-  // D-02: the button goes, the explanation stays. The server evaluates the
-  // deadline on database time either way.
-  it('explains itself once the deadline has passed', () => {
-    renderCard(booking(), new Date('2026-10-11T10:00:00Z'))
-    expect(screen.getByText('Odhlášení již není možné. Kontaktujte trenéra.')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Odhlásit' })).toBeDisabled()
-  })
-
-  it('asks before withdrawing, naming the child and the training', async () => {
+  it('saves Půjde at once, without a dialog', async () => {
     renderCard(booking())
-    await userEvent.click(screen.getByRole('button', { name: 'Odhlásit' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Půjde' }))
+    expect(actions.confirmGoing).toHaveBeenCalledWith('b1')
+    expect(screen.queryByRole('dialog')).toBeNull()
+  })
 
-    const dialog = screen.getByRole('alertdialog')
-    expect(dialog).toHaveTextContent('Odhlásit Ivan Kotov?')
-    expect(dialog).toHaveTextContent('Neděle 11. října')
-    expect(dialog).toHaveTextContent('17:30–18:30')
-    expect(dialog).toHaveTextContent('Ponechat')
+  // Decision 53: past the deadline Nepůjde still works, and says it is late.
+  it('keeps both answers past the deadline, and warns that it is late', () => {
+    renderCard(booking(), new Date('2026-10-11T10:00:00Z'))
+    expect(
+      screen.getByText('Po termínu odhlášení uvidí trenér omluvu jako pozdní.'),
+    ).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Nepůjde' })).toBeEnabled()
+  })
+
+  it('offers nothing once the training has started (guardian test 13)', () => {
+    renderCard(booking(), new Date('2026-10-11T15:31:00Z'))
+    expect(screen.queryByRole('group', { name: 'Účast' })).toBeNull()
+    expect(screen.queryByText('Potvrďte účast')).toBeNull()
+  })
+})
+
+describe('a booking the family confirmed (G4)', () => {
+  const going = () => booking({ response: { sentAt: '2026-10-01T07:00:00Z', byName: 'Eva' } })
+
+  it('says so, and keeps Nepůjde as the way out', () => {
+    renderCard(going())
+    expect(screen.getByText('Půjde · potvrzeno')).toBeInTheDocument()
+    expect(screen.queryByText('Potvrďte účast')).toBeNull()
+    expect(screen.getByRole('button', { name: 'Nepůjde' })).toBeEnabled()
+  })
+
+  it('opens the reason sheet rather than withdrawing', async () => {
+    renderCard(going())
+    await userEvent.click(screen.getByRole('button', { name: 'Nepůjde' }))
+    expect(screen.getByRole('dialog')).toHaveTextContent('Proč Ivan nepůjde?')
+    expect(actions.cancelWithReason).not.toHaveBeenCalled()
   })
 })
 
@@ -121,16 +152,19 @@ describe('a booking something happened to (AC-271)', () => {
     expect(screen.queryByRole('button', { name: 'Odhlásit' })).toBeNull()
   })
 
-  it('keeps a parent’s own withdrawal neutral', () => {
+  it('marks a parent’s own withdrawal Nepůjde, with who and when (G5)', () => {
     renderCard(
       booking({
         status: 'CANCELLED_BY_USER',
         cancelledAt: '2026-10-02T09:15:00Z',
         cancelledByName: 'Rodina Kotov',
+        absenceReason: 'Nemoc – teplota',
       }),
     )
-    expect(screen.getByText('Odhlášeno')).toBeInTheDocument()
+    expect(screen.getByText('Nepůjde')).toBeInTheDocument()
     expect(screen.getByText('Odhlásil Rodina Kotov · 2. 10. 11:15')).toBeInTheDocument()
+    expect(screen.getByText('17:30–18:30')).toHaveClass('line-through')
+    expect(screen.queryByRole('group', { name: 'Účast' })).toBeNull()
   })
 })
 

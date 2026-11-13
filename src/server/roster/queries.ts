@@ -32,6 +32,11 @@ export type RosterEntry = {
   parentMessageSentByName: string | null
   /** v3.4, decision 40: Byl / Nebyl, null until somebody marks it. */
   attendance: 'PRESENT' | 'ABSENT' | null
+  /** v3.7, decision 52: `Půjde` (GOING) or `Nepotvrzeno` (null), K2n. */
+  guardianResponse: 'GOING' | null
+  /** Decision 53: the family withdrew after the deadline — `Pozdě`. */
+  cancelLate: boolean
+  cancelledByName: string | null
 }
 
 export type CandidateAthlete = {
@@ -84,6 +89,9 @@ export async function getSessionRoster(sessionId: string): Promise<RosterEntry[]
     parentMessageSentAt: row.parent_message_sent_at,
     parentMessageSentByName: row.parent_message_sent_by_name,
     attendance: row.attendance,
+    guardianResponse: row.guardian_response === 'GOING' ? 'GOING' : null,
+    cancelLate: row.cancel_late === true,
+    cancelledByName: row.cancelled_by_name,
   }))
 }
 
@@ -158,6 +166,12 @@ export type CoachAthleteSession = {
   coachNote: string | null
   parentMessage: string | null
   parentMessageSentAt: string | null
+  /** v3.7: `Půjde` or `Nepotvrzeno`; and for a withdrawal, why and when. */
+  guardianResponse: 'GOING' | null
+  cancellationReason: string | null
+  cancelLate: boolean
+  cancelledAt: string | null
+  cancelledByName: string | null
 }
 
 /**
@@ -252,6 +266,11 @@ export async function listAthleteSessions(
     coachNote: row.coach_note,
     parentMessage: row.parent_message,
     parentMessageSentAt: row.parent_message_sent_at,
+    guardianResponse: row.guardian_response === 'GOING' ? 'GOING' : null,
+    cancellationReason: row.cancellation_reason,
+    cancelLate: row.cancel_late === true,
+    cancelledAt: row.cancelled_at,
+    cancelledByName: row.cancelled_by_name,
   }))
 }
 

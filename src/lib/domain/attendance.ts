@@ -31,9 +31,16 @@ export function nextAttendance(mark: AttendanceMark): 'PRESENT' | 'ABSENT' {
 }
 
 export type AttendanceItem = Timed & {
+  sessionId: string
   mark: AttendanceMark
   /** Cancelled trainings count for nothing (decision 40). */
   sessionCancelled: boolean
+  /**
+   * A guardian withdrew the athlete with a reason — `Nepůjde` (v3.7) — which
+   * counts as Nebyl (decision 54). A coach's removal is not one: such a
+   * booking is never an item at all.
+   */
+  withdrawn: boolean
 }
 
 export type AttendanceSummary = {
@@ -46,18 +53,40 @@ export type AttendanceSummary = {
 /**
  * K13 tiles and G8b. Only trainings that have ended count, like the club's
  * statistics (migration 48): one under way is not yet a result, marked or
- * not. An ended one nobody marked is `Nebyl`.
+ * not. An ended one nobody marked is `Nebyl`, and so is one the family
+ * withdrew from (decision 54) — once per training, however often they
+ * rebooked and withdrew again, and not at all when the athlete ended up
+ * booked after all (migration 49 counts the same way).
+ *
+ * One entry per counted training, in the order given: G8b draws them as
+ * squares.
  */
-export function summarizeAttendance(items: AttendanceItem[], now: Date): AttendanceSummary {
-  let present = 0
-  let absent = 0
+export function countedAttendance(items: AttendanceItem[], now: Date): ('present' | 'absent')[] {
+  const booked = new Set(items.filter((i) => !i.withdrawn).map((i) => i.sessionId))
+  const withdrawn = new Set<string>()
+  const counted: ('present' | 'absent')[] = []
   for (const item of items) {
     if (item.sessionCancelled) continue
     if (new Date(item.endAt) > now) continue
+    if (item.withdrawn) {
+      if (booked.has(item.sessionId) || withdrawn.has(item.sessionId)) continue
+      withdrawn.add(item.sessionId)
+      counted.push('absent')
+      continue
+    }
     const view = attendanceView(item.mark, item, now)
-    if (view === 'present') present += 1
-    if (view === 'absent') absent += 1
+    if (view === 'present' || view === 'absent') counted.push(view)
   }
-  const marked = present + absent
-  return { present, absent, percent: marked === 0 ? null : Math.round((present / marked) * 100) }
+  return counted
+}
+
+export function summarizeAttendance(items: AttendanceItem[], now: Date): AttendanceSummary {
+  const counted = countedAttendance(items, now)
+  const present = counted.filter((view) => view === 'present').length
+  const absent = counted.length - present
+  return {
+    present,
+    absent,
+    percent: counted.length === 0 ? null : Math.round((present / counted.length) * 100),
+  }
 }

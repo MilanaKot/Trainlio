@@ -1,5 +1,6 @@
 import { messages, plural } from '@/lib/i18n'
 import {
+  formatDateAtTime,
   formatDateGroup,
   formatDateShort,
   formatTime,
@@ -19,7 +20,8 @@ import { changingRoomLabel } from '@/lib/domain/session'
 import { formatPhone } from '@/lib/domain/phone'
 
 /**
- * The message a guardian receives (shared/EMAILS.md, E01–E09).
+ * The message a guardian receives (shared/EMAILS.md, E01–E09), and the one a
+ * coach does (E10).
  *
  * Pure: a claimed delivery in, an e-mail out. No database, no clock, no
  * provider — which is what makes AC-072 and AC-073 assertions on a string, and
@@ -50,6 +52,7 @@ export const NOTIFICATION_EVENT_TYPES = [
   'BOOKING_ADDED_BY_COACH',
   'SESSION_CHANGED',
   'COACH_MESSAGE_TO_GUARDIAN',
+  'GUARDIAN_ABSENCE_TO_COACH',
 ] as const
 
 export type NotificationEventType = (typeof NOTIFICATION_EVENT_TYPES)[number]
@@ -97,6 +100,17 @@ export type ClaimedDelivery = {
     mainCoachName?: string | null
     deadlineHours?: number | null
     change?: SignificantChangeRecord | null
+    /** E10: the training, for `Otevřít trénink`. */
+    sessionId?: string | null
+    /** E10: the guardian who withdrew — number for the helper, address for Reply-To. */
+    actorPhone?: string | null
+    actorEmail?: string | null
+    /** E10: after the cancellation deadline (decision 53). */
+    late?: boolean | null
+    cancelledAt?: string | null
+    /** E10: occupancy as it was once the place was freed. */
+    booked?: number | null
+    capacity?: number | null
   }
   /** This guardian's own affected athletes, in display order. */
   athleteNames: string[]
@@ -121,6 +135,7 @@ const TONE: Record<NotificationEventType, keyof typeof PALETTE> = {
   BOOKING_ADDED_BY_COACH: 'blue',
   SESSION_CHANGED: 'orange',
   COACH_MESSAGE_TO_GUARDIAN: 'blue',
+  GUARDIAN_ABSENCE_TO_COACH: 'red',
 }
 
 /** `st 7. 10.` — the form the subject lines use, lowercase inside a sentence. */
@@ -223,6 +238,41 @@ function template(delivery: ClaimedDelivery, event: NotificationEventType): Temp
       helper: session.coachPhone
         ? fill(t.messageHelperPhone, { phone: formatPhone(session.coachPhone) })
         : t.messageHelper,
+    }
+  }
+
+  // E10 goes the other way, to the training's main coach (or the admins):
+  // who will not come, why, and how full the training is now (§E10).
+  if (event === 'GUARDIAN_ABSENCE_TO_COACH') {
+    const guardian = session.coachName ?? t.guardianFallback
+    if (start && end) rows.push({ label: t.rows.training, value: whenValue(start, end, zone) })
+    rows.push({
+      label: t.rows.withdrewBy,
+      value: session.cancelledAt
+        ? fill(t.withdrewValue, {
+            name: guardian,
+            when: formatDateAtTime(new Date(session.cancelledAt), zone),
+          })
+        : guardian,
+    })
+    if (typeof session.booked === 'number' && typeof session.capacity === 'number') {
+      rows.push({ label: t.rows.occupancy, value: `${session.booked} / ${session.capacity}` })
+    }
+    if (session.late) rows.push({ label: t.rows.warning, value: t.lateValue, changed: true })
+    return {
+      tone: TONE[event],
+      label: t.labels[event] ?? '',
+      subject: fill(t.subjects[event] ?? '', { athletes: names, day, time }),
+      title: fill(t.titles[event] ?? '', { athletes: names }),
+      body: t.bodies[event] ?? '',
+      rows,
+      button: {
+        label: t.buttons.session,
+        path: session.sessionId ? `/trener/${session.sessionId}` : '/trener',
+      },
+      ...(session.actorPhone
+        ? { helper: fill(t.guardianPhoneHelper, { phone: formatPhone(session.actorPhone) }) }
+        : {}),
     }
   }
 
@@ -384,15 +434,27 @@ export function composeNotificationEmail(
       : delivery.session.reason
   )?.trim()
 
+  // E10 is to the staff: its quote is the family's, its footer says which of
+  // the two roles brought it, and a reply goes to the guardian.
+  const absence = delivery.eventType === 'GUARDIAN_ABSENCE_TO_COACH'
+  const staff = absence
+    ? {
+        messageCaption: t.guardianReason,
+        footer: delivery.session.mainCoachName ? t.footerMainCoach : t.footerAdmin,
+      }
+    : {}
+
   return {
     to: delivery.recipientEmail,
     subject: plan.subject,
-    text: renderText(plan, { url, org, message }),
+    text: renderText(plan, { url, org, message, ...staff }),
     html: renderHtml(plan, {
       url,
       org,
       message,
+      ...staff,
       logoUrl: delivery.workspaceLogoUrl ?? null,
     }),
+    ...(absence && delivery.session.actorEmail ? { replyTo: delivery.session.actorEmail } : {}),
   }
 }

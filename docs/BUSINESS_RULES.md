@@ -117,21 +117,23 @@ Booking stores who created it.
 
 ## Cancellation
 
-BR-040 **(amended — D-02)**  
-A guardian may cancel a booking when:
+BR-040 **(amended — D-02; changed — v3.7, decision 53)**  
+A guardian may withdraw a booking (`Nepůjde`) until the session starts, always
+with a reason (BR-192). The cancellation deadline no longer blocks it; it
+decides whether the withdrawal is late:
 
-`current_time <= start_at - cancellation_deadline`
+`current_time <= start_at - cancellation_deadline` — on time
 
-and is blocked when:
+`current_time > start_at - cancellation_deadline` — late (`Pozdě` for the coach)
 
-`current_time > start_at - cancellation_deadline`
+At exactly the deadline a withdrawal is still on time. Examples at a 12-hour deadline: 12:00:01 before start is on time, 12:00:00 before start is on time, 11:59:59 before start is late.
 
-At exactly the deadline, cancellation is still allowed. Examples at a 12-hour deadline: 12:00:01 before start is allowed, 12:00:00 before start is allowed, 11:59:59 before start is blocked.
+The deadline is a workspace setting; its MVP value is 12 hours. It is always computed from server/database time, never client device time. A client-supplied indication of either is never accepted.
 
-The deadline is a workspace setting; its MVP value is 12 hours. It is always computed from server/database time, never client device time. A client-supplied indication that cancellation is allowed is never accepted.
-
-BR-041  
-Inside the 12-hour window the UI must show that self-cancellation is unavailable and the coach must be contacted.
+BR-041 **(changed — v3.7)**  
+Inside the deadline window the UI says that the coach will see the withdrawal
+as late (`Po termínu odhlášení uvidí trenér omluvu jako pozdní.`). From the
+start of the training nothing can be answered or withdrawn.
 
 BR-042  
 A coach may cancel/remove a booking at any time.
@@ -549,3 +551,37 @@ BR-191 **(new — v3.5)**
 Every coach may read K20 with any filter. `Trenéři` and another coach's K20b
 are an administrator's; a coach opening a colleague's K20b gets 403. A
 guardian reads no statistics.
+
+## Parents confirm attendance
+
+Handoff v3.7, decisions 52–55. Migration 49.
+
+BR-192 **(new — v3.7)**  
+Every confirmed booking is `Nepotvrzeno` until a guardian of the athlete
+answers `Půjde`, which is saved at once and audited; the last answer wins and
+names its author. `Nepůjde` is the guardian's withdrawal: it needs a reason of
+1–200 characters after trimming, frees the place, and cannot be edited
+afterwards. No guardian can withdraw without a reason. Both are refused from
+the start of the training, on a cancelled training and on a coach's removal.
+
+BR-193 **(new — v3.7)**  
+A withdrawal sends E10 to the training's main coach, or to every active
+administrator when it has none, with the reason, the occupancy after it, the
+guardian's number and Reply-To the guardian. `Půjde` sends nothing.
+
+BR-194 **(new — v3.7)**  
+The reason is readable by every coach of the club, a view-only one too, and by
+the athlete's guardians — never by another family. It is erased with the
+athlete's other free text on anonymisation.
+
+BR-195 **(new — v3.7)**  
+A withdrawal counts as `Nebyl` in every attendance figure (K13, G8b, K20,
+K20b) once the training has ended — once per training, and not at all when the
+athlete was booked on it again. A coach's removal and a cancelled training do
+not count. Occupancy and payment stay over confirmed bookings; a withdrawal
+does count towards `Nejnižší docházka`'s three trainings.
+
+BR-196 **(new — v3.7)**  
+After `Nepůjde` the family may book the athlete again while there is a place
+and the training has not started; the new booking starts as `Nepotvrzeno`.
+Payment marked before a withdrawal stays on the withdrawn booking.

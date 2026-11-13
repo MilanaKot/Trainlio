@@ -409,3 +409,22 @@ Byl`), not by the athlete: on the player card every row is the same athlete,
   the mobile tap-size review).
 - **A year chip is named `2018, 10`** for a screen reader; read as one string
   the year and the count ran together.
+
+## After handoff v3.7: Půjde / Nepůjde
+
+- **`Rozmysleli jste si to? … můžete sportovce přihlásit znovu.`** The design
+  declines the child's name (`Ivana`); a name cannot be declined reliably, so
+  the sentence names the role (DS §8).
+- **A withdrawn card stays in `Nadcházející` until the training ends**, as
+  every other booking does, rather than moving to `Minulé` at its start.
+- **G6i's struck time is muted grey, not the subtle grey** of the design,
+  which is too faint for text.
+- **The `Důvod` counter counts the trimmed reason and the field has no
+  `maxLength`**: a pasted reason over 200 characters stays visible with the
+  counter in red, and the button explains itself by being off.
+- **The reason is `bookings.cancellation_reason`**, the column that already
+  held a coach's reason for a removal, rather than a new `cancel_reason`; a
+  booking only ever has one of the two. The task's `cancelled_by_guardian`
+  status is the existing `CANCELLED_BY_USER`, renamed only in the UI.
+- **`Přihlásit znovu`** books through the same function as `Přihlásit`, so
+  capacity, eligibility and a coach's removal are checked as for any booking.

@@ -184,7 +184,7 @@ create or replace function pg_temp.booking(p_session uuid, p_athlete uuid) retur
      and status = 'CONFIRMED' limit 1 $$;
 
 select pg_temp.check(
-  pg_temp.as_user(:A, format($$select (public.cancel_booking_as_guardian(%L::uuid) ->> 'ok')$$,
+  pg_temp.as_user(:A, format($$select (public.cancel_booking_as_guardian(%L::uuid, 'Škola') ->> 'ok')$$,
     pg_temp.booking(pg_temp.s(), pg_temp.ath('Tomáš')))),
   'true', 'a guardian can cancel well before the session (AC-040)');
 select pg_temp.check(
@@ -197,7 +197,7 @@ select pg_temp.check(
   (select count(*)::text from public.audit_log where action='BOOKING_CANCELLED_BY_GUARDIAN'),
   '1', 'the cancellation is audited');
 select pg_temp.check(
-  pg_temp.as_user(:B, format($$select (public.cancel_booking_as_guardian(%L::uuid) ->> 'code')$$,
+  pg_temp.as_user(:B, format($$select (public.cancel_booking_as_guardian(%L::uuid, 'Nemoc') ->> 'code')$$,
     pg_temp.booking(pg_temp.s(), pg_temp.ath('Ivan')))),
   'NOT_AUTHORIZED_FOR_ATHLETE', 'another family cannot cancel their booking');
 
@@ -237,13 +237,18 @@ select pg_temp.check(
   pg_temp.as_user(:A, format($$select (public.book_athletes_as_guardian(%L::uuid, array[%L::uuid]) -> 'data' ->> 'booked_count')$$,
     pg_temp.soon(), pg_temp.ath('Tomáš'))),
   '1', 'booking is still allowed inside the cancellation window (PRD §10)');
+-- Decision 53: past the deadline a withdrawal is still allowed, and late.
 select pg_temp.check(
-  pg_temp.as_user(:A, format($$select (public.cancel_booking_as_guardian(%L::uuid) ->> 'code')$$,
+  pg_temp.as_user(:A, format($$select (public.cancel_booking_as_guardian(%L::uuid, 'Nemoc') ->> 'ok')$$,
     pg_temp.booking(pg_temp.soon(), pg_temp.ath('Tomáš')))),
-  'CANCELLATION_DEADLINE_PASSED', 'but cancelling is not (AC-041)');
+  'true', 'and so is withdrawing, with a reason, until the start (AC-041)');
+select pg_temp.check(
+  (select cancel_late::text from public.bookings
+    where training_session_id = pg_temp.soon() and athlete_id = pg_temp.ath('Tomáš')),
+  'true', 'stored as late, which the coach reads as Pozdě (AC-041)');
 select pg_temp.check(
   (select confirmed_count::text from public.training_session_occupancy where training_session_id = pg_temp.soon()),
-  '1', 'and the booking stands');
+  '0', 'and the place is freed');
 
 \echo ''
 \echo '── A session that has started ──────────────────────────────────────'
@@ -272,7 +277,7 @@ select pg_temp.check(
     pg_temp.s2(), pg_temp.ath('Anna'))),
   'SESSION_CANCELLED', 'nobody can book into it (AC-161)');
 select pg_temp.check(
-  pg_temp.as_user(:A, format($$select (public.cancel_booking_as_guardian(%L::uuid) ->> 'code')$$,
+  pg_temp.as_user(:A, format($$select (public.cancel_booking_as_guardian(%L::uuid, 'Nemoc') ->> 'code')$$,
     pg_temp.booking(pg_temp.s2(), pg_temp.ath('Ivan')))),
   'SESSION_CANCELLED', 'and a guardian has nothing left to withdraw from');
 select pg_temp.check(

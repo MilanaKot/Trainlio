@@ -14,6 +14,8 @@ export type EmailMessage = {
   /** Both parts are always sent. Some parents read mail in a plain-text client. */
   text: string
   html: string
+  /** E10: the guardian, so the coach's reply reaches them (EMAILS.md). */
+  replyTo?: string
 }
 
 export type SendResult =

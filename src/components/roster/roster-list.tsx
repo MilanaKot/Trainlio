@@ -1,10 +1,11 @@
 'use client'
 
 import { useState, useTransition } from 'react'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import type { Route } from 'next'
 import { messages } from '@/lib/i18n'
-import { splitRoster } from '@/lib/domain/roster'
+import { splitInactive, splitRoster } from '@/lib/domain/roster'
 import { attendanceView, nextAttendance, type AttendanceMark } from '@/lib/domain/attendance'
 import { HOCKEY_POSITION_LABELS, type HockeyPosition } from '@/lib/enums/hockey'
 import { markAllPresent, setAttendance, setBookingPaid, undoUnpaid } from '@/server/roster/actions'
@@ -16,6 +17,13 @@ import { Button } from '@/components/ui/button'
 import { PlayerCard, TOGGLE_CELLS } from '@/components/ui/player-card'
 import { DollarIcon, PersonCheckIcon, StatusToggle } from '@/components/ui/status-toggle'
 import { useToast, useUndoToast } from '@/components/ui/toast'
+import {
+  formatDateAtTime,
+  formatTime,
+  relativeDayLabel,
+  type Timezone,
+} from '@/lib/time/workspace-time'
+import { cn } from '@/lib/utils'
 import type { CandidateAthlete, RosterEntry } from '@/server/roster/queries'
 
 const t = messages.coach
@@ -94,6 +102,11 @@ type Override = {
  * Confirmed rows first and alone under the heading: a coach arriving at the
  * rink needs that list to be exactly who is coming. Withdrawn and removed
  * bookings are kept (BR-044) and shown below.
+ *
+ * v3.7: before the start each card begins with the family's answer — `Půjde`
+ * or `Nepotvrzeno` — and attendance waits (K2n). Who the family withdrew is
+ * the `NEPŮJDOU` section, with their reason and `Pozdě` when it came after the
+ * deadline; the coach's removals stay behind the disclosure.
  */
 export function RosterList({
   sessionId,
@@ -106,6 +119,7 @@ export function RosterList({
   confirmedCount,
   addable,
   editable,
+  timezone,
 }: {
   sessionId: string
   sessionLabel: string
@@ -121,6 +135,7 @@ export function RosterList({
    * adding, attendance and payment stay open after the training is over.
    */
   editable: boolean
+  timezone: Timezone
 }) {
   const router = useRouter()
   const toast = useToast()
@@ -133,6 +148,8 @@ export function RosterList({
   const started = new Date(startAt) <= now
 
   const { confirmed, inactive } = splitRoster(entries)
+  const { withdrawn, removed } = splitInactive(inactive)
+  const goingCount = confirmed.filter((entry) => entry.guardianResponse === 'GOING').length
 
   const shown = confirmed.map((entry) => {
     const override = overrides[entry.bookingId]
@@ -232,8 +249,27 @@ export function RosterList({
         <>
           {/* The column header: what each toggle is, and how many so far. */}
           <div className="flex items-end justify-between pr-4 pl-3">
-            <span className="text-caption font-bold tracking-[0.05em] text-muted">
-              {t.rosterColumnAthlete}
+            <span className="flex flex-col gap-0.5">
+              {started ? null : (
+                <span className="text-hint font-bold text-ink">
+                  {t.responsesConfirmed
+                    .replace('{total}', String(confirmed.length))
+                    .split('{count}')
+                    .flatMap((part, index) =>
+                      index === 0
+                        ? [part]
+                        : [
+                            <span key="count" className="text-success">
+                              {goingCount}
+                            </span>,
+                            part,
+                          ],
+                    )}
+                </span>
+              )}
+              <span className="text-caption font-bold tracking-[0.05em] text-muted">
+                {t.rosterColumnAthlete}
+              </span>
             </span>
             <span className="-mr-2.5 flex gap-2">
               <ColumnCount
@@ -241,6 +277,7 @@ export function RosterList({
                 label={t.rosterColumnPresent}
                 count={presentCount}
                 total={confirmed.length}
+                pending={!started}
               />
               <ColumnCount
                 className={TOGGLE_CELLS[1]}
@@ -285,6 +322,19 @@ export function RosterList({
                         {name}
                       </span>
                       <span className="flex min-w-0 items-center gap-1.5 text-meta text-muted">
+                        {started ? null : (
+                          <span
+                            className={cn(
+                              'shrink-0 font-bold',
+                              entry.guardianResponse === 'GOING' ? 'text-success' : 'text-warning',
+                            )}
+                          >
+                            {entry.guardianResponse === 'GOING'
+                              ? t.responseGoing
+                              : t.responsePending}
+                            {' ·'}
+                          </span>
+                        )}
                         <span className="truncate">{yearAndPosition(entry)}</span>
                         {entry.coachNote ? (
                           <span
@@ -338,17 +388,62 @@ export function RosterList({
             </div>
           ) : null}
 
-          <p className="text-hint text-muted">{t.attendanceFootnote}</p>
+          <p className="text-hint text-muted">
+            {started ? t.attendanceFootnote : t.attendanceFootnoteBefore}
+          </p>
         </>
       )}
 
-      {inactive.length > 0 ? (
+      {withdrawn.length > 0 ? (
+        <section className="mt-2 flex flex-col gap-2">
+          <h3 className="px-1 text-caption font-bold tracking-[0.05em] text-muted">
+            {t.notGoingCaption.replace('{count}', String(withdrawn.length))}
+          </h3>
+          <ul className="flex flex-col gap-2">
+            {withdrawn.map((entry) => (
+              <li key={entry.bookingId}>
+                <Link
+                  href={`/trener/sportovci/${entry.athleteId}` as Route}
+                  className="flex flex-col gap-2 rounded-card bg-[#f8f9fb] py-3 pr-4 pl-3 shadow-[inset_0_0_0_1px_var(--color-line)]"
+                >
+                  <span className="flex items-center gap-2.5">
+                    <Avatar firstName={entry.firstName} lastName={entry.lastName} size={40} muted />
+                    <span className="flex min-w-0 flex-1 flex-col">
+                      <span className="truncate text-[1rem]/[1.3125rem] font-bold text-muted">
+                        {entry.firstName} {entry.lastName}
+                      </span>
+                      <span className="text-meta text-muted">
+                        {t.withdrawnMeta
+                          .replace('{year}', String(entry.birthYear ?? ''))
+                          .replace('{when}', withdrawnWhen(entry.cancelledAt, timezone, now))}
+                      </span>
+                    </span>
+                    {entry.cancelLate ? (
+                      <Badge variant="warning" size="sm" className="normal-case tracking-normal">
+                        {t.late}
+                      </Badge>
+                    ) : null}
+                  </span>
+                  {entry.cancellationReason ? (
+                    <span className="ml-[50px] rounded-control bg-surface px-2.5 py-2 text-meta text-ink shadow-[inset_0_0_0_1px_var(--color-line)]">
+                      „{entry.cancellationReason}“
+                    </span>
+                  ) : null}
+                </Link>
+              </li>
+            ))}
+          </ul>
+          <p className="px-1 text-hint text-muted">{t.notGoingFootnote}</p>
+        </section>
+      ) : null}
+
+      {removed.length > 0 ? (
         <details className="rounded-card bg-neutral-50 p-3">
           <summary className="min-h-11 cursor-pointer text-meta font-semibold text-muted">
-            {t.rosterRemoved} ({inactive.length})
+            {t.rosterRemoved} ({removed.length})
           </summary>
           <ul className="flex flex-col gap-2 pt-2">
-            {inactive.map((entry) => (
+            {removed.map((entry) => (
               <li key={entry.bookingId} className="flex items-center gap-2">
                 <span className="text-meta text-muted">
                   {entry.firstName} {entry.lastName}
@@ -392,18 +487,30 @@ function ColumnCount({
   count,
   total,
   className,
+  pending = false,
 }: {
   label: string
   count: number
   total: number
   className: string
+  /** K2n: nothing to count before the start, so a dash. */
+  pending?: boolean
 }) {
   return (
     <span className={`flex flex-col items-center ${className}`}>
       <span className="text-hint font-semibold text-muted">{label}</span>
       <span className="nums font-display text-[1.125rem]/[1.25rem] font-bold text-ink">
-        {count}/{total}
+        {pending ? '–' : `${count}/${total}`}
       </span>
     </span>
   )
+}
+
+/** `25. 9. v 20:14`, or `dnes v 9:05` (K2n). */
+function withdrawnWhen(at: string | null, timezone: Timezone, now: Date): string {
+  if (!at) return ''
+  const when = new Date(at)
+  return relativeDayLabel(when, now, timezone) === 'TODAY'
+    ? t.today.replace('{time}', formatTime(when, timezone))
+    : formatDateAtTime(when, timezone)
 }

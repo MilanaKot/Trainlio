@@ -55,12 +55,13 @@ such a training reads as K2e without the `{coach} byl deaktivován` sentence.
 Worth drawing: the K3c row, the K2e notice for a training that never had a
 coach, and whether K1 should mark it differently from one whose coach left.
 
-### DR-17 · Cancellation reasons in the player card (WISHLIST §4)
-
-A required reason when a parent cancels (G6), and where K13 shows how many
-trainings an athlete cancelled and why.
-
 ---
+
+## Answered with v3.7, 13 November 2026
+
+**DR-17 · Cancellation reasons in the player card.** Decisions 52–55: the
+reason is required (`Nepůjde`, G6g) and shown in K2 (`NEPŮJDOU`), in K13's
+Tréninky and Zprávy tabs, and e-mailed to the coach (E10).
 
 ## Answered with v3.4, 12 November 2026
 

@@ -252,12 +252,17 @@ export async function getOwnProfile(): Promise<OwnProfile | null> {
   }
 }
 
-/** One booking as G8b counts it: a confirmed one, and when its training ran. */
+/**
+ * One booking as G8b counts it: a confirmed one, or one the family withdrew
+ * (`Nepůjde`, a Nebyl by decision 54), and when its training ran.
+ */
 export type AttendanceRecord = {
+  sessionId: string
   startAt: string
   endAt: string
   mark: 'PRESENT' | 'ABSENT' | null
   sessionCancelled: boolean
+  withdrawn: boolean
 }
 
 /**
@@ -271,14 +276,16 @@ export async function getAthleteAttendance(athleteId: string): Promise<Attendanc
 
   const result = await supabase
     .from('bookings')
-    .select('attendance, training_sessions!inner ( start_at, end_at, status )')
+    .select('status, attendance, training_sessions!inner ( id, start_at, end_at, status )')
     .eq('athlete_id', athleteId)
-    .eq('status', 'CONFIRMED')
+    .in('status', ['CONFIRMED', 'CANCELLED_BY_USER'])
 
   return rows('getAthleteAttendance', result).map((row) => ({
+    sessionId: row.training_sessions.id,
     startAt: row.training_sessions.start_at,
     endAt: row.training_sessions.end_at,
     mark: row.attendance,
     sessionCancelled: row.training_sessions.status === 'CANCELLED',
+    withdrawn: row.status === 'CANCELLED_BY_USER',
   }))
 }

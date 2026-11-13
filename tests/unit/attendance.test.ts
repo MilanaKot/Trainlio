@@ -35,11 +35,14 @@ describe('nextAttendance (K2)', () => {
 })
 
 describe('summarizeAttendance (K13, G8b)', () => {
-  const item = (mark: 'PRESENT' | 'ABSENT' | null, at = past, sessionCancelled = false) => ({
-    ...at,
-    mark,
-    sessionCancelled,
-  })
+  let next = 0
+  const item = (
+    mark: 'PRESENT' | 'ABSENT' | null,
+    at = past,
+    sessionCancelled = false,
+    withdrawn = false,
+    sessionId = `s${(next += 1)}`,
+  ) => ({ ...at, sessionId, mark, sessionCancelled, withdrawn })
 
   it('is Byl / (Byl + Nebyl), unmarked past ones counting as Nebyl', () => {
     const summary = summarizeAttendance(
@@ -61,6 +64,33 @@ describe('summarizeAttendance (K13, G8b)', () => {
       NOW,
     )
     expect(summary).toEqual({ present: 1, absent: 0, percent: 100 })
+  })
+
+  it('counts a withdrawal (Nepůjde) as Nebyl once it is over (decision 54)', () => {
+    const summary = summarizeAttendance(
+      [
+        item('PRESENT'),
+        item(null, past, false, true),
+        // Under way, or on a training called off: nothing yet, nothing at all.
+        item(null, running, false, true),
+        item(null, past, true, true),
+      ],
+      NOW,
+    )
+    expect(summary).toEqual({ present: 1, absent: 1, percent: 50 })
+  })
+
+  it('counts a training withdrawn twice once, and not at all when rebooked after', () => {
+    const summary = summarizeAttendance(
+      [
+        item(null, past, false, true, 'a'),
+        item(null, past, false, true, 'a'),
+        item(null, past, false, true, 'b'),
+        item('PRESENT', past, false, false, 'b'),
+      ],
+      NOW,
+    )
+    expect(summary).toEqual({ present: 1, absent: 1, percent: 50 })
   })
 
   it('has no percentage with nothing to count', () => {

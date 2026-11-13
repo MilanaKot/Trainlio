@@ -1,4 +1,4 @@
-import { expect } from '@playwright/test'
+import { expect, type APIRequestContext } from '@playwright/test'
 import {
   apiUser,
   freshPerson,
@@ -12,6 +12,7 @@ import {
   grantWorkspaceRole,
   profileFor,
   uniqueEmail,
+  MAILPIT,
   SERVICE,
   STACK,
 } from './helpers'
@@ -199,4 +200,50 @@ export async function bookedChild(sessionId: string): Promise<{
     parentToken: token,
     bookingId: bookings[0]?.id ?? '',
   }
+}
+
+/** Empties the outbox the way production does: the cron route. */
+export async function deliver(request: APIRequestContext) {
+  const secret = process.env.CRON_SECRET ?? 'local-development-secret-value'
+  const response = await request.get('/api/notifications/drain', {
+    headers: { authorization: `Bearer ${secret}` },
+  })
+  expect(response.ok(), 'the drain route answered').toBe(true)
+}
+
+export async function mailTo(address: string, subject: RegExp): Promise<boolean> {
+  for (let attempt = 0; attempt < 20; attempt += 1) {
+    const box = (await (await fetch(`${MAILPIT}/api/v1/messages?limit=200`)).json()) as {
+      messages?: { Subject: string; To?: { Address: string }[] }[]
+    }
+    if (
+      box.messages?.some(
+        (one) => one.To?.some((to) => to.Address === address) && subject.test(one.Subject),
+      )
+    ) {
+      return true
+    }
+    await new Promise((resolve) => setTimeout(resolve, 500))
+  }
+  return false
+}
+
+/**
+ * Moves a training in time with the service key. Nothing in the product moves
+ * a training into the past, and the cases below need one under way and one
+ * three months old.
+ */
+export async function moveTo(sessionId: string, startOffsetMinutes: number, lengthMinutes = 60) {
+  const start = new Date(Date.now() + startOffsetMinutes * 60_000)
+  const end = new Date(start.getTime() + lengthMinutes * 60_000)
+  const response = await fetch(`${STACK}/rest/v1/training_sessions?id=eq.${sessionId}`, {
+    method: 'PATCH',
+    headers: {
+      apikey: SERVICE,
+      authorization: `Bearer ${SERVICE}`,
+      'content-type': 'application/json',
+    },
+    body: JSON.stringify({ start_at: start.toISOString(), end_at: end.toISOString() }),
+  })
+  expect(response.ok, 'moving the training').toBe(true)
 }

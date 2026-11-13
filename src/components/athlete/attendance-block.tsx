@@ -1,5 +1,5 @@
 import { messages, plural } from '@/lib/i18n'
-import { attendanceView, summarizeAttendance } from '@/lib/domain/attendance'
+import { countedAttendance, summarizeAttendance } from '@/lib/domain/attendance'
 import { inPeriod, type Period } from '@/lib/period'
 import { PeriodControl } from '@/components/ui/period-control'
 import type { AttendanceRecord } from '@/server/athletes/queries'
@@ -12,7 +12,8 @@ const t = messages.athlete.attendance
  * The parent's view of attendance: the period's percentage, a square per
  * training (green Byl, red Nebyl) and the two counts. Read-only, no list, and
  * nothing about payment; a month or a season (decision 47). Same rules as the coach's K13: cancelled trainings
- * are left out, and one nobody marked counts as Nebyl only once it is over.
+ * are left out, one nobody marked counts as Nebyl only once it is over, and
+ * so does one the family withdrew from (`Nepůjde`, decision 54).
  */
 export function AttendanceBlock({
   records,
@@ -31,9 +32,7 @@ export function AttendanceBlock({
     .filter((record) => inPeriod(new Date(record.startAt), period))
     .sort((a, b) => a.startAt.localeCompare(b.startAt))
   const summary = summarizeAttendance(inThisPeriod, now)
-  const squares = inThisPeriod
-    .map((record) => attendanceView(record.mark, record, now))
-    .filter((view) => view === 'present' || view === 'absent')
+  const squares = countedAttendance(inThisPeriod, now)
   const total = summary.present + summary.absent
 
   return (

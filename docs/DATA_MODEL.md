@@ -441,6 +441,12 @@ Main coach may be mirrored in training_sessions for simple querying, but associa
   (BR-177)
 - parent_message (≤500), parent_message_sent_at, parent_message_sent_by
   nullable — the coach's message, all three or none (BR-174)
+- cancellation_reason (≤200) nullable — the coach's reason for a removal, or
+  (v3.7) the family's for `Nepůjde` (BR-192); a booking only ever has one
+- guardian_response (`GOING`), responded_at, responded_by nullable — all three
+  or none; null is `Nepotvrzeno` (BR-192, migration 49)
+- cancel_late nullable — a guardian's withdrawal after the deadline, `Pozdě`
+  (BR-040)
 
 Statuses:
 
