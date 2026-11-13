@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { requestCode, verifyCode } from '@/server/auth/actions'
+import { requestCode, signInWithGoogle, verifyCode } from '@/server/auth/actions'
 import { messages } from '@/lib/i18n'
 import { Button } from '@/components/ui/button'
 import { CodeInput } from '@/components/ui/code-input'
@@ -19,7 +19,17 @@ type Stage = { name: 'email' } | { name: 'code'; email: string }
  * on the code step. A parent opening the coach's link on a phone should reach
  * the app in two taps and six digits.
  */
-export function SignInForm({ initialEmail = '' }: { initialEmail?: string }) {
+export function SignInForm({
+  initialEmail = '',
+  google = false,
+  googleFailed = false,
+}: {
+  initialEmail?: string
+  /** `Pokračovat přes Google` above the e-mail, once the provider is set up. */
+  google?: boolean
+  /** Back from Google without a session (`/auth/callback`). */
+  googleFailed?: boolean
+}) {
   const router = useRouter()
   const [stage, setStage] = useState<Stage>({ name: 'email' })
   const [email, setEmail] = useState(initialEmail)
@@ -29,6 +39,19 @@ export function SignInForm({ initialEmail = '' }: { initialEmail?: string }) {
   const [refused, setRefused] = useState(false)
   const [cooldown, setCooldown] = useState(0)
   const [pending, startTransition] = useTransition()
+  const [leaving, startLeaving] = useTransition()
+  const [googleError, setGoogleError] = useState<string | null>(
+    googleFailed ? messages.auth.errors.google : null,
+  )
+
+  function onGoogle() {
+    setGoogleError(null)
+    startLeaving(async () => {
+      // On success the action redirects to Google and never returns.
+      const result = await signInWithGoogle()
+      if (!result.ok) setGoogleError(messages.auth.errors.google)
+    })
+  }
 
   function startCooldown() {
     setCooldown(RESEND_SECONDS)
@@ -107,7 +130,7 @@ export function SignInForm({ initialEmail = '' }: { initialEmail?: string }) {
           {stage.name === 'email' ? t.signInTitle : t.codeTitle}
         </h1>
         {stage.name === 'email' ? (
-          <p className="text-body text-muted">{t.signInIntro}</p>
+          <p className="text-body text-muted">{google ? t.signInIntroGoogle : t.signInIntro}</p>
         ) : (
           <p className="text-body text-muted">
             {t.codeSentTo.split('{email}')[0]}
@@ -116,6 +139,31 @@ export function SignInForm({ initialEmail = '' }: { initialEmail?: string }) {
           </p>
         )}
       </header>
+
+      {stage.name === 'email' && google ? (
+        <div className="flex flex-col gap-4">
+          {googleError ? (
+            <p role="alert" className="text-hint font-semibold text-danger">
+              {googleError}
+            </p>
+          ) : null}
+          <Button
+            size="lg"
+            variant="outline"
+            onClick={onGoogle}
+            disabled={pending}
+            {...(leaving ? { loadingLabel: t.googleRedirecting } : {})}
+          >
+            <GoogleMark />
+            {t.google}
+          </Button>
+          <p className="flex items-center gap-3 text-hint text-muted" aria-hidden="true">
+            <span className="h-px flex-1 bg-line" />
+            {t.or}
+            <span className="h-px flex-1 bg-line" />
+          </p>
+        </div>
+      ) : null}
 
       {stage.name === 'email' ? (
         <form onSubmit={onRequest} className="flex flex-col gap-4">
@@ -214,5 +262,32 @@ export function SignInForm({ initialEmail = '' }: { initialEmail?: string }) {
         </form>
       )}
     </div>
+  )
+}
+
+/**
+ * Google's own four-colour mark, as its branding guidelines require on a
+ * sign-in button — never recoloured.
+ */
+function GoogleMark() {
+  return (
+    <svg viewBox="0 0 18 18" className="size-[18px] shrink-0" aria-hidden="true">
+      <path
+        fill="#4285F4"
+        d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.48h4.84a4.14 4.14 0 0 1-1.8 2.72v2.26h2.92c1.7-1.57 2.68-3.88 2.68-6.62z"
+      />
+      <path
+        fill="#34A853"
+        d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.92-2.26c-.8.54-1.84.86-3.04.86-2.34 0-4.32-1.58-5.03-3.7H.96v2.33A9 9 0 0 0 9 18z"
+      />
+      <path
+        fill="#FBBC05"
+        d="M3.97 10.72A5.41 5.41 0 0 1 3.68 9c0-.6.1-1.18.29-1.72V4.95H.96A9 9 0 0 0 0 9c0 1.45.35 2.83.96 4.05l3.01-2.33z"
+      />
+      <path
+        fill="#EA4335"
+        d="M9 3.58c1.32 0 2.5.45 3.44 1.35l2.58-2.58A9 9 0 0 0 .96 4.95l3.01 2.33C4.68 5.16 6.66 3.58 9 3.58z"
+      />
+    </svg>
   )
 }

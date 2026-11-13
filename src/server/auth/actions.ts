@@ -1,12 +1,16 @@
 'use server'
 
 import { z } from 'zod'
+import type { Route } from 'next'
+import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
+import { publicEnv } from '@/lib/env'
+import { safeNext } from '@/lib/safe-next'
 import { normalisePhone } from '@/lib/domain/phone'
 import { messages } from '@/lib/i18n'
 
 /**
- * Email one-time-code authentication (PRD §7). No password.
+ * Email one-time-code authentication (PRD §7), and Google. No password.
  *
  * Both actions run on the server so the Supabase response, and in particular
  * whether an address is already registered, never reaches the client. The
@@ -79,6 +83,40 @@ export async function verifyCode(email: string, code: string): Promise<AuthResul
   await supabase.rpc('ensure_current_profile')
 
   return { ok: true }
+}
+
+/**
+ * `Pokračovat přes Google` (decided 13 November 2026: Google and the e-mail
+ * code, no password). Supabase builds Google's address with a PKCE challenge
+ * and keeps the verifier in a cookie; Google sends the person back to
+ * `/auth/callback`, which finishes the sign-in.
+ *
+ * The return address is this site's own, from configuration — never the
+ * request's Host header, which a client can set.
+ */
+export async function signInWithGoogle(next?: string): Promise<AuthResult> {
+  if (publicEnv.NEXT_PUBLIC_AUTH_GOOGLE !== 'on') {
+    return { ok: false, message: messages.auth.errors.generic }
+  }
+
+  const supabase = await createClient()
+  const callback = new URL('/auth/callback', publicEnv.NEXT_PUBLIC_SITE_URL)
+  callback.searchParams.set('next', safeNext(next))
+
+  const { data, error } = await supabase.auth.signInWithOAuth({
+    provider: 'google',
+    options: {
+      redirectTo: callback.toString(),
+      // Always the account chooser: a family tablet signed into one parent's
+      // Google account should not sign the other parent in silently.
+      queryParams: { prompt: 'select_account' },
+    },
+  })
+
+  if (error || !data.url) return { ok: false, message: messages.auth.errors.generic }
+
+  // Google's address, not one of ours: typed routes cannot know it.
+  redirect(data.url as Route)
 }
 
 export async function signOut(): Promise<void> {

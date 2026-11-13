@@ -38,7 +38,14 @@ export const cs = {
     resend: 'Poslat kód znovu',
     useAnotherEmail: 'Použít jiný e-mail',
     signOut: 'Odhlásit se',
+    /* Decided 13 November 2026: Google and the e-mail code, no password. */
+    google: 'Pokračovat přes Google',
+    signInIntroGoogle:
+      'Přihlaste se přes Google, nebo vám pošleme kód na e-mail. Heslo nepotřebujete.',
+    googleRedirecting: 'Přesměrovávám…',
+    or: 'nebo',
     errors: {
+      google: 'Přihlášení přes Google se nezdařilo. Zkuste to znovu, nebo použijte kód z e-mailu.',
       invalidEmail: 'Zadejte platný e-mail.',
       invalidCode: 'Kód musí mít 6 číslic.',
       wrongCode: 'Kód je neplatný nebo vypršel. Zkuste to znovu.',

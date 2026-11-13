@@ -125,15 +125,16 @@ no configuration fails at build, which is the intended behaviour
 (`assertEnv()` in `next.config.ts`) and is confusing if you were not expecting
 it.
 
-| Variable                        | Value                         |
-| ------------------------------- | ----------------------------- |
-| `NEXT_PUBLIC_SUPABASE_URL`      | `https://<ref>.supabase.co`   |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase → API → anon public  |
-| `NEXT_PUBLIC_SITE_URL`          | `https://<your-domain>`       |
-| `SUPABASE_SERVICE_ROLE_KEY`     | Supabase → API → service_role |
-| `RESEND_API_KEY`                | The Resend key                |
-| `AUTH_SENDER_EMAIL`             | The verified sender           |
-| `CRON_SECRET`                   | `openssl rand -base64 32`     |
+| Variable                        | Value                                                     |
+| ------------------------------- | --------------------------------------------------------- |
+| `NEXT_PUBLIC_SUPABASE_URL`      | `https://<ref>.supabase.co`                               |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase → API → anon public                              |
+| `NEXT_PUBLIC_SITE_URL`          | `https://<your-domain>`                                   |
+| `SUPABASE_SERVICE_ROLE_KEY`     | Supabase → API → service_role                             |
+| `RESEND_API_KEY`                | The Resend key                                            |
+| `AUTH_SENDER_EMAIL`             | The verified sender                                       |
+| `CRON_SECRET`                   | `openssl rand -base64 32`                                 |
+| `NEXT_PUBLIC_AUTH_GOOGLE`       | `on`, once Google is set up below; otherwise leave it out |
 
 The service-role key bypasses row level security completely. It belongs in
 Vercel's environment and nowhere else — not in `.env.local` committed anywhere,
@@ -159,6 +160,30 @@ Redirect URLs:   https://<your-domain>/**
 
 Without this, sign-in appears to work and then returns the parent to a page that
 signs them straight back out.
+
+### Sign in with Google
+
+Decided 13 November 2026: Google and the e-mail code, no password. The button
+appears only with `NEXT_PUBLIC_AUTH_GOOGLE=on`, so do this first.
+
+1. **Google Cloud Console → APIs & Services → OAuth consent screen**: External,
+   app name `Trainlio`, the support e-mail, the privacy policy URL, scopes
+   `openid`, `email`, `profile` only. Publish it — in testing mode only listed
+   test users can sign in.
+2. **Credentials → Create credentials → OAuth client ID**, type _Web
+   application_. Authorized redirect URI:
+   `https://<ref>.supabase.co/auth/v1/callback` (Supabase's, not the app's).
+3. **Supabase → Authentication → Providers → Google**: enable, paste the client
+   ID and secret.
+4. Set `NEXT_PUBLIC_AUTH_GOOGLE=on` in Vercel and redeploy.
+5. Check: `Pokračovat přes Google` on `/prihlaseni`, choose an account, land
+   signed in. An invited coach must choose the Google account with the address
+   they were invited with — another address makes a new, empty account.
+
+Google comes back through Supabase to `/auth/callback`, which the redirect URL
+pattern above already allows. Supabase links a Google sign-in to an existing
+account with the same verified address, so a parent who used the e-mail code
+before keeps their children.
 
 ---
 

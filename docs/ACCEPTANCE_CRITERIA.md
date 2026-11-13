@@ -1017,3 +1017,13 @@ The reason is readable by every coach of the club, a view-only one too (K2b),
 and by the athlete's guardians, never by another family; K2n shows `Půjde` /
 `Nepotvrzeno` and `Potvrdili účast x z n` before the start, and `NEPŮJDOU`
 with reasons (coach tests 30 and 33, decision 55).
+
+## Signing in with Google (D-38)
+
+AC-320  
+With Google configured, `/prihlaseni` offers `Pokračovat přes Google` above the
+e-mail code; it goes to Google through Supabase with PKCE and the account
+chooser, and comes back to `/auth/callback`, which signs the person in and
+returns them only to a path on this site. A failed or cancelled sign-in comes
+back to `/prihlaseni` with a message offering the e-mail code. Without it
+configured there is no button.

@@ -17,6 +17,12 @@ const publicSchema = z.object({
   NEXT_PUBLIC_SUPABASE_ANON_KEY: z.string().min(1),
   /** Where OTP links and redirects come back to. Also read by supabase/config.toml. */
   NEXT_PUBLIC_SITE_URL: z.url(),
+  /**
+   * `on` once the Google provider is configured in Supabase Auth (DEPLOYMENT
+   * §2b). Off by default, so a deployment without it shows no button that
+   * could only fail.
+   */
+  NEXT_PUBLIC_AUTH_GOOGLE: z.enum(['on', 'off']).default('off'),
 })
 
 const serverSchema = z.object({
@@ -54,6 +60,7 @@ const publicParsed = publicSchema.safeParse({
   NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
   NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
   NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL,
+  NEXT_PUBLIC_AUTH_GOOGLE: process.env.NEXT_PUBLIC_AUTH_GOOGLE,
 })
 
 if (!publicParsed.success) fail('public', publicParsed.error)

@@ -117,6 +117,10 @@ jobs:
       # went to Resend with the key above, which is not a key: every invitation
       # failed to send, and AC-289 failed on the toast that says it was sent.
       EMAIL_TRANSPORT: mailpit
+      # D-38: the Google button is drawn, and auth.spec follows it as far as
+      # Supabase's authorize address. The provider itself is not configured
+      # on the CI stack, so nothing ever reaches Google.
+      NEXT_PUBLIC_AUTH_GOOGLE: 'on'
     steps:
       - uses: actions/checkout@v5
       - uses: pnpm/action-setup@v4
