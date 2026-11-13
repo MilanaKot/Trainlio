@@ -7,9 +7,9 @@ Trainlio — Sports Training Booking Platform
 1. User receives app link from coach. The link is a distribution channel, not
    authorization: an authenticated user with no athlete sees no workspace data.
 2. Opens app.
-3. Enters email.
-4. Receives OTP.
-5. Enters OTP.
+3. Enters email, or chooses `Pokračovat přes Google` and an account there.
+4. Receives OTP (e-mail only).
+5. Enters OTP (e-mail only); Google returns through `/auth/callback`.
 6. Account is created/authenticated.
 7. User creates first athlete profile.
 8. User creates hockey sport profile for athlete.

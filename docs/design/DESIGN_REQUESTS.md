@@ -55,6 +55,29 @@ such a training reads as K2e without the `{coach} byl deaktivován` sentence.
 Worth drawing: the K3c row, the K2e notice for a training that never had a
 coach, and whether K1 should mark it differently from one whose coach left.
 
+### DR-18 · Signing in with Google (D-38)
+
+Decided by the product on 13 November 2026: Google and the e-mail code, no
+password. Built without a design: G11 gains an outline `Pokračovat přes
+Google` with Google's own mark, a divider `nebo`, then the e-mail field as
+before. Worth drawing: G11 with the button (Google's branding rules apply to
+it), the error after a cancelled or failed Google sign-in (today a red line
+above the button), and what a coach sees who chose a Google account other than
+the address they were invited with — today an empty parent account — plus a
+line in A6 saying Google works with that address.
+
+### DR-19 · Joining a club by link and approval
+
+Decided by the product on 12 November 2026, not built yet: a club link or QR
+code, a child waiting for an administrator's approval, and a second parent
+invited by the first (PRD §6). Needed: the administrator's link/QR screen
+(show, copy, print, issue a new one), what a parent sees arriving by the link,
+`Čeká na schválení`, the administrator's approval list with a count in the
+menu, what a rejected parent sees, inviting a second parent from the child's
+profile (address, which children, pending invitations, withdrawing one), and
+the invitation e-mail. Open: whether the administrator is e-mailed about a
+waiting child and the parent about the decision.
+
 ---
 
 ## Answered with v3.7, 13 November 2026

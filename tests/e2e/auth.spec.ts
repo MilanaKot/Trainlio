@@ -56,3 +56,38 @@ test.describe('sign-in', () => {
     await page.waitForURL((url) => !url.pathname.includes('/prihlaseni'))
   })
 })
+
+/**
+ * Google (D-38, AC-320). The CI stack has no Google provider, so the button is
+ * followed as far as Supabase's authorize address and stopped there: what is
+ * asserted is that the request is Google's, PKCE-protected, with the account
+ * chooser, and that it comes back to this site's callback.
+ */
+test.describe('sign-in with Google', () => {
+  test.skip(process.env.NEXT_PUBLIC_AUTH_GOOGLE !== 'on', 'the button is off in this build')
+
+  test('goes to Google through Supabase, and comes back to /auth/callback', async ({ page }) => {
+    await page.goto('/prihlaseni')
+    const authorize = page.waitForRequest((request) => request.url().includes('/auth/v1/authorize'))
+    await page.route('**/auth/v1/authorize**', (route) => route.abort())
+    await page.getByRole('button', { name: 'Pokračovat přes Google' }).click()
+
+    const url = new URL((await authorize).url())
+    expect(url.searchParams.get('provider')).toBe('google')
+    expect(url.searchParams.get('code_challenge')).toBeTruthy()
+    expect(url.searchParams.get('prompt')).toBe('select_account')
+    expect(new URL(url.searchParams.get('redirect_to') ?? '').pathname).toBe('/auth/callback')
+  })
+
+  test('a failed or cancelled Google sign-in comes back with the e-mail code offered', async ({
+    page,
+  }) => {
+    await page.goto('/auth/callback?error=access_denied&next=https://evil.example')
+    await expect(page).toHaveURL(/\/prihlaseni\?chyba=google$/)
+    await expect(page.getByText(/použijte kód z e-mailu/)).toBeVisible()
+    await expect(page.getByLabel('E-mail')).toBeVisible()
+
+    await page.goto('/auth/callback?code=not-a-real-code')
+    await expect(page).toHaveURL(/\/prihlaseni\?chyba=google$/)
+  })
+})

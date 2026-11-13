@@ -47,7 +47,8 @@ allowed_mime_types = ["image/jpeg", "image/png", "image/webp"]
 [auth]
 enabled = true
 site_url = "env(NEXT_PUBLIC_SITE_URL)"
-additional_redirect_urls = ["http://127.0.0.1:3000", "http://localhost:3000"]
+# `/**`: Google returns to /auth/callback (decided 13 November 2026).
+additional_redirect_urls = ["http://127.0.0.1:3000/**", "http://localhost:3000/**"]
 
 # Sessions last a week and refresh, so a parent is not asked to re-verify an
 # email code every time they check a training time.
@@ -69,6 +70,16 @@ secure_password_change = false
 max_frequency = "60s"
 otp_length = 6
 otp_expiry = 600
+
+# Google (decided 13 November 2026: Google and the e-mail code, no password).
+# Off here, because the credentials are a Google Cloud OAuth client nobody
+# commits. To try it locally: create the client (docs/DEPLOYMENT.md §2b), add
+#   client_id = "env(SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_ID)"
+#   secret = "env(SUPABASE_AUTH_EXTERNAL_GOOGLE_SECRET)"
+# with both set in the environment, set enabled to true, `supabase stop &&
+# supabase start`, and run the app with NEXT_PUBLIC_AUTH_GOOGLE=on.
+[auth.external.google]
+enabled = false
 
 [auth.email.template.magic_link]
 subject = "Přihlášení do Trainlio"

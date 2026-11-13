@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
+import { publicEnv } from '@/lib/env'
 import { getPublicOrganization } from '@/server/organization/queries'
 import { OrgLogo } from '@/components/ui/org-logo'
 import { Wordmark } from '@/components/ui/wordmark'
@@ -22,10 +23,10 @@ const t = messages.auth
 export default async function SignInPage({
   searchParams,
 }: {
-  searchParams: Promise<{ email?: string }>
+  searchParams: Promise<{ email?: string; chyba?: string }>
 }) {
   const supabase = await createClient()
-  const { email } = await searchParams
+  const { email, chyba } = await searchParams
 
   // getUser() revalidates against the auth server. getSession() only reads the
   // cookie, so it must never gate a redirect.
@@ -61,7 +62,11 @@ export default async function SignInPage({
             remember which one it was. The code is not sent by the link itself —
             scanners and preview services fetch links, and a code sent by one of
             those is a code the coach never asked for. */}
-        <SignInForm {...(email ? { initialEmail: email } : {})} />
+        <SignInForm
+          {...(email ? { initialEmail: email } : {})}
+          google={publicEnv.NEXT_PUBLIC_AUTH_GOOGLE === 'on'}
+          googleFailed={chyba === 'google'}
+        />
       </div>
 
       <footer className="flex items-center justify-center gap-1.5 pt-8 text-hint font-normal text-muted">
