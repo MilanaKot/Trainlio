@@ -585,3 +585,29 @@ BR-196 **(new — v3.7)**
 After `Nepůjde` the family may book the athlete again while there is a place
 and the training has not started; the new booking starts as `Nepotvrzeno`.
 Payment marked before a withdrawal stays on the withdrawn booking.
+
+## Joining a club
+
+Decided with the product 12–13 November 2026. Migration 50.
+
+BR-197 **(new — D-39)**  
+A parent joins a club through its link or QR code. Only a club whose link
+they opened, one they already have an approved child in, or one they are
+staff of accepts a new child from them. The code is the administrators' to
+see and to replace; replacing it stops the old one at once and keeps everyone
+who already opened it.
+
+BR-198 **(new — D-40)**  
+Every child a parent registers waits for an administrator. While waiting it
+is not active in the club: no training is visible or bookable and no coach
+sees it. An administrator approves or rejects; a rejected child can be sent
+again by its family. An administrator's own child is approved at once. The
+administrators are e-mailed about a waiting child (E11) and the family about
+the decision (E12).
+
+BR-199 **(new — D-41)**  
+A guardian invites another by e-mail address to any of the children they
+manage (E13). The invitation is accepted by signing in with that address and
+gives the same access to those children — no duplicate child, no second
+approval. It can be withdrawn until accepted. Children registered before
+migration 50 count as approved.

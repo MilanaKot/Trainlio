@@ -9,6 +9,8 @@ import {
   signIn,
   uniqueEmail,
   MAILPIT,
+  joinClubInPage,
+  approveAllPending,
 } from './helpers'
 
 /**
@@ -139,7 +141,7 @@ test('a coach opens a training, a parent books, and the training changes', async
   await parent.waitForURL((url) => !url.pathname.includes('/prihlaseni'), { timeout: 30_000 })
 
   // The first child, which is also where the parent says who they are (§G16).
-  await parent.goto('/moji-sportovci/novy')
+  await joinClubInPage(parent)
   await parent.getByLabel('Jméno').first().fill('Hana')
   await parent.getByLabel('Příjmení').first().fill('Nováková')
   await parent.getByLabel('Telefon').fill('777 123 456')
@@ -148,6 +150,7 @@ test('a coach opens a training, a parent books, and the training changes', async
   await shoot(parent, '06-rodic-novy-sportovec', { full: true })
   await parent.getByRole('button', { name: 'Přidat sportovce' }).click()
   await expect(parent.getByText(child.name)).toBeVisible()
+  await approveAllPending()
 
   await parent.goto('/treninky')
   await expect(sessionCard(parent, sessionId)).toBeVisible()

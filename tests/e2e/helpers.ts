@@ -626,3 +626,137 @@ export async function freshPerson(options: { female?: boolean } = {}): Promise<T
   }
   throw new Error('No unused name left; clean the local database')
 }
+
+/** The club's join code (migration 50), read with the service key. */
+export async function joinCode(): Promise<string> {
+  const rows = (await (
+    await fetch(`${STACK}/rest/v1/workspaces?select=join_code&is_active=eq.true&limit=1`, {
+      headers: admin,
+    })
+  ).json()) as { join_code: string }[]
+  const code = rows[0]?.join_code
+  if (!code) throw new Error('No join code: is migration 50 applied?')
+  return code
+}
+
+/**
+ * What opening the club's link does for an API user (migration 50): they may
+ * now register a child into it.
+ */
+export async function joinClub(token: string): Promise<void> {
+  const response = await fetch(`${STACK}/rest/v1/rpc/join_workspace`, {
+    method: 'POST',
+    headers: asUser(token),
+    body: JSON.stringify({ p_code: await joinCode() }),
+  })
+  const result = (await response.json()) as { ok?: boolean; code?: string }
+  if (!result.ok) throw new Error(`joining the club failed: ${result.code}`)
+}
+
+/**
+ * The administrator's `Schválit`, done with the service key, for suites
+ * that need a child in the club rather than a test of approving one.
+ */
+export async function approveAthlete(athleteId: string | undefined): Promise<void> {
+  if (!athleteId) throw new Error('approveAthlete: no athlete id')
+  const response = await fetch(
+    `${STACK}/rest/v1/workspace_athlete_memberships?athlete_id=eq.${athleteId}`,
+    {
+      method: 'PATCH',
+      headers: { ...admin, 'content-type': 'application/json' },
+      body: JSON.stringify({
+        approval: 'APPROVED',
+        is_active: true,
+        decided_at: new Date().toISOString(),
+      }),
+    },
+  )
+  if (!response.ok) throw new Error(`approving failed: ${response.status}`)
+  await withdrawApprovalRequests(`payload->>athlete_id=eq.${athleteId}`)
+}
+
+/**
+ * The E11 a test's own child queued, withdrawn: no administrator is going to
+ * act on it, and every administrator a long run leaves behind would get one —
+ * enough to keep the outbox busy past the e-mails the tests actually read.
+ */
+async function withdrawApprovalRequests(filter: string): Promise<void> {
+  const events = (await (
+    await fetch(
+      `${STACK}/rest/v1/notification_events?select=id&event_type=eq.ATHLETE_APPROVAL_REQUESTED&${filter}`,
+      { headers: admin },
+    )
+  ).json()) as { id: string }[]
+  if (events.length === 0) return
+  const ids = events.map((e) => e.id).join(',')
+  // Marked first: a drain expanding the event at this moment holds its row,
+  // so this waits for it, and the deliveries it made are there to delete.
+  await fetch(`${STACK}/rest/v1/notification_events?id=in.(${ids})&dispatched_at=is.null`, {
+    method: 'PATCH',
+    headers: { ...admin, 'content-type': 'application/json' },
+    body: JSON.stringify({ dispatched_at: new Date().toISOString() }),
+  })
+  await fetch(`${STACK}/rest/v1/notification_deliveries?event_id=in.(${ids})&status=eq.PENDING`, {
+    method: 'DELETE',
+    headers: admin,
+  })
+}
+
+/** Every child this person asked to join with, approved. */
+export async function approveFamily(email: string): Promise<void> {
+  const profileId = await profileFor(email)
+  const response = await fetch(
+    `${STACK}/rest/v1/workspace_athlete_memberships?requested_by=eq.${profileId}&approval=eq.PENDING`,
+    {
+      method: 'PATCH',
+      headers: { ...admin, 'content-type': 'application/json', prefer: 'return=representation' },
+      body: JSON.stringify({
+        approval: 'APPROVED',
+        is_active: true,
+        decided_at: new Date().toISOString(),
+      }),
+    },
+  )
+  if (!response.ok) throw new Error(`approving failed: ${response.status}`)
+  const approved = (await response.json()) as { athlete_id: string }[]
+  for (const row of approved)
+    await withdrawApprovalRequests(`payload->>athlete_id=eq.${row.athlete_id}`)
+}
+
+/** In the browser: the club's link and `Pokračovat`, which opens the child form. */
+export async function joinClubInPage(page: Page): Promise<void> {
+  await page.goto(`/klub/${await joinCode()}`)
+  await page.getByRole('button', { name: 'Pokračovat' }).click()
+  await page.waitForURL('**/moji-sportovci/novy')
+}
+
+/**
+ * Every waiting child approved. Only for suites run alone (the screenshot and
+ * walkthrough sets): under a parallel run it would approve another test's.
+ */
+export async function approveAllPending(): Promise<void> {
+  const response = await fetch(
+    `${STACK}/rest/v1/workspace_athlete_memberships?approval=eq.PENDING`,
+    {
+      method: 'PATCH',
+      headers: { ...admin, 'content-type': 'application/json' },
+      body: JSON.stringify({
+        approval: 'APPROVED',
+        is_active: true,
+        decided_at: new Date().toISOString(),
+      }),
+    },
+  )
+  if (!response.ok) throw new Error(`approving failed: ${response.status}`)
+}
+
+/** One child, approved by name: for a UI flow that never learns the id. */
+export async function approveAthleteNamed(firstName: string, lastName: string): Promise<void> {
+  const rows = (await (
+    await fetch(
+      `${STACK}/rest/v1/athletes?select=id&first_name=eq.${encodeURIComponent(firstName)}&last_name=eq.${encodeURIComponent(lastName)}&order=created_at.desc&limit=1`,
+      { headers: admin },
+    )
+  ).json()) as { id: string }[]
+  await approveAthlete(rows[0]?.id)
+}

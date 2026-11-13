@@ -10,6 +10,8 @@ import {
   tokenFor,
   uniqueEmail,
   STACK,
+  joinClub,
+  approveAthlete,
 } from './helpers'
 
 /**
@@ -28,6 +30,7 @@ async function bookedAthlete(birthYear: number, sessionId: string): Promise<Test
   const athlete = await freshAthlete({ birthYear })
   const token = await tokenFor(uniqueEmail('rodina'))
 
+  await joinClub(token)
   const workspaces = (await (
     await fetch(`${STACK}/rest/v1/rpc/joinable_workspaces`, {
       method: 'POST',
@@ -50,6 +53,7 @@ async function bookedAthlete(birthYear: number, sessionId: string): Promise<Test
       }),
     })
   ).json()) as { ok?: boolean; data?: { athlete_id?: string } }
+  await approveAthlete(created.data?.athlete_id)
   expect(created.ok).toBe(true)
 
   const booked = (await (

@@ -17,6 +17,8 @@ import {
   SERVICE,
   STACK,
   sessionCard,
+  joinClub,
+  approveAthlete,
 } from './helpers'
 
 /**
@@ -38,6 +40,7 @@ async function family(options: { bookInto?: string } = {}): Promise<TestAthlete>
   const athlete = await freshAthlete()
   const token = await tokenFor(uniqueEmail('rodina'))
 
+  await joinClub(token)
   const workspaces = (await (
     await fetch(`${STACK}/rest/v1/rpc/joinable_workspaces`, {
       method: 'POST',
@@ -60,6 +63,7 @@ async function family(options: { bookInto?: string } = {}): Promise<TestAthlete>
       }),
     })
   ).json()) as { ok?: boolean; data?: { athlete_id?: string } }
+  await approveAthlete(created.data?.athlete_id)
   expect(created.ok).toBe(true)
 
   if (!options.bookInto) return athlete
@@ -264,6 +268,7 @@ test.describe('a coach publishes a training and runs its roster', () => {
     // not decide what the assertions below find.
     const parentEmail = uniqueEmail('rodic.hledani')
     const token = await tokenFor(parentEmail)
+    await joinClub(token)
     const workspaces = (await (
       await fetch(`${STACK}/rest/v1/rpc/joinable_workspaces`, {
         method: 'POST',
@@ -302,6 +307,7 @@ test.describe('a coach publishes a training and runs its roster', () => {
         }),
       })
     ).json()) as { ok?: boolean; data?: { athlete_id?: string } }
+    await approveAthlete(created.data?.athlete_id)
     expect(created.ok).toBe(true)
 
     await page.goto('/trener/sportovci')

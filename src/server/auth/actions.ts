@@ -81,6 +81,9 @@ export async function verifyCode(email: string, code: string): Promise<AuthResul
   // imported by an administrator, or a project where the trigger was added
   // later — so a signed-in user is never left without an actor record.
   await supabase.rpc('ensure_current_profile')
+  // A second parent signing in with the address they were invited at gets
+  // the children now (migration 50). Signing in proves the address.
+  await supabase.rpc('accept_guardian_invitations')
 
   return { ok: true }
 }

@@ -59,6 +59,15 @@ export default async function SessionsPage() {
     localDateKey(new Date(session.startAt), timezone),
   )
 
+  const approvals = athletes.map((a) => a.membership?.approval ?? 'APPROVED')
+  const waiting = approvals.includes('APPROVED')
+    ? null
+    : approvals.includes('PENDING')
+      ? 'PENDING'
+      : approvals.includes('REJECTED')
+        ? 'REJECTED'
+        : null
+
   return (
     <main className="flex flex-col gap-5">
       {/* The club above the page title, not beside it (guardian/SPEC.md §G1,
@@ -91,6 +100,15 @@ export default async function SessionsPage() {
           }
         >
           {t.noAthletes}
+        </EmptyState>
+      ) : waiting ? (
+        // Migration 50: no child is in the club yet. There is nothing to show,
+        // and "no trainings" would be a lie about the club rather than about
+        // this family.
+        <EmptyState
+          body={waiting === 'PENDING' ? messages.club.waitingBody : messages.club.rejectedBody}
+        >
+          {waiting === 'PENDING' ? messages.club.waitingTitle : messages.club.rejected}
         </EmptyState>
       ) : sessions.length === 0 ? (
         <EmptyState>{t.noSessions}</EmptyState>

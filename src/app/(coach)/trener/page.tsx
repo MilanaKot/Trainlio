@@ -9,7 +9,9 @@ import { TrainingsHeader } from '@/components/session/trainings-header'
 import { EmptyState } from '@/components/ui/empty-state'
 import { canCreateSessions } from '@/lib/domain/coach-rights'
 import { DollarIcon, PersonCheckIcon } from '@/components/ui/status-toggle'
-import { messages } from '@/lib/i18n'
+import Link from 'next/link'
+import { messages, plural } from '@/lib/i18n'
+import { listJoinRequests } from '@/server/club/queries'
 
 const t = messages.coach
 
@@ -50,7 +52,12 @@ export default async function CoachSessionsPage({
   const rights = { me: state?.profileId ?? '', canEditAll: state?.canEditAll ?? false }
   const canCreate = canCreateSessions(rights)
 
-  const { upcoming, past } = await listCoachSessions()
+  const [{ upcoming, past }, requests] = await Promise.all([
+    listCoachSessions(),
+    // Answers only an administrator; for anyone else it is empty.
+    listJoinRequests(workspace.id),
+  ])
+  const waiting = requests.filter((r) => r.approval === 'PENDING').length
   const showingPast = tab === 'minule'
   const sessions = showingPast ? past : upcoming
   const now = new Date()
@@ -60,6 +67,17 @@ export default async function CoachSessionsPage({
       <TrainingsHeader workspace={workspace} />
 
       <CoachTrainingsTabs value={showingPast ? 'past' : 'upcoming'} />
+
+      {/* Migration 50: children waiting for the administrator. */}
+      {waiting > 0 ? (
+        <Link
+          href="/trener/vice/zadosti"
+          className="flex min-h-12 items-center justify-between gap-3 rounded-control-lg bg-warning-soft px-4 text-row font-bold text-warning"
+        >
+          {plural(waiting, messages.access.waitingNotice)}
+          <span aria-hidden="true">›</span>
+        </Link>
+      ) : null}
 
       {/* §K14 (decision 44): what the two counters on each row are. */}
       {showingPast && sessions.length > 0 ? (

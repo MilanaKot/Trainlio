@@ -11,6 +11,8 @@ import {
   uniqueEmail,
   asUser,
   STACK,
+  joinClubInPage,
+  approveAthleteNamed,
 } from './helpers'
 
 /**
@@ -196,7 +198,7 @@ test.describe('on a phone', () => {
     await expectNoHorizontalScroll(page, 'my athletes (empty)')
     await expectTappableControls(page, 'my athletes (empty)')
 
-    await page.goto('/moji-sportovci/novy')
+    await joinClubInPage(page)
     await expectNoHorizontalScroll(page, 'new athlete')
     await expectTappableControls(page, 'new athlete')
 
@@ -207,6 +209,7 @@ test.describe('on a phone', () => {
     await fillAthleteForm(page, child)
     await page.getByRole('button', { name: 'Přidat sportovce' }).click()
     await expect(page.getByText(child.name)).toBeVisible()
+    await approveAthleteNamed(child.firstName, child.lastName)
 
     await expectNoHorizontalScroll(page, 'my athletes')
     await expectTappableControls(page, 'my athletes')

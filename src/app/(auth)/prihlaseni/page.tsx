@@ -1,6 +1,8 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { publicEnv } from '@/lib/env'
+import { safeNext } from '@/lib/safe-next'
+import type { Route } from 'next'
 import { getPublicOrganization } from '@/server/organization/queries'
 import { OrgLogo } from '@/components/ui/org-logo'
 import { Wordmark } from '@/components/ui/wordmark'
@@ -23,10 +25,13 @@ const t = messages.auth
 export default async function SignInPage({
   searchParams,
 }: {
-  searchParams: Promise<{ email?: string; chyba?: string }>
+  searchParams: Promise<{ email?: string; chyba?: string; dalsi?: string }>
 }) {
   const supabase = await createClient()
-  const { email, chyba } = await searchParams
+  const { email, chyba, dalsi } = await searchParams
+  // Where to go once signed in: the club's link the parent came from (§G11,
+  // migration 50). A path on this site only.
+  const next = safeNext(dalsi)
 
   // getUser() revalidates against the auth server. getSession() only reads the
   // cookie, so it must never gate a redirect.
@@ -34,7 +39,7 @@ export default async function SignInPage({
     data: { user },
   } = await supabase.auth.getUser()
 
-  if (user) redirect('/')
+  if (user) redirect(next as Route)
 
   const organization = await getPublicOrganization()
 
@@ -66,6 +71,7 @@ export default async function SignInPage({
           {...(email ? { initialEmail: email } : {})}
           google={publicEnv.NEXT_PUBLIC_AUTH_GOOGLE === 'on'}
           googleFailed={chyba === 'google'}
+          next={next}
         />
       </div>
 

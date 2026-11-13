@@ -3,6 +3,7 @@ import { messages } from '@/lib/i18n'
 import { HOCKEY_POSITION_LABELS } from '@/lib/enums/hockey'
 import { formatBirthDate } from '@/lib/time/workspace-time'
 import { Avatar } from '@/components/ui/avatar'
+import { Badge } from '@/components/ui/badge'
 import type { GuardianAthlete } from '@/server/athletes/queries'
 
 const t = messages.athlete
@@ -41,6 +42,17 @@ export function AthleteCard({ athlete }: { athlete: GuardianAthlete }) {
                 {t.inactive}
               </span>
             )}
+            {/* Migration 50: the club has not taken the child yet. */}
+            {athlete.membership?.approval === 'PENDING' ? (
+              <Badge variant="warning" size="sm" className="shrink-0">
+                {messages.club.pending}
+              </Badge>
+            ) : null}
+            {athlete.membership?.approval === 'REJECTED' ? (
+              <Badge variant="danger" size="sm" className="shrink-0">
+                {messages.club.rejected}
+              </Badge>
+            ) : null}
           </span>
 
           <span className="text-meta text-muted">{formatBirthDate(athlete.dateOfBirth)}</span>

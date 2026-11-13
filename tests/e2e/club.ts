@@ -15,6 +15,8 @@ import {
   MAILPIT,
   SERVICE,
   STACK,
+  joinClub,
+  approveAthlete,
 } from './helpers'
 
 /**
@@ -159,6 +161,7 @@ export async function bookedChild(sessionId: string): Promise<{
       phone: '777333444',
     }),
   })
+  await joinClub(token)
   const workspaces = (await (
     await fetch(`${STACK}/rest/v1/rpc/joinable_workspaces`, {
       method: 'POST',
@@ -180,6 +183,7 @@ export async function bookedChild(sessionId: string): Promise<{
       }),
     })
   ).json()) as { ok?: boolean; data?: { athlete_id?: string } }
+  await approveAthlete(created.data?.athlete_id)
   expect(created.ok).toBe(true)
   const booked = await rpc(token, 'book_athletes_as_guardian', {
     p_training_session_id: sessionId,
@@ -202,17 +206,26 @@ export async function bookedChild(sessionId: string): Promise<{
   }
 }
 
-/** Empties the outbox the way production does: the cron route. */
+/**
+ * Empties the outbox the way production does: the cron route — turned until
+ * it has nothing left to send, as the five-minute schedule would. One turn
+ * sends twenty, and a long run leaves enough administrators behind for E11 to
+ * fill several (migration 50).
+ */
 export async function deliver(request: APIRequestContext) {
   const secret = process.env.CRON_SECRET ?? 'local-development-secret-value'
-  const response = await request.get('/api/notifications/drain', {
-    headers: { authorization: `Bearer ${secret}` },
-  })
-  expect(response.ok(), 'the drain route answered').toBe(true)
+  for (let turn = 0; turn < 40; turn += 1) {
+    const response = await request.get('/api/notifications/drain', {
+      headers: { authorization: `Bearer ${secret}` },
+    })
+    expect(response.ok(), 'the drain route answered').toBe(true)
+    const report = (await response.json().catch(() => ({}))) as { attempted?: number }
+    if (!report.attempted) return
+  }
 }
 
-export async function mailTo(address: string, subject: RegExp): Promise<boolean> {
-  for (let attempt = 0; attempt < 20; attempt += 1) {
+export async function mailTo(address: string, subject: RegExp, attempts = 20): Promise<boolean> {
+  for (let attempt = 0; attempt < attempts; attempt += 1) {
     const box = (await (await fetch(`${MAILPIT}/api/v1/messages?limit=200`)).json()) as {
       messages?: { Subject: string; To?: { Address: string }[] }[]
     }

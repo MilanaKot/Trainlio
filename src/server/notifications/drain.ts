@@ -129,6 +129,7 @@ function toClaimedDelivery(row: ClaimRow): ClaimedDelivery {
       cancelledAt: text(session.cancelled_at),
       booked: count(session.booked),
       capacity: count(session.capacity),
+      approved: session.approved === true,
     },
     athleteNames: strings(delivery.athlete_names),
     bookingIds: strings(delivery.booking_ids),

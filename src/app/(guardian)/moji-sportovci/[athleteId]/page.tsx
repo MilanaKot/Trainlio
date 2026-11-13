@@ -2,10 +2,13 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import {
   getAthleteAttendance,
-  getGuardianAthlete,
+  listGuardianAthletes,
   listJoinableWorkspaces,
 } from '@/server/athletes/queries'
+import { listGuardianInvitations } from '@/server/club/queries'
 import { AttendanceBlock } from '@/components/athlete/attendance-block'
+import { GuardiansSection } from '@/components/club/guardians-section'
+import { MembershipNotice } from '@/components/club/membership-notice'
 import { parsePeriod } from '@/lib/period'
 import { Avatar } from '@/components/ui/avatar'
 import { DetailList } from '@/components/ui/detail-list'
@@ -34,15 +37,17 @@ export default async function AthletePage({
 
   // Returns null for an athlete this guardian does not guard: the row policy
   // filters it out before it reaches here, so a guessed id is a 404, not a leak.
-  const athlete = await getGuardianAthlete(athleteId)
+  const family = await listGuardianAthletes()
+  const athlete = family.find((a) => a.id === athleteId)
   if (!athlete) notFound()
 
   const sports = messages.sports as Record<string, string>
   const hockey = athlete.sportProfiles.find((profile) => profile.sportCode === 'HOCKEY')
 
-  const [records, workspaces] = await Promise.all([
+  const [records, workspaces, invitations] = await Promise.all([
     getAthleteAttendance(athleteId),
     listJoinableWorkspaces(),
+    listGuardianInvitations(athleteId),
   ])
   const timezone = workspaces[0]?.timezone ?? DEFAULT_TIMEZONE
   // G8b opens on the season, as the design draws it; `Měsíc` narrows it.
@@ -82,6 +87,13 @@ export default async function AthletePage({
         </div>
       </header>
 
+      {athlete.membership ? (
+        <MembershipNotice
+          membershipId={athlete.membership.id}
+          approval={athlete.membership.approval}
+        />
+      ) : null}
+
       <section className="flex flex-col gap-2.5">
         <h2 className="text-caption font-bold uppercase tracking-[0.8px] text-muted">
           {t.sportsCaption}
@@ -120,6 +132,13 @@ export default async function AthletePage({
           sportName={sports[hockey.sportCode] ?? hockey.sportCode}
         />
       ) : null}
+
+      <GuardiansSection
+        athleteId={athlete.id}
+        athletes={family.map((a) => ({ id: a.id, name: `${a.firstName} ${a.lastName}` }))}
+        invitations={invitations}
+        timezone={timezone}
+      />
     </main>
   )
 }

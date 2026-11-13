@@ -4,8 +4,9 @@ Trainlio — Sports Training Booking Platform
 
 ## 1. Registration
 
-1. User receives app link from coach. The link is a distribution channel, not
-   authorization: an authenticated user with no athlete sees no workspace data.
+1. User receives the club's link or QR code from the coach (`/klub/{code}`,
+   D-39). It names the club and leads through sign-in back to itself;
+   `Pokračovat` opens the child form. Without it no child can be registered.
 2. Opens app.
 3. Enters email, or chooses `Pokračovat přes Google` and an account there.
 4. Receives OTP (e-mail only).
@@ -15,8 +16,10 @@ Trainlio — Sports Training Booking Platform
 8. User creates hockey sport profile for athlete.
 9. Athlete, guardian access, sport profile and workspace membership are created
    in one server-side transaction.
-10. Athlete becomes available for booking in the current workspace, and becomes
-    visible to that workspace's coaches.
+10. The child waits (`Čeká na schválení`); the administrators are e-mailed
+    (E11). Once an administrator approves (`Více › Žádosti o přijetí`), the
+    family is e-mailed (E12), and the child becomes available for booking and
+    visible to the club's coaches (D-40).
 
 ## 2. Add another child
 
@@ -160,12 +163,13 @@ A single confirmation never splits siblings into booked and not-booked states.
 4. Coach changes date/time or other fields.
 5. New independent session is created.
 
-## 13. Future second guardian invitation
+## 13. Second guardian invitation (D-41, built)
 
-1. Existing guardian opens athlete access settings.
-2. Taps `Pozvat další osobu`.
+1. Existing guardian opens the child (G8), section `RODIČE`.
+2. Taps `Pozvat dalšího rodiče`.
 3. Enters recipient email.
-4. Selects athletes to share.
-5. Recipient receives invite.
-6. Recipient authenticates via OTP.
-7. Recipient gains guardian access to existing athlete records.
+4. Selects the children to share (all they manage are offered).
+5. Recipient receives E13; the invitation is listed and can be withdrawn.
+6. Recipient signs in with that address — a code to it, or Google with it.
+7. Recipient gains guardian access to the existing children: no duplicate, no
+   second approval.

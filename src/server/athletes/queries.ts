@@ -6,6 +6,7 @@ import { toOrganization } from '@/server/organization/queries'
 import type { Organization } from '@/lib/domain/org'
 import { PHOTO_BUCKET, PHOTO_SIGNED_URL_SECONDS } from '@/lib/domain/photo'
 import type { HockeyPosition, StickSide } from '@/lib/enums/hockey'
+import type { MembershipApproval } from '@/types/database'
 
 export type AthleteSportProfile = {
   id: string
@@ -26,6 +27,11 @@ export type GuardianAthlete = {
   photoPath: string | null
   photoUrl: string | null
   sportProfiles: AthleteSportProfile[]
+  /**
+   * The club's answer (migration 50): `PENDING` until an administrator
+   * decides. Null for a child in no club, which only an old record can be.
+   */
+  membership: { id: string; approval: MembershipApproval } | null
 }
 
 export type JoinableWorkspace = {
@@ -148,7 +154,8 @@ export async function listGuardianAthletes(): Promise<GuardianAthlete[]> {
     .select(
       `id, first_name, last_name, date_of_birth, is_active, photo_path,
        athlete_sport_profiles ( id, club_name, team_or_category, jersey_number,
-                                attributes, is_active, sports ( code ) )`,
+                                attributes, is_active, sports ( code ) ),
+       workspace_athlete_memberships ( id, approval, created_at )`,
     )
     .in('id', mine)
     .order('first_name', { ascending: true })
@@ -166,6 +173,11 @@ export async function listGuardianAthletes(): Promise<GuardianAthlete[]> {
     isActive: athlete.is_active,
     photoPath: athlete.photo_path,
     photoUrl: athlete.photo_path ? (signed.get(athlete.photo_path) ?? null) : null,
+    // One club in the MVP; the oldest membership is the one it joined.
+    membership:
+      [...(athlete.workspace_athlete_memberships ?? [])]
+        .sort((a, b) => a.created_at.localeCompare(b.created_at))
+        .map((m) => ({ id: m.id, approval: m.approval }))[0] ?? null,
     sportProfiles: ((athlete.athlete_sport_profiles ?? []) as unknown as ProfileRow[]).map(
       (profile) => {
         const { position, stickSide } = readAttributes(profile.attributes)

@@ -469,13 +469,15 @@ AC-221
 Deleting an authentication record preserves guardian access links.
 
 AC-222  
-No operational table stores an email address except two, and both are
+No operational table stores an email address except three, and all are
 unreachable by any client role. The notification delivery audit holds the
 address a message was sent to, which is service-role only and scrubbable. The
 staff contact table holds the address a coach signs in with (handoff v3,
 DR-07), because an invited coach has no authentication record yet — there is
 nowhere else for it to be until they first sign in — and that table has row
-level security on, no policy and no grant.
+level security on, no policy and no grant. The guardian invitations table
+(migration 50) holds the address a second parent was invited at, for the same
+reason, with the same protection.
 
 AC-223  
 Audit entries remain attributable after an authentication record is removed.
@@ -1027,3 +1029,34 @@ chooser, and comes back to `/auth/callback`, which signs the person in and
 returns them only to a path on this site. A failed or cancelled sign-in comes
 back to `/prihlaseni` with a message offering the e-mail code. Without it
 configured there is no button.
+
+## Joining a club, approval and the second parent (D-39 to D-41)
+
+AC-321  
+A child can be registered only into a club whose link (`/klub/{code}`, or its
+QR code) the parent opened, one they already have an approved child in, or
+one they are staff of. The link names the club before sign-in and returns to
+itself after it. The code is readable only by the club's administrators, who
+can replace it; the old one stops working at once.
+
+AC-322  
+A child registered by a parent waits (`Čeká na schválení`): no training is
+visible or bookable and no coach sees the child until an administrator
+approves. The administrators are e-mailed (E11) and see the waiting children
+on K1, in `Více` and in `Žádosti o přijetí`; approving lets the child in and
+e-mails the family (E12).
+
+AC-323  
+A rejected child shows `Zamítnuto` with `Požádat znovu`, which makes it wait
+again and e-mails the administrators again; the family is e-mailed the
+rejection (E12). An administrator's own child needs no approval.
+
+AC-324  
+A parent invites another by e-mail to one or more of their children (E13);
+the invitation is listed on the child and can be withdrawn. Not to a child of
+another family, not to themselves, not to someone who already guards them.
+
+AC-325  
+Signing in with the invited address (a code to it, or Google with it) gives
+the second parent the same children without a duplicate and without a second
+approval; a withdrawn invitation gives nothing.

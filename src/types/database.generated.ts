@@ -284,10 +284,10 @@ export type Database = {
           attendance: Database["public"]["Enums"]["attendance_status"] | null
           attendance_at: string | null
           attendance_by: string | null
+          cancel_late: boolean | null
           cancellation_reason: string | null
           cancelled_at: string | null
           cancelled_by: string | null
-          cancel_late: boolean | null
           change_seen_at: string | null
           coach_capacity_override: boolean
           created_at: string
@@ -312,10 +312,10 @@ export type Database = {
           attendance?: Database["public"]["Enums"]["attendance_status"] | null
           attendance_at?: string | null
           attendance_by?: string | null
+          cancel_late?: boolean | null
           cancellation_reason?: string | null
           cancelled_at?: string | null
           cancelled_by?: string | null
-          cancel_late?: boolean | null
           change_seen_at?: string | null
           coach_capacity_override?: boolean
           created_at?: string
@@ -340,10 +340,10 @@ export type Database = {
           attendance?: Database["public"]["Enums"]["attendance_status"] | null
           attendance_at?: string | null
           attendance_by?: string | null
+          cancel_late?: boolean | null
           cancellation_reason?: string | null
           cancelled_at?: string | null
           cancelled_by?: string | null
-          cancel_late?: boolean | null
           change_seen_at?: string | null
           coach_capacity_override?: boolean
           created_at?: string
@@ -365,6 +365,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "bookings_athlete_id_fkey"
+            columns: ["athlete_id"]
+            isOneToOne: false
+            referencedRelation: "athletes"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "bookings_attendance_by_fkey"
             columns: ["attendance_by"]
             isOneToOne: false
@@ -372,8 +379,15 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "bookings_responded_by_fkey"
-            columns: ["responded_by"]
+            foreignKeyName: "bookings_cancelled_by_fkey"
+            columns: ["cancelled_by"]
+            isOneToOne: false
+            referencedRelation: "app_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bookings_created_by_fkey"
+            columns: ["created_by"]
             isOneToOne: false
             referencedRelation: "app_profiles"
             referencedColumns: ["id"]
@@ -393,22 +407,8 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "bookings_athlete_id_fkey"
-            columns: ["athlete_id"]
-            isOneToOne: false
-            referencedRelation: "athletes"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "bookings_cancelled_by_fkey"
-            columns: ["cancelled_by"]
-            isOneToOne: false
-            referencedRelation: "app_profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "bookings_created_by_fkey"
-            columns: ["created_by"]
+            foreignKeyName: "bookings_responded_by_fkey"
+            columns: ["responded_by"]
             isOneToOne: false
             referencedRelation: "app_profiles"
             referencedColumns: ["id"]
@@ -515,6 +515,54 @@ export type Database = {
           {
             foreignKeyName: "guardian_athlete_access_profile_id_fkey"
             columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "app_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      guardian_invitations: {
+        Row: {
+          accepted_at: string | null
+          accepted_by: string | null
+          athlete_ids: string[]
+          created_at: string
+          email: string
+          id: string
+          invited_by: string
+          revoked_at: string | null
+        }
+        Insert: {
+          accepted_at?: string | null
+          accepted_by?: string | null
+          athlete_ids: string[]
+          created_at?: string
+          email: string
+          id?: string
+          invited_by: string
+          revoked_at?: string | null
+        }
+        Update: {
+          accepted_at?: string | null
+          accepted_by?: string | null
+          athlete_ids?: string[]
+          created_at?: string
+          email?: string
+          id?: string
+          invited_by?: string
+          revoked_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "guardian_invitations_accepted_by_fkey"
+            columns: ["accepted_by"]
+            isOneToOne: false
+            referencedRelation: "app_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "guardian_invitations_invited_by_fkey"
+            columns: ["invited_by"]
             isOneToOne: false
             referencedRelation: "app_profiles"
             referencedColumns: ["id"]
@@ -723,7 +771,7 @@ export type Database = {
           local_end_time: string
           local_start_time: string
           location_id: string
-          main_coach_profile_id: string
+          main_coach_profile_id: string | null
           public_notes: string | null
           sport_id: string
           updated_at: string
@@ -751,7 +799,7 @@ export type Database = {
           local_end_time: string
           local_start_time: string
           location_id: string
-          main_coach_profile_id: string
+          main_coach_profile_id?: string | null
           public_notes?: string | null
           sport_id: string
           updated_at?: string
@@ -779,7 +827,7 @@ export type Database = {
           local_end_time?: string
           local_start_time?: string
           location_id?: string
-          main_coach_profile_id?: string
+          main_coach_profile_id?: string | null
           public_notes?: string | null
           sport_id?: string
           updated_at?: string
@@ -1140,31 +1188,46 @@ export type Database = {
       }
       workspace_athlete_memberships: {
         Row: {
+          approval: Database["public"]["Enums"]["membership_approval"]
           athlete_id: string
           athlete_sport_profile_id: string
           created_at: string
+          decided_at: string | null
+          decided_by: string | null
           id: string
           is_active: boolean
+          requested_at: string | null
+          requested_by: string | null
           sport_id: string
           updated_at: string
           workspace_id: string
         }
         Insert: {
+          approval?: Database["public"]["Enums"]["membership_approval"]
           athlete_id: string
           athlete_sport_profile_id: string
           created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
           id?: string
           is_active?: boolean
+          requested_at?: string | null
+          requested_by?: string | null
           sport_id: string
           updated_at?: string
           workspace_id: string
         }
         Update: {
+          approval?: Database["public"]["Enums"]["membership_approval"]
           athlete_id?: string
           athlete_sport_profile_id?: string
           created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
           id?: string
           is_active?: boolean
+          requested_at?: string | null
+          requested_by?: string | null
           sport_id?: string
           updated_at?: string
           workspace_id?: string
@@ -1196,6 +1259,53 @@ export type Database = {
             columns: ["athlete_id"]
             isOneToOne: false
             referencedRelation: "athletes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "workspace_athlete_memberships_decided_by_fkey"
+            columns: ["decided_by"]
+            isOneToOne: false
+            referencedRelation: "app_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "workspace_athlete_memberships_requested_by_fkey"
+            columns: ["requested_by"]
+            isOneToOne: false
+            referencedRelation: "app_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      workspace_join_grants: {
+        Row: {
+          granted_at: string
+          profile_id: string
+          workspace_id: string
+        }
+        Insert: {
+          granted_at?: string
+          profile_id: string
+          workspace_id: string
+        }
+        Update: {
+          granted_at?: string
+          profile_id?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workspace_join_grants_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "app_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "workspace_join_grants_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
             referencedColumns: ["id"]
           },
         ]
@@ -1255,6 +1365,8 @@ export type Database = {
           delivery_email_retention_days: number
           id: string
           is_active: boolean
+          join_code: string
+          join_code_rotated_at: string | null
           logo_background: string
           logo_path: string | null
           logo_updated_at: string | null
@@ -1270,6 +1382,8 @@ export type Database = {
           delivery_email_retention_days?: number
           id?: string
           is_active?: boolean
+          join_code?: string
+          join_code_rotated_at?: string | null
           logo_background?: string
           logo_path?: string | null
           logo_updated_at?: string | null
@@ -1285,6 +1399,8 @@ export type Database = {
           delivery_email_retention_days?: number
           id?: string
           is_active?: boolean
+          join_code?: string
+          join_code_rotated_at?: string | null
           logo_background?: string
           logo_path?: string | null
           logo_updated_at?: string | null
@@ -1309,6 +1425,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      accept_guardian_invitations: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
       anonymization_preview: { Args: { p_profile_id: string }; Returns: Json }
       anonymize_profile: {
         Args: {
@@ -1325,6 +1445,15 @@ export type Database = {
       athlete_eligibility_for_session: {
         Args: { p_athlete_id: string; p_training_session_id: string }
         Returns: string
+      }
+      athlete_guardian_invitations: {
+        Args: { p_athlete_id: string }
+        Returns: {
+          created_at: string
+          email: string
+          id: string
+          invited_by_name: string
+        }[]
       }
       athlete_guardians: {
         Args: { p_athlete_id: string }
@@ -1348,6 +1477,10 @@ export type Database = {
       book_athletes_as_guardian: {
         Args: { p_athlete_ids: string[]; p_training_session_id: string }
         Returns: Json
+      }
+      booking_edit_target: {
+        Args: { p_booking_id: string }
+        Returns: Record<string, unknown>
       }
       booking_guardians: {
         Args: { p_booking_id: string }
@@ -1373,6 +1506,7 @@ export type Database = {
         Args: { p_main_coach_profile_id: string; p_workspace_id: string }
         Returns: boolean
       }
+      can_join_workspace: { Args: { p_workspace_id: string }; Returns: boolean }
       cancel_booking_as_coach: {
         Args: { p_booking_id: string; p_reason?: string }
         Returns: Json
@@ -1429,10 +1563,6 @@ export type Database = {
           training_session_id: string
         }[]
       }
-      confirm_attendance_as_guardian: {
-        Args: { p_booking_id: string }
-        Returns: Json
-      }
       coach_athletes: {
         Args: { p_workspace_id: string }
         Returns: {
@@ -1465,6 +1595,10 @@ export type Database = {
         }[]
       }
       complete_staff_welcome: { Args: { p_phone?: string }; Returns: Json }
+      confirm_attendance_as_guardian: {
+        Args: { p_booking_id: string }
+        Returns: Json
+      }
       create_athlete_with_guardian: {
         Args: {
           p_attributes?: Json
@@ -1497,6 +1631,7 @@ export type Database = {
           p_main_coach_profile_id?: string
           p_public_notes?: string
           p_status?: Database["public"]["Enums"]["session_status"]
+          p_without_main_coach?: boolean
           p_workspace_id: string
         }
         Returns: Json
@@ -1516,6 +1651,7 @@ export type Database = {
           p_main_coach_profile_id?: string
           p_public_notes?: string
           p_status?: Database["public"]["Enums"]["session_status"]
+          p_without_main_coach?: boolean
           p_workspace_id: string
         }
         Returns: Json
@@ -1531,7 +1667,11 @@ export type Database = {
         }
         Returns: Json
       }
-      current_profile_id: { Args: never; Returns: string }
+      current_profile_id: { Args: Record<PropertyKey, never>; Returns: string }
+      decide_join_request: {
+        Args: { p_approve: boolean; p_membership_id: string }
+        Returns: Json
+      }
       dormant_profiles: {
         Args: { p_inactive_days?: number }
         Returns: {
@@ -1552,19 +1692,14 @@ export type Database = {
         }
         Returns: Json
       }
-      ensure_current_profile: { Args: never; Returns: string }
+      ensure_current_profile: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
       expand_notification_event: { Args: { p_event_id: string }; Returns: Json }
       facility_location_for_workspace: {
         Args: { p_facility_id: string; p_workspace_id: string }
         Returns: string
-      }
-      guardian_can_see_workspace: {
-        Args: { p_workspace_id: string }
-        Returns: boolean
-      }
-      guardian_rebooking_blocked: {
-        Args: { p_athlete_id: string; p_training_session_id: string }
-        Returns: boolean
       }
       guardian_booking_actors: {
         Args: { p_booking_ids: string[] }
@@ -1573,6 +1708,14 @@ export type Database = {
           cancelled_by_name: string
           responded_by_name: string
         }[]
+      }
+      guardian_can_see_workspace: {
+        Args: { p_workspace_id: string }
+        Returns: boolean
+      }
+      guardian_rebooking_blocked: {
+        Args: { p_athlete_id: string; p_training_session_id: string }
+        Returns: boolean
       }
       guardian_session_athletes: {
         Args: { p_training_session_id: string }
@@ -1606,7 +1749,11 @@ export type Database = {
         Args: { p_athlete_id: string }
         Returns: boolean
       }
-      is_platform_admin: { Args: never; Returns: boolean }
+      invite_guardian: {
+        Args: { p_athlete_ids: string[]; p_email: string }
+        Returns: Json
+      }
+      is_platform_admin: { Args: Record<PropertyKey, never>; Returns: boolean }
       is_visible_staff_profile: {
         Args: { p_profile_id: string }
         Returns: boolean
@@ -1617,8 +1764,9 @@ export type Database = {
         Args: { p_workspace_id: string }
         Returns: boolean
       }
+      join_workspace: { Args: { p_code: string }; Returns: Json }
       joinable_workspaces: {
-        Args: never
+        Args: Record<PropertyKey, never>
         Returns: {
           id: string
           location_name: string
@@ -1636,14 +1784,15 @@ export type Database = {
         Args: { p_booking_id: string }
         Returns: Json
       }
-      mark_session_present: {
-        Args: { p_training_session_id: string }
-        Returns: Json
-      }
       mark_session_paid: {
         Args: { p_training_session_id: string }
         Returns: Json
       }
+      mark_session_present: {
+        Args: { p_training_session_id: string }
+        Returns: Json
+      }
+      new_join_code: { Args: Record<PropertyKey, never>; Returns: string }
       notification_event_recipients: {
         Args: { p_event_id: string }
         Returns: {
@@ -1653,9 +1802,12 @@ export type Database = {
           recipient_profile_id: string
         }[]
       }
-      notification_queue_depth: { Args: never; Returns: Json }
+      notification_queue_depth: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
       occupancy_reconciliation: {
-        Args: never
+        Args: Record<PropertyKey, never>
         Returns: {
           actual: number
           drift: number
@@ -1664,7 +1816,7 @@ export type Database = {
         }[]
       }
       organization_identity: {
-        Args: never
+        Args: Record<PropertyKey, never>
         Returns: {
           id: string
           logo_background: string
@@ -1676,7 +1828,7 @@ export type Database = {
         }[]
       }
       own_staff_state: {
-        Args: never
+        Args: Record<PropertyKey, never>
         Returns: {
           can_edit_all: boolean
           email: string
@@ -1721,7 +1873,23 @@ export type Database = {
         Args: { p_training_session_id?: string }
         Returns: Json
       }
-      scrub_notification_emails: { Args: never; Returns: Json }
+      request_join_again: { Args: { p_membership_id: string }; Returns: Json }
+      revoke_guardian_invitation: {
+        Args: { p_invitation_id: string }
+        Returns: Json
+      }
+      rotate_workspace_join_code: {
+        Args: { p_workspace_id: string }
+        Returns: Json
+      }
+      scrub_notification_emails: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
+      send_parent_message: {
+        Args: { p_booking_id: string; p_message: string }
+        Returns: Json
+      }
       session_coaches: {
         Args: { p_training_session_id: string }
         Returns: {
@@ -1769,21 +1937,23 @@ export type Database = {
           stick_side_code: string
         }[]
       }
-      sessions_without_occupancy: { Args: never; Returns: string[] }
-      send_parent_message: {
-        Args: { p_booking_id: string; p_message: string }
-        Returns: Json
+      sessions_without_occupancy: {
+        Args: Record<PropertyKey, never>
+        Returns: string[]
       }
       set_athlete_internal_note: {
         Args: { p_athlete_id: string; p_notes: string; p_workspace_id: string }
         Returns: Json
       }
-      set_booking_coach_note: {
-        Args: { p_booking_id: string; p_note: string }
+      set_booking_attendance: {
+        Args: {
+          p_attendance: Database["public"]["Enums"]["attendance_status"]
+          p_booking_id: string
+        }
         Returns: Json
       }
-      set_booking_attendance: {
-        Args: { p_attendance: Database["public"]["Enums"]["attendance_status"]; p_booking_id: string }
+      set_booking_coach_note: {
+        Args: { p_booking_id: string; p_note: string }
         Returns: Json
       }
       set_booking_paid: {
@@ -1850,7 +2020,7 @@ export type Database = {
         }
         Returns: Json
       }
-      touch_staff_seen: { Args: never; Returns: undefined }
+      touch_staff_seen: { Args: Record<PropertyKey, never>; Returns: undefined }
       undo_booking_unpaid: { Args: { p_booking_id: string }; Returns: Json }
       update_training_session: {
         Args: {
@@ -1893,18 +2063,33 @@ export type Database = {
         }
         Returns: string[]
       }
-      workspace_statistics: {
-        Args: {
-          p_birth_year?: number
-          p_bucket?: string
-          p_coach_id?: string
-          p_from: string
-          p_main_only?: boolean
-          p_personal?: boolean
-          p_to: string
-          p_workspace_id: string
-        }
-        Returns: Json
+      workspace_join_code: { Args: { p_workspace_id: string }; Returns: Json }
+      workspace_join_preview: {
+        Args: { p_code: string }
+        Returns: {
+          id: string
+          logo_background: string
+          logo_path: string
+          logo_updated_at: string
+          name: string
+          short_name: string
+          sport_code: string
+        }[]
+      }
+      workspace_join_requests: {
+        Args: { p_workspace_id: string }
+        Returns: {
+          approval: Database["public"]["Enums"]["membership_approval"]
+          athlete_id: string
+          date_of_birth: string
+          decided_at: string
+          first_name: string
+          guardians: Json
+          last_name: string
+          membership_id: string
+          position_code: string
+          requested_at: string
+        }[]
       }
       workspace_staff: {
         Args: { p_workspace_id: string }
@@ -1926,28 +2111,32 @@ export type Database = {
           roles: Database["public"]["Enums"]["workspace_role"][]
         }[]
       }
+      workspace_statistics: {
+        Args: {
+          p_birth_year?: number
+          p_bucket?: string
+          p_coach_id?: string
+          p_from: string
+          p_main_only?: boolean
+          p_personal?: boolean
+          p_to: string
+          p_workspace_id: string
+        }
+        Returns: Json
+      }
     }
     Enums: {
       access_permission_level: "MANAGE" | "VIEW"
       access_status: "ACTIVE" | "INVITED" | "REVOKED"
       attendance_status: "PRESENT" | "ABSENT"
       booking_creator_role:
-        | "USER"
-        | "COACH"
-        | "WORKSPACE_ADMIN"
-        | "PLATFORM_ADMIN"
+        "USER" | "COACH" | "WORKSPACE_ADMIN" | "PLATFORM_ADMIN"
       booking_status: "CONFIRMED" | "CANCELLED_BY_USER" | "CANCELLED_BY_COACH"
       coach_session_role: "MAIN" | "ASSISTANT"
       eligibility_mode: "ALL" | "BIRTH_YEAR_RANGE"
       facility_type:
-        | "RINK"
-        | "PITCH"
-        | "COURT"
-        | "POOL"
-        | "LANE"
-        | "GYM"
-        | "ROOM"
-        | "OTHER"
+        "RINK" | "PITCH" | "COURT" | "POOL" | "LANE" | "GYM" | "ROOM" | "OTHER"
+      membership_approval: "PENDING" | "APPROVED" | "REJECTED"
       notification_delivery_status: "PENDING" | "SENDING" | "SENT" | "FAILED"
       recurrence_frequency: "WEEKLY"
       session_status: "DRAFT" | "OPEN" | "CLOSED" | "COMPLETED" | "CANCELLED"
@@ -1994,8 +2183,7 @@ export type Tables<
 
 export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
-    | keyof DefaultSchema["Tables"]
-    | { schema: keyof DatabaseWithoutInternals },
+    keyof DefaultSchema["Tables"] | { schema: keyof DatabaseWithoutInternals },
   TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
@@ -2019,8 +2207,7 @@ export type TablesInsert<
 
 export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
-    | keyof DefaultSchema["Tables"]
-    | { schema: keyof DatabaseWithoutInternals },
+    keyof DefaultSchema["Tables"] | { schema: keyof DatabaseWithoutInternals },
   TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
@@ -2044,8 +2231,7 @@ export type TablesUpdate<
 
 export type Enums<
   DefaultSchemaEnumNameOrOptions extends
-    | keyof DefaultSchema["Enums"]
-    | { schema: keyof DatabaseWithoutInternals },
+    keyof DefaultSchema["Enums"] | { schema: keyof DatabaseWithoutInternals },
   EnumName extends (DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
@@ -2101,6 +2287,7 @@ export const Constants = {
         "ROOM",
         "OTHER",
       ],
+      membership_approval: ["PENDING", "APPROVED", "REJECTED"],
       notification_delivery_status: ["PENDING", "SENDING", "SENT", "FAILED"],
       recurrence_frequency: ["WEEKLY"],
       session_status: ["DRAFT", "OPEN", "CLOSED", "COMPLETED", "CANCELLED"],
@@ -2108,4 +2295,3 @@ export const Constants = {
     },
   },
 } as const
-

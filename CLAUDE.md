@@ -72,6 +72,9 @@ Code, schema, comments, docs: English.
   guardian may still withdraw (`Nepůjde`, with a reason) until the start; after
   the deadline the withdrawal is marked late for the coach.
 - Users may book until the session starts while booking is open and capacity allows.
+- Parents join a club by its link or QR code; an administrator approves each
+  child before the family sees or books anything. A second parent is invited
+  by e-mail (migration 50).
 - Multi-athlete guardian booking is atomic: all selected athletes or none.
 - An athlete removed by a coach cannot be re-booked by a guardian.
 - Coach may manually exceed capacity.

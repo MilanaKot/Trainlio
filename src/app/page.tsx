@@ -17,6 +17,10 @@ export default async function Home() {
 
   if (!user) redirect('/prihlaseni')
 
+  // Someone invited while already signed in elsewhere picks the children up
+  // on their next visit, not only at their next sign-in (migration 50).
+  await supabase.rpc('accept_guardian_invitations')
+
   const { data: staff } = await supabase
     .from('workspace_members')
     .select('workspace_id')

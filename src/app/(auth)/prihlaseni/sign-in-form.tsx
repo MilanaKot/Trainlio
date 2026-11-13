@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
+import type { Route } from 'next'
 import { requestCode, signInWithGoogle, verifyCode } from '@/server/auth/actions'
 import { messages } from '@/lib/i18n'
 import { Button } from '@/components/ui/button'
@@ -23,12 +24,15 @@ export function SignInForm({
   initialEmail = '',
   google = false,
   googleFailed = false,
+  next = '/',
 }: {
   initialEmail?: string
   /** `Pokračovat přes Google` above the e-mail, once the provider is set up. */
   google?: boolean
   /** Back from Google without a session (`/auth/callback`). */
   googleFailed?: boolean
+  /** Where to go once signed in; already a path on this site (`safeNext`). */
+  next?: string
 }) {
   const router = useRouter()
   const [stage, setStage] = useState<Stage>({ name: 'email' })
@@ -48,7 +52,7 @@ export function SignInForm({
     setGoogleError(null)
     startLeaving(async () => {
       // On success the action redirects to Google and never returns.
-      const result = await signInWithGoogle()
+      const result = await signInWithGoogle(next)
       if (!result.ok) setGoogleError(messages.auth.errors.google)
     })
   }
@@ -98,7 +102,7 @@ export function SignInForm({
         setError(result.message)
         return
       }
-      router.replace('/')
+      router.replace(next as Route)
       router.refresh()
     })
   }
