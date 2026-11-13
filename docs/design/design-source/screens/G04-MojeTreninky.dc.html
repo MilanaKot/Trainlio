@@ -22,7 +22,7 @@ body{margin:0;background:#F3F5F9;font-family:Manrope,"Segoe UI",system-ui,sans-s
 .meta{font-size:14px;line-height:20px;color:var(--muted)}
 .foot{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:10px;padding-top:12px;box-shadow:0 -1px 0 var(--line)}
 .dl{display:flex;align-items:center;gap:6px;font-size:13px;line-height:18px;color:var(--muted)}
-.btn{width:124px;flex-shrink:0;height:44px;padding:0 12px;border-radius:10px;border:0;font:600 15px/1 Manrope,system-ui,sans-serif;white-space:nowrap;background:#fff;color:var(--ink);box-shadow:inset 0 0 0 1.5px var(--line)}
+.btn{width:124px;flex-shrink:0;height:44px;padding:0 12px;border-radius:12px;border:0;font:600 15px/1 Manrope,system-ui,sans-serif;white-space:nowrap;background:#fff;color:var(--ink);box-shadow:inset 0 0 0 1.5px var(--line)}
 .badge{display:inline-flex;align-items:center;height:24px;padding:0 8px;border-radius:6px;font-size:11px;font-weight:700;letter-spacing:.6px;text-transform:uppercase}
 .segctl{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px;padding:4px;border-radius:12px;background:var(--n50)}
 .segctl button{height:40px;border:0;border-radius:9px;background:transparent;font:600 15px/1 Manrope,system-ui,sans-serif;color:var(--muted)}
@@ -30,9 +30,14 @@ body{margin:0;background:#F3F5F9;font-family:Manrope,"Segoe UI",system-ui,sans-s
 .nav{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));height:76px;padding-bottom:8px;box-sizing:border-box;background:var(--surface);box-shadow:0 -1px 0 var(--line)}
 .nav a{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font-size:11px;font-weight:600;color:var(--muted);text-decoration:none}
 .nav a.act{color:var(--accent)}
+.rsb{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.rb{height:44px;border-radius:12px;border:0;font:700 15px/1 Manrope,sans-serif;display:flex;align-items:center;justify-content:center;gap:6px;text-decoration:none}
+.rb.yes{background:#E3F4EC;color:#13795B;box-shadow:inset 0 0 0 1.5px #A9D9C3}
+.rb.no{background:#FBE9E7;color:#B42318;box-shadow:inset 0 0 0 1.5px #EFC2BC}
+.ok{display:inline-flex;align-items:center;gap:5px;font-size:14px;font-weight:700;color:#13795B}
 </style>
 </helmet>
-<div class="s" style="width: 390px; height: 844px; background: var(--bg); display: flex; flex-direction: column; overflow: hidden">
+<div class="s" style="width: 390px; height: 960px; background: var(--bg); display: flex; flex-direction: column; overflow: hidden">
 <main style="flex-grow: 1; overflow: hidden; padding: 60px 16px 16px; display: flex; flex-direction: column; gap: 12px">
 <h1 class="disp" style="margin: 0; padding: 0 4px; font-size: 40px; line-height: 44px; font-weight: 700">Moje tréninky</h1>
 <div class="segctl" role="tablist" style="margin-bottom: 4px"><button class="on" role="tab" aria-selected="true">Nadcházející</button><button role="tab" aria-selected="false">Minulé</button></div>
@@ -42,15 +47,16 @@ body{margin:0;background:#F3F5F9;font-family:Manrope,"Segoe UI",system-ui,sans-s
 <div class="time">18:00–19:00</div>
 <div class="date">Neděle 27. září · Dnes</div>
 <div class="meta">Příbram · VH · Šatna 2</div>
-<div class="foot"><span class="dl" style="color: var(--ink); font-weight: 600"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0"><circle cx="12" cy="12" r="8.5"></circle><path d="M12 11v5M12 8h.01"></path></svg>Odhlášení již není možné. Kontaktujte trenéra.</span><button class="btn" disabled style="background: #ECEFF5; color: #8791A6; box-shadow: none">Odhlásit</button></div>
+<div class="foot"><span class="ok"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7.5"></path></svg>Půjde · potvrzeno</span><a class="btn" href="G06g-NepujdeDuvod.dc.html" style="display:flex;align-items:center;justify-content:center;text-decoration:none;color:#B42318">Nepůjde</a></div>
+<p class="dl" style="margin:6px 0 0">Po termínu odhlášení uvidí trenér omluvu jako pozdní.</p>
 </article>
 
 <article class="card">
-<div class="who"><span class="n"><span class="av">AK</span>Anna Kotova</span><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8791A6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9.5 6 6 6-6 6"></path></svg></div>
+<div class="who"><span class="n"><span class="av">AK</span>Anna Kotova</span><span style="display: flex; align-items: center; gap: 6px"><span class="badge" style="background: var(--infosoft); color: var(--info)">Potvrďte účast</span><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8791A6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9.5 6 6 6-6 6"></path></svg></span></div>
 <div class="time">09:00–10:00</div>
 <div class="date">Neděle 4. října</div>
 <div class="meta">Příbram · MH · Šatna 4</div>
-<div class="foot"><span class="dl"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0"><circle cx="12" cy="12" r="8.5"></circle><path d="M12 7.5V12l3 2"></path></svg>Odhlásit lze do so 3. 10. 21:00</span><button class="btn">Odhlásit</button></div>
+<div class="foot" style="flex-direction:column;align-items:stretch;gap:0"><span class="dl"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0"><circle cx="12" cy="12" r="8.5"></circle><path d="M12 7.5V12l3 2"></path></svg>Odhlásit lze do so 3. 10. 21:00</span><div class="rsb"><a class="rb yes" href="G06h-UcastPotvrzena.dc.html"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7.5"></path></svg>Půjde</a><a class="rb no" href="G06g-NepujdeDuvod.dc.html"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"></path></svg>Nepůjde</a></div></div>
 </article>
 
 <article class="card">
@@ -58,7 +64,7 @@ body{margin:0;background:#F3F5F9;font-family:Manrope,"Segoe UI",system-ui,sans-s
 <div class="time"><span style="background: var(--infosoft); color: var(--info); border-radius: 6px; padding: 0 6px">17:30–18:30</span></div>
 <div class="date">Středa 7. října</div>
 <div class="meta">Původně 17:00–18:00 · Příbram · MH</div>
-<div class="foot"><span class="dl"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0"><circle cx="12" cy="12" r="8.5"></circle><path d="M12 7.5V12l3 2"></path></svg>Odhlásit lze do st 7. 10. 5:30</span><button class="btn">Odhlásit</button></div>
+<div class="foot"><span class="ok"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7.5"></path></svg>Půjde · potvrzeno</span><a class="btn" href="G06g-NepujdeDuvod.dc.html" style="display:flex;align-items:center;justify-content:center;text-decoration:none;color:#B42318">Nepůjde</a></div>
 </article>
 </main>
 <nav class="nav" aria-label="Hlavní navigace">
@@ -69,7 +75,7 @@ body{margin:0;background:#F3F5F9;font-family:Manrope,"Segoe UI",system-ui,sans-s
 </nav>
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":960}}'>
 class Component extends DCLogic {
 renderVals() {
 return {};

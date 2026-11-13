@@ -10,7 +10,9 @@ import { BubbleIcon, LockIcon } from '@/components/roster/roster-list'
 import { Button } from '@/components/ui/button'
 import { TextareaWithCounter } from '@/components/ui/field'
 import { useToast } from '@/components/ui/toast'
+import { CrossIcon } from '@/components/booking/response-block'
 import type { CardSession } from '@/components/player/trainings-tab'
+import type { CoachAthleteSession } from '@/server/roster/queries'
 
 const t = messages.coach.card
 
@@ -21,10 +23,24 @@ const PAGE = 10
  * decision 35 — and the message to the parents, which they read in the app
  * and receive as E09 (decision 36). Every booking of the athlete, newest
  * first, so a message can go before a training as well as after it.
+ *
+ * v3.7: a training the family withdrew from carries their reason on top —
+ * `Omluvenka od rodiče` — and nothing more can be written to it.
  */
-export function MessagesTab({ sessions, timezone }: { sessions: CardSession[]; timezone: string }) {
+export function MessagesTab({
+  sessions,
+  withdrawals,
+  timezone,
+}: {
+  sessions: CardSession[]
+  withdrawals: CoachAthleteSession[]
+  timezone: string
+}) {
   const [shown, setShown] = useState(PAGE)
-  const ordered = [...sessions].sort((a, b) => b.startAt.localeCompare(a.startAt))
+  const ordered = [
+    ...sessions,
+    ...withdrawals.map((w): CardSession => ({ ...w, editable: false })),
+  ].sort((a, b) => b.startAt.localeCompare(a.startAt))
 
   return (
     <div className="flex flex-col gap-3">
@@ -58,6 +74,7 @@ function SessionMessages({ session, timezone }: { session: CardSession; timezone
   const [editing, setEditing] = useState<'note' | 'message' | null>(null)
   const [draft, setDraft] = useState('')
   const start = new Date(session.startAt)
+  const withdrawn = session.bookingStatus === 'CANCELLED_BY_USER'
 
   function open(which: 'note' | 'message') {
     setDraft((which === 'note' ? session.coachNote : session.parentMessage) ?? '')
@@ -116,7 +133,29 @@ function SessionMessages({ session, timezone }: { session: CardSession; timezone
       <h2 className="nums text-[0.9375rem]/[1.25rem] font-bold text-ink">
         {formatDateShort(start, timezone)} ·{' '}
         {formatTimeRange(start, new Date(session.endAt), timezone)}
+        {withdrawn ? <span className="text-danger"> {t.notGoingSuffix}</span> : null}
       </h2>
+
+      {withdrawn && session.cancellationReason ? (
+        <div className="flex gap-2 rounded-[12px] bg-danger-soft px-3 py-2.5">
+          <span className="mt-0.5 text-danger">
+            <CrossIcon className="size-3.5" />
+          </span>
+          <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+            <span className="text-hint font-bold text-danger">
+              {t.absenceCaption
+                .replace('{guardian}', session.cancelledByName ?? '—')
+                .replace(
+                  '{when}',
+                  session.cancelledAt
+                    ? formatDateTime(new Date(session.cancelledAt), timezone)
+                    : '',
+                )}
+            </span>
+            <p className="whitespace-pre-line text-meta text-ink">{session.cancellationReason}</p>
+          </div>
+        </div>
+      ) : null}
 
       {editing === 'note' ? (
         editor('note')

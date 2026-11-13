@@ -124,13 +124,12 @@ Future changed session:
 Cancelled:
 `ZRUŠENO TRENÉREM`
 
-Inside the cancellation deadline window:
-Disable cancel button and show:
-`Odhlášení již není možné. Kontaktujte trenéra.`
+Inside the cancellation deadline window (v3.7, decision 53):
+`Nepůjde` stays available until the start and the footer says
+`Po termínu odhlášení uvidí trenér omluvu jako pozdní.`
 
-The deadline is a workspace setting whose MVP value is 12 hours. The disabled
-state is a display affordance only; the server independently rejects a late
-cancellation.
+The deadline is a workspace setting whose MVP value is 12 hours. The server
+decides whether a withdrawal is late, and refuses one after the start.
 
 Cancelled session, no re-booking possible:
 `Trénink byl zrušen.`

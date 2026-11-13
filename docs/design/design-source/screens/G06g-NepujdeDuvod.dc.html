@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<title>Nepůjde — důvod (sheet)</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@500;600;700&amp;family=Manrope:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0;background:#F3F5F9;font-family:Manrope,"Segoe UI",system-ui,sans-serif;color:#0E1726}
+.s{--bg:#F3F5F9;--surface:#FFFFFF;--ink:#0E1726;--muted:#55607A;--line:#DFE4EE;--segoff:#DCE2EC;--n50:#ECEFF5;--accent:#2B55E0;--accentsoft:#E5EBFD;--chg:#8F5200;--chgsoft:#FBF0DC;--disp:"Barlow Semi Condensed","Arial Narrow",sans-serif}
+.disp{font-family:var(--disp)}
+.meta{font-size:14px;line-height:20px;color:var(--muted)}
+.panel{background:var(--surface);border-radius:16px;padding:4px 16px}
+.row{display:grid;grid-template-columns:112px minmax(0,1fr);gap:12px;padding:12px 0;font-size:15px;line-height:22px;box-shadow:0 1px 0 var(--line)}
+.row:last-child{box-shadow:none}
+.row dt{color:var(--muted);font-size:14px}
+.row dd{margin:0;font-weight:600}
+.segs{display:flex;gap:3px}
+.seg{width:9px;height:16px;border-radius:2px;background:var(--segoff)}
+.seg.on{background:var(--ink)}
+.num{font-family:var(--disp);font-weight:600;font-size:18px;font-variant-numeric:tabular-nums}
+.av{width:28px;height:28px;border-radius:50%;background:var(--accentsoft);color:var(--accent);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700}
+.btn{height:52px;width:100%;border-radius:12px;border:0;font:700 16px/1 Manrope,system-ui,sans-serif;background:#fff;color:var(--ink);box-shadow:inset 0 0 0 1.5px var(--line)}
+.rs{background:var(--surface);border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:12px}
+.rs h2{margin:0;font-size:17px;line-height:24px;font-weight:700}
+.rs .top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.st{display:inline-flex;align-items:center;gap:5px;height:24px;padding:0 8px;border-radius:6px;font-size:12px;font-weight:700}
+.st.wait{background:#FBF0DC;color:#8F5200}.st.ok{background:#E3F4EC;color:#13795B}.st.no{background:#FBE9E7;color:#B42318}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.rb{height:52px;border-radius:12px;border:0;font:700 16px/1 Manrope,sans-serif;display:flex;align-items:center;justify-content:center;gap:8px;text-decoration:none}
+.rb.yes{background:#E3F4EC;color:#13795B;box-shadow:inset 0 0 0 1.5px #A9D9C3}
+.rb.no{background:#FBE9E7;color:#B42318;box-shadow:inset 0 0 0 1.5px #EFC2BC}
+.lnk{border:0;background:transparent;color:var(--accent);font:700 15px/1 Manrope,sans-serif;padding:0;height:36px;display:inline-flex;align-items:center;align-self:flex-start;text-decoration:none}
+.hint{font-size:13px;line-height:18px;color:var(--muted);margin:0}
+.reason{padding:10px 12px;border-radius:10px;background:var(--bg);font-size:15px;line-height:22px}
+.ch{height:36px;padding:0 14px;border-radius:18px;border:0;background:#fff;box-shadow:inset 0 0 0 1.5px var(--line);font:600 14px/1 Manrope,sans-serif;color:var(--ink)}
+.ch.on{background:var(--accent);color:#fff;box-shadow:none}
+</style>
+</helmet>
+<div class="s" style="width: 390px; height: 960px; background: var(--bg); display: flex; flex-direction: column; overflow: hidden; position: relative">
+<div style="padding: 52px 8px 0; display: flex; align-items: center; gap: 4px">
+<a href="G04-MojeTreninky.dc.html" aria-label="Zpět" style="width: 44px; height: 44px; border-radius: 22px; display: flex; align-items: center; justify-content: center; color: var(--ink)"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m14.5 6-6 6 6 6"></path></svg></a>
+<span style="font-size: 15px; font-weight: 600; color: var(--muted)">Moje tréninky</span>
+</div>
+
+<main style="flex-grow: 1; overflow: hidden; padding: 8px 16px 16px; display: flex; flex-direction: column; gap: 16px">
+<header style="display: flex; flex-direction: column; gap: 4px; padding: 0 4px">
+<span style="display: flex; align-items: center; gap: 8px; font-size: 15px; font-weight: 700; margin-bottom: 4px"><span class="av">IK</span>Ivan Kotov</span>
+<h1 class="disp" style="margin: 0; font-size: 44px; line-height: 48px; font-weight: 700; font-variant-numeric: tabular-nums">17:30–18:30</h1>
+<div style="font-size: 24px; line-height: 30px; font-weight: 700">Středa 7. října</div>
+</header>
+
+<section class="rs" aria-labelledby="rq"><div class="top"><h2 id="rq">Půjde Ivan na trénink?</h2><span class="st wait">Nepotvrzeno</span></div>
+<div class="two"><a class="rb yes" href="G06h-UcastPotvrzena.dc.html"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7.5"></path></svg>Půjde</a><a class="rb no" href="G06g-NepujdeDuvod.dc.html"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"></path></svg>Nepůjde</a></div>
+<p class="hint">Když Ivan nepůjde, napíšete důvod. Bude z tréninku odhlášen a místo dostane někdo jiný.</p></section>
+<dl class="panel" style="margin: 0">
+<div class="row"><dt>Místo</dt><dd>Příbram · Malá hala (MH)</dd></div>
+<div class="row"><dt>Šatna</dt><dd>4</dd></div>
+<div class="row"><dt>Ročníky</dt><dd>2017–2018</dd></div>
+<div class="row"><dt>Hlavní trenér</dt><dd>Milan Filipi</dd></div>
+<div class="row"><dt>Asistenti</dt><dd style="color: var(--muted); font-weight: 400">—</dd></div>
+<div class="row" style="align-items: center"><dt>Obsazenost</dt><dd style="display: flex; align-items: center; gap: 10px"><span class="segs"><sc-for list="{{s5}}" as="s" hint-placeholder-count="10"><span class="{{s.c}}"></span></sc-for></span><span class="num">5 / 10</span></dd></div>
+</dl>
+
+<section style="display: flex; flex-direction: column; gap: 6px; padding: 14px 16px; border-radius: 16px; background: var(--surface)">
+<h2 style="margin: 0; font-size: 12px; line-height: 16px; font-weight: 700; letter-spacing: .8px; text-transform: uppercase; color: var(--muted)">Informace pro sportovce</h2>
+<p style="margin: 0; font-size: 15px; line-height: 22px">Přineste si láhev s vodou. Sraz 15 minut před začátkem.</p>
+</section>
+</main>
+
+<footer style="padding: 12px 16px 28px; background: var(--surface); box-shadow: 0 -1px 0 var(--line)"><p class="hint" style="justify-content:center;display:flex;align-items:center;gap:6px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"></circle><path d="M12 7.5V12l3 2"></path></svg>Po st 7. 10. 5:30 uvidí trenér odhlášení jako pozdní</p></footer><div style="position: absolute; inset: 0; background: rgba(14, 23, 38, 0.45)"></div>
+<section role="dialog" aria-modal="true" aria-labelledby="sh" style="position: absolute; left: 0; right: 0; bottom: 0; background: #fff; border-radius: 24px 24px 0 0; padding: 10px 20px 28px; display: flex; flex-direction: column; gap: 14px; box-shadow: 0 -12px 32px rgba(14,23,38,.16)">
+<div style="width: 40px; height: 4px; border-radius: 2px; background: var(--line); align-self: center"></div>
+<h2 id="sh" class="disp" style="margin: 0; font-size: 28px; line-height: 32px; font-weight: 700">Proč Ivan nepůjde?</h2>
+<div role="group" aria-label="Rychlý výběr" style="display:flex;flex-wrap:wrap;gap:8px">
+<button class="ch on" aria-pressed="true">Nemoc</button><button class="ch" aria-pressed="false">Zranění</button><button class="ch" aria-pressed="false">Škola</button><button class="ch" aria-pressed="false">Rodinné důvody</button></div>
+<div style="display:flex;flex-direction:column;gap:6px"><label for="dv" style="font-size:14px;font-weight:600">Důvod <span style="color:#B42318">*</span><span style="float:right;font-weight:400;font-size:13px;color:var(--muted)">31 / 200</span></label>
+<textarea id="dv" rows="3" required maxlength="200" style="border:0;border-radius:10px;box-shadow:inset 0 0 0 2px var(--accent),0 0 0 4px var(--accentsoft);padding:12px 14px;font:500 16px/24px Manrope,sans-serif;color:var(--ink);resize:none">Nemoc – teplota, zůstává doma.</textarea></div>
+<p class="hint">Důvod uvidí trenér. Ivan bude z tréninku odhlášen, místo se uvolní a v docházce se trénink počítá jako absence.</p>
+<div style="display:flex;flex-direction:column;gap:8px"><a class="btn" href="G06i-Nepujde.dc.html" style="display:flex;align-items:center;justify-content:center;text-decoration:none;background:#B42318;color:#fff">Odhlásit: Ivan nepůjde</a>
+<a class="btn" href="G06f-PotvrditUcast.dc.html" style="display:flex;align-items:center;justify-content:center;text-decoration:none;background:transparent;color:var(--ink);box-shadow:inset 0 0 0 1.5px var(--line)">Zpět</a></div>
+</section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":960}}'>
+class Component extends DCLogic {
+renderVals() {
+const seg = (filled, cap) => Array.from({ length: cap }, (_, i) => ({ c: i < filled ? 'seg on' : 'seg' }));
+return { s5: seg(5, 10) };
+}
+}
+</script>
+</body>
+</html>

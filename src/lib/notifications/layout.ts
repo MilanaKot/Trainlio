@@ -72,6 +72,8 @@ export function renderText(
     url: string
     org: string
     message?: string | undefined
+    /** What the quoted words are; the coach's, unless E10 says otherwise. */
+    messageCaption?: string | undefined
     /** The closing line. Every message says why its reader got it. */
     footer?: string | undefined
   },
@@ -85,7 +87,9 @@ export function renderText(
     lines.push(`${row.label}: ${value}`)
   }
 
-  if (context.message) lines.push('', `${t.coachMessage}: ${context.message}`)
+  if (context.message) {
+    lines.push('', `${context.messageCaption ?? t.coachMessage}: ${context.message}`)
+  }
 
   lines.push('', fill(t.linkText, { label: plan.button.label, url: context.url }))
   if (plan.helper) lines.push('', plan.helper)
@@ -106,6 +110,7 @@ export function renderHtml(
     url: string
     org: string
     message?: string | undefined
+    messageCaption?: string | undefined
     footer?: string | undefined
     logoUrl: string | null
   },
@@ -149,7 +154,7 @@ export function renderHtml(
   const coachMessage = context.message
     ? `<tr><td style="padding:0 0 18px"><table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%"><tr>` +
       `<td style="border-left:3px solid ${LINE};padding:2px 0 2px 14px">` +
-      `<div style="font:400 13px/20px ${FONT};color:${MUTED};padding-bottom:4px">${escapeHtml(t.coachMessage)}</div>` +
+      `<div style="font:400 13px/20px ${FONT};color:${MUTED};padding-bottom:4px">${escapeHtml(context.messageCaption ?? t.coachMessage)}</div>` +
       `<div style="font:400 15px/23px ${FONT};color:${INK}">${escapeHtml(context.message)}</div>` +
       '</td></tr></table></td></tr>'
     : ''

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useTransition } from 'react'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import type { Route } from 'next'
 import { messages } from '@/lib/i18n'
@@ -12,13 +13,21 @@ import {
 } from '@/lib/domain/attendance'
 import { inPeriod, periodCaption, type Period } from '@/lib/period'
 import { changingRoomLabel } from '@/lib/domain/session'
-import { formatDateShort, formatTime, formatTimeRange } from '@/lib/time/workspace-time'
+import {
+  formatDateAtTime,
+  formatDateShort,
+  formatTime,
+  formatTimeRange,
+} from '@/lib/time/workspace-time'
 import { setAttendance, setBookingPaid, undoUnpaid } from '@/server/roster/actions'
 import { RemoveAthleteDialog } from '@/components/roster/remove-athlete-dialog'
 import { PeriodControl } from '@/components/ui/period-control'
 import { PlayerCard, TOGGLE_CELLS } from '@/components/ui/player-card'
 import { StatusToggle } from '@/components/ui/status-toggle'
 import { useToast, useUndoToast } from '@/components/ui/toast'
+import { CrossIcon } from '@/components/booking/response-block'
+import { Badge } from '@/components/ui/badge'
+import { cn } from '@/lib/utils'
 import type { CoachAthleteSession } from '@/server/roster/queries'
 
 const t = messages.coach.card
@@ -46,15 +55,22 @@ type Override = {
  * over every booking in the period, the future ones too, since a training can
  * be paid in advance. `Nadcházející` is every upcoming booking whatever the
  * period; `Proběhlé` is the period's.
+ *
+ * v3.7: an upcoming row says whether the family answered `Půjde`; a training
+ * they withdrew from (`Nepůjde`) is a muted row with their reason, and once
+ * it is over a static Nebyl — it counts as one (decision 54).
  */
 export function TrainingsTab({
   athleteName,
   sessions,
+  withdrawals,
   period,
   timezone,
 }: {
   athleteName: string
   sessions: CardSession[]
+  /** `currentWithdrawals`: one per training, none that was rebooked. */
+  withdrawals: CoachAthleteSession[]
   period: Period
   timezone: string
 }) {
@@ -81,13 +97,26 @@ export function TrainingsTab({
   })
 
   const inThisPeriod = rows.filter((row) => inPeriod(new Date(row.session.startAt), period))
+  const withdrawnInPeriod = withdrawals.filter((w) => inPeriod(new Date(w.startAt), period))
   const summary = summarizeAttendance(
-    inThisPeriod.map((row) => ({
-      startAt: row.session.startAt,
-      endAt: row.session.endAt,
-      mark: row.attendance,
-      sessionCancelled: false,
-    })),
+    [
+      ...inThisPeriod.map((row) => ({
+        sessionId: row.session.sessionId,
+        startAt: row.session.startAt,
+        endAt: row.session.endAt,
+        mark: row.attendance,
+        sessionCancelled: false,
+        withdrawn: false,
+      })),
+      ...withdrawnInPeriod.map((w) => ({
+        sessionId: w.sessionId,
+        startAt: w.startAt,
+        endAt: w.endAt,
+        mark: null,
+        sessionCancelled: false,
+        withdrawn: true,
+      })),
+    ],
     now,
   )
   const paidInPeriod = inThisPeriod.filter((row) => row.paid).length
@@ -98,6 +127,22 @@ export function TrainingsTab({
   const past = inThisPeriod
     .filter((row) => new Date(row.session.startAt) <= now)
     .sort((a, b) => b.session.startAt.localeCompare(a.session.startAt))
+  const upcomingWithdrawn = withdrawals
+    .filter((w) => new Date(w.startAt) > now)
+    .sort((a, b) => a.startAt.localeCompare(b.startAt))
+  // Past ones interleave with the period's trainings, newest first.
+  const pastRows: (
+    { kind: 'card'; row: (typeof rows)[number] } | { kind: 'withdrawn'; w: CoachAthleteSession }
+  )[] = [
+    ...past.map((row) => ({ kind: 'card' as const, row })),
+    ...withdrawnInPeriod
+      .filter((w) => new Date(w.startAt) <= now)
+      .map((w) => ({ kind: 'withdrawn' as const, w })),
+  ].sort((a, b) =>
+    (b.kind === 'card' ? b.row.session.startAt : b.w.startAt).localeCompare(
+      a.kind === 'card' ? a.row.session.startAt : a.w.startAt,
+    ),
+  )
 
   function override(bookingId: string, next: Override) {
     setOverrides((current) => ({ ...current, [bookingId]: { ...current[bookingId], ...next } }))
@@ -201,9 +246,72 @@ export function TrainingsTab({
               ]
                 .filter(Boolean)
                 .join(' · ')}
+              {upcomingRow ? (
+                <>
+                  {' · '}
+                  <span
+                    className={cn(
+                      'font-bold',
+                      session.guardianResponse === 'GOING' ? 'text-success' : 'text-warning',
+                    )}
+                  >
+                    {session.guardianResponse === 'GOING' ? t.responseGoing : t.responsePending}
+                  </span>
+                </>
+              ) : null}
             </span>
           </span>
         </PlayerCard>
+      </li>
+    )
+  }
+
+  /** A training the family withdrew from: their reason, and from the start a Nebyl. */
+  function withdrawnRow(w: CoachAthleteSession, upcomingRow: boolean) {
+    const start = new Date(w.startAt)
+    const end = new Date(w.endAt)
+    return (
+      <li key={w.bookingId}>
+        <Link
+          href={`/trener/${w.sessionId}` as Route}
+          className="flex items-start gap-2 rounded-card bg-[#f8f9fb] px-3.5 py-3 shadow-[inset_0_0_0_1px_var(--color-line)]"
+        >
+          <span className="flex min-w-0 flex-1 flex-col gap-1.5">
+            <span className="flex flex-wrap items-center justify-between gap-2">
+              <span className="nums text-[0.9375rem]/[1.3125rem] font-bold text-muted line-through">
+                {formatDateShort(start, timezone)} · {formatTimeRange(start, end, timezone)}
+              </span>
+              <span className="flex items-center gap-1.5">
+                {w.cancelLate ? <Badge variant="warning">{t.late}</Badge> : null}
+                <span className="inline-flex h-6 items-center gap-1 rounded-badge bg-danger-soft px-2 text-[0.75rem] font-bold text-danger">
+                  <CrossIcon className="size-3.5" />
+                  {t.withdrawnBadge}
+                </span>
+              </span>
+            </span>
+            {w.cancellationReason ? (
+              <span className="text-meta text-ink">„{w.cancellationReason}“</span>
+            ) : null}
+            {w.cancelledAt ? (
+              <span className="text-hint text-muted">
+                {t.withdrawnMeta.replace(
+                  '{when}',
+                  formatDateAtTime(new Date(w.cancelledAt), timezone),
+                )}
+              </span>
+            ) : null}
+          </span>
+          {upcomingRow ? null : (
+            <StatusToggle
+              kind="attendance"
+              size="md"
+              state="absent"
+              athlete={`${formatDateShort(start, timezone)} ${formatTime(start, timezone)}`}
+              readOnly
+              onToggle={() => undefined}
+            />
+          )}
+        </Link>
       </li>
     )
   }
@@ -235,12 +343,25 @@ export function TrainingsTab({
 
       <section className="flex flex-col gap-2">
         <h2 className="text-caption font-bold uppercase tracking-[0.05em] text-muted">
-          {t.upcoming.replace('{count}', String(upcoming.length))}
+          {t.upcoming.replace('{count}', String(upcoming.length + upcomingWithdrawn.length))}
+          {upcomingWithdrawn.length > 0 ? (
+            <span className="font-semibold normal-case tracking-normal">
+              {' '}
+              {t.upcomingWithdrawn.replace('{count}', String(upcomingWithdrawn.length))}
+            </span>
+          ) : null}
         </h2>
-        {upcoming.length === 0 ? (
+        {upcoming.length + upcomingWithdrawn.length === 0 ? (
           <p className="text-meta text-muted">{t.upcomingNone}</p>
         ) : (
-          <ul className="flex flex-col gap-2">{upcoming.map((row) => card(row, true))}</ul>
+          <ul className="flex flex-col gap-2">
+            {[
+              ...upcoming.map((row) => ({ at: row.session.startAt, node: card(row, true) })),
+              ...upcomingWithdrawn.map((w) => ({ at: w.startAt, node: withdrawnRow(w, true) })),
+            ]
+              .sort((a, b) => a.at.localeCompare(b.at))
+              .map((entry) => entry.node)}
+          </ul>
         )}
       </section>
 
@@ -248,20 +369,24 @@ export function TrainingsTab({
         <h2 className="text-caption font-bold uppercase tracking-[0.05em] text-muted">
           {t.past.replace('{period}', periodCaption(period))}
         </h2>
-        {past.length === 0 ? (
+        {pastRows.length === 0 ? (
           <p className="text-meta text-muted">{t.pastNone}</p>
         ) : (
           <ul className="flex flex-col gap-2">
-            {past.slice(0, shown).map((row) => card(row, false))}
+            {pastRows
+              .slice(0, shown)
+              .map((entry) =>
+                entry.kind === 'card' ? card(entry.row, false) : withdrawnRow(entry.w, false),
+              )}
           </ul>
         )}
-        {past.length > shown ? (
+        {pastRows.length > shown ? (
           <button
             type="button"
             onClick={() => setShown((count) => count + PAGE)}
             className="flex min-h-11 items-center self-start text-row font-bold text-primary"
           >
-            {t.showMore.replace('{count}', String(past.length - shown))}
+            {t.showMore.replace('{count}', String(pastRows.length - shown))}
           </button>
         ) : null}
       </section>

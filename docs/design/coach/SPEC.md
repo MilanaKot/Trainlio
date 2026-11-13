@@ -307,6 +307,18 @@ E-mail templates for every row: `../shared/EMAILS.md`.
 
 The UI must always state the notification consequence **before** the coach confirms (footer notice in K3, K3c notice, K6 box, K9 line).
 
+### K2 · Účast rodičů (v3.7) · K2, K2n
+- **Before the session start (K2n):** every roster card's meta starts with the guardian response: `Půjde` (success, 700) or `Nepotvrzeno` (warning, 700), then `{year} · {position}` (ellipsis as before). Above the roster, left of the column header: `Potvrdili účast {x} z {n}` (13/700, x in success). The attendance toggle is disabled (as before); the `Byl` counter shows `–`; `Ostatní byli` is disabled. Footnote: `Docházku lze zapsat od začátku tréninku. „Nepotvrzeno“ = rodič zatím neodpověděl.`
+- **After the start (K2):** the response is no longer shown on cards (attendance takes over).
+- **Section `NEPŮJDOU · {n}`** below the roster buttons (K2 and K2n, always while there are any): muted cards (`#F8F9FB`, 1 px line), avatar muted, name muted, meta `{year} · odhlásil rodič {d. m.} v {HH:MM}` (`dnes v …`), optional warning tag `Pozdě` (when `late`), and the reason as a quote box under the name (white, 1 px line, radius 10, 14/20). The whole card → K13. No toggles. Footnote `Odhlášení s důvodem uvolní místo a v docházce se počítá jako „Nebyl“. „Pozdě“ = po termínu pro odhlášení.`
+- The roster count `Sportovci {n}` and capacity count only active bookings.
+- Coach can still remove an athlete (E07) — that is not a guardian cancellation and does **not** count as Nebyl.
+
+### K13 · Účast (v3.7)
+- **Tréninky** tab, upcoming rows: meta `{place} · Půjde | Nepotvrzeno` (colours as K2n). Guardian cancellations appear as muted rows in the upcoming list (struck date, danger badge `✕ Nepůjde`, reason 14/20, meta `Odhlásil rodič {d. m.} v {HH:MM} · v docházce jako „Nebyl“`); caption `Nadcházející · {n} · {m} nepůjde`. After the session they show in the past list with the Nebyl icon (static, not toggleable).
+- **Zprávy** tab: a guardian cancellation is an entry on top of that session: danger-soft box, ✕ icon, caption `Omluvenka od rodiče · {guardian} · {d. m. HH:MM}`, text = reason; session title gets `· nepůjde` in danger.
+- Footnote of the Tréninky tab adds `Odhlášení s důvodem (Nepůjde) se počítá jako „Nebyl“.`
+
 ## 5. Acceptance tests
 1. K1 renders 5 states (normal, full=cobalt, over `8 / 6` with `+2`, closed, cancelled) with text labels.
 2. Edit time on a session with 8 bookings → footer notice mentions 8 parents; save → guardians see `Změněno`.
@@ -337,6 +349,11 @@ The UI must always state the notification consequence **before** the coach confi
 27. K20 tiles match hand-computed values for a seeded month; cancelled sessions excluded; `Nezaplaceno` lists only athletes with unpaid bookings of held sessions.
 28. A non-admin coach does not see the `Trenéři` block and gets 403 for another coach's K20b; an admin sees all.
 29. Switching `Měsíc / Sezóna` in K13, K20, K20b and G8b uses 1 Aug – 31 Jul seasons; the labels say `Sezóna 2026/27`.
+
+30. (v3.7) K2n before start: meta shows `Půjde` / `Nepotvrzeno`, header `Potvrdili účast x z n`; after the guardian's `Nepůjde` the athlete moves to `NEPŮJDOU` with the reason, capacity −1, main coach receives E10.
+31. (v3.7) A cancellation after the deadline shows `Pozdě` in K2 and K13.
+32. (v3.7) Attendance: a guardian cancellation counts as Nebyl in K13, K20, K20b and G8b (percent = Byl / (Byl + Nebyl + Nepůjde)); a coach removal (E07) and a cancelled session do not count.
+33. (v3.7) The reason is visible to all coaches of the session (incl. read-only K2b) and to the guardians of that athlete; never to other guardians (RLS test).
 
 ## 6. Assumptions & open questions
 - Reopening closed registration is allowed (`Otevřít přihlašování`) — confirmed v3.

@@ -30,6 +30,7 @@ export function mailpitProvider(url: string, from: string): EmailProvider {
             Subject: message.subject,
             Text: message.text,
             HTML: message.html,
+            ...(message.replyTo ? { ReplyTo: [{ Email: message.replyTo }] } : {}),
           }),
         })
 

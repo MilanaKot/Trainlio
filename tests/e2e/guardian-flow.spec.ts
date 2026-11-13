@@ -295,22 +295,31 @@ test.describe('a guardian, from first sign-in to a withdrawn booking', () => {
     await page.goto('/moje-treninky')
     await expect(page.getByText(ivan.name)).toBeVisible()
 
-    // Well outside the 12-hour deadline, so withdrawing is offered (AC-040).
-    // §G4 confirms first: a parent with several bookings is one tap from
-    // withdrawing the wrong child.
-    await page.getByRole('button', { name: 'Odhlásit' }).click()
-    const confirm = page.getByRole('alertdialog')
-    await expect(confirm).toContainText(`Odhlásit ${ivan.name}?`)
-    await confirm.getByRole('button', { name: 'Odhlásit' }).click()
+    // v3.7: a new booking asks for an answer (guardian test 11).
+    const mine = page.locator('main li').first()
+    await expect(mine).toContainText('Potvrďte účast')
+    await mine.getByRole('button', { name: 'Půjde', exact: true }).click()
+    await expect(
+      page.getByRole('status').filter({ hasText: `Potvrzeno: ${ivan.firstName} půjde` }),
+    ).toBeVisible()
+    await expect(mine).toContainText('Půjde · potvrzeno')
 
-    await expect(page.getByRole('status')).toContainText('Odhlášeno')
+    // Withdrawing always says why (AC-040, decision 52): the reason sheet.
+    await mine.getByRole('button', { name: 'Nepůjde' }).click()
+    const reason = page.getByRole('dialog')
+    await expect(reason).toContainText(`Proč ${ivan.firstName} nepůjde?`)
+    await reason.getByRole('button', { name: 'Škola' }).click()
+    await page.keyboard.type('výlet')
+    await reason.getByRole('button', { name: `Odhlásit: ${ivan.firstName} nepůjde` }).click()
+
+    await expect(page.getByRole('status').filter({ hasText: 'Odhlášeno' })).toBeVisible()
 
     // The booking is kept, not deleted (principle 9): it stays in
-    // Nadcházející until the training ends, wearing the neutral badge, and
-    // offers nothing more to withdraw from. See docs/DESIGN_DEVIATIONS.md.
+    // Nadcházející until the training ends, marked Nepůjde, and offers
+    // nothing more to withdraw from. See docs/DESIGN_DEVIATIONS.md.
     const cancelled = page.locator('main li').first()
-    await expect(cancelled).toContainText('Odhlášeno')
-    await expect(page.getByRole('button', { name: 'Odhlásit' })).toHaveCount(0)
+    await expect(cancelled).toContainText('Nepůjde')
+    await expect(page.getByRole('group', { name: 'Účast' })).toHaveCount(0)
 
     await page.goto('/moje-treninky?tab=minule')
     await expect(page.getByText('Zatím nemáte žádný absolvovaný trénink.')).toBeVisible()
@@ -469,7 +478,7 @@ test.describe('a guardian, from first sign-in to a withdrawn booking', () => {
       'href',
       'sms:777654321',
     )
-    await expect(page.getByRole('button', { name: 'Odhlásit' })).toHaveCount(0)
+    await expect(page.getByRole('group', { name: 'Účast' })).toHaveCount(0)
     await expect(page.getByRole('button', { name: 'Přihlásit znovu' })).toHaveCount(0)
 
     // AC-292: the footer that replaced the button, with the coach to ring.

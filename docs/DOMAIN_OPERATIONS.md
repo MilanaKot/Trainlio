@@ -53,7 +53,8 @@ Czech message. Constraint violations still raise — those are bugs, not user er
 | `EMPTY_SELECTION`                  | No athlete ids supplied                                                                                                        |
 | `BOOKING_NOT_FOUND`                |                                                                                                                                |
 | `BOOKING_NOT_CONFIRMED`            | Already cancelled                                                                                                              |
-| `CANCELLATION_DEADLINE_PASSED`     | `BR-040`                                                                                                                       |
+| `CANCELLATION_DEADLINE_PASSED`     | No longer returned by a guardian's withdrawal (v3.7, BR-040)                                                                   |
+| `SESSION_STARTED`                  | v3.7: `Půjde` / `Nepůjde` after the training started                                                                           |
 | `CAPACITY_BELOW_OCCUPANCY`         | Session edit: the requested capacity is below the confirmed count. Coach must resend with the confirmation flag (`BR-051`)     |
 | `WOULD_EXCEED_CAPACITY`            | Coach manual booking: the addition would take the count past capacity. Coach must resend with the confirmation flag (`BR-033`) |
 | `BOOKINGS_WOULD_BECOME_INELIGIBLE` | D-08: narrowing the birth-year range past existing bookings                                                                    |
@@ -215,27 +216,33 @@ and why:
 }
 ```
 
-### `cancel_booking_as_guardian(p_booking_id uuid) → jsonb`
+### `cancel_booking_as_guardian(p_booking_id uuid, p_reason text) → jsonb` (migration 49)
 
 ```
-1. lock occupancy row for the booking's session
-2. load booking + session + workspace
-3. has_athlete_manage_access(booking.athlete_id)  -> NOT_AUTHORIZED_FOR_ATHLETE
-4. booking.status = 'CONFIRMED'                   -> BOOKING_NOT_CONFIRMED
-5. session.status <> 'CANCELLED'                  -> SESSION_CANCELLED
-6. start_at - now() >= (workspaces.cancellation_deadline_hours || ' hours')::interval
-                                                  -> CANCELLATION_DEADLINE_PASSED
-7. update -> CANCELLED_BY_USER, cancelled_at = now(), cancelled_by = auth.uid()
-8. append audit BOOKING_CANCELLED_BY_GUARDIAN
+1. trimmed reason of 1–200 characters             -> VALIDATION
+2. lock occupancy row for the booking's session
+3. load booking + session + workspace
+4. has_athlete_manage_access(booking.athlete_id)  -> NOT_AUTHORIZED_FOR_ATHLETE
+5. booking.status = 'CONFIRMED' (re-read)         -> BOOKING_NOT_CONFIRMED
+6. session.status <> 'CANCELLED'                  -> SESSION_CANCELLED
+7. now() < start_at                               -> SESSION_STARTED
+8. late = now() > start_at - deadline
+9. update -> CANCELLED_BY_USER, cancelled_at, cancelled_by, cancellation_reason, cancel_late
+10. append audit BOOKING_CANCELLED_BY_GUARDIAN
+11. queue GUARDIAN_ABSENCE_TO_COACH (E10)
 ```
 
-The deadline is computed from `start_at` on the server, from the workspace's own
-configured value. A client-supplied `can_cancel` flag is never read (`PERMISSIONS`).
+The one-argument version of migration 15 is dropped: no withdrawal without a
+reason (decision 52). The deadline no longer refuses anything; D-02's boundary
+now decides `late`: at exactly the deadline a withdrawal is on time. Server
+time only; nothing the client says about either is read.
 
-D-02, decided: step 6 is `now() <= start_at - deadline`, so cancellation is
-permitted at exactly the deadline. 12:00:01 before start is allowed, 12:00:00 is
-allowed, 11:59:59 is blocked. Evaluated on server time; a client-supplied
-`can_cancel` is never read.
+### `confirm_attendance_as_guardian(p_booking_id uuid) → jsonb` (migration 49)
+
+`Půjde`: the guardian's manage access, a confirmed booking, a session neither
+cancelled nor started (`SESSION_STARTED`). Sets `guardian_response = 'GOING'`
+with who and when, audits `BOOKING_GUARDIAN_CONFIRMED`; answering again changes
+nothing. No e-mail.
 
 D-09: this path never consults `athletes.is_active`. A guardian can cancel the
 booking of a deactivated athlete, which is what keeps deactivation from stranding

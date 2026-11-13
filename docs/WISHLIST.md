@@ -140,7 +140,9 @@ only about ones somebody else made.
 ## 4. Cancellations in an athlete's record for the coach
 
 **Done with v3.4:** attendance itself (`Byl` / `Nebyl`) and the per-athlete
-percentage in K13 (D-29). What is still wished for is below.
+percentage in K13 (D-29). **Done with v3.7:** the required reason (`Nepůjde`,
+G6g) and each withdrawal with its reason in K13 (BR-192). What is still
+wished for is a per-athlete count of withdrawals, below.
 
 **What.** Per athlete, how many trainings they cancelled — and, one level
 down, the reason a parent gave for each cancellation (a reason that would

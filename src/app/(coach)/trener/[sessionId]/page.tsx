@@ -263,6 +263,7 @@ export default async function SessionDetailPage({
         confirmedCount={session.confirmedCount}
         addable={editable && !cancelled && !finished}
         editable={editable && !cancelled}
+        timezone={workspace.timezone}
       />
 
       {/* §K6b: a cancelled training has one thing left to do — the same

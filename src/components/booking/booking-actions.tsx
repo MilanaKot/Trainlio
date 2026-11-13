@@ -3,20 +3,25 @@
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { messages } from '@/lib/i18n'
-import { canCancel } from '@/lib/domain/booking'
+import { freePlaces } from '@/lib/domain/booking'
 import { bookingCardVariant } from '@/lib/domain/booking-card'
+import { cancellationDeadline, canRespond, isLate } from '@/lib/domain/guardian-response'
 import { formatPhone } from '@/lib/domain/phone'
-import { formatDateGroup, formatDeadline, formatTimeRange } from '@/lib/time/workspace-time'
-import { cancelBooking } from '@/server/bookings/actions'
+import { formatDateAtTime, formatDeadline } from '@/lib/time/workspace-time'
+import { bookAthletes } from '@/server/bookings/actions'
+import {
+  ResponseButtons,
+  ResponseStatus,
+  useGuardianResponse,
+} from '@/components/booking/response-block'
 import { Avatar } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import { ContactActions } from '@/components/ui/contact-actions'
-import { ConfirmDialog } from '@/components/ui/dialog'
 import { useToast } from '@/components/ui/toast'
 import type { MyBooking, RemovedByCoach } from '@/server/bookings/queries'
 
 const t = messages.myTrainings
-const c = messages.cancellation
+const r = messages.response
 
 function ClockIcon() {
   return (
@@ -27,24 +32,127 @@ function ClockIcon() {
   )
 }
 
-function InfoIcon() {
+/**
+ * G6f–G6i (v3.7, DS §6.38): the family's answer, above the detail list.
+ *
+ * `Nepotvrzeno` asks the question with two buttons; `Půjde` says who answered
+ * and offers the way out; a withdrawal shows its reason, which cannot be
+ * edited. From the start of the training it is read-only — attendance takes
+ * over. Not shown for a removal by the coach or a cancelled training.
+ */
+export function ResponseSection({
+  booking,
+  timezone,
+  now,
+}: {
+  booking: MyBooking
+  timezone: string
+  now: Date
+}) {
+  const response = useGuardianResponse(booking.bookingId, booking.athleteFirstName)
+  const { session } = booking
+  const variant = bookingCardVariant(booking, session)
+  const name = booking.athleteFirstName
+
+  if (variant === 'removedByCoach' || variant === 'cancelledSession') return null
+
+  if (variant === 'selfCancelled') {
+    return (
+      <section
+        aria-labelledby="ucast"
+        className="flex flex-col gap-3 rounded-card bg-surface p-4 shadow-[inset_0_0_0_1.5px_var(--color-danger-line)]"
+      >
+        <Header state="notGoing" title={r.title} />
+        <p className="text-meta text-ink">{r.cancelledText.replace('{name}', name)}</p>
+        {booking.absenceReason ? (
+          <div className="flex flex-col gap-1">
+            <span className="text-caption font-bold tracking-[0.05em] text-muted">
+              {r.reasonCaption}
+            </span>
+            <p className="rounded-control bg-bg px-3 py-2.5 text-[0.9375rem]/[1.375rem] whitespace-pre-line text-ink">
+              {booking.absenceReason}
+            </p>
+          </div>
+        ) : null}
+        {booking.cancelledAt ? (
+          <p className="text-hint text-muted">
+            {r.cancelledMeta
+              .replace('{when}', formatDateAtTime(new Date(booking.cancelledAt), timezone))
+              .replace('{name}', booking.cancelledByName ?? t.none)}
+          </p>
+        ) : null}
+      </section>
+    )
+  }
+
+  const open = canRespond(booking, session, now)
+
+  if (booking.response) {
+    return (
+      <section aria-labelledby="ucast" className="flex flex-col gap-3 rounded-card bg-surface p-4">
+        <Header state="going" title={r.title} />
+        <p className="text-meta text-ink">{r.goingText.replace('{name}', name)}</p>
+        <p className="text-hint text-muted">
+          {r.goingMeta
+            .replace('{when}', formatDateAtTime(new Date(booking.response.sentAt), timezone))
+            .replace('{name}', booking.response.byName ?? t.none)}
+        </p>
+        {open ? (
+          <button
+            type="button"
+            onClick={response.openReason}
+            disabled={response.pending}
+            className="flex min-h-11 items-center self-start text-row font-bold text-danger"
+          >
+            {r.change.replace('{name}', name)}
+          </button>
+        ) : null}
+        {open ? response.sheet : null}
+      </section>
+    )
+  }
+
   return (
-    <svg viewBox="0 0 16 16" fill="none" className="size-4 shrink-0" aria-hidden="true">
-      <circle cx="8" cy="8" r="6" stroke="currentColor" strokeWidth="1.5" />
-      <path d="M8 7.25v4M8 4.75v.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-    </svg>
+    <section aria-labelledby="ucast" className="flex flex-col gap-3 rounded-card bg-surface p-4">
+      <Header state="pending" title={open ? r.question.replace('{name}', name) : r.title} />
+      {open ? (
+        <>
+          <ResponseButtons
+            disabled={response.pending}
+            onGoing={response.going}
+            onNotGoing={response.openReason}
+          />
+          <p className="text-hint text-muted">{r.pendingHint.replace('{name}', name)}</p>
+          {response.error ? (
+            <p role="alert" className="text-hint text-danger">
+              {response.error}
+            </p>
+          ) : null}
+          {response.sheet}
+        </>
+      ) : null}
+    </section>
+  )
+}
+
+function Header({ state, title }: { state: 'pending' | 'going' | 'notGoing'; title: string }) {
+  return (
+    <div className="flex items-center justify-between gap-2">
+      <h2 id="ucast" className="text-[1.0625rem]/[1.5rem] font-bold text-ink">
+        {title}
+      </h2>
+      <ResponseStatus state={state} />
+    </div>
   )
 }
 
 /**
- * What a parent can do about one booking, on its own screen
- * (guardian/SPEC.md §G6, §G6c, §G6d).
+ * The footer of one booking's screen (guardian/SPEC.md §G6, §G6d, §G6i).
  *
- * The deadline is shown rather than merely enforced: a parent who opens this
- * two hours before a training should read why the button is dead instead of
- * pressing it. The refusal is still the server's — `cancel_booking_as_guardian`
- * checks the same deadline against its own clock, so a page left open past it
- * cannot withdraw by being stale.
+ * v3.7: the answer lives in the Účast section, so the footer only says when a
+ * withdrawal turns late — the server stamps that itself, on its own clock. A
+ * withdrawn booking offers `Přihlásit znovu` while there is a place and the
+ * training has not started; the new booking starts as `Nepotvrzeno`.
  *
  * A cancelled training has no footer at all: there is nothing to withdraw from.
  */
@@ -68,17 +176,15 @@ export function BookingActions({
 }) {
   const router = useRouter()
   const toast = useToast()
-  const [confirming, setConfirming] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [pending, startTransition] = useTransition()
 
   const { session } = booking
-  const start = new Date(session.startAt)
   const end = new Date(session.endAt)
   const variant = bookingCardVariant(booking, session)
   const upcoming = end.getTime() >= now.getTime()
 
-  if (!upcoming || variant === 'cancelledSession' || variant === 'selfCancelled') return null
+  if (!upcoming || variant === 'cancelledSession') return null
 
   // §G6d, D-06: not an action but a person. The parent cannot put the athlete
   // back — only the coach can — so the footer is the coach: their name, their
@@ -107,63 +213,65 @@ export function BookingActions({
     )
   }
 
-  const cancellable = canCancel(booking, session, deadlineHours, now)
-  const deadlineAt = new Date(start.getTime() - deadlineHours * 60 * 60 * 1000)
+  const started = new Date(session.startAt).getTime() <= now.getTime()
 
-  function onCancel() {
-    setError(null)
-    startTransition(async () => {
-      const result = await cancelBooking(booking.bookingId)
-      if (!result.ok) {
-        const table = messages.booking.errors as Record<string, string>
-        setError(table[result.code] ?? messages.booking.errors.generic)
-        return
-      }
-      setConfirming(false)
-      toast(c.done)
-      router.refresh()
-    })
+  if (variant === 'selfCancelled') {
+    if (started) return null
+    // Booking again is the server's decision as much as ever: capacity,
+    // eligibility and a coach's removal are checked there.
+    const rebookable = session.status === 'OPEN' && freePlaces(session) > 0
+
+    function onRebook() {
+      setError(null)
+      startTransition(async () => {
+        const result = await bookAthletes(session.id, [booking.athleteId])
+        if (!result.ok) {
+          const table = messages.booking.errors as Record<string, string>
+          setError(table[result.code] ?? messages.booking.errors.generic)
+          return
+        }
+        toast(messages.booking.booked)
+        router.refresh()
+      })
+    }
+
+    return (
+      <Footer>
+        <p className="text-center text-hint text-muted">{r.rebookHint}</p>
+        {error ? (
+          <p role="alert" className="text-center text-hint text-danger">
+            {error}
+          </p>
+        ) : null}
+        {rebookable ? (
+          <Button
+            size="lg"
+            variant="outline"
+            onClick={onRebook}
+            {...(pending ? { loadingLabel: messages.booking.booking } : {})}
+          >
+            {r.rebook}
+          </Button>
+        ) : null}
+      </Footer>
+    )
   }
+
+  if (started) return null
+
+  const late = isLate(session.startAt, deadlineHours, now)
 
   return (
     <Footer>
-      {cancellable ? (
-        <p className="flex items-center gap-1.5 text-hint text-muted">
-          <ClockIcon />
-          {c.until.replace('{deadline}', formatDeadline(deadlineAt, timezone))}
-        </p>
-      ) : (
-        <p className="flex items-center gap-1.5 text-hint font-semibold text-ink">
-          <InfoIcon />
-          {c.tooLate}
-        </p>
-      )}
-
-      {error ? (
-        <p role="alert" className="text-hint text-danger">
-          {error}
-        </p>
-      ) : null}
-
-      <Button
-        size="lg"
-        variant="outline"
-        disabled={!cancellable || pending}
-        onClick={() => setConfirming(true)}
-      >
-        {c.cancel}
-      </Button>
-
-      <ConfirmDialog
-        open={confirming}
-        onOpenChange={setConfirming}
-        title={c.confirmTitle.replace('{name}', booking.athleteName)}
-        description={`${formatDateGroup(start, timezone)} · ${formatTimeRange(start, end, timezone)}`}
-        cancelLabel={c.keep}
-        confirmLabel={c.cancel}
-        onConfirm={onCancel}
-        pending={pending}
-      />
+      <p className="flex items-center justify-center gap-1.5 text-hint text-muted">
+        <ClockIcon />
+        {late
+          ? r.lateAfter
+          : r.lateFrom.replace(
+              '{deadline}',
+              formatDeadline(cancellationDeadline(session.startAt, deadlineHours), timezone),
+            )}
+      </p>
     </Footer>
   )
 }

@@ -34,6 +34,30 @@ export function splitRoster<T extends RosterRow>(entries: T[]): { confirmed: T[]
 }
 
 /**
+ * `NEPŮJDOU` (v3.7, K2/K2n): who the family withdrew, the latest withdrawal
+ * per athlete, and not an athlete booked again since. The other inactive rows
+ * are the coach's removals.
+ */
+export function splitInactive<
+  T extends RosterRow & { athleteId: string; cancelledAt: string | null },
+>(entries: T[]): { withdrawn: T[]; removed: T[] } {
+  const booked = new Set(entries.filter((e) => e.status === 'CONFIRMED').map((e) => e.athleteId))
+  const latest = new Map<string, T>()
+  for (const entry of entries) {
+    if (entry.status !== 'CANCELLED_BY_USER' || booked.has(entry.athleteId)) continue
+    const seen = latest.get(entry.athleteId)
+    if (!seen || (entry.cancelledAt ?? '') > (seen.cancelledAt ?? ''))
+      latest.set(entry.athleteId, entry)
+  }
+  return {
+    withdrawn: [...latest.values()].sort((a, b) =>
+      (a.cancelledAt ?? '').localeCompare(b.cancelledAt ?? ''),
+    ),
+    removed: entries.filter((e) => e.status === 'CANCELLED_BY_COACH'),
+  }
+}
+
+/**
  * The count a coach sees. Occupancy may exceed capacity, because a coach may
  * override it (BR-033, AC-050); it is never clamped, since "11 / 10" is the
  * fact the coach needs.

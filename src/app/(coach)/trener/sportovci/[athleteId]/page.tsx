@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation'
 import { getCoachWorkspace } from '@/server/sessions/queries'
+import { currentWithdrawals } from '@/lib/domain/guardian-response'
 import {
   getAthleteGuardians,
   getAthleteInternalNote,
@@ -78,6 +79,9 @@ export default async function PlayerCardPage({
   const active: CardSession[] = sessions
     .filter((s) => s.bookingStatus === 'CONFIRMED' && s.status !== 'CANCELLED')
     .map((s) => ({ ...s, editable: canEditSession(rights, { mainCoachId: s.mainCoachId }) }))
+  // v3.7: a withdrawal (`Nepůjde`) is the family's answer, shown with its
+  // reason and counted as Nebyl (decision 54).
+  const withdrawals = currentWithdrawals(sessions)
 
   const name = `${athlete.firstName} ${athlete.lastName}`
   const position = athlete.positionCode
@@ -116,6 +120,7 @@ export default async function PlayerCardPage({
         <TrainingsTab
           athleteName={name}
           sessions={active}
+          withdrawals={withdrawals}
           period={period}
           timezone={workspace.timezone}
         />
@@ -197,7 +202,9 @@ export default async function PlayerCardPage({
         )
       ) : null}
 
-      {tab === 'zpravy' ? <MessagesTab sessions={active} timezone={workspace.timezone} /> : null}
+      {tab === 'zpravy' ? (
+        <MessagesTab sessions={active} withdrawals={withdrawals} timezone={workspace.timezone} />
+      ) : null}
     </main>
   )
 }

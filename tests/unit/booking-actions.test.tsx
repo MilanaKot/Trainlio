@@ -5,7 +5,9 @@ import { ToastProvider } from '@/components/ui/toast'
 import type { MyBooking, RemovedByCoach } from '@/server/bookings/queries'
 
 vi.mock('@/server/bookings/actions', () => ({
-  cancelBooking: async () => ({ ok: true }),
+  bookAthletes: async () => ({ ok: true }),
+  confirmGoing: async () => ({ ok: true }),
+  cancelWithReason: async () => ({ ok: true }),
 }))
 
 vi.mock('next/navigation', () => ({
@@ -51,6 +53,8 @@ const removed: MyBooking = {
   coachMessage: null,
   paid: false,
   parentMessage: null,
+  response: null,
+  absenceReason: null,
   session,
 }
 

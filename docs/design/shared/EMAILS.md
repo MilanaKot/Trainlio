@@ -48,6 +48,7 @@ Rules:
 | E07 | `BOOKING_REMOVED_BY_COACH` | the removed athlete's guardians | orange `Odhlášeno trenérem` | `Otevřít v aplikaci` → G6d |
 | E08 | `BOOKING_ADDED_BY_COACH` **(new, DR-12)** | the added athlete's guardians | blue `Nová přihláška` | `Otevřít v aplikaci` → G6 |
 | E09 | `COACH_MESSAGE_TO_GUARDIAN` **(v3.3)** | all guardians of that athlete | blue `Zpráva od trenéra` | `Otevřít v aplikaci` → G6 (booking) |
+| E10 | `GUARDIAN_ABSENCE_TO_COACH` **(v3.7)** | the session's **main coach** (no main coach → all admins) | red `Omluvenka` | `Otevřít trénink` → K2 |
 
 When several significant fields change in one save (e.g. time and hall), send **one** e-mail: label `Změna tréninku`, subject `Změna tréninku: trénink {dd d. m.}`, H1 `Trénink se změnil`, and all changed rows highlighted.
 
@@ -109,11 +110,20 @@ When several significant fields change in one save (e.g. time and hall), send **
 - Helper: `Na zprávu nelze odpovědět e-mailem. Trenéra kontaktujte telefonicky: {coach phone}.` (without phone: `Na zprávu nelze odpovědět e-mailem.`)
 - Sent again (same subject) when the coach edits and re-sends. Payment changes send **no** e-mail.
 
+### E10 · GUARDIAN_ABSENCE_TO_COACH (v3.7) — to the coach, not to guardians
+- Subject: `Omluvenka: {Ivan Kotov} nepůjde · trénink {st 7. 10.} v {17:30}`
+- H1: `{Ivan Kotov} na trénink nepůjde` · Text: `Rodič sportovce odhlásil z tréninku a napsal důvod. Místo se uvolnilo.`
+- Block: `Sportovec` · `Trénink` `{Středa 7. října · 17:30–18:30}` · `Odhlásil` `{guardian} · {6. 10. v 18:40}` · `Obsazenost` `{4 / 10}`; when late add the row `Upozornění` `Po termínu pro odhlášení` (warning highlight).
+- Message block caption `Důvod od rodiče` + reason.
+- Helper: `Rodiče kontaktujte telefonicky: {guardian phone}.` (without phone: omit).
+- Footer: `Tento e-mail jste dostali jako hlavní trenér tréninku v aplikaci {org}.`
+- Reply-To: the guardian's e-mail. One e-mail per cancellation. `Půjde` sends nothing.
+
 ## 3. Label colours
 - red (`#FBE9E7` / `#B42318`) — cancelled
 - orange (`#FBF0DC` / `#8F5200`) — change, removal
 - blue (`#E5EBFD` / `#2B55E0`) — new booking, invitation
 
 ## 4. Not sent
-Payment marked/unmarked; coach note per booking (internal).
+Payment marked/unmarked; coach note per booking (internal); guardian `Půjde` confirmations (v3.7).
 Room, capacity, notes, assistants changes; closing/reopening registration; guardian's own booking/cancellation (in-app toast only).

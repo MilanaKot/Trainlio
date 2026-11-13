@@ -1,4 +1,4 @@
-import type { BookingStatus, SessionStatus } from '@/types/database'
+import type { SessionStatus } from '@/types/database'
 
 /**
  * Guardian-facing booking rules, mirrored from the server for display only.
@@ -30,30 +30,6 @@ export function sessionAvailability(
 
 export function freePlaces(session: { capacity: number; confirmedCount: number }): number {
   return Math.max(session.capacity - session.confirmedCount, 0)
-}
-
-/**
- * D-02: cancellation is allowed up to and including the deadline.
- *
- *   12:00:01 before start -> allowed
- *   12:00:00 before start -> allowed
- *   11:59:59 before start -> blocked
- *
- * Display only. The server computes the same comparison on database time, and
- * a client clock that is wrong changes what the button looks like, never what
- * happens.
- */
-export function canCancel(
-  booking: { status: BookingStatus },
-  session: { startAt: string; status: SessionStatus },
-  deadlineHours: number,
-  now: Date,
-): boolean {
-  if (booking.status !== 'CONFIRMED') return false
-  if (session.status === 'CANCELLED') return false
-
-  const deadline = new Date(session.startAt).getTime() - deadlineHours * 60 * 60 * 1000
-  return now.getTime() <= deadline
 }
 
 /**

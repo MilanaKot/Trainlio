@@ -148,11 +148,12 @@ CTA disabled until n ≤ remaining. This is a normal state — no red.
 ### G4 · My trainings — upcoming (`/my-trainings`)
 H1 `Moje tréninky`; SegmentedControl (tablist) `Nadcházející | Minulé`.
 List of BookingCards (one card per booking, i.e. per child), ascending by start. Each card: avatar + name + (badge) + chevron; time; date line (`Neděle 27. září · Dnes` / `Středa 7. října`); meta `Příbram · VH · Šatna 2`.
-Footer:
-- `canCancel` → hint (clock) `Odhlásit lze do {deadline}` + outline `Odhlásit` (124 px).
-- deadline passed → text (ink, 600, info icon) `Odhlášení již není možné. Kontaktujte trenéra.` + **disabled** `Odhlásit` (124 px, neutral).
+Footer (**v3.7 — replaces the `Odhlásit` button, see "Účast" below**):
+- `response = null` (Nepotvrzeno) → warning badge `Potvrďte účast` next to the name; footer = deadline hint (clock) `Odhlásit lze do {deadline}` + two equal buttons (grid 1fr 1fr, gap 8, 44 px, radius 12): `✓ Půjde` (success-soft, success text, 1.5 px #A9D9C3) and `✕ Nepůjde` (danger-soft, danger text, 1.5 px #EFC2BC).
+- `response = going` → left `✓ Půjde · potvrzeno` (success 14/700) + outline card button `Nepůjde` (124 × 44, danger text). After the deadline add the muted line `Po termínu odhlášení uvidí trenér omluvu jako pozdní.`
+- ~~deadline passed → disabled `Odhlásit`~~ (v3.7: `Nepůjde` stays available until the session **starts**).
 Changed booking (`significantChange && !changeSeenAt`): badge warning `Změněno` next to name; the changed value highlighted (warning-soft bg, warning text), meta starts with `Původně {oldValue}`.
-Cancel flow: tap `Odhlásit` → confirm Dialog: title `Odhlásit {Jméno}?`, text `{date} · {time}`, buttons `Ponechat` (outline) / `Odhlásit` (primary). Success → toast `Odhlášeno`; booking moves to Minulé as self-cancelled.
+~~Cancel flow with the `Odhlásit {Jméno}?` dialog~~ → v3.7: `Nepůjde` opens the reason sheet G6g; success → toast `Odhlášeno`; the card stays in Nadcházející muted with danger badge `Nepůjde` until the session start, then moves to Minulé.
 Tap card → G6 (marks change seen).
 
 **G4b · Removed by coach** (`removed_by_coach`, session in the future): card stays in Nadcházející until session start.
@@ -169,7 +170,7 @@ Same list, descending. Variants (DS §6.6):
 - attended/finished — normal card, no badge (don't emphasise "completed");
 - cancelled by coach — muted card, struck time & date, danger badge `Zrušeno trenérem`, meta `Trénink se nekonal · {place}`;
 - removed by coach (after the session started) — same as G4b but without footer; orange badge `Odhlášeno trenérem`;
-- self-cancelled — muted card, no strike, neutral badge `Odhlášeno`, meta `Odhlásil {guardian name} · {d. m. HH:MM}` (always masculine form — DS §8).
+- self-cancelled (v3.7 `Nepůjde`) — muted card, struck time, danger badge `Nepůjde`, meta `Odhlásil {guardian name} · {d. m. HH:MM}` (always masculine form — DS §8); the reason is in G6i.
 Upcoming sessions cancelled by the coach also appear in **Nadcházející** until their start time with the cancelled styling (so parents notice), then move to Minulé.
 
 ### G6 · Booking detail (`/my-trainings/[bookingId]`)
@@ -177,7 +178,7 @@ Back row `‹ Moje tréninky`. Header: avatar + athlete name; time (`text-hero`)
 Change notice (only if `significantChange`, regardless of seen state, until session start): warning Notice, clock icon, title `Trenér změnil {čas | datum | místo | halu | hlavního trenéra}` e.g. `Trenér změnil čas tréninku`, text `Původně 17:00–18:00, nově 17:30–18:30.`, meta `Změněno 26. 9. v 14:10`.
 DetailList: `Místo` (`Příbram · Malá hala (MH)`), `Šatna`, `Ročníky`, `Hlavní trenér`, `Asistenti` (names stacked one per line; `—` muted when none — row always visible), `Obsazenost` (meter + count).
 Section `INFORMACE PRO SPORTOVCE` (caption) + public note text (only if present).
-Sticky footer: deadline hint + outline lg `Odhlásit` — or, when locked (G6c), text `Odhlášení již není možné. Kontaktujte trenéra.` (ink, info icon) + disabled lg `Odhlásit`.
+Sticky footer (v3.7): only the deadline hint `Po {deadline} uvidí trenér odhlášení jako pozdní` (clock, 13 muted, centred). The action lives in the **Účast** block (below). ~~G6c locked state~~ is gone: `Nepůjde` works until the session starts.
 On mount: `update bookings set change_seen_at = now()` when a change is unseen (badge disappears in G4 afterwards).
 Cancelled-by-coach booking: header strike-through + danger Notice `Trénink byl zrušen trenérem.`; no footer.
 
@@ -188,6 +189,16 @@ Cancelled-by-coach booking: header strike-through + danger Notice `Trénink byl 
 
 **G6d · Removed by coach:** header muted (no strike) + orange badge `Odhlášeno trenérem` next to the name. Warning Notice (person-minus icon): title `Trenér odhlásil sportovce z tréninku`, text `Trénink se koná, ale {athlete} na něm není přihlášen.`, meta `Odhlásil {coach} · {d. m.} v {HH:MM}`. If `coachMessage`: section caption `ZPRÁVA OD TRENÉRA` + text. DetailList (Místo, Šatna, Hlavní trenér, Obsazenost — no Asistenti row needed). Sticky footer (**v3, D-06**) — contact block instead of an action: Avatar 40 (coach initials) + title 15/700 `Znovu přihlásit může jen trenér` + meta `{coach name} · {coach phone}`; below, two equal outline lg buttons (grid 1fr 1fr, gap 8): `Zavolat` (phone icon, `<a href="tel:…">`) and `Napsat SMS` (`<a href="sms:…">`). Coach = the one who removed the athlete (fallback: main coach). **Coach without phone** (`Coach.phone` is optional, admin A2/A3 or coach K0): show only the title + coach name, no buttons. No `Odhlásit` / `Přihlásit` action.
 Screen may exceed 844 px → page scrolls; footer stays fixed.
+
+### Účast — Půjde / Nepůjde (v3.7) · G6f, G6g, G6h, G6i
+Every active booking has a guardian response: `null` (**Nepotvrzeno**, the default after any booking, also after E08), `going`, or `not_going`.
+- **G6f · Nepotvrzeno:** section (white, radius 16, padding 16) placed **above** the DetailList: title 17/700 `Půjde {Jméno} na trénink?` + warning badge `Nepotvrzeno`; two equal buttons 52 px radius 12 `✓ Půjde` / `✕ Nepůjde` (colours as in G4); hint 13 muted `Když {Jméno} nepůjde, napíšete důvod. Bude z tréninku odhlášen a místo dostane někdo jiný.`
+- `Půjde` → saves `going` immediately (no dialog), toast `Potvrzeno: {Jméno} půjde` → **G6h**: title `Účast` + success badge `✓ Půjde`; text `Potvrdili jste, že {Jméno} přijde. Trenér to vidí v sestavě.`; meta `Potvrzeno {d. m.} v {HH:MM} · {guardian}`; link (danger) `Změnit: {Jméno} nepůjde` → G6g.
+- `Nepůjde` → **G6g** bottom sheet: H2 `Proč {Jméno} nepůjde?`; quick chips (single select, pill 36, selected = primary) `Nemoc`, `Zranění`, `Škola`, `Rodinné důvody` — a chip writes `{chip} – ` into the field and focuses it at the end; textarea `Důvod *`, **required**, 1–200 chars after trim, counter `x / 200`; hint `Důvod uvidí trenér. {Jméno} bude z tréninku odhlášen, místo se uvolní a v docházce se trénink počítá jako absence.`; buttons `Odhlásit: {Jméno} nepůjde` (danger fill, disabled until valid) and `Zpět` (outline).
+- Confirm → booking becomes `cancelled_by_guardian` with `cancel_reason`, `cancelled_at`, `cancelled_by`, `late = now() > deadline`; the place is freed; E10 goes to the main coach → **G6i**: header time struck through; section with 1.5 px danger-border: `Účast` + danger badge `✕ Nepůjde`, text `{Jméno} je z tréninku odhlášen, místo se uvolnilo. Trenér dostal důvod e-mailem. V docházce se trénink počítá jako absence.`, caption `DŮVOD` + reason box (bg, radius 10), meta `Odhlášeno {d. m.} v {HH:MM} · {guardian}`. Footer: hint `Rozmysleli jste si to? Pokud je volné místo, můžete {Jméno} přihlásit znovu.` + outline lg `Přihlásit znovu` (only while capacity allows and the session has not started; a new booking starts as Nepotvrzeno). The reason cannot be edited after sending.
+- `Nepůjde` is allowed until the session **start**. After the cancellation deadline it is still allowed, but marked `late` (coach sees `Pozdě`).
+- Any guardian of the athlete can respond; the last response wins and is shown with its author.
+- Not available for G4b/G6d (removed by coach) and cancelled sessions.
 
 ### G7 · Athletes (`/athletes`)
 H1 `Moji sportovci`. Cards (link, chevron): avatar 56 (photo or initials), name 17/700, birth date `8. 6. 2017`, sport chips (neutral-50, 13/600): `Lední hokej · Centr` (position appended when set), `Fotbal`.
@@ -245,7 +256,7 @@ E-mail (not designed here): booking confirmation (optional), significant session
 1. Guardian with 2 eligible kids books both on a session with ≥2 places → both BookedChips visible; count +2.
 2. Session with 1 place, 2 kids selected → G3 notice, CTA disabled; unselect one → CTA `Přihlásit 1 sportovce` enabled; booking succeeds.
 3. Ineligible child visible but disabled with reason; cannot be selected via keyboard.
-4. Booking < 12 h before start → no active cancel button; locked text visible in G4 and G6.
+4. ~~Booking < 12 h before start → no active cancel button~~ (v3.7): after the deadline `Nepůjde` still works and the booking is flagged `late`; after the session start the Účast block is read-only.
 5. Coach changes time → G4 shows `Změněno`; after opening G6 and returning, badge gone; G6 notice still shows old/new time.
 6. Coach cancels session → card in G4/G5 struck through with `Zrušeno trenérem`; self-cancelled booking shows `Odhlášeno` without strike-through.
 7. Full session → `Obsazeno` disabled button, cobalt meter, no duplicate badge.
@@ -253,6 +264,10 @@ E-mail (not designed here): booking confirmation (optional), significant session
 8. All card buttons measure 124 × 44.
 9. Axe: no serious violations on G1, G2, G4, G6, G9.
 10. Org with logo → logo on G11 and G1 header; org without logo → monogram `HŠ` in the same size/position, no broken image.
+11. (v3.7) New booking shows `Potvrďte účast` in G4 and `Nepotvrzeno` in G6f; `Půjde` saves without a dialog and G4 shows `✓ Půjde · potvrzeno`.
+12. (v3.7) `Nepůjde` → G6g: the confirm button is disabled with an empty or whitespace-only reason and with 201 chars; a chip prefills `Nemoc – `; confirming frees the place (G1 count −1), sends E10, and G6i shows the reason.
+13. (v3.7) `Nepůjde` after the deadline succeeds and is stored with `late = true`; after the session start the buttons are gone.
+14. (v3.7) Axe: no serious violations on G6f, G6g (sheet open) and G6i.
 
 ## 7. Assumptions & open questions (confirm before build)
 - OTP length 6, resend after 60 s.

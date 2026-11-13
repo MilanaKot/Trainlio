@@ -28,6 +28,7 @@ export function resendProvider(apiKey: string, from: string): EmailProvider {
             subject: message.subject,
             text: message.text,
             html: message.html,
+            ...(message.replyTo ? { reply_to: message.replyTo } : {}),
           }),
         })
       } catch (cause) {

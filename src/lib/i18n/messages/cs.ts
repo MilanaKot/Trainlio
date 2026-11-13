@@ -193,7 +193,8 @@ export const cs = {
     badgeChanged: 'Změněno',
     badgeRemoved: 'Odhlášeno trenérem',
     badgeSessionCancelled: 'Zrušeno trenérem',
-    badgeSelfCancelled: 'Odhlášeno',
+    /* v3.7: a guardian's withdrawal is `Nepůjde` (G5, G4). */
+    badgeSelfCancelled: 'Nepůjde',
     /* Masculine participle for everyone: the product does not collect gender
        and will not guess it from a name (DESIGN_SYSTEM §8). */
     cancelledBy: 'Odhlásil {name} · {when}',
@@ -293,20 +294,52 @@ export const cs = {
       NOT_AUTHENTICATED: 'Nejste přihlášeni.',
       BOOKING_NOT_FOUND: 'Přihláška nebyla nalezena.',
       BOOKING_NOT_CONFIRMED: 'Přihláška už není aktivní.',
-      CANCELLATION_DEADLINE_PASSED: 'Odhlášení již není možné. Kontaktujte trenéra.',
+      SESSION_STARTED: 'Trénink již začal.',
+      VALIDATION: 'Napište důvod, nejvýše 200 znaků.',
       generic: 'Akce se nezdařila. Zkuste to prosím znovu.',
     },
   },
 
   cancellation: {
-    cancel: 'Odhlásit',
-    tooLate: 'Odhlášení již není možné. Kontaktujte trenéra.',
     until: 'Odhlásit lze do {deadline}',
-    /* §G4: the confirmation names the child and the training, because a
-       parent with several bookings is one tap from withdrawing the wrong one. */
-    confirmTitle: 'Odhlásit {name}?',
-    keep: 'Ponechat',
     done: 'Odhlášeno',
+  },
+
+  /* v3.7, decisions 52–55: Půjde / Nepůjde (G4, G6f–G6i, DS §6.38). */
+  response: {
+    group: 'Účast',
+    title: 'Účast',
+    question: 'Půjde {name} na trénink?',
+    pending: 'Nepotvrzeno',
+    confirmBadge: 'Potvrďte účast',
+    going: 'Půjde',
+    notGoing: 'Nepůjde',
+    goingConfirmed: 'Půjde · potvrzeno',
+    pendingHint:
+      'Když {name} nepůjde, napíšete důvod. Bude z tréninku odhlášen a místo dostane někdo jiný.',
+    goingText: 'Potvrdili jste, že {name} přijde. Trenér to vidí v sestavě.',
+    goingMeta: 'Potvrzeno {when} · {name}',
+    change: 'Změnit: {name} nepůjde',
+    lateAfter: 'Po termínu odhlášení uvidí trenér omluvu jako pozdní.',
+    lateFrom: 'Po {deadline} uvidí trenér odhlášení jako pozdní',
+    confirmedToast: 'Potvrzeno: {name} půjde',
+    cancelledText:
+      '{name} je z tréninku odhlášen, místo se uvolnilo. Trenér dostal důvod e-mailem. V docházce se trénink počítá jako absence.',
+    reasonCaption: 'DŮVOD',
+    cancelledMeta: 'Odhlášeno {when} · {name}',
+    /* The design declines the name (`Ivana`); a name cannot be declined
+       reliably, so the sentence names the role instead (DS §8). */
+    rebookHint: 'Rozmysleli jste si to? Pokud je volné místo, můžete sportovce přihlásit znovu.',
+    rebook: 'Přihlásit znovu',
+    sheetTitle: 'Proč {name} nepůjde?',
+    chips: 'Rychlý výběr',
+    reasonLabel: 'Důvod',
+    sheetHint:
+      'Důvod uvidí trenér. {name} bude z tréninku odhlášen, místo se uvolní a v docházce se trénink počítá jako absence.',
+    sheetConfirm: 'Odhlásit: {name} nepůjde',
+    back: 'Zpět',
+    sending: 'Odhlašuji…',
+    saving: 'Ukládám…',
   },
 
   myBookings: {
@@ -646,12 +679,23 @@ export const cs = {
       attendanceNone: 'Docházka · zatím nic',
       paidTile: 'Zaplaceno',
       upcoming: 'NADCHÁZEJÍCÍ · {count}',
+      /* v3.7: how many of them the family withdrew from. */
+      upcomingWithdrawn: '· {count} nepůjde',
       past: 'PROBĚHLÉ · {period}',
       pastNone: 'V tomto období žádný trénink neproběhl.',
       upcomingNone: 'Nemá přihlášku na žádný nadcházející trénink.',
       remove: 'Odhlásit z tréninku',
       showMore: 'Zobrazit další ({count})',
-      footnote: 'Platbu lze označit i předem, docházku od začátku tréninku.',
+      footnote:
+        'Platbu lze označit i předem, docházku od začátku tréninku. Odhlášení s důvodem (Nepůjde) se počítá jako „Nebyl“.',
+      /* v3.7 (K13 · Účast). */
+      responseGoing: 'Půjde',
+      responsePending: 'Nepotvrzeno',
+      withdrawnBadge: 'Nepůjde',
+      withdrawnMeta: 'Odhlásil rodič {when} · v docházce jako „Nebyl“',
+      late: 'Pozdě',
+      absenceCaption: 'Omluvenka od rodiče · {guardian} · {when}',
+      notGoingSuffix: '· nepůjde',
       born: 'Narozen',
       filledByParent: 'Údaje vyplňuje rodič ve své aplikaci.',
       playerNote: 'POZNÁMKA O HRÁČI · JEN TRENÉŘI',
@@ -757,6 +801,18 @@ export const cs = {
     othersPresent: 'Ostatní byli',
     attendanceFootnote:
       'Docházku lze zapsat od začátku tréninku; nezapsaní se po skončení počítají jako „Nebyl“.',
+    /* v3.7 · K2n (before the start) and NEPŮJDOU. */
+    responseGoing: 'Půjde',
+    responsePending: 'Nepotvrzeno',
+    responsesConfirmed: 'Potvrdili účast {count} z {total}',
+    attendanceFootnoteBefore:
+      'Docházku lze zapsat od začátku tréninku. „Nepotvrzeno“ = rodič zatím neodpověděl.',
+    notGoingCaption: 'NEPŮJDOU · {count}',
+    withdrawnMeta: '{year} · odhlásil rodič {when}',
+    today: 'dnes v {time}',
+    late: 'Pozdě',
+    notGoingFootnote:
+      'Odhlášení s důvodem uvolní místo a v docházce se počítá jako „Nebyl“. „Pozdě“ = po termínu pro odhlášení.',
     /* DS §6.16, the one toast with an action. */
     paymentCancelled: 'Platba zrušena · {athlete}',
     undoPayment: 'Vrátit',
@@ -1043,6 +1099,7 @@ export const cs = {
       BOOKING_ADDED_BY_COACH: 'Nová přihláška',
       SESSION_CHANGED: 'Změna tréninku',
       COACH_MESSAGE_TO_GUARDIAN: 'Zpráva od trenéra',
+      GUARDIAN_ABSENCE_TO_COACH: 'Omluvenka',
     } as Record<string, string>,
     subjects: {
       SESSION_CANCELLED: 'Zrušeno: trénink {day} v {time}',
@@ -1056,6 +1113,7 @@ export const cs = {
       BOOKING_ADDED_BY_COACH: 'Přihláška na trénink {day} v {time}',
       SESSION_CHANGED: 'Změna tréninku: trénink {day}',
       COACH_MESSAGE_TO_GUARDIAN: 'Zpráva od trenéra: {athletes} · trénink {day}',
+      GUARDIAN_ABSENCE_TO_COACH: 'Omluvenka: {athletes} nepůjde · trénink {day} v {time}',
     } as Record<string, string>,
     titles: {
       SESSION_CANCELLED: 'Trénink byl zrušen',
@@ -1069,6 +1127,7 @@ export const cs = {
       BOOKING_ADDED_BY_COACH: 'Trenér přihlásil sportovce na trénink',
       SESSION_CHANGED: 'Trénink se změnil',
       COACH_MESSAGE_TO_GUARDIAN: 'Trenér vám poslal zprávu',
+      GUARDIAN_ABSENCE_TO_COACH: '{athletes} na trénink nepůjde',
     } as Record<string, string>,
     bodies: {
       SESSION_CANCELLED:
@@ -1088,6 +1147,8 @@ export const cs = {
         '{coach} přihlásil sportovce na trénink. Najdete ho v aplikaci v Moje tréninky.',
       SESSION_CHANGED: 'Trenér upravil trénink. Přihláška platí dál, se změnami níže.',
       COACH_MESSAGE_TO_GUARDIAN: '{coach} vám poslal zprávu ke sportovci z tréninku.',
+      GUARDIAN_ABSENCE_TO_COACH:
+        'Rodič sportovce odhlásil z tréninku a napsal důvod. Místo se uvolnilo.',
     } as Record<string, string>,
     /* `Trénink se přesouvá do Malé haly`: the hall's name has to decline, and
        only these two exist in the MVP. Anything else gets the sentence that
@@ -1101,6 +1162,7 @@ export const cs = {
       booking: 'Otevřít v aplikaci',
       sessions: 'Zobrazit další tréninky',
       findAnother: 'Najít jiný trénink',
+      session: 'Otevřít trénink',
     },
     rows: {
       athletes: {
@@ -1116,8 +1178,20 @@ export const cs = {
       coach: 'Trenér',
       deadline: 'Odhlásit lze',
       training: 'Trénink',
+      withdrewBy: 'Odhlásil',
+      occupancy: 'Obsazenost',
+      warning: 'Upozornění',
     },
     deadlineValue: 'do {day} v {time}',
+    /* E10 (v3.7): the one notification to the staff. */
+    withdrewValue: '{name} · {when}',
+    lateValue: 'Po termínu pro odhlášení',
+    guardianReason: 'Důvod od rodiče',
+    guardianFallback: 'rodič',
+    guardianPhoneHelper: 'Rodiče kontaktujte telefonicky: {phone}.',
+    footerMainCoach: 'Tento e-mail jste dostali jako hlavní trenér tréninku v aplikaci {org}.',
+    footerAdmin:
+      'Tento e-mail jste dostali jako administrátor, protože trénink nemá hlavního trenéra, v aplikaci {org}.',
     allYears: 'Všichni sportovci',
     yearRange: '{from}–{to}',
     /* The caption above what the coach wrote for this one parent. Never the

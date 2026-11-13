@@ -7,7 +7,7 @@ import {
 } from '@/server/bookings/queries'
 import { getSessionCoaches } from '@/server/sessions/queries'
 import { listJoinableWorkspaces } from '@/server/athletes/queries'
-import { BookingActions } from '@/components/booking/booking-actions'
+import { BookingActions, ResponseSection } from '@/components/booking/booking-actions'
 import { MarkSeen } from '@/components/booking/mark-seen'
 import { Avatar } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
@@ -91,7 +91,6 @@ export default async function BookingDetailPage({
           {variant === 'cancelledSession' ? (
             <Badge variant="danger">{t.badgeSessionCancelled}</Badge>
           ) : null}
-          {variant === 'selfCancelled' ? <Badge>{t.badgeSelfCancelled}</Badge> : null}
           {/* G6e: only when paid — a parent is never shown "unpaid". */}
           {booking.paid ? (
             <Badge variant="success" className="ml-auto gap-1">
@@ -112,6 +111,10 @@ export default async function BookingDetailPage({
           className={cn(
             'nums font-display text-hero font-bold',
             struck ? 'text-muted line-through' : 'text-ink',
+            // G6i: the family withdrew — the time is struck, the day is not.
+            // Muted rather than the design's subtle grey, which is too faint
+            // for text (tokens.css).
+            variant === 'selfCancelled' && 'text-muted line-through',
           )}
         >
           {formatTimeRange(start, end, timezone)}
@@ -204,6 +207,8 @@ export default async function BookingDetailPage({
           </p>
         </section>
       ) : null}
+
+      <ResponseSection booking={booking} timezone={timezone} now={now} />
 
       <DetailList
         items={[

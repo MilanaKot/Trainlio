@@ -287,18 +287,22 @@ export type Database = {
           cancellation_reason: string | null
           cancelled_at: string | null
           cancelled_by: string | null
+          cancel_late: boolean | null
           change_seen_at: string | null
           coach_capacity_override: boolean
           created_at: string
           created_by: string
           created_by_role: Database["public"]["Enums"]["booking_creator_role"]
           eligibility_narrowed_at: string | null
+          guardian_response: string | null
           id: string
           paid_at: string | null
           paid_by: string | null
           parent_message: string | null
           parent_message_sent_at: string | null
           parent_message_sent_by: string | null
+          responded_at: string | null
+          responded_by: string | null
           status: Database["public"]["Enums"]["booking_status"]
           training_session_id: string
           updated_at: string
@@ -311,18 +315,22 @@ export type Database = {
           cancellation_reason?: string | null
           cancelled_at?: string | null
           cancelled_by?: string | null
+          cancel_late?: boolean | null
           change_seen_at?: string | null
           coach_capacity_override?: boolean
           created_at?: string
           created_by: string
           created_by_role: Database["public"]["Enums"]["booking_creator_role"]
           eligibility_narrowed_at?: string | null
+          guardian_response?: string | null
           id?: string
           paid_at?: string | null
           paid_by?: string | null
           parent_message?: string | null
           parent_message_sent_at?: string | null
           parent_message_sent_by?: string | null
+          responded_at?: string | null
+          responded_by?: string | null
           status?: Database["public"]["Enums"]["booking_status"]
           training_session_id: string
           updated_at?: string
@@ -335,18 +343,22 @@ export type Database = {
           cancellation_reason?: string | null
           cancelled_at?: string | null
           cancelled_by?: string | null
+          cancel_late?: boolean | null
           change_seen_at?: string | null
           coach_capacity_override?: boolean
           created_at?: string
           created_by?: string
           created_by_role?: Database["public"]["Enums"]["booking_creator_role"]
           eligibility_narrowed_at?: string | null
+          guardian_response?: string | null
           id?: string
           paid_at?: string | null
           paid_by?: string | null
           parent_message?: string | null
           parent_message_sent_at?: string | null
           parent_message_sent_by?: string | null
+          responded_at?: string | null
+          responded_by?: string | null
           status?: Database["public"]["Enums"]["booking_status"]
           training_session_id?: string
           updated_at?: string
@@ -355,6 +367,13 @@ export type Database = {
           {
             foreignKeyName: "bookings_attendance_by_fkey"
             columns: ["attendance_by"]
+            isOneToOne: false
+            referencedRelation: "app_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bookings_responded_by_fkey"
+            columns: ["responded_by"]
             isOneToOne: false
             referencedRelation: "app_profiles"
             referencedColumns: ["id"]
@@ -1359,7 +1378,7 @@ export type Database = {
         Returns: Json
       }
       cancel_booking_as_guardian: {
-        Args: { p_booking_id: string }
+        Args: { p_booking_id: string; p_reason: string }
         Returns: Json
       }
       cancel_training_session: {
@@ -1392,10 +1411,15 @@ export type Database = {
           attendance: Database["public"]["Enums"]["attendance_status"]
           booking_id: string
           booking_status: Database["public"]["Enums"]["booking_status"]
+          cancel_late: boolean
+          cancellation_reason: string
+          cancelled_at: string
+          cancelled_by_name: string
           changing_room: string
           coach_note: string
           end_at: string
           facility_code: string
+          guardian_response: string
           main_coach_profile_id: string
           paid_at: string
           parent_message: string
@@ -1404,6 +1428,10 @@ export type Database = {
           status: Database["public"]["Enums"]["session_status"]
           training_session_id: string
         }[]
+      }
+      confirm_attendance_as_guardian: {
+        Args: { p_booking_id: string }
+        Returns: Json
       }
       coach_athletes: {
         Args: { p_workspace_id: string }
@@ -1537,6 +1565,14 @@ export type Database = {
       guardian_rebooking_blocked: {
         Args: { p_athlete_id: string; p_training_session_id: string }
         Returns: boolean
+      }
+      guardian_booking_actors: {
+        Args: { p_booking_ids: string[] }
+        Returns: {
+          booking_id: string
+          cancelled_by_name: string
+          responded_by_name: string
+        }[]
       }
       guardian_session_athletes: {
         Args: { p_training_session_id: string }
@@ -1709,13 +1745,16 @@ export type Database = {
           booked_at: string
           booked_by_name: string
           booking_id: string
+          cancel_late: boolean
           cancellation_reason: string
           cancelled_at: string
+          cancelled_by_name: string
           capacity_override: boolean
           club_name: string
           coach_note: string
           created_by_role: Database["public"]["Enums"]["booking_creator_role"]
           first_name: string
+          guardian_response: string
           jersey_number: string
           last_name: string
           paid_at: string
@@ -1724,6 +1763,8 @@ export type Database = {
           parent_message_sent_at: string
           parent_message_sent_by_name: string
           position_code: string
+          responded_at: string
+          responded_by_name: string
           status: Database["public"]["Enums"]["booking_status"]
           stick_side_code: string
         }[]

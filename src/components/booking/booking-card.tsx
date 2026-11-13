@@ -1,12 +1,11 @@
 'use client'
 
 import Link from 'next/link'
-import { useState, useTransition } from 'react'
-import { useRouter } from 'next/navigation'
 import { messages } from '@/lib/i18n'
 import { changingRoomLabel } from '@/lib/domain/session'
-import { canCancel, showsChangedBadge } from '@/lib/domain/booking'
+import { showsChangedBadge } from '@/lib/domain/booking'
 import { bookingCardVariant, changeRows } from '@/lib/domain/booking-card'
+import { cancellationDeadline, canRespond, isLate } from '@/lib/domain/guardian-response'
 import {
   formatDateGroup,
   formatDateTime,
@@ -14,17 +13,20 @@ import {
   formatTimeRange,
   relativeDayLabel,
 } from '@/lib/time/workspace-time'
-import { cancelBooking } from '@/server/bookings/actions'
 import { Avatar } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { ConfirmDialog } from '@/components/ui/dialog'
-import { useToast } from '@/components/ui/toast'
+import {
+  CheckIcon,
+  ResponseButtons,
+  useGuardianResponse,
+} from '@/components/booking/response-block'
 import { cn } from '@/lib/utils'
 import type { MyBooking } from '@/server/bookings/queries'
 
 const t = messages.myTrainings
 const c = messages.cancellation
+const r = messages.response
 
 function ClockIcon({ className }: { className?: string }) {
   return (
@@ -59,7 +61,11 @@ function InfoIcon() {
  * looks like a bug.
  *
  * The whole card is a link to the detail, which is what silences the "Změněno"
- * badge. The footer button sits inside it, so its click must not navigate.
+ * badge. The footer sits outside it, so its buttons do not navigate.
+ *
+ * v3.7: the footer is the family's answer — `Půjde` / `Nepůjde` until it is
+ * given, `Půjde · potvrzeno` with a way out after — until the training starts
+ * (decisions 52–53). A withdrawal reads `Nepůjde`, struck through.
  */
 export function BookingCard({
   booking,
@@ -72,11 +78,7 @@ export function BookingCard({
   deadlineHours: number
   now: Date
 }) {
-  const router = useRouter()
-  const toast = useToast()
-  const [confirming, setConfirming] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [pending, startTransition] = useTransition()
+  const response = useGuardianResponse(booking.bookingId, booking.athleteFirstName)
 
   const { session } = booking
   const start = new Date(session.startAt)
@@ -84,13 +86,15 @@ export function BookingCard({
 
   const variant = bookingCardVariant(booking, session)
   const muted = variant !== 'normal'
-  const struck = variant === 'cancelledSession'
+  const struck = variant === 'cancelledSession' || variant === 'selfCancelled'
   const changed = variant === 'normal' && showsChangedBadge(booking, session.significantChangedAt)
   const rows = changed ? changeRows(session.significantChange, session, timezone) : []
 
   const upcoming = end.getTime() >= now.getTime()
-  const cancellable = canCancel(booking, session, deadlineHours, now)
-  const deadlineAt = new Date(start.getTime() - deadlineHours * 60 * 60 * 1000)
+  const answerable = variant === 'normal' && canRespond(booking, session, now)
+  const unanswered = answerable && booking.response === null
+  const late = isLate(session.startAt, deadlineHours, now)
+  const deadlineAt = cancellationDeadline(session.startAt, deadlineHours)
   const relative = relativeDayLabel(start, now, timezone)
 
   const venue = [
@@ -100,21 +104,6 @@ export function BookingCard({
   ]
     .filter(Boolean)
     .join(' · ')
-
-  function onCancel() {
-    setError(null)
-    startTransition(async () => {
-      const result = await cancelBooking(booking.bookingId)
-      if (!result.ok) {
-        const table = messages.booking.errors as Record<string, string>
-        setError(table[result.code] ?? messages.booking.errors.generic)
-        return
-      }
-      setConfirming(false)
-      toast(c.done)
-      router.refresh()
-    })
-  }
 
   return (
     <li
@@ -140,12 +129,15 @@ export function BookingCard({
           <span className={cn('text-row font-bold', muted ? 'text-muted' : 'text-ink')}>
             {booking.athleteName}
           </span>
+          {unanswered ? <Badge variant="warning">{r.confirmBadge}</Badge> : null}
           {changed ? <Badge variant="warning">{t.badgeChanged}</Badge> : null}
           {variant === 'removedByCoach' ? <Badge variant="warning">{t.badgeRemoved}</Badge> : null}
           {variant === 'cancelledSession' ? (
             <Badge variant="danger">{t.badgeSessionCancelled}</Badge>
           ) : null}
-          {variant === 'selfCancelled' ? <Badge>{t.badgeSelfCancelled}</Badge> : null}
+          {variant === 'selfCancelled' ? (
+            <Badge variant="danger">{t.badgeSelfCancelled}</Badge>
+          ) : null}
           <span className="ml-auto text-subtle" aria-hidden="true">
             ›
           </span>
@@ -209,46 +201,51 @@ export function BookingCard({
         </p>
       ) : null}
 
-      {variant === 'normal' && upcoming ? (
-        <div className="flex items-center justify-between gap-3 border-t border-line pt-3">
-          {cancellable ? (
-            <p className="flex items-center gap-1.5 text-hint text-muted">
-              <ClockIcon />
-              {c.until.replace('{deadline}', formatDeadline(deadlineAt, timezone))}
-            </p>
-          ) : (
-            <p className="flex items-center gap-1.5 text-hint font-semibold text-ink">
-              <InfoIcon />
-              {c.tooLate}
-            </p>
-          )}
-          <Button
-            size="card"
-            variant="outline"
-            disabled={!cancellable || pending}
-            onClick={() => setConfirming(true)}
-          >
-            {c.cancel}
-          </Button>
+      {answerable && unanswered ? (
+        <div className="flex flex-col gap-2.5 border-t border-line pt-3">
+          <p className="flex items-center gap-1.5 text-hint text-muted">
+            <ClockIcon />
+            {late
+              ? r.lateAfter
+              : c.until.replace('{deadline}', formatDeadline(deadlineAt, timezone))}
+          </p>
+          <ResponseButtons
+            compact
+            disabled={response.pending}
+            onGoing={response.going}
+            onNotGoing={response.openReason}
+          />
         </div>
       ) : null}
 
-      {error ? (
+      {answerable && !unanswered ? (
+        <div className="flex flex-col gap-1.5 border-t border-line pt-3">
+          <div className="flex items-center justify-between gap-3">
+            <span className="flex items-center gap-1.5 text-row font-bold text-success">
+              <CheckIcon />
+              {r.goingConfirmed}
+            </span>
+            <Button
+              size="card"
+              variant="outline"
+              className="text-danger"
+              disabled={response.pending}
+              onClick={response.openReason}
+            >
+              {r.notGoing}
+            </Button>
+          </div>
+          {late ? <p className="text-hint text-muted">{r.lateAfter}</p> : null}
+        </div>
+      ) : null}
+
+      {response.error ? (
         <p role="alert" className="text-hint text-danger">
-          {error}
+          {response.error}
         </p>
       ) : null}
 
-      <ConfirmDialog
-        open={confirming}
-        onOpenChange={setConfirming}
-        title={c.confirmTitle.replace('{name}', booking.athleteName)}
-        description={`${formatDateGroup(start, timezone)} · ${formatTimeRange(start, end, timezone)}`}
-        cancelLabel={c.keep}
-        confirmLabel={c.cancel}
-        onConfirm={onCancel}
-        pending={pending}
-      />
+      {answerable ? response.sheet : null}
     </li>
   )
 }

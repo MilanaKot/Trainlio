@@ -129,9 +129,11 @@ Then the guardian cannot cancel.
 AC-040d **(D-02)**  
 The boundary is evaluated on server/database time, never on client device time.
 
-AC-041  
+AC-041 **(changed — v3.7, decision 53)**  
 Given the session starts inside the cancellation deadline  
-Then the guardian cannot cancel.
+Then the guardian can still withdraw (`Nepůjde`) with a reason until the start,
+and the withdrawal is stored as late (`Pozdě`). Without a reason, or once the
+training has started, it is refused.
 
 AC-042  
 Coach can cancel athlete booking at any time.
@@ -984,3 +986,34 @@ AC-314
 From K1 the `Série` tab opens K15 with that tab selected and `Tréninky` lit in
 the bottom navigation; `Více` has no `Série tréninků` row and has `Přehledy`
 (decision 50).
+
+## Parents confirm attendance (handoff v3.7)
+
+AC-315  
+A new booking shows `Potvrďte účast` in G4 and `Nepotvrzeno` in G6f;
+`Půjde` saves without a dialog and G4 then shows `✓ Půjde · potvrzeno`
+(guardian test 11, decision 52).
+
+AC-316  
+`Nepůjde` opens G6g: the confirm button stays disabled with an empty or
+whitespace-only reason and with 201 characters; a chip prefills `Nemoc – `;
+confirming frees the place, queues E10 to the main coach (to the
+administrators when there is none) and G6i shows the reason (guardian test 12,
+coach test 30).
+
+AC-317  
+A withdrawal after the cancellation deadline succeeds, is stored as late and
+shows `Pozdě` in K2 and K13; after the start the Účast block is read-only and
+the server refuses both answers (guardian test 13, coach test 31,
+decision 53).
+
+AC-318  
+A guardian's withdrawal counts as `Nebyl` in K13, K20, K20b and G8b — once per
+training, not when the athlete was booked again; a coach's removal and a
+cancelled training do not count (coach test 32, decision 54).
+
+AC-319  
+The reason is readable by every coach of the club, a view-only one too (K2b),
+and by the athlete's guardians, never by another family; K2n shows `Půjde` /
+`Nepotvrzeno` and `Potvrdili účast x z n` before the start, and `NEPŮJDOU`
+with reasons (coach tests 30 and 33, decision 55).

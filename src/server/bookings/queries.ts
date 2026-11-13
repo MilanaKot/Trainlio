@@ -85,6 +85,10 @@ export type MyBooking = {
   paid: boolean
   /** Decision 36: the coach's message about this booking (G6e). */
   parentMessage: { text: string; sentAt: string; senderName: string | null } | null
+  /** v3.7: `Půjde`, with who answered and when; null is `Nepotvrzeno` (G6h). */
+  response: { sentAt: string; byName: string | null } | null
+  /** v3.7: the family's reason for `Nepůjde` (G6i). */
+  absenceReason: string | null
   session: GuardianSession
 }
 
@@ -113,7 +117,7 @@ const SESSION_COLUMNS = `
   app_profiles!training_sessions_main_coach_profile_id_fkey ( display_name ),
   training_session_occupancy ( confirmed_count ),
   bookings ( id, status, athlete_id, created_at, eligibility_narrowed_at, change_seen_at,
-    cancelled_at, cancellation_reason,
+    cancelled_at, cancellation_reason, guardian_response, responded_at,
     paid_at, parent_message, parent_message_sent_at,
     app_profiles!bookings_cancelled_by_fkey ( display_name ),
     sender:app_profiles!bookings_parent_message_sent_by_fkey ( display_name ),
@@ -146,6 +150,8 @@ type Row = {
     change_seen_at: string | null
     cancelled_at: string | null
     cancellation_reason: string | null
+    guardian_response: string | null
+    responded_at: string | null
     paid_at: string | null
     parent_message: string | null
     parent_message_sent_at: string | null
@@ -315,7 +321,14 @@ export async function listMyBookings(): Promise<{ upcoming: MyBooking[]; past: M
         changeSeenAt: booking.change_seen_at,
         cancelledAt: booking.cancelled_at,
         cancelledByName: booking.app_profiles?.display_name ?? null,
-        coachMessage: booking.cancellation_reason,
+        // One column, two authors: the coach's words on a removal, the
+        // family's own on a withdrawal (migration 49).
+        coachMessage: booking.status === 'CANCELLED_BY_COACH' ? booking.cancellation_reason : null,
+        absenceReason: booking.status === 'CANCELLED_BY_USER' ? booking.cancellation_reason : null,
+        response:
+          booking.guardian_response === 'GOING' && booking.responded_at
+            ? { sentAt: booking.responded_at, byName: null }
+            : null,
         paid: booking.paid_at !== null,
         parentMessage:
           booking.parent_message && booking.parent_message_sent_at
@@ -330,7 +343,54 @@ export async function listMyBookings(): Promise<{ upcoming: MyBooking[]; past: M
     }
   }
 
-  return splitByTime(all, now)
+  // A withdrawal the family then took back by booking again is history, not
+  // a second card for the same child and training.
+  const current = all.filter(
+    (b) =>
+      b.status !== 'CANCELLED_BY_USER' ||
+      !all.some(
+        (other) =>
+          other !== b &&
+          other.session.id === b.session.id &&
+          other.athleteId === b.athleteId &&
+          other.bookingCreatedAt > b.bookingCreatedAt,
+      ),
+  )
+
+  await nameActors(supabase, current)
+
+  return splitByTime(current, now)
+}
+
+/**
+ * Who answered `Půjde` and who withdrew, by name (G6h, G6i, G5). Usually the
+ * other parent, whose profile row this guardian cannot read, so it comes from
+ * a function that answers for the caller's own children (migration 49).
+ */
+async function nameActors(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  bookings: MyBooking[],
+): Promise<void> {
+  const ids = bookings
+    .filter((b) => b.response !== null || b.status === 'CANCELLED_BY_USER')
+    .map((b) => b.bookingId)
+  if (ids.length === 0) return
+
+  const names = new Map(
+    rows(
+      'guardian_booking_actors',
+      await supabase.rpc('guardian_booking_actors', { p_booking_ids: ids }),
+    ).map((row) => [row.booking_id, row]),
+  )
+
+  for (const booking of bookings) {
+    const row = names.get(booking.bookingId)
+    if (!row) continue
+    if (booking.response) booking.response.byName = row.responded_by_name
+    if (booking.status === 'CANCELLED_BY_USER') {
+      booking.cancelledByName = row.cancelled_by_name ?? booking.cancelledByName
+    }
+  }
 }
 
 /**

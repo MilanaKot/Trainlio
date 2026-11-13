@@ -58,20 +58,22 @@ A single confirmation never splits siblings into booked and not-booked states.
 3. Booking CTA is disabled.
 4. Coach can still manually add an athlete using override.
 
-## 5. Guardian cancellation
+## 5. Guardian answers: Půjde / Nepůjde (v3.7)
 
-1. Guardian opens My Bookings.
-2. Selects athlete/session.
-3. If >=12 hours before start, `Odhlásit` is enabled.
-4. User confirms.
-5. Booking status becomes CANCELLED_BY_USER.
-6. Occupancy updates.
+1. Guardian opens My Bookings; a new booking shows `Potvrďte účast`.
+2. `Půjde` saves at once and the card reads `Půjde · potvrzeno`.
+3. `Nepůjde` opens the reason sheet; a chip (`Nemoc`, `Zranění`, `Škola`,
+   `Rodinné důvody`) prefills `{chip} – `, the reason is required (1–200).
+4. Confirming withdraws the booking: status CANCELLED_BY_USER, the reason
+   stored, the place freed, E10 to the main coach.
+5. Occupancy updates; the booking shows `Nepůjde` with the reason (G6i) and
+   offers `Přihlásit znovu` while there is a place.
 
-## 6. Cancellation inside 12 hours
+## 6. Withdrawal inside 12 hours (v3.7)
 
-1. Guardian opens booking.
-2. `Odhlásit` is disabled.
-3. UI displays `Odhlášení již není možné. Kontaktujte trenéra.`
+1. Guardian opens booking; the footer says the coach will see it as late.
+2. `Nepůjde` works until the start and is stored as late (`Pozdě`).
+3. From the start the Účast block is read-only.
 
 ## 7. Coach manually adds athlete
 

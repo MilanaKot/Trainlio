@@ -68,7 +68,9 @@ Code, schema, comments, docs: English.
 - Workspace timezone = Europe/Prague. All wall-clock reasoning uses it, never the
   device timezone.
 - Guardian cancellation deadline = 12 hours before session start, stored as a
-  workspace setting rather than a hardcoded constant.
+  workspace setting rather than a hardcoded constant. Since handoff v3.7 a
+  guardian may still withdraw (`Nepůjde`, with a reason) until the start; after
+  the deadline the withdrawal is marked late for the coach.
 - Users may book until the session starts while booking is open and capacity allows.
 - Multi-athlete guardian booking is atomic: all selected athletes or none.
 - An athlete removed by a coach cannot be re-booked by a guardian.
