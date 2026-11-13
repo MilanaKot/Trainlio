@@ -38,7 +38,8 @@ export default defineConfig({
       // The permissions spec is specified at 390 × 844 and sets its own
       // viewport, so a desktop run would repeat it at the same size — and
       // double the sign-ins it spends against GoTrue's rate limit.
-      testIgnore: /(mobile|organization|permissions|payment|statistics|athlete-years|response)\.spec\.ts/,
+      testIgnore:
+        /(mobile|organization|permissions|payment|statistics|athlete-years|response)\.spec\.ts/,
     },
   ],
   webServer: {
