@@ -78,7 +78,9 @@ export function JoinRequestList({
               <span className="font-semibold">
                 {guardian.name ?? messages.coach.bookedByParent}
               </span>
-              <span className="text-muted">
+              {/* An address is one long word: it wraps anywhere rather than
+                  pushing the card wider than the screen. */}
+              <span className="break-all text-muted">
                 {[guardian.phone ? formatPhone(guardian.phone) : null, guardian.email]
                   .filter(Boolean)
                   .join(' · ')}
