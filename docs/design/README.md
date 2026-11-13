@@ -89,12 +89,17 @@ The prototypes are visual references with sample data (names like Jan Novák, El
 49. Selected filter chips are **primary blue `#2B55E0`, never black/ink** (K1, K12, K20, K20b). Birth-year filter in K12 is a YearGrid: all years always visible in a 4-column grid with counts, default `Všechny`, not remembered.
 50. Více has no `Plánování` section. Sections: profile · `Přehledy` (Statistiky) · `Správa` (admin) · `Účet`. Series are the third Tréninky tab `Nadcházející · Minulé · Série`.
 51. One corner radius for buttons: **12 px** for every text button (incl. FAB and e-mail CTA). Pills only for chips/filters.
+52. Guardians confirm every booking: `Půjde` / `Nepůjde` (default **Nepotvrzeno**). `Nepůjde` needs a reason (1–200 chars, quick chips `Nemoc`, `Zranění`, `Škola`, `Rodinné důvody`) and **cancels the booking, freeing the place**. It replaces the guardian's `Odhlásit` button.
+53. `Nepůjde` is possible until the session start; after the cancellation deadline it is flagged `Pozdě` for the coach.
+54. A guardian cancellation (Nepůjde) **counts as Nebyl** in all attendance figures. Coach removals and cancelled sessions do not.
+55. The coach sees responses in K2n (before start), the `NEPŮJDOU` section with reasons in K2/K2n, the K13 Tréninky and Zprávy tabs, and the main coach gets e-mail E10.
 
 Open questions are listed at the end of each SPEC.md. What the implementation
 still needs answered — those questions, plus anything that shipped without a
 design — is collected in `DESIGN_REQUESTS.md`.
 
 ## Changelog
+- **v3.7 — guardian confirms attendance (Půjde / Nepůjde).** G4 cards and G6f–G6i (confirm, reason sheet, confirmed, cancelled); coach K2n (before start) + `NEPŮJDOU` section in K2, K13 rows and Zprávy entry; e-mail E10 to the main coach; Nepůjde counts as Nebyl. Decisions 52–55. Task: `CLAUDE_CODE_TASK_v3.7.md`.
 - **v3.6 — year filter + chip colour.** K12 year filter becomes a YearGrid (all years visible, counts, newest first; K12b = year selected); selected FilterChips are primary blue instead of ink in K1, K12, K20, K20b. DS §6.28. Více: `Plánování` → `Přehledy` (only Statistiky); series moved to the third Tréninky tab `Série` (K1, K1b, K14, K15). Buttons: one radius 12 everywhere (FAB was a pill, md buttons were 10). Decisions 49–51. Task: `CLAUDE_CODE_TASK_v3.6.md`.
 - **v3.5 — statistics + season.** K20 Statistiky, K20b per-coach statistics, A0 row `Statistiky`; `Rok` → `Sezóna` (1 Aug – 31 Jul) in K13, K20, K20b, G8b; K13 season view = month layout. Decisions 47–48. Task: `CLAUDE_CODE_TASK_v3.5.md`.
 - **v3.4 — attendance, merged roster, player card tabs.** K2 roster with attendance/payment toggles (DS §6.36/6.37) and tap-zone rules (`design-source/screens/K02s-StavyKarty.dc.html`); K13 player card with 4 tabs (K13, K13h, K13r, K13z) replaces K17/K17b and K19; K14 counters; K2b read-only update; K2e + A3f (main coach deactivated); G8b attendance for parents; undo toast for payment; decisions 38–46. **Task: `CLAUDE_CODE_TASK_v3.4.md` (supersedes `CLAUDE_CODE_TASK_payment.md`, now replaced by `CLAUDE_CODE_TASK_v3.4.md`).**

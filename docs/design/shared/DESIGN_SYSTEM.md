@@ -310,3 +310,6 @@ Use `Intl.PluralRules("cs")` → `one` (1), `few` (2–4), `many` (fractions), `
 | network / unknown | `Něco se nepovedlo. Zkuste to prosím znovu.` |
 
 Never show SQL/RPC names or HTTP codes.
+
+### 6.38 ResponseBlock — Půjde / Nepůjde (v3.7)
+White section, radius 16, padding 16, gap 12. Header row: title 17/700 + status badge (24 px, radius 6, 12/700): `Nepotvrzeno` warning-soft/warning, `✓ Půjde` success-soft/success, `✕ Nepůjde` danger-soft/danger. Buttons: two equal columns, gap 8, height 52 (44 in G4 cards), radius 12, 16/700 with 20 px icon: yes = success-soft bg + success text + inset 1.5 px `#A9D9C3`; no = danger-soft + danger + inset 1.5 px `#EFC2BC`. Cancelled state: 1.5 px inset danger-border `#EFC2BC` around the section. Reason box: bg `--bg`, radius 10, padding 10/12, 15/22. Reason sheet: DS §6.12 bottom sheet + QuickChips (pill 36, single select, primary when selected) + Textarea (radius 10, 3 rows, counter right in the label row). Use `role="group"` with `aria-label="Účast"` on the buttons; status changes announced via the toast (`aria-live="polite"`).
