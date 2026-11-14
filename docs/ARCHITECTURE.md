@@ -187,3 +187,13 @@ deadline and the primary sport are workspace columns. Tenancy is enforced by
 composite foreign keys. Athletes are global and reach a workspace through an
 explicit membership, so one athlete can belong to several workspaces and several
 sports without duplication.
+
+### Reading long lists
+
+PostgREST returns at most `max_rows` (1000) rows per request and says nothing
+when it cuts a result short. A read that can grow past that — a club's future
+sessions, the sessions a family may book, the family's bookings, which are
+picked out of the club's sessions — goes through `allRows()` in
+`src/server/query-result.ts`. It asks for 1000 rows at a time with `.range()`
+over a total order (`start_at`, then `id`) until a page comes back short.
+Bounded reads, such as the last 50 past sessions, keep a plain `.limit()`.

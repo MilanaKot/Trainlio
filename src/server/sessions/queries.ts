@@ -1,7 +1,7 @@
 import 'server-only'
 
 import { createClient } from '@/lib/supabase/server'
-import { maybeRow, rows } from '@/server/query-result'
+import { maybeRow, rows, allRows } from '@/server/query-result'
 import { toOrganization } from '@/server/organization/queries'
 import type { Organization } from '@/lib/domain/org'
 import type { SessionStatus, EligibilityMode, CoachSessionRole } from '@/types/database'
@@ -229,7 +229,17 @@ export async function listCoachSessions(): Promise<{
   const now = new Date().toISOString()
 
   const [upcoming, past] = await Promise.all([
-    supabase.from('training_sessions').select(SESSION_COLUMNS).gte('end_at', now).order('start_at'),
+    // Every upcoming training, however many: a page at a time, because one
+    // read stops at PostgREST's thousand rows without saying so.
+    allRows('listCoachSessions upcoming', (from, to) =>
+      supabase
+        .from('training_sessions')
+        .select(SESSION_COLUMNS)
+        .gte('end_at', now)
+        .order('start_at')
+        .order('id')
+        .range(from, to),
+    ),
     supabase
       .from('training_sessions')
       .select(SESSION_COLUMNS)
@@ -239,7 +249,7 @@ export async function listCoachSessions(): Promise<{
   ])
 
   return {
-    upcoming: (rows('listCoachSessions upcoming', upcoming) as unknown as Row[]).map(toSession),
+    upcoming: (upcoming as unknown as Row[]).map(toSession),
     past: (rows('listCoachSessions past', past) as unknown as Row[]).map(toSession),
   }
 }

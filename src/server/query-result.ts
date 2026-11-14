@@ -52,3 +52,32 @@ export function maybeRow<T>(
   if (result.error) fail(where, result.error)
   return result.data
 }
+
+/**
+ * PostgREST's row cap (`max_rows`, 1000 here and on Supabase by default).
+ * A read above it does not fail: it returns the first thousand rows and says
+ * nothing, and a coach's list simply ends at the thousandth training.
+ */
+export const PAGE_ROWS = 1000
+
+/**
+ * Every row of a read that may outgrow one page, fetched a page at a time.
+ *
+ * `page` builds the same query each time with `.range(from, to)`; it must
+ * have a total order (a tie-breaking `.order('id')`), or rows sharing a sort
+ * key could appear on two pages or on none.
+ */
+export async function allRows<T>(
+  where: string,
+  page: (
+    from: number,
+    to: number,
+  ) => PromiseLike<{ data: T[] | null; error: PostgrestError | null }>,
+): Promise<T[]> {
+  const all: T[] = []
+  for (let from = 0; ; from += PAGE_ROWS) {
+    const batch = rows(where, await page(from, from + PAGE_ROWS - 1))
+    all.push(...batch)
+    if (batch.length < PAGE_ROWS) return all
+  }
+}
