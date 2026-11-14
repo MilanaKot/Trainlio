@@ -55,28 +55,70 @@ such a training reads as K2e without the `{coach} byl deaktivován` sentence.
 Worth drawing: the K3c row, the K2e notice for a training that never had a
 coach, and whether K1 should mark it differently from one whose coach left.
 
-### DR-18 · Signing in with Google (D-38)
+### DR-18 · Signing in: Google and the e-mail code (D-38)
 
-Decided by the product on 13 November 2026: Google and the e-mail code, no
-password. Built without a design: G11 gains an outline `Pokračovat přes
-Google` with Google's own mark, a divider `nebo`, then the e-mail field as
-before. Worth drawing: G11 with the button (Google's branding rules apply to
-it), the error after a cancelled or failed Google sign-in (today a red line
-above the button), and what a coach sees who chose a Google account other than
-the address they were invited with — today an empty parent account — plus a
-line in A6 saying Google works with that address.
+Decided by the product on 13 November 2026: **no password**. Every actor —
+parent, coach, administrator — signs in the same way, with Google or with a
+six-digit code sent by e-mail. There is no separate registration: the first
+sign-in creates the account. **Fixed.** The application ships as an Android
+APK first, then in the stores, so every screen must also work inside an app
+shell, where Google opens in the system browser and comes back.
+
+Built today without a design, on G11/G12 (`/prihlaseni`):
+
+- **G11 · Přihlášení.** The club's crest and name at the top with
+  `Rezervace tréninků` under them (the product's wordmark when no single club
+  can be told); the title `Přihlášení`; the intro `Přihlaste se přes Google,
+  nebo vám pošleme kód na e-mail. Heslo nepotřebujete.`; an outline lg button
+  `Pokračovat přes Google` with Google's four-colour mark; a divider `nebo`;
+  the `E-mail` field; the primary lg `Poslat kód`; the footer `Běží na
+  Trainlio`.
+- **G12 · Zadejte kód.** `Poslali jsme ho na {email}`, six boxes (§6.26, the
+  sixth digit submits), `Přihlásit se`, then `Poslat znovu za 0:42` turning
+  into `Poslat znovu`, and `Změnit e-mail`.
+
+Needed, one screen or state each:
+
+1. **G11 with Google.** The button follows Google's branding rules (mark,
+   wording, outline or filled); its weight against `Poslat kód` — which of
+   the two is the main way in.
+2. **Leaving for Google** (`Přesměrovávám…`) and **coming back** in the app
+   shell: what the parent sees for the second or two before the app opens.
+3. **Google failed or cancelled.** Today a red line above the button:
+   `Přihlášení přes Google se nezdařilo. Zkuste to znovu, nebo použijte kód z
+   e-mailu.`
+4. **G12 errors.** A wrong or expired code (the boxes red and emptied,
+   `Kód je neplatný nebo vypršel. Zkuste to znovu.`), too many attempts
+   (`Příliš mnoho pokusů. Zkuste to prosím za chvíli.`), and an invalid
+   address on G11 (`Zadejte platný e-mail.`).
+5. **Arriving by the club's link** (DR-19, `/klub/{code}`): the club page
+   sends the parent to G11 and back. Does G11 say which club they are
+   joining, and does `Pokračovat` on the return need its own screen?
+6. **The first sign-in.** Today a new parent lands straight in the app with
+   no welcome and no name; their own name can be filled in later on `Účet`.
+   Is a short "who are you" step wanted after the first sign-in, or leave it?
+7. **A coach who chose the wrong Google account.** An invited coach's
+   access is tied to the address the administrator typed (A3, A6). Signing in
+   with another Google account today opens an empty parent account with no
+   hint. Needed: what that coach sees, and a line in the A6 e-mail saying
+   Google works only with the invited address.
+
+Open: Sign in with Apple. The App Store requires it next to Google once the
+iOS app exists; if the designer draws G11 with room for a second provider
+button, adding it later costs nothing.
 
 ### DR-19 · Joining a club by link and approval
 
-Decided by the product on 12 November 2026, not built yet: a club link or QR
-code, a child waiting for an administrator's approval, and a second parent
-invited by the first (PRD §6). Needed: the administrator's link/QR screen
-(show, copy, print, issue a new one), what a parent sees arriving by the link,
-`Čeká na schválení`, the administrator's approval list with a count in the
-menu, what a rejected parent sees, inviting a second parent from the child's
-profile (address, which children, pending invitations, withdrawing one), and
-the invitation e-mail. Open: whether the administrator is e-mailed about a
-waiting child and the parent about the decision.
+Decided by the product on 12 November 2026 and built without a design in
+migration 50: a club link or QR code, a child waiting for an administrator's
+approval, and a second parent invited by the first (PRD §6). Needed: the
+administrator's link/QR screen (show, copy, print, issue a new one), what a
+parent sees arriving by the link, `Čeká na schválení`, the administrator's
+approval list with a count in the menu, what a rejected parent sees, inviting
+a second parent from the child's profile (address, which children, pending
+invitations, withdrawing one), and the three e-mails: the request to every
+administrator (E11), the decision to the parents (E12) and the invitation
+(E13).
 
 ---
 
