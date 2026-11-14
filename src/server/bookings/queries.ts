@@ -1,7 +1,7 @@
 import 'server-only'
 
 import { createClient } from '@/lib/supabase/server'
-import { maybeRow, rows } from '@/server/query-result'
+import { maybeRow, rows, allRows } from '@/server/query-result'
 import { guardedAthleteIds } from '@/server/athletes/queries'
 import { splitByTime } from '@/lib/domain/booking'
 import type { EligibilityMode, SessionStatus, BookingStatus } from '@/types/database'
@@ -198,14 +198,19 @@ function toSession(row: Row): GuardianSession {
 export async function listBookableSessions(): Promise<GuardianSession[]> {
   const supabase = await createClient()
 
-  const result = await supabase
-    .from('training_sessions')
-    .select(SESSION_COLUMNS)
-    .gte('end_at', new Date().toISOString())
-    .neq('status', 'CANCELLED')
-    .order('start_at')
+  const now = new Date().toISOString()
+  const all = await allRows('listBookableSessions', (from, to) =>
+    supabase
+      .from('training_sessions')
+      .select(SESSION_COLUMNS)
+      .gte('end_at', now)
+      .neq('status', 'CANCELLED')
+      .order('start_at')
+      .order('id')
+      .range(from, to),
+  )
 
-  return (rows('listBookableSessions', result) as unknown as Row[]).map(toSession)
+  return (all as unknown as Row[]).map(toSession)
 }
 
 export async function getGuardianSession(sessionId: string): Promise<GuardianSession | null> {
@@ -297,15 +302,22 @@ export async function listMyBookings(): Promise<{ upcoming: MyBooking[]; past: M
   const mine = await guardedAthleteIds(supabase)
   if (mine.length === 0) return { upcoming: [], past: [] }
 
-  const result = await supabase
-    .from('training_sessions')
-    .select(SESSION_COLUMNS)
-    .in('bookings.athlete_id', mine)
-    .order('start_at')
+  // Every session the family may see comes back — the filter is on the
+  // embedded bookings, not on the sessions — so this outgrows one page long
+  // before the family has a thousand bookings.
+  const result = await allRows('listMyBookings', (from, to) =>
+    supabase
+      .from('training_sessions')
+      .select(SESSION_COLUMNS)
+      .in('bookings.athlete_id', mine)
+      .order('start_at')
+      .order('id')
+      .range(from, to),
+  )
 
   const all: MyBooking[] = []
 
-  for (const row of rows('listMyBookings', result) as unknown as Row[]) {
+  for (const row of result as unknown as Row[]) {
     const session = toSession(row)
     for (const booking of row.bookings ?? []) {
       const athlete = booking.athletes
