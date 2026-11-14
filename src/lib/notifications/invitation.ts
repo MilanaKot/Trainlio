@@ -61,3 +61,51 @@ export function composeInvitationEmail(delivery: InvitationDelivery, appUrl: str
     }),
   }
 }
+
+export type GuardianInvitationDelivery = {
+  email: string
+  inviterName: string | null
+  athleteNames: string[]
+  organizationName: string
+  organizationLogoUrl: string | null
+}
+
+/**
+ * E13 · a parent invites the other parent (PRD §6, migration 50).
+ *
+ * The button prefills the address, as A6 does, and nothing more: the
+ * invitation is accepted by signing in with that address, a code to it or
+ * Google with it, which proves the address is theirs.
+ */
+export function composeGuardianInvitationEmail(
+  delivery: GuardianInvitationDelivery,
+  appUrl: string,
+): EmailMessage {
+  const g = messages.email.guardianInvitation
+  const base = appUrl.replace(/\/$/, '')
+  const org = delivery.organizationName
+  const athletes = delivery.athleteNames.join(', ')
+
+  const plan: Template = {
+    tone: 'blue',
+    label: g.label,
+    subject: fill(g.subject, { athletes, org }),
+    title: g.title,
+    body: fill(g.body, { inviter: delivery.inviterName ?? g.byParent, org }),
+    rows: [
+      ...(athletes ? [{ label: g.rowAthletes, value: athletes }] : []),
+      { label: g.rowEmail, value: delivery.email },
+    ],
+    button: { label: g.button, path: `/prihlaseni?email=${encodeURIComponent(delivery.email)}` },
+    helper: g.helper,
+  }
+
+  const url = `${base}${plan.button.path}`
+
+  return {
+    to: delivery.email,
+    subject: plan.subject,
+    text: renderText(plan, { url, org, footer: g.footer }),
+    html: renderHtml(plan, { url, org, footer: g.footer, logoUrl: delivery.organizationLogoUrl }),
+  }
+}

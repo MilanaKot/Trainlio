@@ -14,6 +14,11 @@ const t = messages.coach.card
  *
  * The period lives in the URL (`?obdobi=2026-11` or `?obdobi=sezona-2026`),
  * like the tabs: back from a training lands on the month the coach was reading.
+ *
+ * It has to fit 326 px — G8b draws it inside a padded card on a 390 px phone —
+ * without the 44 px steps shrinking. So the label gives way: it takes what is
+ * left and breaks `Sezóna 2026/27` onto two lines rather than pushing `›` off
+ * the screen.
  */
 export function PeriodControl({ period, timezone }: { period: Period; timezone: string }) {
   const router = useRouter()
@@ -28,11 +33,11 @@ export function PeriodControl({ period, timezone }: { period: Period; timezone: 
   }
 
   return (
-    <div className="flex items-center justify-between gap-2">
+    <div className="flex items-center justify-between gap-1.5">
       <div
         role="radiogroup"
         aria-label={t.period}
-        className="flex rounded-[10px] bg-neutral-50 p-0.5"
+        className="flex shrink-0 rounded-[10px] bg-neutral-50 p-0.5"
       >
         {(['month', 'season'] as const).map((kind) => (
           <button
@@ -42,7 +47,7 @@ export function PeriodControl({ period, timezone }: { period: Period; timezone: 
             aria-checked={period.kind === kind}
             onClick={() => go(switchKind(period, kind, new Date(), timezone))}
             className={cn(
-              'rounded-[8px] px-3.5 text-meta font-semibold',
+              'min-h-10 rounded-[8px] px-3 text-meta font-semibold',
               period.kind === kind ? 'bg-surface text-ink shadow-card' : 'text-muted',
             )}
           >
@@ -50,10 +55,10 @@ export function PeriodControl({ period, timezone }: { period: Period; timezone: 
           </button>
         ))}
       </div>
-      <div className="flex items-center gap-1">
+      <div className="flex min-w-0 flex-1 items-center justify-end gap-1">
         <StepButton label={t.previous} onClick={() => go(shiftPeriod(period, -1, timezone))} flip />
         <span
-          className="min-w-[7.5rem] text-center text-meta font-bold text-ink"
+          className="min-w-0 flex-1 text-center text-meta/[1.15] font-bold text-ink"
           aria-live="polite"
         >
           {periodLabel(period)}
@@ -78,7 +83,7 @@ function StepButton({
       type="button"
       aria-label={label}
       onClick={onClick}
-      className="flex size-11 items-center justify-center rounded-[10px] bg-neutral-50 text-ink"
+      className="flex size-11 shrink-0 items-center justify-center rounded-[10px] bg-neutral-50 text-ink"
     >
       <svg
         viewBox="0 0 24 24"

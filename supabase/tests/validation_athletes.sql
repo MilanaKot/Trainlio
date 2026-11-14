@@ -37,8 +37,14 @@ end $$;
 -- them no workspace, yet the registration form needs one.
 select pg_temp.check(pg_temp.as_user(:STRANGER, $$select count(*)::text from public.workspaces$$),
   '0', 'a guardian with no athlete sees no workspace row');
+-- Migration 50: not every club any more — only one whose link they opened.
 select pg_temp.check(pg_temp.as_user(:STRANGER, $$select count(*)::text from public.joinable_workspaces()$$),
-  '1', 'but joinable_workspaces() offers one to register into');
+  '0', 'nor, without the club''s link, one to register into (AC-321)');
+select pg_temp.check(pg_temp.as_user(:STRANGER, format($$select public.join_workspace(%L) ->> 'ok'$$,
+    (select lower(join_code) from public.workspaces limit 1))),
+  'true', 'opening the link (in any letter case) lets them in');
+select pg_temp.check(pg_temp.as_user(:STRANGER, $$select count(*)::text from public.joinable_workspaces()$$),
+  '1', 'and joinable_workspaces() then offers that club');
 select pg_temp.check(pg_temp.as_user(:STRANGER, $$select sport_code from public.joinable_workspaces() limit 1$$),
   'HOCKEY', 'and names its sport');
 

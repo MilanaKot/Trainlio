@@ -13,6 +13,10 @@ import {
   uniqueEmail,
   SERVICE,
   STACK,
+  joinClub,
+  approveAthlete,
+  joinClubInPage,
+  approveFamily,
 } from './helpers'
 
 /**
@@ -125,6 +129,7 @@ async function fillSession(sessionId: string): Promise<void> {
   const token = await tokenFor(other)
   const child = await freshAthlete()
 
+  await joinClub(token)
   const workspaces = (await (
     await fetch(`${STACK}/rest/v1/rpc/joinable_workspaces`, {
       method: 'POST',
@@ -147,6 +152,7 @@ async function fillSession(sessionId: string): Promise<void> {
       }),
     })
   ).json()) as { ok?: boolean; data?: { athlete_id?: string } }
+  await approveAthlete(created.data?.athlete_id)
   expect(created.ok, 'the other family could not register').toBe(true)
 
   const booked = (await (
@@ -236,7 +242,8 @@ test.describe('a guardian, from first sign-in to a withdrawn booking', () => {
     await expect(
       page.getByText('Přidejte prvního sportovce a můžete začít rezervovat tréninky.'),
     ).toBeVisible()
-    await page.getByRole('link', { name: 'Přidat sportovce' }).first().click()
+    // Migration 50: a club is joined through its link (AC-321).
+    await joinClubInPage(page)
 
     // AC-278 / AC-279: the first registration asks who the parent is, because the
     // coach's roster names whoever booked each child.
@@ -250,6 +257,12 @@ test.describe('a guardian, from first sign-in to a withdrawn booking', () => {
     await page.getByRole('button', { name: 'Přidat sportovce' }).click()
 
     await expect(page.getByText(ivan.name)).toBeVisible()
+    // The club has not taken him yet; the administrator does (AC-322).
+    await expect(page.getByText('Čeká na schválení')).toBeVisible()
+    await page.goto('/treninky')
+    await expect(page.getByText('Čekáme na schválení klubem')).toBeVisible()
+    await approveFamily(parent)
+    await page.goto('/moji-sportovci')
 
     // Asked once. A second child meets the same screen without the block.
     await page.goto('/moji-sportovci/novy')
@@ -336,7 +349,7 @@ test.describe('a guardian, from first sign-in to a withdrawn booking', () => {
     await fillSession(sessionId)
 
     await signIn(page, parent)
-    await page.goto('/moji-sportovci/novy')
+    await joinClubInPage(page)
     // §G16 fields first: this parent has no name yet either.
     await page.getByLabel('Jméno').first().fill('Hana')
     await page.getByLabel('Příjmení').first().fill('Kotova')
@@ -344,6 +357,7 @@ test.describe('a guardian, from first sign-in to a withdrawn booking', () => {
     await fillAthleteForm(page, anna)
     await page.getByRole('button', { name: 'Přidat sportovce' }).click()
     await expect(page.getByText(anna.name)).toBeVisible()
+    await approveFamily(parent)
 
     await page.goto('/treninky')
     const card = sessionCard(page, sessionId)
@@ -384,13 +398,14 @@ test.describe('a guardian, from first sign-in to a withdrawn booking', () => {
     const sessionId = await openSession(coach, 10, room)
 
     await signIn(page, parent)
-    await page.goto('/moji-sportovci/novy')
+    await joinClubInPage(page)
     await page.getByLabel('Jméno').first().fill('Jana')
     await page.getByLabel('Příjmení').first().fill('Kotova')
     const petr = await freshAthlete()
     await fillAthleteForm(page, petr)
     await page.getByRole('button', { name: 'Přidat sportovce' }).click()
     await expect(page.getByText(petr.name)).toBeVisible()
+    await approveFamily(parent)
 
     await page.goto('/treninky')
     await sessionCard(page, sessionId).getByRole('button', { name: 'Přihlásit' }).click()
@@ -439,7 +454,7 @@ test.describe('a guardian, from first sign-in to a withdrawn booking', () => {
     const sessionId = await openSession(coach, 10, room)
 
     await signIn(page, parent)
-    await page.goto('/moji-sportovci/novy')
+    await joinClubInPage(page)
     await page.getByLabel('Jméno').first().fill('Hana')
     await page.getByLabel('Příjmení').first().fill('Procházková')
     const eliska = await freshAthlete()
@@ -448,6 +463,7 @@ test.describe('a guardian, from first sign-in to a withdrawn booking', () => {
     // Saving uploads nothing but still waits on the server; under a full run
     // that can take longer than the default five seconds.
     await expect(page.getByText(eliska.name)).toBeVisible({ timeout: 15_000 })
+    await approveFamily(parent)
 
     await page.goto('/treninky')
     await sessionCard(page, sessionId).getByRole('button', { name: 'Přihlásit' }).click()

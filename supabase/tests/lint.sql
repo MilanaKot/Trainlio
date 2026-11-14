@@ -224,12 +224,15 @@ where n.nspname = 'public'
 -- can answer a question asked before there is a session. organization_identity()
 -- takes no arguments, reads two reference tables, returns the club's public
 -- face and refuses to guess when more than one club is active (migration 30).
+-- workspace_join_preview() is the club's link (migration 50): the landing
+-- page names the club before anybody signs in, and it answers only for the
+-- exact join code — the link is the credential, as the coach handed it out.
 select 'ERROR definer_function_granted_to_anon: ' || p.proname
 from pg_proc p
 join pg_namespace n on n.oid = p.pronamespace
 where n.nspname = 'public' and p.prosecdef
   and has_function_privilege('anon', p.oid, 'execute')
-  and p.proname <> 'organization_identity';
+  and p.proname not in ('organization_identity', 'workspace_join_preview');
 
 -- INFO. The exception above, printed every run so it cannot quietly become
 -- two.

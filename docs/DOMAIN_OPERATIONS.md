@@ -974,3 +974,18 @@ instead of a code the interface could explain.
 A trigger now removes the assistant row as part of the same write. Nothing could
 reach the collision before migration 26, because nothing could create an
 assistant.
+
+## Joining a club (migration 50)
+
+| Function                                                                   | Who                       | What                                                                                                                                                                 |
+| -------------------------------------------------------------------------- | ------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `workspace_join_preview(code)`                                             | anyone, also signed out   | The club a link names: its name and mark, for `/klub/{code}`.                                                                                                        |
+| `join_workspace(code)`                                                     | signed in                 | Records that the caller opened the link (`INVALID_JOIN_CODE`).                                                                                                       |
+| `workspace_join_code(ws)` / `rotate_workspace_join_code(ws)`               | administrator             | The code; a new one, the old stops at once.                                                                                                                          |
+| `can_join_workspace(ws)`                                                   | signed in                 | The link, an approved child there, or staff. Gates `create_athlete_with_guardian` and a new membership in `upsert_athlete_sport_profile` (`WORKSPACE_NOT_JOINABLE`). |
+| `workspace_join_requests(ws)`                                              | administrator             | Waiting and rejected children with their guardians.                                                                                                                  |
+| `decide_join_request(membership, approve)`                                 | administrator             | `PENDING` → `APPROVED` (active) or `REJECTED`; audits; queues E12 (`ALREADY_DECIDED`).                                                                               |
+| `request_join_again(membership)`                                           | the child's guardian      | `REJECTED` → `PENDING`; queues E11 (`NOT_REJECTED`).                                                                                                                 |
+| `invite_guardian(email, athletes)`                                         | a guardian of all of them | Records the invitation; the app e-mails it (E13). `INVALID_EMAIL`, `INVITING_SELF`, `ALREADY_GUARDIAN`, `TOO_MANY_INVITATIONS`.                                      |
+| `athlete_guardian_invitations(athlete)` / `revoke_guardian_invitation(id)` | the child's guardian      | Open invitations; withdrawing one.                                                                                                                                   |
+| `accept_guardian_invitations()`                                            | signed in                 | Every open invitation to the caller's verified address becomes guardian access; called after each sign-in and on `/`.                                                |

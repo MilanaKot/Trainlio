@@ -349,6 +349,97 @@ export const cs = {
     saving: 'Ukládám…',
   },
 
+  /* Migration 50 (D-39 to D-41): the club's link, approval, second parent.
+     Built without a design (DESIGN_REQUESTS DR-19). */
+  club: {
+    landingTitle: 'Přihlaste svého sportovce do klubu',
+    landingBody:
+      'Přidáte sportovce a klub vaši žádost schválí. Potom uvidíte tréninky a můžete se přihlašovat.',
+    landingSignIn: 'Přihlásit se a pokračovat',
+    landingContinue: 'Pokračovat',
+    landingInvalidTitle: 'Odkaz nefunguje',
+    landingInvalidBody:
+      'Odkaz klubu je neplatný nebo ho klub mezitím změnil. Požádejte trenéra o nový.',
+    noClubTitle: 'Nejdřív otevřete odkaz od klubu',
+    noClubBody:
+      'Sportovce můžete přidat do klubu jen přes odkaz nebo QR kód, který vám dal trenér.',
+    pending: 'Čeká na schválení',
+    approved: 'Přijato',
+    rejected: 'Zamítnuto',
+    waitingTitle: 'Čekáme na schválení klubem',
+    waitingBody:
+      'Klub vaši žádost brzy posoudí. Jakmile ji schválí, pošleme vám e-mail a uvidíte tréninky.',
+    rejectedBody:
+      'Klub žádost zamítl. Pokud jde o omyl, opravte údaje sportovce a požádejte znovu, nebo kontaktujte trenéra.',
+    requestAgain: 'Požádat znovu',
+    requestedAgain: 'Žádost odeslána znovu',
+    /* G8 · the second parent. */
+    guardiansCaption: 'RODIČE',
+    invite: 'Pozvat dalšího rodiče',
+    inviteTitle: 'Pozvat dalšího rodiče',
+    inviteBody:
+      'Pošleme pozvánku e-mailem. Jakmile se druhý rodič přihlásí touto adresou, uvidí vybrané sportovce a může je přihlašovat.',
+    inviteEmail: 'E-mail druhého rodiče',
+    inviteAthletes: 'Ke kterým sportovcům',
+    inviteSend: 'Poslat pozvánku',
+    inviteSent: 'Pozvánka odeslána',
+    invited: 'Pozván',
+    invitedMeta: 'Pozván {when}',
+    revoke: 'Zrušit pozvánku',
+    revoked: 'Pozvánka zrušena',
+    errors: {
+      INVALID_JOIN_CODE: 'Odkaz klubu je neplatný.',
+      INVALID_EMAIL: 'Zadejte platný e-mail.',
+      INVITING_SELF: 'Tohle je váš vlastní e-mail.',
+      ALREADY_GUARDIAN: 'Tento rodič už k vybraným sportovcům přístup má.',
+      TOO_MANY_INVITATIONS: 'Máte příliš mnoho nevyřízených pozvánek. Některou nejdřív zrušte.',
+      SEND_FAILED: 'Pozvánku se nepodařilo odeslat. Zkuste to prosím znovu.',
+      NOT_REJECTED: 'Žádost už byla odeslána.',
+      generic: 'Akce se nezdařila. Zkuste to prosím znovu.',
+    },
+  },
+
+  /* Migration 50 · the administrator's side. */
+  access: {
+    row: 'Přístup do klubu',
+    rowValue: 'Odkaz a QR kód',
+    title: 'Přístup do klubu',
+    intro:
+      'Rodiče přidají sportovce přes tento odkaz nebo QR kód. Každého nového sportovce potom schválíte v Žádostech o přijetí.',
+    linkCaption: 'ODKAZ KLUBU',
+    copy: 'Kopírovat odkaz',
+    copied: 'Odkaz zkopírován',
+    download: 'Stáhnout QR kód',
+    qrAlt: 'QR kód s odkazem klubu',
+    rotate: 'Vytvořit nový odkaz',
+    rotateTitle: 'Vytvořit nový odkaz?',
+    rotateBody:
+      'Dosavadní odkaz a QR kód přestanou fungovat. Rodiče, kteří ho už otevřeli, o přístup nepřijdou.',
+    rotateConfirm: 'Vytvořit nový',
+    rotated: 'Nový odkaz vytvořen',
+    rotatedAt: 'Naposledy změněn {when}',
+    requestsRow: 'Žádosti o přijetí',
+    requestsTitle: 'Žádosti o přijetí',
+    requestsIntro:
+      'Sportovci přidaní přes odkaz klubu. Dokud je neschválíte, nevidí tréninky a nemohou se přihlásit.',
+    pendingCaption: 'ČEKAJÍ NA SCHVÁLENÍ · {count}',
+    rejectedCaption: 'ZAMÍTNUTÉ · {count}',
+    none: 'Žádný sportovec nečeká na schválení.',
+    born: 'Ročník {year}',
+    requested: 'Žádost {when}',
+    approve: 'Schválit',
+    reject: 'Zamítnout',
+    rejectTitle: 'Zamítnout {name}?',
+    rejectBody: 'Rodiče dostanou e-mail. Mohou údaje opravit a požádat znovu.',
+    approvedToast: 'Schváleno · {name}',
+    rejectedToast: 'Zamítnuto · {name}',
+    waitingNotice: {
+      one: '{count} sportovec čeká na schválení',
+      few: '{count} sportovci čekají na schválení',
+      many: '{count} sportovců čeká na schválení',
+    } satisfies PluralForms,
+  },
+
   myBookings: {
     upcoming: 'Nadcházející',
     past: 'Minulé',
@@ -459,6 +550,7 @@ export const cs = {
       SPORT_NOT_FOUND: 'Sport není k dispozici.',
       WORKSPACE_NOT_FOUND: 'Klub není k dispozici.',
       SPORT_NOT_IN_WORKSPACE: 'Vybraný klub tento sport nenabízí.',
+      WORKSPACE_NOT_JOINABLE: 'Do klubu se přidáte přes odkaz nebo QR kód od trenéra.',
       INVALID_SPORT_ATTRIBUTES: 'Zkontrolujte pozici a stranu hole.',
       INVALID_ATHLETE_DATA: 'Zkontrolujte zadané údaje.',
       INVALID_NAME: 'Zadejte jméno a příjmení.',
@@ -1107,6 +1199,9 @@ export const cs = {
       SESSION_CHANGED: 'Změna tréninku',
       COACH_MESSAGE_TO_GUARDIAN: 'Zpráva od trenéra',
       GUARDIAN_ABSENCE_TO_COACH: 'Omluvenka',
+      ATHLETE_APPROVAL_REQUESTED: 'Nová žádost',
+      ATHLETE_JOIN_APPROVED: 'Přijato',
+      ATHLETE_JOIN_REJECTED: 'Zamítnuto',
     } as Record<string, string>,
     subjects: {
       SESSION_CANCELLED: 'Zrušeno: trénink {day} v {time}',
@@ -1121,6 +1216,9 @@ export const cs = {
       SESSION_CHANGED: 'Změna tréninku: trénink {day}',
       COACH_MESSAGE_TO_GUARDIAN: 'Zpráva od trenéra: {athletes} · trénink {day}',
       GUARDIAN_ABSENCE_TO_COACH: 'Omluvenka: {athletes} nepůjde · trénink {day} v {time}',
+      ATHLETE_APPROVAL_REQUESTED: 'Žádost o přijetí: {athletes}',
+      ATHLETE_JOIN_APPROVED: 'Přijato do klubu: {athletes}',
+      ATHLETE_JOIN_REJECTED: 'Žádost o přijetí zamítnuta: {athletes}',
     } as Record<string, string>,
     titles: {
       SESSION_CANCELLED: 'Trénink byl zrušen',
@@ -1135,6 +1233,9 @@ export const cs = {
       SESSION_CHANGED: 'Trénink se změnil',
       COACH_MESSAGE_TO_GUARDIAN: 'Trenér vám poslal zprávu',
       GUARDIAN_ABSENCE_TO_COACH: '{athletes} na trénink nepůjde',
+      ATHLETE_APPROVAL_REQUESTED: 'Nový sportovec čeká na schválení',
+      ATHLETE_JOIN_APPROVED: 'Sportovec byl přijat do klubu',
+      ATHLETE_JOIN_REJECTED: 'Žádost o přijetí byla zamítnuta',
     } as Record<string, string>,
     bodies: {
       SESSION_CANCELLED:
@@ -1156,6 +1257,12 @@ export const cs = {
       COACH_MESSAGE_TO_GUARDIAN: '{coach} vám poslal zprávu ke sportovci z tréninku.',
       GUARDIAN_ABSENCE_TO_COACH:
         'Rodič sportovce odhlásil z tréninku a napsal důvod. Místo se uvolnilo.',
+      ATHLETE_APPROVAL_REQUESTED:
+        '{coach} přidal sportovce přes odkaz klubu. Dokud ho neschválíte, nevidí tréninky a nemůže se přihlásit.',
+      ATHLETE_JOIN_APPROVED:
+        'Klub vaši žádost schválil. Sportovce teď můžete přihlašovat na tréninky.',
+      ATHLETE_JOIN_REJECTED:
+        'Klub vaši žádost zamítl. Pokud jde o omyl, opravte údaje sportovce a požádejte v aplikaci znovu, nebo kontaktujte trenéra.',
     } as Record<string, string>,
     /* `Trénink se přesouvá do Malé haly`: the hall's name has to decline, and
        only these two exist in the MVP. Anything else gets the sentence that
@@ -1170,6 +1277,8 @@ export const cs = {
       sessions: 'Zobrazit další tréninky',
       findAnother: 'Najít jiný trénink',
       session: 'Otevřít trénink',
+      requests: 'Otevřít žádosti',
+      athletes: 'Otevřít aplikaci',
     },
     rows: {
       athletes: {
@@ -1199,6 +1308,23 @@ export const cs = {
     footerMainCoach: 'Tento e-mail jste dostali jako hlavní trenér tréninku v aplikaci {org}.',
     footerAdmin:
       'Tento e-mail jste dostali jako administrátor, protože trénink nemá hlavního trenéra, v aplikaci {org}.',
+    /* E11 (migration 50). */
+    footerApprovals: 'Tento e-mail jste dostali jako administrátor klubu v aplikaci {org}.',
+    footerJoinDecided: 'Tento e-mail jste dostali jako rodič sportovce v aplikaci {org}.',
+    /* E13: the second parent (PRD §6). Sent by the app, like A6. */
+    guardianInvitation: {
+      label: 'Pozvánka',
+      subject: 'Pozvánka: {athletes} · {org}',
+      title: 'Pozvánka do aplikace',
+      body: '{inviter} vás zve, abyste spolu sledovali tréninky a přihlášky v aplikaci {org}.',
+      rowAthletes: 'Sportovci',
+      rowEmail: 'Přihlašovací e-mail',
+      button: 'Přijmout pozvánku',
+      helper:
+        'Přihlaste se tímto e-mailem — kódem, který vám pošleme, nebo přes Google se stejnou adresou. Heslo nepotřebujete.',
+      footer: 'Pozvánku jste nečekali? Tento e-mail ignorujte, bez přihlášení se nic nestane.',
+      byParent: 'Rodič',
+    },
     allYears: 'Všichni sportovci',
     yearRange: '{from}–{to}',
     /* The caption above what the coach wrote for this one parent. Never the

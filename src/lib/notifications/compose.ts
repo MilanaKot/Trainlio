@@ -53,6 +53,8 @@ export const NOTIFICATION_EVENT_TYPES = [
   'SESSION_CHANGED',
   'COACH_MESSAGE_TO_GUARDIAN',
   'GUARDIAN_ABSENCE_TO_COACH',
+  'ATHLETE_APPROVAL_REQUESTED',
+  'ATHLETE_JOIN_DECIDED',
 ] as const
 
 export type NotificationEventType = (typeof NOTIFICATION_EVENT_TYPES)[number]
@@ -111,6 +113,8 @@ export type ClaimedDelivery = {
     /** E10: occupancy as it was once the place was freed. */
     booked?: number | null
     capacity?: number | null
+    /** E12: the club's decision (migration 50). */
+    approved?: boolean | null
   }
   /** This guardian's own affected athletes, in display order. */
   athleteNames: string[]
@@ -136,6 +140,8 @@ const TONE: Record<NotificationEventType, keyof typeof PALETTE> = {
   SESSION_CHANGED: 'orange',
   COACH_MESSAGE_TO_GUARDIAN: 'blue',
   GUARDIAN_ABSENCE_TO_COACH: 'red',
+  ATHLETE_APPROVAL_REQUESTED: 'blue',
+  ATHLETE_JOIN_DECIDED: 'blue',
 }
 
 /** `st 7. 10.` — the form the subject lines use, lowercase inside a sentence. */
@@ -238,6 +244,32 @@ function template(delivery: ClaimedDelivery, event: NotificationEventType): Temp
       helper: session.coachPhone
         ? fill(t.messageHelperPhone, { phone: formatPhone(session.coachPhone) })
         : t.messageHelper,
+    }
+  }
+
+  // E11 and E12 (migration 50) are about a child joining the club, not about
+  // a training: the child, and where to go.
+  if (event === 'ATHLETE_APPROVAL_REQUESTED') {
+    return {
+      tone: TONE[event],
+      label: t.labels[event] ?? '',
+      subject: fill(t.subjects[event] ?? '', { athletes: names }),
+      title: t.titles[event] ?? '',
+      body: fill(t.bodies[event] ?? '', { coach: session.coachName ?? t.guardianFallback }),
+      rows,
+      button: { label: t.buttons.requests, path: '/trener/vice/zadosti' },
+    }
+  }
+  if (event === 'ATHLETE_JOIN_DECIDED') {
+    const key = session.approved ? 'ATHLETE_JOIN_APPROVED' : 'ATHLETE_JOIN_REJECTED'
+    return {
+      tone: session.approved ? 'blue' : 'red',
+      label: t.labels[key] ?? '',
+      subject: fill(t.subjects[key] ?? '', { athletes: names }),
+      title: t.titles[key] ?? '',
+      body: t.bodies[key] ?? '',
+      rows,
+      button: { label: t.buttons.athletes, path: '/moji-sportovci' },
     }
   }
 
@@ -442,7 +474,11 @@ export function composeNotificationEmail(
         messageCaption: t.guardianReason,
         footer: delivery.session.mainCoachName ? t.footerMainCoach : t.footerAdmin,
       }
-    : {}
+    : delivery.eventType === 'ATHLETE_APPROVAL_REQUESTED'
+      ? { footer: t.footerApprovals }
+      : delivery.eventType === 'ATHLETE_JOIN_DECIDED'
+        ? { footer: t.footerJoinDecided }
+        : {}
 
   return {
     to: delivery.recipientEmail,

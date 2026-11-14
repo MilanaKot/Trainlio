@@ -30,6 +30,8 @@ export async function GET(request: NextRequest) {
   if (error) return NextResponse.redirect(`${site}/prihlaseni?chyba=google`)
 
   await supabase.rpc('ensure_current_profile')
+  // Google proved the address too: a pending invitation to it is accepted.
+  await supabase.rpc('accept_guardian_invitations')
 
   return NextResponse.redirect(`${site}${next}`)
 }

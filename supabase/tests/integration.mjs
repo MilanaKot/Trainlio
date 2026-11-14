@@ -49,6 +49,44 @@ const ok = (label, cond, extra = '') => {
   console.log(`${cond ? 'PASS' : 'FAIL'}  ${label}${extra ? ' — ' + extra : ''}`)
 }
 
+/**
+ * Migration 50: a family joins a club through its link, and every child they
+ * register waits for an administrator. Both are done here with the service
+ * key — reading the code an administrator would hand out, and approving the
+ * way an administrator would — so the flows below meet a club the family is
+ * in. Without the key they cannot be, and the suite says so.
+ */
+const SERVICE_KEY = process.env.SERVICE_ROLE_KEY
+const serviceHeaders = SERVICE_KEY
+  ? { apikey: SERVICE_KEY, authorization: `Bearer ${SERVICE_KEY}`, 'content-type': 'application/json' }
+  : null
+
+async function joinClub(headers) {
+  if (!serviceHeaders) throw new Error('SERVICE_ROLE_KEY is required to join a club (migration 50)')
+  const [row] = await (
+    await fetch(`${API}/rest/v1/workspaces?select=join_code&is_active=eq.true&limit=1`, {
+      headers: serviceHeaders,
+    })
+  ).json()
+  const joined = await (
+    await fetch(`${API}/rest/v1/rpc/join_workspace`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({ p_code: row?.join_code }),
+    })
+  ).json()
+  if (!joined.ok) throw new Error(`joining the club failed: ${joined.code}`)
+}
+
+async function approve(athleteId) {
+  const r = await fetch(`${API}/rest/v1/workspace_athlete_memberships?athlete_id=eq.${athleteId}`, {
+    method: 'PATCH',
+    headers: serviceHeaders,
+    body: JSON.stringify({ approval: 'APPROVED', is_active: true, decided_at: new Date().toISOString() }),
+  })
+  if (!r.ok) throw new Error(`approving failed: ${r.status}`)
+}
+
 /** Signs a new person in through the real OTP flow, reading the code from Mailpit. */
 async function signIn(email) {
   const r = await fetch(`${API}/auth/v1/otp`, {
@@ -112,6 +150,11 @@ console.log('')
 console.log('── A first-time parent can still find a workspace ──────────────────')
 const visible = await (await fetch(`${API}/rest/v1/workspaces?select=id`, { headers: auth })).json()
 ok('no workspace row is readable yet (D-01)', visible.length === 0)
+const notYet = await (
+  await fetch(`${API}/rest/v1/rpc/joinable_workspaces`, { method: 'POST', headers: auth, body: '{}' })
+).json()
+ok('nor one to register into before opening the club\'s link (AC-321)', notYet.length === 0)
+await joinClub(auth)
 const workspaces = await (
   await fetch(`${API}/rest/v1/rpc/joinable_workspaces`, { method: 'POST', headers: auth, body: '{}' })
 ).json()
@@ -135,6 +178,8 @@ const created = await (
 ).json()
 ok('the athlete is created', created.ok === true, created.code ?? '')
 const athleteId = created.data?.athlete_id
+ok('and waits for the club (AC-322)', created.data?.approval === 'PENDING')
+await approve(athleteId)
 
 console.log('')
 console.log('── Private photo storage ───────────────────────────────────────────')
@@ -593,6 +638,7 @@ if (!SERVICE) {
   ).json()
   ok('a family with no athlete reads no occupancy at all (D-01)', beforeJoining.length === 0)
 
+  await joinClub(auth2)
   const joined = await (await fetch(`${API}/rest/v1/rpc/create_athlete_with_guardian`, {
     method: 'POST',
     headers: auth2,
@@ -603,6 +649,7 @@ if (!SERVICE) {
     }),
   })).json()
   const otherAthleteId = joined.data?.athlete_id
+  await approve(otherAthleteId)
 
   // Now they see the count move, without learning anything about who took the
   // place — the point of projecting rather than publishing bookings.
@@ -774,6 +821,7 @@ if (!SERVICE) {
     }),
   })).json()
   const siblingId = sibling.data?.athlete_id
+  await approve(siblingId)
   ok('the family adds a second athlete', sibling.ok === true, sibling.code ?? '')
 
   res = await rpc('book_athletes_as_guardian', {

@@ -204,6 +204,10 @@ Application validation must enforce allowed values.
 - logo_path — object in the public `workspace-logos` bucket, or null
 - logo_background — `white` (a plate behind the mark) or `transparent`
 - logo_updated_at — when the mark last changed; travels in the URL as `?v=`
+- join_code — the club's link (`/klub/{code}`), eight characters, unique;
+  readable only through `workspace_join_code` by an administrator (migration
+  50: clients read this table column by column, and not this column)
+- join_code_rotated_at — when an administrator last replaced it
 - is_active
 - created_at
 - updated_at
@@ -236,11 +240,37 @@ prove their sport matches the workspace.
 - athlete_id
 - athlete_sport_profile_id
 - sport_id — carried only to support the composite keys below
-- is_active
+- is_active — only ever true when approved (`wam_active_only_when_approved`)
+- approval — `PENDING` / `APPROVED` / `REJECTED` (migration 50, BR-198)
+- requested_by, requested_at, decided_by, decided_at — who asked and who
+  decided
 - created_at
 - updated_at
 
-One athlete may be a member of multiple workspaces.
+One athlete may be a member of multiple workspaces. A waiting child is an
+inactive membership, so every predicate that reads `is_active` — what a
+guardian sees (D-01), booking, what a coach sees — already leaves it out.
+
+## workspace_join_grants (migration 50)
+
+- workspace_id, profile_id — who opened which club's link (primary key)
+- granted_at
+
+Row level security on, no policy and no grant: read only by
+`can_join_workspace`.
+
+## guardian_invitations (migration 50)
+
+- id
+- email — lower-cased address of the invited parent
+- athlete_ids — the children (1–20) the invitation covers
+- invited_by
+- created_at, accepted_at, accepted_by, revoked_at
+
+Row level security on, no policy and no grant: written and read only by
+`invite_guardian`, `athlete_guardian_invitations`, `revoke_guardian_invitation`
+and `accept_guardian_invitations`, which matches the caller's verified
+sign-in address.
 
 Three composite foreign keys make an inconsistent membership impossible:
 

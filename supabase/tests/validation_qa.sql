@@ -83,8 +83,8 @@ select pg_temp.check(
     where table_schema = 'public'
       and data_type in ('text', 'character varying', 'character')
       and (column_name ilike '%email%' or column_name ilike '%e_mail%')),
-  'notification_deliveries.recipient_email, staff_contacts.email',
-  'only the two documented tables store an email address (AC-222)');
+  'guardian_invitations.email, notification_deliveries.recipient_email, staff_contacts.email',
+  'only the three documented tables store an email address (AC-222)');
 select pg_temp.check(
   (select is_nullable from information_schema.columns
     where table_schema='public' and table_name='notification_deliveries' and column_name='recipient_email'),

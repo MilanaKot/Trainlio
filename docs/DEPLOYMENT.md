@@ -187,6 +187,17 @@ before keeps their children.
 
 ---
 
+### The club's link (migration 50)
+
+Parents can register a child only through the club's link or its QR code. Once
+the first administrator exists (§4), they find both under `Více › Přístup do
+klubu` and hand them out — on the rink's door, in the parents' chat. Every
+child a parent registers then waits in `Více › Žádosti o přijetí` until an
+administrator approves it. Children registered before migration 50 were
+approved by the migration.
+
+---
+
 ## 4. The first coach
 
 There is no interface for granting a coach role, deliberately: it is an

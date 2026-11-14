@@ -9,6 +9,8 @@ import {
   grantCoach,
   signIn,
   uniqueEmail,
+  joinClub,
+  approveAthlete,
 } from './helpers'
 
 /**
@@ -30,6 +32,7 @@ async function nineYears(): Promise<void> {
   const present = new Set(existing.map((row) => Number(row.date_of_birth.slice(0, 4))))
   for (const year of YEARS.filter((y) => !present.has(y))) {
     const token = await apiUser(uniqueEmail('rodina.rocnik'))
+    await joinClub(token)
     const workspaces = (await (
       await fetch(`${STACK}/rest/v1/rpc/joinable_workspaces`, {
         method: 'POST',
@@ -51,8 +54,10 @@ async function nineYears(): Promise<void> {
           p_attributes: { position: child.position, stick_side: child.stickSide },
         }),
       })
-    ).json()) as { ok?: boolean }
+    ).json()) as { ok?: boolean; data?: { athlete_id?: string } }
     expect(created.ok).toBe(true)
+    // K12 lists the club's children, which a waiting one is not yet.
+    await approveAthlete(created.data?.athlete_id)
   }
 }
 

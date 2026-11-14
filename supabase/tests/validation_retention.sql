@@ -353,7 +353,7 @@ select pg_temp.check(
   -- The second is the address an invited coach signs in with (migration 36),
   -- which has nowhere else to live until they first sign in. Both tables are
   -- unreachable by every client role.
-  'notification_deliveries.recipient_email, staff_contacts.email',
+  'guardian_invitations.email, notification_deliveries.recipient_email, staff_contacts.email',
   'and no new column started storing an address (AC-222)');
 
 drop function pg_temp.as_user(text,text);

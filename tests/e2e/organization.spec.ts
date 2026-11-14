@@ -8,6 +8,7 @@ import {
   signIn,
   storedLogoUrl,
   uniqueEmail,
+  joinClubInPage,
 } from './helpers'
 
 /**
@@ -162,6 +163,8 @@ test('uploading a mark stores a 512px PNG and shows it everywhere (admin tests 6
   const guardian = await browser.newContext()
   const parent = await guardian.newPage()
   await signIn(parent, uniqueEmail('rodic'))
+  // Migration 50: a parent belongs to no club until they open its link.
+  await joinClubInPage(parent)
   await parent.goto('/treninky')
   await expect(parent.getByRole('heading', { name: 'Tréninky' })).toBeVisible()
   await expect(parent.locator('header img')).toBeVisible()
@@ -209,6 +212,7 @@ test('removing the mark brings the monogram back and deletes the object (admin t
   const guardian = await browser.newContext()
   const parent = await guardian.newPage()
   await signIn(parent, uniqueEmail('rodic'))
+  await joinClubInPage(parent)
   await parent.goto('/treninky')
   await expect(parent.locator('header').getByText('HŠ')).toBeVisible()
   await expect(parent.locator('header img')).toHaveCount(0)

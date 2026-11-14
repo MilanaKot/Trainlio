@@ -15,6 +15,10 @@ import {
   tokenFor,
   uniqueEmail,
   STACK,
+  joinClub,
+  approveAthlete,
+  joinClubInPage,
+  approveAllPending,
 } from './helpers'
 
 /** A child booked into a training, so the edit screen has somebody to warn about. */
@@ -41,6 +45,7 @@ async function bookedAthlete(
     headers: asUser(token),
     body: JSON.stringify({ first_name: first, last_name: rest.join(' ') }),
   })
+  await joinClub(token)
   const workspaces = (await (
     await fetch(`${STACK}/rest/v1/rpc/joinable_workspaces`, {
       method: 'POST',
@@ -63,6 +68,7 @@ async function bookedAthlete(
       }),
     })
   ).json()) as { data?: { athlete_id?: string } }
+  await approveAthlete(created.data?.athlete_id)
 
   await fetch(`${STACK}/rest/v1/rpc/book_athletes_as_guardian`, {
     method: 'POST',
@@ -260,7 +266,7 @@ test('the parent’s children (§G7, §G8, §G9)', async ({ page }) => {
   await expect(page.getByRole('heading', { name: 'Moji sportovci' })).toBeVisible()
   await shoot(page, 'G7-sportovci-prazdne')
 
-  await page.goto('/moji-sportovci/novy')
+  await joinClubInPage(page)
   await page.getByLabel('Jméno').first().fill('Milana')
   await page.getByLabel('Příjmení').first().fill('Kotova')
   await page.getByLabel('Telefon').fill('777 123 456')
@@ -273,6 +279,7 @@ test('the parent’s children (§G7, §G8, §G9)', async ({ page }) => {
 
   await page.getByRole('button', { name: 'Přidat sportovce' }).click()
   await expect(page.getByText('Ivan Kotov')).toBeVisible()
+  await approveAllPending()
   await shoot(page, 'G7-sportovci')
 
   await page.getByRole('link', { name: /Ivan Kotov/ }).click()
@@ -339,7 +346,7 @@ test('a booking a parent holds (§G4, §G6)', async ({ page, browser }) => {
 
   await signIn(page, uniqueEmail('rodic'))
 
-  await page.goto('/moji-sportovci/novy')
+  await joinClubInPage(page)
   await page.getByLabel('Jméno').first().fill('Milana')
   await page.getByLabel('Příjmení').first().fill('Kotova')
   await page.getByLabel('Jméno').last().fill('Ivan')
@@ -349,6 +356,7 @@ test('a booking a parent holds (§G4, §G6)', async ({ page, browser }) => {
   await page.getByRole('radio', { name: 'Levá' }).click()
   await page.getByRole('button', { name: 'Přidat sportovce' }).click()
   await expect(page.getByText('Ivan Kotov')).toBeVisible()
+  await approveAllPending()
 
   await page.goto('/treninky')
   const card = page.locator('main li', { hasText: 'Šatna 4' }).first()
@@ -392,7 +400,7 @@ test('the booking sheet, with room and without (§G2, §G3)', async ({ page, bro
     ['Ivan', '2017-06-08'],
     ['Anna', '2018-03-14'],
   ] as const) {
-    await page.goto('/moji-sportovci/novy')
+    await joinClubInPage(page)
     if (first === 'Ivan') {
       await page.getByLabel('Jméno').first().fill('Milana')
       await page.getByLabel('Příjmení').first().fill('Kotova')
@@ -581,7 +589,7 @@ test('what v3 added (§K12–§K16, §A3b, §G6d)', async ({ page, browser }) =>
   const parent = await browser.newPage()
   const parentEmail = uniqueEmail('rodic.odhlaseny')
   await signIn(parent, parentEmail)
-  await parent.goto('/moji-sportovci/novy')
+  await joinClubInPage(parent)
   await parent.getByLabel('Jméno').first().fill('Hana')
   await parent.getByLabel('Příjmení').first().fill('Procházková')
   await parent.getByLabel('Jméno').last().fill('Eliška')
@@ -591,6 +599,7 @@ test('what v3 added (§K12–§K16, §A3b, §G6d)', async ({ page, browser }) =>
   await parent.getByRole('radio', { name: 'Levá' }).click()
   await parent.getByRole('button', { name: 'Přidat sportovce' }).click()
   await expect(parent.getByText('Eliška Procházková')).toBeVisible()
+  await approveAllPending()
 
   await parent.goto('/treninky')
   // This test's own training. Booking into another run's leftover is how this

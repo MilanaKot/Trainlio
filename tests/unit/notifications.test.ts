@@ -623,3 +623,37 @@ describe('E10 · a guardian’s withdrawal, to the coach (v3.7, decision 55)', (
     expect(sent({ mainCoachName: null }).text).toContain('jako administrátor')
   })
 })
+
+describe('E11 and E12 · a child joining the club (migration 50, AC-322, AC-323)', () => {
+  const join = (eventType: string, session: Partial<ClaimedDelivery['session']> = {}) =>
+    composed(
+      delivery({
+        eventType,
+        session: { coachName: 'Hana Nováková', mainCoachName: null, ...session },
+        bookingIds: [],
+      }),
+    )
+
+  it('E11 asks the administrators, and opens their list', () => {
+    const message = join('ATHLETE_APPROVAL_REQUESTED')
+    expect(message.subject).toBe('Žádost o přijetí: Ivan Kotov')
+    expect(message.text).toContain('Nový sportovec čeká na schválení')
+    expect(message.text).toContain('Hana Nováková přidal sportovce přes odkaz klubu.')
+    expect(message.text).toContain(`${APP}/trener/vice/zadosti`)
+    expect(message.text).toContain('jako administrátor klubu')
+  })
+
+  it('E12 tells the family the club took the child', () => {
+    const message = join('ATHLETE_JOIN_DECIDED', { approved: true })
+    expect(message.subject).toBe('Přijato do klubu: Ivan Kotov')
+    expect(message.text).toContain('můžete přihlašovat na tréninky')
+    expect(message.text).toContain(`${APP}/moji-sportovci`)
+  })
+
+  it('E12 tells the family it did not, and what to do', () => {
+    const message = join('ATHLETE_JOIN_DECIDED', { approved: false })
+    expect(message.subject).toBe('Žádost o přijetí zamítnuta: Ivan Kotov')
+    expect(message.text).toContain('požádejte v aplikaci znovu')
+    expect(message.html).toContain('#FBE9E7')
+  })
+})

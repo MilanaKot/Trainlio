@@ -32,6 +32,7 @@ export type BookingStatus = Enums<'booking_status'>
 export type BookingCreatorRole = Enums<'booking_creator_role'>
 export type EligibilityMode = Enums<'eligibility_mode'>
 export type WorkspaceRole = Enums<'workspace_role'>
+export type MembershipApproval = Enums<'membership_approval'>
 export type CoachSessionRole = Enums<'coach_session_role'>
 export type AccessStatus = Enums<'access_status'>
 export type AccessPermissionLevel = Enums<'access_permission_level'>

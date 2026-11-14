@@ -67,16 +67,22 @@ May:
 
 - read own app profile;
 - read athletes with ACTIVE guardian access;
-- create an athlete and automatically receive guardian access;
+- create an athlete and automatically receive guardian access, only into a
+  club whose link they opened, one they have an approved child in, or one they
+  are staff of; the child waits for an administrator (migration 50);
+- send a rejected child again;
+- invite another guardian by e-mail to children they manage, and withdraw
+  that invitation; accept invitations to their own verified address;
 - update athletes with ACTIVE guardian access;
 - read sport profiles for athletes they can access;
 - create/update sport profiles for athletes they can access;
 - read non-DRAFT sessions in workspaces where at least one of their athletes
-  holds an active membership;
+  holds an active — that is, approved — membership;
 - read own athletes' bookings, including bookings of a deactivated athlete;
 - read a session's public notes, changing room and main coach name;
 - create normal bookings for own linked athletes;
-- cancel own athletes' bookings only when server-side cancellation rule allows.
+- answer `Půjde`, and withdraw (`Nepůjde`) with a reason until the start
+  (v3.7; after the deadline it is late).
 
 May not:
 
@@ -92,7 +98,9 @@ May not:
 - exceed session capacity;
 - modify sessions;
 - bypass age eligibility;
-- cancel inside 12 hours.
+- withdraw without a reason, or after the start;
+- read a club's join code, the join grants or anybody's invitations;
+- let a child into a club themselves.
 
 ## Coach
 
@@ -132,7 +140,9 @@ both, so role checks use existence, never equality.
 May:
 
 - run coach domain operations in their own workspace;
-- manage that workspace's configuration.
+- manage that workspace's configuration;
+- read and replace the club's join code, see the waiting and rejected
+  children with their guardians, and approve or reject them (migration 50).
 
 May not:
 
@@ -212,7 +222,9 @@ The projection is also the lock target that serializes the capacity check.
 
 ## Cancellation RPC
 
-Guardian cancellation must calculate the 12-hour rule on the server using session start_at.
+Guardian withdrawal calculates, on the server from session start_at, both
+whether the training has started (refused) and whether the deadline has
+passed (late) — v3.7.
 
 Never accept a client-provided `can_cancel=true`.
 

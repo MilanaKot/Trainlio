@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation'
 import { getManagedOrganization } from '@/server/organization/queries'
 import { getOwnProfile } from '@/server/athletes/queries'
 import { getWorkspaceStaff } from '@/server/staff/queries'
+import { listJoinRequests } from '@/server/club/queries'
 import { Avatar } from '@/components/ui/avatar'
 import { OrgLogo } from '@/components/ui/org-logo'
 import { SignOutButton } from '@/components/staff/sign-out-button'
@@ -36,6 +37,21 @@ function ChartIcon() {
   )
 }
 
+function QrIcon() {
+  return (
+    <svg viewBox="0 0 20 20" fill="none" className="size-4" aria-hidden="true">
+      <rect x="3" y="3" width="5" height="5" rx="1" stroke="currentColor" strokeWidth="1.6" />
+      <rect x="12" y="3" width="5" height="5" rx="1" stroke="currentColor" strokeWidth="1.6" />
+      <rect x="3" y="12" width="5" height="5" rx="1" stroke="currentColor" strokeWidth="1.6" />
+      <path
+        d="M12 12h2v2h-2zM15 15h2v2h-2zM12 16h1M16 12h1"
+        stroke="currentColor"
+        strokeWidth="1.6"
+      />
+    </svg>
+  )
+}
+
 function Caption({ children }: { children: React.ReactNode }) {
   return (
     <h2 className="text-caption font-bold uppercase tracking-[0.8px] text-muted">{children}</h2>
@@ -55,7 +71,10 @@ export default async function MorePage() {
   if (!organization) notFound()
 
   const profile = await getOwnProfile()
-  const staff = organization.canEdit ? await getWorkspaceStaff(organization.id) : []
+  const [staff, requests] = organization.canEdit
+    ? await Promise.all([getWorkspaceStaff(organization.id), listJoinRequests(organization.id)])
+    : [[], []]
+  const waiting = requests.filter((r) => r.approval === 'PENDING').length
 
   const name = [profile?.firstName, profile?.lastName].filter(Boolean).join(' ')
 
@@ -119,6 +138,36 @@ export default async function MorePage() {
                   {staff.length}
                 </span>
                 <span className="flex-1">{t.coaches}</span>
+                <Chevron />
+              </Link>
+            </li>
+            {/* Migration 50: the club's link, and who waits for approval. */}
+            <li className="border-t border-line">
+              <Link
+                href="/trener/vice/zadosti"
+                className="flex min-h-14 items-center gap-3 py-2 text-row font-semibold text-ink"
+              >
+                <span
+                  className={`flex size-7 items-center justify-center rounded-chip text-hint font-bold ${
+                    waiting > 0 ? 'bg-warning-soft text-warning' : 'bg-primary-100 text-primary'
+                  }`}
+                >
+                  {waiting}
+                </span>
+                <span className="flex-1">{messages.access.requestsRow}</span>
+                <Chevron />
+              </Link>
+            </li>
+            <li className="border-t border-line">
+              <Link
+                href="/trener/vice/pristup"
+                className="flex min-h-14 items-center gap-3 py-2 text-row font-semibold text-ink"
+              >
+                <span className="flex size-7 items-center justify-center rounded-chip bg-primary-100 text-primary">
+                  <QrIcon />
+                </span>
+                <span className="flex-1">{messages.access.row}</span>
+                <span className="text-meta font-normal text-muted">{messages.access.rowValue}</span>
                 <Chevron />
               </Link>
             </li>

@@ -39,7 +39,7 @@ export default defineConfig({
       // viewport, so a desktop run would repeat it at the same size — and
       // double the sign-ins it spends against GoTrue's rate limit.
       testIgnore:
-        /(mobile|organization|permissions|payment|statistics|athlete-years|response)\.spec\.ts/,
+        /(mobile|organization|permissions|payment|statistics|athlete-years|response|club-access)\.spec\.ts/,
     },
   ],
   webServer: {

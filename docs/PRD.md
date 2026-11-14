@@ -273,7 +273,8 @@ Do not allow users to find children by name + date of birth.
 
 MVP:
 
-- Registration available to users who receive the application link from the coach.
+- Registration available to users who open the club's link or QR code from the
+  coach (D-39); every child then waits for an administrator's approval (D-40).
 - Authentication: email + one-time code (OTP), or Google (decided 13 November
   2026).
 - No password, ever: it would add a way in that is weaker than the e-mail it
