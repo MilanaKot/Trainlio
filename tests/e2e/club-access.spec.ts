@@ -168,6 +168,8 @@ test.describe('joining a club (migration 50)', () => {
 
     await signIn(page, child.parentEmail)
     await page.goto(`/moji-sportovci/${athleteId}`)
+    // G8b draws Měsíc / Sezóna inside a padded card: it fits a 390 px phone.
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390)
     await page.getByRole('button', { name: 'Pozvat dalšího rodiče' }).click()
     const sheet = page.getByRole('dialog')
     await sheet.getByLabel('E-mail druhého rodiče').fill(second)
